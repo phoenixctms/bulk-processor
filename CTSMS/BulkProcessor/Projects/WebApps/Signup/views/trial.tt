@@ -1,0 +1,34 @@
+<form id="form" action="/trial" method="post" autocomplete="off">
+<input type="submit" name="ts" id="ts" value="[% ts %]" class="ui-helper-hidden"/>
+
+<h1>[% l('trial_title') %]</h1>
+<div class="ce-textpic ce-right ce-intext">
+    <div class="ce-bodytext">
+[% l('trial_description') %]
+    </div>        
+</div>
+
+<div class="ui-grid">
+  <div class="ui-grid-row ctsms-trials-content">
+    <div class="ui-grid-col-12">
+<div id="trials"></div>
+    </div>
+  </div>
+  
+  <div class="ui-grid-row">
+    <div class="ui-grid-col-12">
+
+<div id="messages"></div>
+
+    </div>
+  </div>
+  
+  
+  <div class="ui-grid-row ctsms-toolbar-row">
+    <div class="ui-grid-col-12 ctsms-btn-cell">
+		<button id="done_btn" name="done" value="1" class="ctsms-btn" type="submit">[% l('done_btn_label') %]</button>    		
+    </div>    
+  </div>  
+  
+</div>
+</form>

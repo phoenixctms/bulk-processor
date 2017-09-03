@@ -1,0 +1,46 @@
+<form id="form" action="/inquiry" method="post" autocomplete="off">
+<input type="submit" name="ts" id="ts" value="[% ts %]" class="ui-helper-hidden"/>
+
+<h1>[% l('inquiry_title',session.trial.name) %]</h1>
+<div class="ce-textpic ce-right ce-intext">
+    <div class="ce-bodytext">
+[% l('inquiry_description') %]
+    </div>        
+</div>
+
+<div class="ui-grid">
+  <div class="ui-grid-row ctsms-inquiries-content">
+    <div class="ui-grid-col-12">
+
+<div id="inquiries"></div>    
+    
+    </div>
+  </div>
+    
+  <div class="ui-grid-row">
+    <div class="ui-grid-col-12">
+  
+<div id="messages"></div>
+
+    </div>
+  </div>
+
+  <div class="ui-grid-row ctsms-toolbar-row">
+    <div class="ui-grid-col-2">
+        <span class="mandatory-hint ui-state-disabled"><span class="mandatory">*</span> = [% l('mandatory_field_label') %]</span>
+    </div>  
+    <div class="ui-grid-col-2 ctsms-pbar-cell">
+        <div id="inquiry_pbar"></div>
+    </div>    
+    <div class="ui-grid-col-8 ctsms-btn-cell">
+        <button id="prev_btn" name="prev" value="1" class="ctsms-btn" type="submit">[% l('inquiries_prev_btn_label') %]</button>    		
+        <button id="inquiryform_blank_btn" class="ctsms-btn" type="button">[% l('inquiryform_blank_btn_label') %]</button>
+        <button id="done_btn" name="done" value="1" class="ctsms-btn" type="submit">[% l('done_btn_label') %]</button>    		
+        <button id="save_next_btn" name="done" value="0" class="ctsms-btn" type="submit">[% l('save_next_btn_label') %]</button>
+    </div>  
+  </div>
+</div>
+<div id="incomplete_dlg" title="[% l('incomplete_dlg_title') %]">
+[% l('incomplete_dlg_prompt') %]
+</div>
+</form>
