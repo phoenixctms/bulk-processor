@@ -101,7 +101,7 @@ function hideErrorMessage(error_message_id) {
 function setErrorMessageText(error_message_id,output) {
 	var errorMessageSpanElement = _getElement(error_message_id);
 	if (errorMessageSpanElement != null) {
-		errorMessageSpanElement.text(output);
+		errorMessageSpanElement.html(output);
 		//var textElement = errorMessageSpanElement.contents()[0];
 
 		//if (typeof textElement.textContent !== 'undefined') {
@@ -133,7 +133,7 @@ function setErrorMessageTexts(error_message_id,msgs) {
 				for (i = 1; i < msgsLength; i++) {
 					liElement = liElement.clone();
 					errorMessageSpanElement = liElement.find('span').first();
-					errorMessageSpanElement.text(msgs[i].output);
+					errorMessageSpanElement.html(msgs[i].output);
 					errorMessageSpanElement.attr('id', spanId + '_' + i);
 					ulElement.append(liElement);
 				}
