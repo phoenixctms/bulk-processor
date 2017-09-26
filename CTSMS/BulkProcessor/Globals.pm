@@ -164,8 +164,6 @@ our $working_path = tempdir(CLEANUP => 0) . '/'; #'/var/xy/';
 #our $input_path = $working_path . 'input/';
 
 
-#our $provisioning_conf = undef;
-
 
 # csv
 our $csv_path = $working_path . 'csv/';
@@ -201,8 +199,8 @@ our $mailfile_path = $working_path . 'mails/';   # emails can be saved (logged) 
 #mkdir $mailfilepath;
 our $writefiles = 0;                                 # save emails
 
-our $erroremailrecipient = ''; #'rkrenn@foxtrot.at';
-our $warnemailrecipient = ''; #'rkrenn@foxtrot.at';
+our $erroremailrecipient = ''; #'rkrenn@phoenixctms.org';
+our $warnemailrecipient = ''; #'rkrenn@phoenixctms.org';
 our $completionemailrecipient = '';
 our $doneemailrecipient = '';
 
@@ -322,12 +320,12 @@ sub update_masterconfig {
 
         my @loadconfig_args = ();
 
-        #$provisioning_conf = $data->{provisioning_conf} if exists $data->{provisioning_conf};
+        #$xy_conf = $data->{xyconf} if exists $data->{xy_conf};
         #
-        #if (defined $provisioning_conf and length($provisioning_conf) > 0) {
+        #if (defined $xy_conf and length($xy_conf) > 0) {
         #    push(@loadconfig_args,[
-        #        $provisioning_conf,
-        #        \&_update_provisioning_conf,
+        #        $xy_conf,
+        #        \&_update_xy_conf,
         #        $anyconfigtype,
         #        { force_plugins => [ 'Config::Any::XML' ] }
         #    ]);
@@ -340,7 +338,7 @@ sub update_masterconfig {
 
 }
 
-#sub _update_provisioning_conf {
+#sub _update_xy_conf {
 #
 #    my ($data,$configfile) = @_;
 #

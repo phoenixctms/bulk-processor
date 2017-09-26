@@ -64,13 +64,13 @@ my %msmailpriority = (
 
 # sample email data structure:
 #my $message = {
-#    to          => 'rkrenn@foxtrot.at',
+#    to          => 'rkrenn@phoenixctms.org,
 #    cc          => 'rkrenn@alumni.tugraz.at',
 #    bcc         => '',
 #    return_path => '',
 #    priority    => $normalpriority,
 #    sender_name => 'Rene Krenn',
-#    from        => 'rkrenn@foxtrot.at',
+#    from        => 'rkrenn@phoenixctms.org',
 #    subject     => 'subject...',
 #    body        => wrap_mailbody('test.......'),
 #    guid        => create_guid()

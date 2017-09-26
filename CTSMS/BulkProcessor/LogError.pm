@@ -128,12 +128,12 @@ sub done {
             if (length($doneemailrecipient) > 0 and defined $logger) {
                 my $email = {
                     to          => $doneemailrecipient,
-                    #cc          => 'rkrenn@foxtrot.at',
+                    #cc          => 'rkrenn@phoenixctms.org',
                     #bcc         => '',
                     #return_path => undef,
                     priority    => $lowpriority,
                     #sender_name => 'Rene K.',
-                    #from        => 'rkrenn@foxtrot.at',
+                    #from        => 'rkrenn@phoenixctms.org',
                     subject     => $donemailsubject . $logger->{category},
                     body        => getscriptpath() . ":\n\n" . wrap_mailbody($message) . "\n\n" . $signature,
                     guid        => create_guid()
@@ -172,12 +172,12 @@ sub completion {
             if (length($completionemailrecipient) > 0 and defined $logger) {
                 my $email = {
                     to          => $completionemailrecipient,
-                    #cc          => 'rkrenn@foxtrot.at',
+                    #cc          => 'rkrenn@phoenixctms.org',
                     #bcc         => '',
                     #return_path => undef,
                     priority    => $normalpriority,
                     #sender_name => 'Rene K.',
-                    #from        => 'rkrenn@foxtrot.at',
+                    #from        => 'rkrenn@phoenixctms.org',
                     subject     => $completionmailsubject . $logger->{category},
                     body        => getscriptpath() . ":\n\n" . wrap_mailbody($message) . "\n\n" . $signature,
                     guid        => create_guid()
