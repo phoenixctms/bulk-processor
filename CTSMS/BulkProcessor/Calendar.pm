@@ -21,6 +21,8 @@ our @EXPORT_OK = qw(
     split_date
     split_time
     split_datetime
+    check_date
+    check_time
 );
 
 my @daysofmonths = (31,28,31,30,31,30,31,31,30,31,30,31);
@@ -108,6 +110,44 @@ sub days_of_month {
 #  return split /-/,$datestring,3;
 #
 #}
+
+sub check_time {
+
+  my ($hour,$minute,$second) = @_;
+
+  if ($hour =~ /[^0-9]/ or $minute =~ /[^0-9]/ or (defined $second and $second =~ /[^0-9]/)) {
+    return (0,'invalid time');
+  } elsif ($hour >= 24 or $hour < 0) {
+    return (0,'invalid hour',$hour);
+  } elsif ($minute >= 60 or $minute < 0) {
+    return (0,'invalid minute',$minute);
+  } elsif (defined $second and $second >= 60 or $second < 0) {
+    return (0,'invalid second',$second);
+  } else {
+    return (1);
+  }
+
+}
+
+sub check_date {
+
+  my ($year,$month,$day) = @_;
+  
+  if ($year =~ /[^0-9]/ or $month =~ /[^0-9]/ or $day =~ /[^0-9]/) {
+    return (0,'invalid date');
+  } elsif ($month > 12 or $month <= 0) {
+    return (0,'invalid month',$month);
+  } elsif ($year < 1582) {
+    return (0,'invalid year',$year);
+  } elsif ($month < 10 and $year < 1582) { # 15.10.1582 Gregorian Day
+    return (0,'invalid date');
+  } elsif ($day > days_of_month($month,$year) or $day <= 0) {
+    return (0,'invalid day',$day);
+  } else {
+    return (1);
+  }
+
+}
 
 sub add_days {
 
