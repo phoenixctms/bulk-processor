@@ -378,7 +378,7 @@ sub restwarn {
 
 sub restrequesterror {
 
-    my ($restapi, $message, $request, $logger) = @_;
+    my ($restapi, $message, $request, $data, $logger) = @_;
     $message = _getrestconnectorinstanceprefix($restapi) . _getrestconnectidentifiermessage($restapi,$message) if $cli;
     if (defined $logger) {
         $logger->error($message);

@@ -1,4 +1,4 @@
-package CTSMS::BulkProcessor::Projects::ETL::Excel;
+package CTSMS::BulkProcessor::Projects::ETL::EcrfExcel;
 use strict;
 
 ## no critic

@@ -21,7 +21,9 @@ our @EXPORT_OK = qw(
     filter
     getroundrobinitem
     getrandomitem
-    array_to_map);
+    array_to_map
+    powerset
+);
 
 sub mergearrays {
 
@@ -379,6 +381,14 @@ sub mapeq {
           return 1; #print "they have the same keys or values\n";
       }
   }
+}
+
+#http://cpansearch.perl.org/src/NIKC/List-PowerSet-0.01/lib/List/PowerSet.pm
+sub powerset {
+    return [[]] if @_ == 0;
+    my $first = shift;
+    my $pow = &powerset;
+    [ map { [$first, @$_ ], [ @$_] } @$pow ];
 }
 
 1;

@@ -1,4 +1,4 @@
-package CTSMS::BulkProcessor::Projects::ETL::Export;
+package CTSMS::BulkProcessor::Projects::ETL::EcrfExport;
 use strict;
 
 ## no critic
@@ -19,7 +19,7 @@ use CTSMS::BulkProcessor::Globals qw(
     $ctsmsrestapi_password    
 ); 
 
-use CTSMS::BulkProcessor::Projects::ETL::Settings qw(
+use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $output_path
     
     $ecrf_data_truncate_table
@@ -74,7 +74,7 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListE
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File qw();
 
-use CTSMS::BulkProcessor::Projects::ETL::ProjectConnectorPool qw(
+use CTSMS::BulkProcessor::Projects::ETL::EcrfConnectorPool qw(
     get_sqlite_db
     get_csv_db
     destroy_all_dbs
@@ -83,7 +83,7 @@ use CTSMS::BulkProcessor::Projects::ETL::ProjectConnectorPool qw(
 use CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataVertical qw();
 use CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataHorizontal qw();
 
-use CTSMS::BulkProcessor::Projects::ETL::Excel qw();
+use CTSMS::BulkProcessor::Projects::ETL::EcrfExcel qw();
 
 use CTSMS::BulkProcessor::Array qw(array_to_map);
 #use CTSMS::BulkProcessor::Utils qw(threadid);
@@ -140,7 +140,7 @@ sub publish_ecrf_data_pdf {
 
 sub publish_audit_trail_xls {
 
-    my $filename = sprintf($audit_trail_export_xls_filename,timestampdigits(), $CTSMS::BulkProcessor::Projects::ETL::Excel::xlsextension);
+    my $filename = sprintf($audit_trail_export_xls_filename,timestampdigits(), $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsextension);
     my $outputfile = $output_path . $filename;    
 
     #-eep "D:\ctsms\ecrf.pdf" -f -u "somebody" -p "password" -id 5949677
@@ -159,7 +159,7 @@ sub publish_audit_trail_xls {
     _info(undef,"$dbtool executed");
   
     return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
-        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::Excel::xlsmimetype),$outputfile) if $result;
+        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype),$outputfile) if $result;
     return undef;
     
 }
@@ -195,13 +195,13 @@ sub publish_ecrf_data_xls {
     my @modules = ();
     push(@modules,'CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataHorizontal');    
     push(@modules,'CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataVertical');
-    my $filename = sprintf($ecrf_data_export_xls_filename,timestampdigits(), ($ecrf_data_export_xlsx ? $CTSMS::BulkProcessor::Projects::ETL::Excel::xlsxextension : $CTSMS::BulkProcessor::Projects::ETL::Excel::xlsextension));
+    my $filename = sprintf($ecrf_data_export_xls_filename,timestampdigits(), ($ecrf_data_export_xlsx ? $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsxextension : $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsextension));
     my $outputfile = $output_path . $filename;
         
-    my $result = CTSMS::BulkProcessor::Projects::ETL::Excel::write_workbook($outputfile,$ecrf_data_export_xlsx,@modules);
+    my $result = CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::write_workbook($outputfile,$ecrf_data_export_xlsx,@modules);
     
     return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
-        $outputfile,$filename,($ecrf_data_export_xlsx ? $CTSMS::BulkProcessor::Projects::ETL::Excel::xlsxmimetype : $CTSMS::BulkProcessor::Projects::ETL::Excel::xlsmimetype)),$outputfile) if $result;
+        $outputfile,$filename,($ecrf_data_export_xlsx ? $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsxmimetype : $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype)),$outputfile) if $result;
     return undef;
 
 }

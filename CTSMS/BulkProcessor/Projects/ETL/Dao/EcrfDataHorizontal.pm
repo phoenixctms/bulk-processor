@@ -3,7 +3,7 @@ use strict;
 
 ## no critic
 
-use CTSMS::BulkProcessor::Projects::ETL::ProjectConnectorPool qw(
+use CTSMS::BulkProcessor::Projects::ETL::EcrfConnectorPool qw(
     get_csv_db
     destroy_all_dbs
 );

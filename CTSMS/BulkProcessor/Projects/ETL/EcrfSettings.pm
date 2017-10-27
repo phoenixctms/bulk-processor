@@ -1,4 +1,4 @@
-package CTSMS::BulkProcessor::Projects::ETL::Settings;
+package CTSMS::BulkProcessor::Projects::ETL::EcrfSettings;
 use strict;
 
 ## no critic

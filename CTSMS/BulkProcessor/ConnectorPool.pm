@@ -53,6 +53,9 @@ our @EXPORT_OK = qw(
     destroy_dbs
     get_connectorinstancename
     get_cluster_db
+    
+    ping_dbs
+    ping
 );
 
 my $connectorinstancenameseparator = '_';
@@ -113,6 +116,28 @@ sub get_connectorinstancename {
         $instance_name .= $connectorinstancenameseparator . $name;
     }
     return $instance_name;
+}
+
+sub ping_dbs {
+
+    ping($ctsms_dbs);
+
+}
+
+sub ping {
+
+    my $dbs = shift;
+    my $this_tid = threadid();
+    foreach my $instance_name (keys %$dbs) {
+        my ($tid,$name) = split(quotemeta($connectorinstancenameseparator),$instance_name,2);
+        next unless ($this_tid == $tid and defined $dbs->{$instance_name});
+        my $result = 0;
+        eval {
+            $result = $dbs->{$instance_name}->ping();
+        };
+        undef $dbs->{$instance_name} unless $result;
+    }
+
 }
 
 sub destroy_dbs {

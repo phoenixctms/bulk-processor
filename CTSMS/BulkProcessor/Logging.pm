@@ -78,7 +78,7 @@ our @EXPORT_OK = qw(
     filethreadingdebug
     fileprocessingstarted
     fileprocessingdone
-    fetching_lines
+    lines_read
     processing_lines
 
     processing_info
@@ -624,20 +624,32 @@ sub fileprocessingdone {
 
 }
 
-sub fetching_lines {
+sub lines_read {
 
-    my ($file,$start,$blocksize,$logger) = @_;
+    my ($file,$start,$blocksize,$block_n,$logger) = @_;
     if (defined $logger) {
-        $logger->info('fetching lines from ' . basename($file) . ': ' . ($start + 1) . '~' . ($start + $blocksize));
+        if (defined $block_n) {
+            if ($block_n > 0) {
+                $logger->info(basename($file) . ': ' . kbytes2gigs(int($block_n / 1024)) . ' read');
+            }
+        } else {
+            $logger->info(basename($file) . ': lines ' . ($start + 1) . '~' . ($start + $blocksize) . ' read');
+        }
     }
 
 }
 
 sub processing_lines {
 
-    my ($tid, $start,$blocksize,$logger) = @_;
+    my ($tid, $start,$blocksize,$block_n,$logger) = @_;
     if (defined $logger) {
-        $logger->info(($enablemultithreading ? '[' . $tid . '] ' : '') . 'processing lines: ' . ($start + 1) . '-' . ($start + $blocksize));
+        if (defined $block_n) {
+            if ($block_n > 0) {
+                $logger->info(($enablemultithreading ? '[' . $tid . '] ' : '') . 'processing lines: ' . kbytes2gigs(int($block_n / 1024)));
+            }
+        } else {
+            $logger->info(($enablemultithreading ? '[' . $tid . '] ' : '') . 'processing lines: ' . ($start + 1) . '-' . ($start + $blocksize));
+        }
     }
 
 }

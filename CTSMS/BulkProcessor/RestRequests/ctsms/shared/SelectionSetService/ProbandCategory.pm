@@ -25,6 +25,7 @@ our @EXPORT_OK = qw(
     get_item_path
     
     get_preset_item
+    get_all
 );
 
 my $default_restapi = \&get_ctsms_restapi;
@@ -35,6 +36,9 @@ my $get_item_path_query = sub {
 my $get_preset_item_path_query = sub {
     my ($signup,$person) = @_;
     return 'selectionset/probandcategorypreset/' . get_query_string({ signup => booltostring($signup), person => booltostring($person), });
+};
+my $get_all_path_query = sub {
+    return 'selectionset/allprobandcategories/';
 };
 
 my $fieldnames = [
@@ -75,6 +79,12 @@ sub get_preset_item {
     my $api = _get_api($restapi,$default_restapi);
     return builditems_fromrows($api->get(&$get_preset_item_path_query($signup,$person),$headers),$load_recursive,$restapi);
 
+}
+
+sub get_all {
+    my ($load_recursive,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return builditems_fromrows($api->get(&$get_all_path_query(),$headers),$load_recursive,$restapi);
 }
 
 sub builditems_fromrows {

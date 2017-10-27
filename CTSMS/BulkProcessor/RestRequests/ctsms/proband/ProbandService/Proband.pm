@@ -11,6 +11,7 @@ use CTSMS::BulkProcessor::ConnectorPool qw(
 use CTSMS::BulkProcessor::RestProcessor qw(
     copy_row
     get_query_string
+    process_collection
 );
 
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
@@ -27,12 +28,23 @@ our @EXPORT_OK = qw(
     add_item
     update_item
     search
+    get_list
+    update_category
+    
+    process_search_items
 );
 
 my $default_restapi = \&get_ctsms_restapi;
 my $get_item_path_query = sub {
     my ($id) = @_;
     return 'proband/' . $id;
+};
+my $get_list_path_query = sub {
+    my ($department_id) = @_; #,$proband_id) = @_;
+    my %params = ();
+    $params{department_id} = $department_id if defined $department_id;
+    #$params{proband_id} = $proband_id if defined $proband_id;
+    return 'proband/' . get_query_string(\%params);
 };
 my $get_search_path_query = sub {
     return 'search/proband/search';
@@ -42,6 +54,10 @@ my $get_add_path_query = sub {
 };
 my $get_update_path_query = sub {
     return 'proband/';
+};
+my $get_update_category_path_query = sub {
+    my ($id) = @_;
+    return 'proband/' . $id . '/category/';
 };
 
 my $fieldnames = [
@@ -117,6 +133,22 @@ sub update_item {
 
 }
 
+sub update_category {
+
+    my ($id,$in,$load_recursive,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return builditems_fromrows($api->put(&$get_update_category_path_query($id),$in,$headers),$load_recursive,$restapi);
+
+}
+
+sub get_list {
+
+    my ($department_id,$p,$sf,$load_recursive,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_list_path_query($department_id),$p,$sf),$headers),$p),$load_recursive,$restapi);
+
+}
+
 sub search {
 
     my ($in,$p,$sf,$load_recursive,$restapi,$headers) = @_;
@@ -146,6 +178,53 @@ sub builditems_fromrows {
         return $item;
     }
     return undef;
+
+}
+
+sub process_search_items {
+
+    my %params = @_;
+    my ($restapi,
+        $in,
+        $headers,
+        $process_code,
+        $static_context,
+        $blocksize,
+        $init_process_context_code,
+        $uninit_process_context_code,
+        $multithreading,
+        $numofthreads,
+        $load_recursive) = @params{qw/
+            restapi
+            in
+            headers
+            process_code
+            static_context
+            blocksize
+            init_process_context_code
+            uninit_process_context_code
+            multithreading
+            numofthreads
+            load_recursive
+        /};
+
+    return process_collection(
+        get_restapi  => sub { return _get_api($restapi,$default_restapi); },
+        path_query   => &$get_search_path_query(),
+        post_data    => $in,
+        headers      => $headers,
+        extract_collection_items_params => undef,
+        process_code => sub {
+            my ($context,$rowblock,$row_offset) = @_;
+            return &$process_code($context,builditems_fromrows($rowblock,$load_recursive),$row_offset);
+        },
+        static_context => $static_context,
+        blocksize => $blocksize,
+        init_process_context_code   => $init_process_context_code,
+        uninit_process_context_code => $uninit_process_context_code,
+        multithreading => $multithreading,
+        collectionprocessing_threads =>$numofthreads,
+    );
 
 }
 

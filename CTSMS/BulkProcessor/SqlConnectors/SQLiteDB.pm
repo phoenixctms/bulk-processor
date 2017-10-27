@@ -79,7 +79,7 @@ my $LongTruncOk = 0;
 
 our $mimetype = 'application/x-sqlite3';
 
-my $rowblock_transactional = 1;
+my $rowblock_transactional = 0; #1;
 
 #SQLite transactions are always serializable.
 
@@ -501,6 +501,13 @@ sub multithreading_supported {
 
     my $self = shift;
     return 1;
+
+}
+
+sub rowblock_transactional {
+
+    my $self = shift;
+    return $rowblock_transactional;
 
 }
 

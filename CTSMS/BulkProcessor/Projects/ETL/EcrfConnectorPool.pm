@@ -1,9 +1,9 @@
-package CTSMS::BulkProcessor::Projects::ETL::ProjectConnectorPool;
+package CTSMS::BulkProcessor::Projects::ETL::EcrfConnectorPool;
 use strict;
 
 ## no critic
 
-use CTSMS::BulkProcessor::Projects::ETL::Settings qw(
+use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $sqlite_db_file
     $csv_dir
 );

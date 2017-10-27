@@ -122,6 +122,7 @@ sub process_collection {
     my %params = @_;
     my ($get_restapi,
         $path_query,
+        $post_data,
         $headers,
         $extract_collection_items_params,
         $process_code,
@@ -133,6 +134,7 @@ sub process_collection {
         $collectionprocessing_threads) = @params{qw/
             get_restapi
             path_query
+            post_data
             headers
             extract_collection_items_params
             process_code
@@ -171,6 +173,7 @@ sub process_collection {
                                             headers            => $headers,
                                             blocksize            => $blocksize,
                                             extract_collection_items_params => $extract_collection_items_params,
+                                            post_data          => $post_data,
                                           });
 
             for (my $i = 0; $i < $collectionprocessing_threads; $i++) {
@@ -223,7 +226,9 @@ sub process_collection {
                 my $i = 0;
                 while (1) {
                     fetching_items($restapi,$path_query,$i,$blocksize,getlogger(__PACKAGE__));
-                    my $collection_page = $restapi->get($restapi->get_collection_page_query_uri($path_query,$blocksize,$blockcount),$headers);
+                    my $collection_page;
+                    $collection_page = $restapi->get($restapi->get_collection_page_query_uri($path_query,$blocksize,$blockcount + $restapi->get_firscollectionpagenum),$headers) unless $post_data;
+                    $collection_page = $restapi->post($restapi->get_collection_page_query_uri($path_query,$blocksize,$blockcount + $restapi->get_firscollectionpagenum),$post_data,$headers) if $post_data;
                     my $rowblock = $restapi->extract_collection_items($collection_page,$blocksize,$blockcount,$extract_collection_items_params);
                     my $realblocksize = scalar @$rowblock;
                     if ($realblocksize > 0) {
@@ -300,7 +305,9 @@ sub _reader {
         while (($state & $RUNNING) == $RUNNING and ($state & $ERROR) == 0) { #as long there is one running consumer and no defunct consumer
             fetching_items($restapi,$context->{path_query},$i,$blocksize,getlogger(__PACKAGE__));
 
-            my $collection_page = $restapi->get($restapi->get_collection_page_query_uri($context->{path_query},$blocksize,$blockcount),$context->{headers});
+            my $collection_page;
+            $collection_page = $restapi->get($restapi->get_collection_page_query_uri($context->{path_query},$blocksize,$blockcount + $restapi->get_firscollectionpagenum),$context->{headers}) unless $context->{post_data};
+            $collection_page = $restapi->post($restapi->get_collection_page_query_uri($context->{path_query},$blocksize,$blockcount + $restapi->get_firscollectionpagenum),$context->{post_data},$context->{headers}) if $context->{post_data};
             my $rowblock = $restapi->extract_collection_items($collection_page,$blocksize,$blockcount,$context->{extract_collection_items_params});
             my $realblocksize = scalar @$rowblock;
             my %packet :shared = ();

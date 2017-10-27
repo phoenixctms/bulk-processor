@@ -46,7 +46,7 @@ my $defaultrealm = 'api';
 my $timeout = 60;
 
 my $default_collection_page_size = 10;
-my $first_page_num = 1;
+my $first_collection_page_num = 1;
 
 my $contenttype = 'application/json';
 
@@ -132,6 +132,8 @@ sub _encode_request_content {
     my $self = shift;
     my ($data) = @_;
     return Encode::encode($request_charset,JSON::to_json($data));
+    #
+                                                         #{ allow_nonref => 1 }));
 }
 
 sub _decode_response_content {
@@ -285,6 +287,11 @@ sub extract_collection_items {
 sub get_defaultcollectionpagesize {
     my $self = shift;
     return $default_collection_page_size;
+}
+
+sub get_firscollectionpagenum {
+    my $self = shift;
+    return $first_collection_page_num;
 }
 
 sub _request_error {

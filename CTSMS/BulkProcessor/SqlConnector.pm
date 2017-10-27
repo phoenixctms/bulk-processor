@@ -869,6 +869,10 @@ sub db_get_begin {
         if ($transactional) {
             #$self->lock_tables({ $tablename => 'WRITE' });
             $self->db_begin();
+        } else {
+            my $offset = shift;
+            my $limit = shift;
+            $query = $self->paginate_sort_query($query,$offset,$limit,undef);
         }
 
         $self->{sth} = $self->{dbh}->prepare($query) or $self->_prepare_error($query);
@@ -883,6 +887,13 @@ sub db_get_begin {
 }
 
 sub multithreading_supported {
+
+    my $self = shift;
+    return 0;
+
+}
+
+sub rowblock_transactional {
 
     my $self = shift;
     return 0;
@@ -966,6 +977,15 @@ sub db_finish {
         $self->{params} = undef;
 
     }
+
+}
+
+sub ping {
+
+    my $self = shift;
+
+    #notimplementederror((ref $self) . ': ' . (caller(0))[3] . ' not implemented',getlogger(__PACKAGE__));
+    return 1;
 
 }
 
