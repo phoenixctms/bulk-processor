@@ -74,6 +74,8 @@ our @EXPORT_OK = qw(
     $ecrf_data_export_xlsx
     
     $audit_trail_export_xls_filename
+    $ecrf_journal_export_xls_filename
+    $ecrfs_export_xls_filename
     
     $ctsms_base_url
     $dbtool
@@ -109,6 +111,8 @@ our $ecrf_data_export_xls_filename = '%s%s';
 our $ecrf_data_export_xlsx = 0;
 
 our $audit_trail_export_xls_filename = "%s%s";
+our $ecrf_journal_export_xls_filename = "%s%s";
+our $ecrfs_export_xls_filename = "%s%s";
 
 our $ctsms_base_url = undef; #_get_ctsms_baseuri();
 our $dbtool = undef;
@@ -260,6 +264,8 @@ sub update_settings {
         $ecrf_data_export_pdf_filename = $data->{ecrf_data_export_pdf_filename} if exists $data->{ecrf_data_export_pdf_filename};
         
         $audit_trail_export_xls_filename = $data->{audit_trail_export_xls_filename} if exists $data->{audit_trail_export_xls_filename};
+        $ecrf_journal_export_xls_filename = $data->{ecrf_journal_export_xls_filename} if exists $data->{ecrf_journal_export_xls_filename};
+        $ecrfs_export_xls_filename = $data->{ecrfs_export_xls_filename} if exists $data->{ecrfs_export_xls_filename};
         
         $ecrfname_abbreviate_opts = $data->{ecrfname_abbreviate_opts} if exists $data->{ecrfname_abbreviate_opts};
         $inputfieldname_abbreviate_opts = $data->{inputfieldname_abbreviate_opts} if exists $data->{inputfieldname_abbreviate_opts};

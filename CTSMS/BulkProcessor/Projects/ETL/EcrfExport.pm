@@ -46,6 +46,8 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $ecrf_data_export_xlsx
     
     $audit_trail_export_xls_filename
+    $ecrf_journal_export_xls_filename
+    $ecrfs_export_xls_filename
     
     $dbtool
     $ecrf_data_export_pdf_filename
@@ -104,6 +106,8 @@ our @EXPORT_OK = qw(
     publish_ecrf_data_pdf
     
     publish_audit_trail_xls
+    publish_ecrf_journal_xls
+    publish_ecrfs_xls
 );
 
 my $show_page_retreive_progress = 0;
@@ -146,6 +150,58 @@ sub publish_audit_trail_xls {
     #-eep "D:\ctsms\ecrf.pdf" -f -u "somebody" -p "password" -id 5949677
     my @dbtoolargs = ($dbtool,
                            '-eat',
+                           $outputfile,
+                           '-u',
+                           $ctsmsrestapi_username,
+                           '-p',
+                           $ctsmsrestapi_password,
+                           '-id',
+                           $ecrf_data_trial_id);
+    runerror('dbtool executable not defined',getlogger(__PACKAGE__)) unless $dbtool;
+    my ($result,$msg) = run(shell_args(@dbtoolargs)); #suppress output, to hide password
+    runerror("$dbtool failed",getlogger(__PACKAGE__)) unless $result;
+    _info(undef,"$dbtool executed");
+  
+    return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
+        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype),$outputfile) if $result;
+    return undef;
+    
+}
+
+sub publish_ecrf_journal_xls {
+
+    my $filename = sprintf($ecrf_journal_export_xls_filename,timestampdigits(), $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsextension);
+    my $outputfile = $output_path . $filename;    
+
+    #-eep "D:\ctsms\ecrf.pdf" -f -u "somebody" -p "password" -id 5949677
+    my @dbtoolargs = ($dbtool,
+                           '-eej',
+                           $outputfile,
+                           '-u',
+                           $ctsmsrestapi_username,
+                           '-p',
+                           $ctsmsrestapi_password,
+                           '-id',
+                           $ecrf_data_trial_id);
+    runerror('dbtool executable not defined',getlogger(__PACKAGE__)) unless $dbtool;
+    my ($result,$msg) = run(shell_args(@dbtoolargs)); #suppress output, to hide password
+    runerror("$dbtool failed",getlogger(__PACKAGE__)) unless $result;
+    _info(undef,"$dbtool executed");
+  
+    return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
+        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype),$outputfile) if $result;
+    return undef;
+    
+}
+
+sub publish_ecrfs_xls {
+
+    my $filename = sprintf($ecrfs_export_xls_filename,timestampdigits(), $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsextension);
+    my $outputfile = $output_path . $filename;    
+
+    #-eep "D:\ctsms\ecrf.pdf" -f -u "somebody" -p "password" -id 5949677
+    my @dbtoolargs = ($dbtool,
+                           '-ee',
                            $outputfile,
                            '-u',
                            $ctsmsrestapi_username,
