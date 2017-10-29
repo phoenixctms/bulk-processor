@@ -291,6 +291,12 @@ sub _import_proband_checks {
                 propertyId => $context->{criterionproperty_map}->{'proband.blinded'},
                 restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},                    
                 booleanValue => JSON::false,
+            },{
+                position => 4,
+                tieId => $context->{criteriontie_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::AND},
+                propertyId => $context->{criterionproperty_map}->{'proband.deferredDelete'},
+                restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},                    
+                booleanValue => JSON::false,
             }],
         };    
     }
