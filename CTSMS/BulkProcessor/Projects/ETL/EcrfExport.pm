@@ -51,6 +51,7 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     
     $dbtool
     $ecrf_data_export_pdf_filename
+    $ecrf_data_export_pdfs_filename
     
 );
 use CTSMS::BulkProcessor::Logging qw (
@@ -104,6 +105,7 @@ our @EXPORT_OK = qw(
     publish_ecrf_data_horizontal_csv
     publish_ecrf_data_xls
     publish_ecrf_data_pdf
+    publish_ecrf_data_pdfs
     
     publish_audit_trail_xls
     publish_ecrf_journal_xls
@@ -140,6 +142,17 @@ sub publish_ecrf_data_pdf {
         $outputfile,$filename,$pdfmimetype),$outputfile) if $result;
     return undef;
     
+}
+
+sub publish_ecrf_data_pdfs {
+
+    my $context = {};
+    my $result = _init_ecrf_data_pdfs_context($context);
+
+    $result = _export_items($context) if $result;
+
+    return ($result,$context->{warning_count},$context->{uploads});
+
 }
 
 sub publish_audit_trail_xls {
@@ -284,7 +297,6 @@ sub export_ecrf_data_vertical {
     $result = CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataVertical::create_table($ecrf_data_truncate_table,$context->{ecrffieldmaxselectionsetvaluecount},$ecrf_data_listentrytags) if $result;
     #$result &= CTSMS::BulkProcessor::Projects::Migration::IPGallery::Dao::import::FeatureOptionSetItem::create_table(0);
   
-    
     $result = _export_items($context) if $result;
     undef $context->{db};
     destroy_all_dbs();
@@ -525,6 +537,77 @@ sub export_ecrf_data_horizontal {
     destroy_all_dbs();
     return ($result,$context->{warning_count});
 
+}
+
+sub _init_ecrf_data_pdfs_context {
+    my ($context) = @_;
+
+    my $result = 1;
+    $context->{ecrf_data_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($ecrf_data_trial_id);
+    
+    #$context->{ecrfmap} = _get_ecrfmap($context);
+    #$context->{columns} = _get_horizontal_cols($context);
+    
+    $context->{error_count} = 0;
+    $context->{warning_count} = 0;
+    #$context->{db} = &get_csv_db(); 
+
+    $context->{api_listentries_page} = [];
+    $context->{api_listentries_page_num} = 0;
+    $context->{api_listentries_page_total_count} = undef;   
+    
+    
+    $context->{timestamp_digits} = timestampdigits();
+    $context->{uploads} = [];
+    $context->{items_row_block} = 1;
+    $context->{item_to_row_code} = sub {
+        my ($context,$lwp_response) = @_;
+        _info($context,"proband ID $context->{listentry}->{proband}->{id} eCRF casebook pdf rendered");
+        return $lwp_response;
+    };
+    $context->{export_code} = sub {
+        my ($context,$lwp_response) = @_;
+        $lwp_response = $lwp_response->[0] if $lwp_response;
+    
+        if ($lwp_response and defined $lwp_response->content_ref) {
+            my $filename = sprintf($ecrf_data_export_pdfs_filename,$context->{listentry}->{proband}->{id},$context->{timestamp_digits}, $pdfextension);
+    
+            my $out = CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'PDF/'), #'PDF/' . $context->{listentry}->{proband}->{id} . '/'
+                $lwp_response->content_ref,$filename,$pdfmimetype);
+            if ($out) {
+                push(@{$context->{uploads}}, [ $out,undef ] );
+                return 1;
+            }
+        }
+        return 0;
+    };
+    $context->{api_get_items_code} = sub {
+        my ($context) = @_;
+        
+        if ((scalar @{$context->{api_listentries_page}}) == 0) {
+            my $p = { page_size => $ecrf_data_api_listentries_page_size , page_num => $context->{api_listentries_page_num} + 1, total_count => undef };
+            my $sf = {};
+            #$sf->{fileName} = $dialysis_substitution_volume_file_pattern if defined $dialysis_substitution_volume_file_pattern;
+            my $first = $context->{api_listentries_page_num} * $ecrf_data_api_listentries_page_size;
+            _info($context,"retrieving proband list entries page: " . $first . '-' . ($first + $ecrf_data_api_listentries_page_size) . ' of ' . (defined $context->{api_listentries_page_total_count} ? $context->{api_listentries_page_total_count} : '?'),not $show_page_retreive_progress);
+            $context->{api_listentries_page} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::get_trial_list($context->{ecrf_data_trial}->{id}, undef, undef, 1, $p, $sf);
+            $context->{api_listentries_page_total_count} = $p->{total_count};
+            $context->{api_listentries_page_num} += 1;
+        }
+        $context->{listentry} = shift @{$context->{api_listentries_page}};
+        if (defined $context->{listentry}) {
+            #tag values
+            if ((scalar keys %$ecrf_data_listentrytags) > 0) {
+                ($context->{tagvalues}, my $nameL10nKeys, my $items) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return $item->{tag}->{field}->{nameL10nKey}; },undef,'last');
+            } else {
+                $context->{tagvalues} = {};
+            }
+            return CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::render_ecrf($context->{listentry}->{id});
+        }
+        return undef;
+
+    };
+    return $result;
 }
 
 sub _init_ecrf_data_horizontal_context {
@@ -782,7 +865,6 @@ sub _get_probandlistentrytagvalues {
     }
     return \@listentrytagvalues;
 }
-
 
 sub _warn_or_error {
     my ($context,$message) = @_;

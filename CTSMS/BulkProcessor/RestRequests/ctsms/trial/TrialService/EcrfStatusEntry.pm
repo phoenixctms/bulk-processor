@@ -16,7 +16,7 @@ use CTSMS::BulkProcessor::RestProcessor qw(
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
 use CTSMS::BulkProcessor::RestItem qw();
 
-#use CTSMS::BulkProcessor::Utils qw(booltostring);
+use CTSMS::BulkProcessor::Utils qw(booltostring);
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
@@ -24,7 +24,7 @@ our @EXPORT_OK = qw(
     get_item
     get_item_path
     
-    
+    render_ecrf
 );
 
 
@@ -33,7 +33,12 @@ my $get_item_path_query = sub {
     my ($listentry_id,$ecrf_id) = @_;
     return 'ecrfstatusentry/' . $listentry_id . '/' . $ecrf_id;
 };
-
+my $get_renderecrf_path_query = sub {
+    my ($listentry_id,$ecrf_id,$blank) = @_;
+    my %params = ();
+    $params{blank} = booltostring($blank);
+    return 'ecrfstatusentry/' . $listentry_id . '/ecrfpdf' . ((defined $ecrf_id) ? '/' . $ecrf_id : '') . get_query_string(\%params);;
+};
 
 my $fieldnames = [
     "ecrf",
@@ -70,6 +75,13 @@ sub get_item {
 
 }
 
+sub render_ecrf {
+
+    my ($listentry_id,$ecrf_id,$blank,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return $api->get_file(&$get_renderecrf_path_query($listentry_id,$ecrf_id,$blank),$headers);
+
+}
 
 sub builditems_fromrows {
 
