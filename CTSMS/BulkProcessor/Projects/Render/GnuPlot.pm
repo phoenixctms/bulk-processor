@@ -21,7 +21,7 @@ our @EXPORT_OK = qw(
     convert
 );
 
-my $magick = 'magick';
+my $magick = 'magick'; #'convert'
 
 # Try to find the executable of Gnuplot
 my $gnuplot = 'gnuplot';
@@ -42,30 +42,30 @@ if ($^O =~ /MSWin/) {
 sub plot {
 
     my ($script,$terminal) = @_;
-    
+
     if ($^O =~ /MSWin/ and !-e $gnuplot) {
-        runerror("gnuplot command not found.",getlogger(__PACKAGE__)); 
+        runerror("gnuplot command not found.",getlogger(__PACKAGE__));
     }
-    
+
     my @args = ($script);
     if ($terminal =~ /^(ggi|pm|windows|wxt|x11)(\s|$)/) {
         push(@args,'-');
     }
-    
+
     my ($result,$msg) = run($gnuplot,@args);
     if ($result) {
         runinfo($msg,getlogger(__PACKAGE__));
     } else {
         runerror($msg,getlogger(__PACKAGE__));
     }
-    
+
 
 }
 
 sub convert {
-    
+
     my ($inputfile, $outputfile, $rotate, $dpi, $dimension) = @_;
-    
+
     my @args = ();
     if ($dpi > 0) {
         push(@args,'-density');
@@ -79,14 +79,14 @@ sub convert {
     if ($rotate) {
         #push(@args,'-rotate 90');
         push(@args,'-rotate');
-        push(@args,$rotate);        
-    }    
+        push(@args,$rotate);
+    }
     push(@args,'-quality');
-    push(@args,'100%');   
+    push(@args,'100%');
     #push(@args,'-colorspace');
-    #push(@args,'RGB');       
+    #push(@args,'RGB');
     push(@args,$outputfile);
-    
+
     my ($result,$msg) = run($magick,@args);
     if ($result) {
         runinfo($msg,getlogger(__PACKAGE__));

@@ -10,19 +10,19 @@ use Tie::IxHash;
 
 use CTSMS::BulkProcessor::Projects::Render::Settings qw(
     $output_path
-    
+
     $journal_heatmap_filename
     $journal_heatmap_span_days
     $journal_heatmap_start_date
     $journal_heatmap_end_date
     $journal_heatmap_dimension
-    
+
     $logon_heatmap_filename
     $logon_heatmap_span_days
     $logon_heatmap_start_date
     $logon_heatmap_end_date
     $logon_heatmap_dimension
-    
+
     $journal_histogram_filename
     $journal_histogram_dimension
     $journal_histogram_interval
@@ -154,7 +154,7 @@ sub _create_journalentry_24hheatmap {
             dpi
             dimension
         /};
-        
+
     my $db = get_ctsms_db();
 
     my $filter_where = (defined $filter and length($filter) > 0 ? ' where ' . $filter : '');
@@ -191,9 +191,9 @@ sub _create_journalentry_24hheatmap {
     my $datafile = $tempfilename . '.txt';
     my $epsfile = $tempfilename . '.eps';
     my $pltfile = $tempfilename . '.plt';
-    my @tmp_files = ($tempfilename);  
+    my @tmp_files = ($tempfilename);
 
-    eval {    
+    eval {
         local *DATA_FILE;
         open DATA_FILE, ">", $datafile or _error($!);
         _info('gnuplot data file created: ' . $datafile);
@@ -228,17 +228,19 @@ sub _create_journalentry_24hheatmap {
         #my $blah = join(',',map { local $_ = $_; '"" "'.$_.'"'; } @dates);
         local *PLT_FILE;
         open PLT_FILE, ">", $pltfile or _error($!);
-        _info('gnuplot plt file created: ' . $pltfile);   
-        push(@tmp_files,$pltfile); 
+        _info('gnuplot plt file created: ' . $pltfile);
+        push(@tmp_files,$pltfile);
         print PLT_FILE <<"END_24HHEATMAP_PLT";
+set term postscript eps color size 7,1.8
+set output '$epsfile'
 clear
 reset
 unset key
 set view map
-set title "$title" 
+set title "$title"
 #palfuncparam 5000,0.001
-set term postscript eps color size 7,1.8
-set output '$epsfile'
+#set term postscript eps color size 7,1.8
+#set output '$epsfile'
 
 #set xlabel "time"
 set timefmt "%Y-%m-%d"
@@ -261,18 +263,18 @@ plot '$datafile' using 1:2:3 with image
 END_24HHEATMAP_PLT
 
         close PLT_FILE;
-        
+
         _info('gnuplot eps file: ' . $epsfile);
         push(@tmp_files,$epsfile);
         plot($pltfile,'postscript');
-        _info('output image: ' . $filename);   
+        _info('output image: ' . $filename);
         convert($epsfile,$filename,$rotate, $dpi, $dimension);
 
     };
     my $err = $@;
     _cleanup_tmp_files(@tmp_files);
     if ($err) {
-        _error($err);    
+        _error($err);
     }
 
 }
@@ -302,11 +304,11 @@ sub _create_journalentry_histogram {
             dpi
             dimension
         /};
-        
+
     #my $journal_modules = CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::JournalModule::get_items();
-        
+
     my $db = get_ctsms_db();
-    
+
     $year //= get_year();
     my @root_entities = keys %journal_entry_history_root_entities;
     my $pivot = '"' . $root_entities[0] . '".' . $interval;
@@ -321,10 +323,10 @@ sub _create_journalentry_histogram {
     my $tempfilename = tempfilename('histogram_XXXX',$output_path,undef);
     my $datafile = $tempfilename . '.txt';
     my $epsfile = $tempfilename . '.eps';
-    my $pltfile = $tempfilename . '.plt';  
+    my $pltfile = $tempfilename . '.plt';
     my @tmp_files = ($tempfilename);
 
-    eval {    
+    eval {
         local *DATA_FILE;
         open DATA_FILE, ">", $datafile or _error($!);
         _info('gnuplot data file created: ' . $datafile);
@@ -340,25 +342,29 @@ sub _create_journalentry_histogram {
                 }
             } elsif ('week' eq $interval) {
                 $xlabel = '"' . zerofill($row->{$interval},2) . '/' . $year . '"';
-            }     
+            }
             print DATA_FILE $xlabel . "\t" . join("\t",map { local $_ = $_; $row->{$_ . '_count'}; } keys %journal_entry_history_root_entities) . "\n";
     	}
         close DATA_FILE;
         local *PLT_FILE;
         open PLT_FILE, ">", $pltfile or _error($!);
         _info('gnuplot plt file created: ' . $pltfile);
-        push(@tmp_files,$pltfile);    
+        push(@tmp_files,$pltfile);
         my $max_root_entity_col_index = (scalar keys %journal_entry_history_root_entities) + 1;
         my @line_styles = ();
         my $col_index = 2;
         foreach my $col (keys %journal_entry_history_root_entities) {
-            push(@line_styles,'set style line ' . $col_index . ' lc rgb "' . 
+            push(@line_styles,'set style line ' . $col_index . ' lc rgb "' .
                 $journal_entry_history_root_entities{$col}->{color} . '" lt 1 lw 2 pt 7 ps 1.5');
             $col_index++;
         }
         my $linestyles = join("\n",@line_styles);
         my $xtics = ((!defined $month and $interval eq 'day') ? 'xtic(int($0)%10==9 ? strcol(1):"")' : 'xticlabels(1)');
+        #plot for loops require 4.4 https://stackoverflow.com/questions/14946530/loop-structure-inside-gnuplot
         print PLT_FILE <<"END_HISTOGRAM_PLT";
+set term postscript eps size 7,3.5 color
+#font 'Helvetica,20' linewidth 2
+set output '$epsfile'
 clear
 reset
 set title "$title"
@@ -369,22 +375,22 @@ set xtics rotate out
 set style data histogram
 # Give the bars a plain fill pattern, and draw a solid line around them.
 set style fill solid border
-set autoscale y  
-#set autoscale y  
+set autoscale y
+#set autoscale y
 #set xlabel "time (week number)"
-#set ylabel "journal entry records (system messages)" 
-set term postscript eps size 7,3.5 color
-#font 'Helvetica,20' linewidth 2
-set output '$epsfile'
+#set ylabel "journal entry records (system messages)"
+#set term postscript eps size 7,3.5 color
+##font 'Helvetica,20' linewidth 2
+#set output '$epsfile'
 
-set xtics border nomirror out scale default 
+set xtics border nomirror out scale default
 #set xtics add ("" "2013-02-01","" "2013-04-01","" "2013-06-01","" "2013-08-01","" "2013-10-01","" "2013-12-01","" "2014-02-01","" "2014-04-01","" "2014-06-01")
 set ytics border out scale default autofreq
 
 set grid
 #set key font ",10"
-#set xtics font ", 10" 
-#set ytics font ", 10" 
+#set xtics font ", 10"
+#set ytics font ", 10"
 set key left top
 set format y "%gk"
 set yrange [ 0 : * ]
@@ -397,18 +403,18 @@ plot for [COL=2:$max_root_entity_col_index] '$datafile' using (column(COL)/1000)
 END_HISTOGRAM_PLT
 
         close PLT_FILE;
-        
+
         _info('gnuplot eps file: ' . $epsfile);
-        push(@tmp_files,$epsfile);    
+        push(@tmp_files,$epsfile);
         plot($pltfile,'postscript');
-        _info('output image: ' . $filename);   
+        _info('output image: ' . $filename);
         convert($epsfile,$filename,$rotate, $dpi, $dimension);
 
     };
     my $err = $@;
     _cleanup_tmp_files(@tmp_files);
     if ($err) {
-        _error($err);    
+        _error($err);
     }
 
 }
@@ -434,7 +440,7 @@ sub _histogram_stmt_part {
         $extract = 'week';
     } else {
         _error('unknonw interval ' . $interval);
-    }     
+    }
     my $restriction = "and extract(year from je.modified_timestamp) = $year";
     if ($month) {
         $restriction .= " and extract(month from je.modified_timestamp) = $month";
