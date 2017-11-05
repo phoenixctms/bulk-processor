@@ -7,52 +7,52 @@ use strict;
 
 use Tie::IxHash;
 
-use JSON qw();
+#use JSON -support_by_pp, -no_export;
 
 use CTSMS::BulkProcessor::Globals qw(
     $system_name
     $system_version
     $system_instance_label
     $local_fqdn
-    
+
     $ctsmsrestapi_username
-    $ctsmsrestapi_password    
-); 
+    $ctsmsrestapi_password
+);
 
 use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $output_path
-    
+
     $ecrf_data_truncate_table
     $ecrf_data_ignore_duplicates
     $ecrf_data_trial_id
-    
+
     $ecrf_data_api_listentries_page_size
     $ecrf_data_api_ecrfs_page_size
     $ecrf_data_api_values_page_size
     $ecrf_data_row_block
     $ecrf_data_api_tagvalues_page_size
-    $ecrf_data_api_ecrffields_page_size    
+    $ecrf_data_api_ecrffields_page_size
     $ecrf_data_listentrytags
-    
+
     %export_colname_abbreviation
     ecrf_data_include_ecrffield
 
     $skip_errors
-    
+
     $ecrf_data_export_upload_folder
     $ecrf_data_export_sqlite_filename
     $ecrf_data_export_horizontal_csv_filename
     $ecrf_data_export_xls_filename
     $ecrf_data_export_xlsx
-    
+
     $audit_trail_export_xls_filename
     $ecrf_journal_export_xls_filename
     $ecrfs_export_xls_filename
-    
+
     $dbtool
     $ecrf_data_export_pdf_filename
     $ecrf_data_export_pdfs_filename
-    
+
 );
 use CTSMS::BulkProcessor::Logging qw (
     getlogger
@@ -100,13 +100,13 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
     export_ecrf_data_vertical
     export_ecrf_data_horizontal
-    
+
     publish_ecrf_data_sqlite
     publish_ecrf_data_horizontal_csv
     publish_ecrf_data_xls
     publish_ecrf_data_pdf
     publish_ecrf_data_pdfs
-    
+
     publish_audit_trail_xls
     publish_ecrf_journal_xls
     publish_ecrfs_xls
@@ -121,7 +121,7 @@ my $pdfmimetype = 'application/pdf';
 sub publish_ecrf_data_pdf {
 
     my $filename = sprintf($ecrf_data_export_pdf_filename,timestampdigits(), $pdfextension);
-    my $outputfile = $output_path . $filename;    
+    my $outputfile = $output_path . $filename;
 
     #-eep "D:\ctsms\ecrf.pdf" -f -u "somebody" -p "password" -id 5949677
     my @dbtoolargs = ($dbtool,
@@ -137,11 +137,11 @@ sub publish_ecrf_data_pdf {
     my ($result,$msg) = run(shell_args(@dbtoolargs)); #suppress output, to hide password
     runerror("$dbtool failed",getlogger(__PACKAGE__)) unless $result;
     _info(undef,"$dbtool executed");
-  
+
     return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'PDF/'),
         $outputfile,$filename,$pdfmimetype),$outputfile) if $result;
     return undef;
-    
+
 }
 
 sub publish_ecrf_data_pdfs {
@@ -158,7 +158,7 @@ sub publish_ecrf_data_pdfs {
 sub publish_audit_trail_xls {
 
     my $filename = sprintf($audit_trail_export_xls_filename,timestampdigits(), $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsextension);
-    my $outputfile = $output_path . $filename;    
+    my $outputfile = $output_path . $filename;
 
     #-eep "D:\ctsms\ecrf.pdf" -f -u "somebody" -p "password" -id 5949677
     my @dbtoolargs = ($dbtool,
@@ -174,17 +174,17 @@ sub publish_audit_trail_xls {
     my ($result,$msg) = run(shell_args(@dbtoolargs)); #suppress output, to hide password
     runerror("$dbtool failed",getlogger(__PACKAGE__)) unless $result;
     _info(undef,"$dbtool executed");
-  
+
     return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
         $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype),$outputfile) if $result;
     return undef;
-    
+
 }
 
 sub publish_ecrf_journal_xls {
 
     my $filename = sprintf($ecrf_journal_export_xls_filename,timestampdigits(), $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsextension);
-    my $outputfile = $output_path . $filename;    
+    my $outputfile = $output_path . $filename;
 
     #-eep "D:\ctsms\ecrf.pdf" -f -u "somebody" -p "password" -id 5949677
     my @dbtoolargs = ($dbtool,
@@ -200,17 +200,17 @@ sub publish_ecrf_journal_xls {
     my ($result,$msg) = run(shell_args(@dbtoolargs)); #suppress output, to hide password
     runerror("$dbtool failed",getlogger(__PACKAGE__)) unless $result;
     _info(undef,"$dbtool executed");
-  
+
     return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
         $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype),$outputfile) if $result;
     return undef;
-    
+
 }
 
 sub publish_ecrfs_xls {
 
     my $filename = sprintf($ecrfs_export_xls_filename,timestampdigits(), $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsextension);
-    my $outputfile = $output_path . $filename;    
+    my $outputfile = $output_path . $filename;
 
     #-eep "D:\ctsms\ecrf.pdf" -f -u "somebody" -p "password" -id 5949677
     my @dbtoolargs = ($dbtool,
@@ -226,11 +226,11 @@ sub publish_ecrfs_xls {
     my ($result,$msg) = run(shell_args(@dbtoolargs)); #suppress output, to hide password
     runerror("$dbtool failed",getlogger(__PACKAGE__)) unless $result;
     _info(undef,"$dbtool executed");
-  
+
     return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
         $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype),$outputfile) if $result;
     return undef;
-    
+
 }
 
 sub publish_ecrf_data_sqlite {
@@ -238,12 +238,12 @@ sub publish_ecrf_data_sqlite {
     my $db = &get_sqlite_db();
     my $dbfilename = $db->{dbfilename};
     destroy_all_dbs();
-    
+
     my $filename = sprintf($ecrf_data_export_sqlite_filename,timestampdigits(), $CTSMS::BulkProcessor::SqlConnectors::SQLiteDB::dbextension);
-    
+
     return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'SQLite/'),
         $dbfilename,$filename,$CTSMS::BulkProcessor::SqlConnectors::SQLiteDB::mimetype),$dbfilename);
-    
+
 }
 
 sub publish_ecrf_data_horizontal_csv {
@@ -251,9 +251,9 @@ sub publish_ecrf_data_horizontal_csv {
     my $db = &get_csv_db();
     my $tablefilename = $db->_gettablefilename(CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataHorizontal::gettablename());
     destroy_all_dbs();
-    
+
     my $filename = sprintf($ecrf_data_export_horizontal_csv_filename,timestampdigits(), $CTSMS::BulkProcessor::SqlConnectors::CSVDB::csvextension);
-    
+
     return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'CSV/'),
         $tablefilename,$filename,$CTSMS::BulkProcessor::SqlConnectors::CSVDB::mimetype),$tablefilename);
 
@@ -262,13 +262,13 @@ sub publish_ecrf_data_horizontal_csv {
 sub publish_ecrf_data_xls {
 
     my @modules = ();
-    push(@modules,'CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataHorizontal');    
+    push(@modules,'CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataHorizontal');
     push(@modules,'CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataVertical');
     my $filename = sprintf($ecrf_data_export_xls_filename,timestampdigits(), ($ecrf_data_export_xlsx ? $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsxextension : $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsextension));
     my $outputfile = $output_path . $filename;
-        
+
     my $result = CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::write_workbook($outputfile,$ecrf_data_export_xlsx,@modules);
-    
+
     return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
         $outputfile,$filename,($ecrf_data_export_xlsx ? $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsxmimetype : $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype)),$outputfile) if $result;
     return undef;
@@ -279,7 +279,7 @@ sub _get_file_in {
     my ($title,$subfolder) = @_;
     $subfolder //= '';
     return {
-        "active" => JSON::true,
+        "active" => \1, #JSON::true,
         "comment" => $system_name . ' ' . $system_version . ' (' . $system_instance_label . ') [' . $local_fqdn . ']',
         "trialId" => $ecrf_data_trial_id,
         "module" => $CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::TRIAL_FILE_MODULE,
@@ -296,7 +296,7 @@ sub export_ecrf_data_vertical {
     # create tables:
     $result = CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataVertical::create_table($ecrf_data_truncate_table,$context->{ecrffieldmaxselectionsetvaluecount},$ecrf_data_listentrytags) if $result;
     #$result &= CTSMS::BulkProcessor::Projects::Migration::IPGallery::Dao::import::FeatureOptionSetItem::create_table(0);
-  
+
     $result = _export_items($context) if $result;
     undef $context->{db};
     destroy_all_dbs();
@@ -317,11 +317,11 @@ sub _export_items {
             $result &= &{$context->{export_code}}($context,\@rows);
             @rows = ();
         }
-    
+
     }
 
     $result &= &{$context->{export_code}}($context,\@rows);
-    
+
     return $result;
 }
 
@@ -330,36 +330,36 @@ sub _init_ecrf_data_vertical_context {
 
     my $result = 1;
     $context->{ecrf_data_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($ecrf_data_trial_id);
-    
+
     $context->{ecrffieldmaxselectionsetvaluecount} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_ecrffieldmaxselectionsetvaluecount($context->{ecrf_data_trial}->{id});
     _info($context,"max number of selection set values: $context->{ecrffieldmaxselectionsetvaluecount}",0);
-    
+
     $context->{error_count} = 0;
     $context->{warning_count} = 0;
-    $context->{db} = &get_sqlite_db(); 
+    $context->{db} = &get_sqlite_db();
 
     $context->{api_listentries_page} = [];
     $context->{api_listentries_page_num} = 0;
-    $context->{api_listentries_page_total_count} = undef;   
+    $context->{api_listentries_page_total_count} = undef;
 
     $context->{api_ecrfs_page} = [];
     $context->{api_ecrfs_page_num} = 0;
-    $context->{api_ecrfs_page_total_count} = undef;       
-    
+    $context->{api_ecrfs_page_total_count} = undef;
+
     $context->{api_values_page} = [];
     $context->{api_values_page_num} = 0;
     $context->{api_values_page_total_count} = undef;
-    
+
     $context->{ecrf} = undef;
     $context->{listentry} = undef;
     $context->{ecrf_status} = undef;
-    
+
     $context->{items_row_block} = $ecrf_data_row_block;
     $context->{item_to_row_code} = \&_ecrf_data_vertical_items_to_row;
     $context->{export_code} = \&_insert_ecrf_data_vertical_rows;
     $context->{api_get_items_code} = sub {
         my ($context) = @_;
-        
+
 NEXT_LISTENTRY:
         if (not defined $context->{api_listentries_page_total_count} or ($context->{api_listentries_page_num} * $ecrf_data_api_listentries_page_size < $context->{api_listentries_page_total_count} and (scalar @{$context->{api_listentries_page}}) == 0)) {
             my $p = { page_size => $ecrf_data_api_listentries_page_size , page_num => $context->{api_listentries_page_num} + 1, total_count => undef };
@@ -383,9 +383,9 @@ NEXT_LISTENTRY:
                     $context->{tagvalues} = {};
                 }
              } else {
-                return undef;    
+                return undef;
             }
-        }        
+        }
 
 NEXT_ECRF:
         if (not defined $context->{api_ecrfs_page_total_count} or ($context->{api_ecrfs_page_num} * $ecrf_data_api_ecrfs_page_size < $context->{api_ecrfs_page_total_count} and (scalar @{$context->{api_ecrfs_page}}) == 0)) {
@@ -395,7 +395,7 @@ NEXT_ECRF:
             my $first = $context->{api_ecrfs_page_num} * $ecrf_data_api_ecrfs_page_size;
             _info($context,"retrieving eCRFs page: " . $first . '-' . ($first + $ecrf_data_api_ecrfs_page_size) . ' of ' . (defined $context->{api_ecrfs_page_total_count} ? $context->{api_ecrfs_page_total_count} : '?'),not $show_page_retreive_progress);
             $context->{api_ecrfs_page} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Ecrf::get_trial_list($context->{ecrf_data_trial}->{id}, 1, $p, $sf);
-            $context->{api_ecrfs_page_total_count} = $p->{total_count};                
+            $context->{api_ecrfs_page_total_count} = $p->{total_count};
             $context->{api_ecrfs_page_num} += 1;
         }
         if (not defined $context->{ecrf}) {
@@ -411,7 +411,7 @@ NEXT_ECRF:
                 goto NEXT_LISTENTRY;
             }
         }
-        
+
         if (not defined $context->{api_values_page_total_count} or ($context->{api_values_page_num} * $ecrf_data_api_values_page_size < $context->{api_values_page_total_count} and (scalar @{$context->{api_values_page}}) == 0)) {
             my $p = { page_size => $ecrf_data_api_values_page_size , page_num => $context->{api_values_page_num} + 1, total_count => undef };
             my $sf = {};
@@ -480,7 +480,7 @@ sub _ecrf_data_vertical_items_to_row {
     #    }
     #    push(@row,$selectionValue ? $selectionValue->{value} : undef);
     #}
-    
+
     my @selectionSetValues = @{$item->{ecrfField}->{field}->{selectionSetValues} // []};
     foreach my $selectionSetValue (@selectionSetValues) {
         if (exists $item->{_selectionValueMap}->{$selectionSetValue->{id}}) {
@@ -492,7 +492,7 @@ sub _ecrf_data_vertical_items_to_row {
     for (my $i = scalar @selectionSetValues; $i < ($context->{ecrffieldmaxselectionsetvaluecount} // 0); $i++) {
         push(@row,undef);
     }
-    
+
     return \@row;
 }
 
@@ -530,8 +530,8 @@ sub export_ecrf_data_horizontal {
 
     # create tables:
     $result = CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataHorizontal::create_table($ecrf_data_truncate_table,$context->{columns},$ecrf_data_listentrytags) if $result;
-  
-    
+
+
     $result = _export_items($context) if $result;
     undef $context->{db};
     destroy_all_dbs();
@@ -544,19 +544,19 @@ sub _init_ecrf_data_pdfs_context {
 
     my $result = 1;
     $context->{ecrf_data_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($ecrf_data_trial_id);
-    
+
     #$context->{ecrfmap} = _get_ecrfmap($context);
     #$context->{columns} = _get_horizontal_cols($context);
-    
+
     $context->{error_count} = 0;
     $context->{warning_count} = 0;
-    #$context->{db} = &get_csv_db(); 
+    #$context->{db} = &get_csv_db();
 
     $context->{api_listentries_page} = [];
     $context->{api_listentries_page_num} = 0;
-    $context->{api_listentries_page_total_count} = undef;   
-    
-    
+    $context->{api_listentries_page_total_count} = undef;
+
+
     $context->{timestamp_digits} = timestampdigits();
     $context->{uploads} = [];
     $context->{items_row_block} = 1;
@@ -568,10 +568,10 @@ sub _init_ecrf_data_pdfs_context {
     $context->{export_code} = sub {
         my ($context,$lwp_response) = @_;
         $lwp_response = $lwp_response->[0] if $lwp_response;
-    
+
         if ($lwp_response and defined $lwp_response->content_ref) {
             my $filename = sprintf($ecrf_data_export_pdfs_filename,$context->{listentry}->{proband}->{id},$context->{timestamp_digits}, $pdfextension);
-    
+
             my $out = CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'PDF/'), #'PDF/' . $context->{listentry}->{proband}->{id} . '/'
                 $lwp_response->content_ref,$filename,$pdfmimetype);
             if ($out) {
@@ -583,7 +583,7 @@ sub _init_ecrf_data_pdfs_context {
     };
     $context->{api_get_items_code} = sub {
         my ($context) = @_;
-        
+
         if ((scalar @{$context->{api_listentries_page}}) == 0) {
             my $p = { page_size => $ecrf_data_api_listentries_page_size , page_num => $context->{api_listentries_page_num} + 1, total_count => undef };
             my $sf = {};
@@ -615,24 +615,24 @@ sub _init_ecrf_data_horizontal_context {
 
     my $result = 1;
     $context->{ecrf_data_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($ecrf_data_trial_id);
-    
+
     $context->{ecrfmap} = _get_ecrfmap($context);
     $context->{columns} = _get_horizontal_cols($context);
-    
+
     $context->{error_count} = 0;
     $context->{warning_count} = 0;
-    $context->{db} = &get_csv_db(); 
+    $context->{db} = &get_csv_db();
 
     $context->{api_listentries_page} = [];
     $context->{api_listentries_page_num} = 0;
-    $context->{api_listentries_page_total_count} = undef;   
-    
+    $context->{api_listentries_page_total_count} = undef;
+
     $context->{items_row_block} = 1;
     $context->{item_to_row_code} = \&_ecrf_data_horizontal_items_to_row;
     $context->{export_code} = \&_insert_ecrf_data_horizontal_rows;
     $context->{api_get_items_code} = sub {
         my ($context) = @_;
-        
+
         if ((scalar @{$context->{api_listentries_page}}) == 0) {
             my $p = { page_size => $ecrf_data_api_listentries_page_size , page_num => $context->{api_listentries_page_num} + 1, total_count => undef };
             my $sf = {};
@@ -661,7 +661,7 @@ sub _init_ecrf_data_horizontal_context {
 
 sub _ecrf_data_horizontal_items_to_row {
     my ($context,$items) = @_;
-    
+
     my @row = ();
     push(@row,$context->{listentry}->{proband}->{id}); #'proband_id',
     foreach my $tag_col (sort keys %$ecrf_data_listentrytags) {
@@ -669,7 +669,7 @@ sub _ecrf_data_horizontal_items_to_row {
     }
     push(@row,$context->{listentry}->{group} ? $context->{listentry}->{group}->{token} : undef); #'subject_group',
     push(@row,$context->{listentry}->{lastStatus} ? $context->{listentry}->{lastStatus}->{status}->{nameL10nKey} : undef); #'enrollment_status',
-    
+
     my %valuemap = ();
     foreach my $item (@$items) {
         my $select = undef;
@@ -694,12 +694,12 @@ sub _ecrf_data_horizontal_items_to_row {
             }
         }
     }
-    
+
     foreach my $colname (@{$context->{columns}}) {
         push(@row,(exists $valuemap{$colname} ? $valuemap{$colname} : undef));
     }
-    
-    return \@row;    
+
+    return \@row;
 }
 
 
@@ -768,7 +768,7 @@ sub _get_ecrfmap {
     foreach my $ecrfid (keys %ecrfmap) {
         my %sectionmap = ();
         tie(%sectionmap, 'Tie::IxHash',
-        );        
+        );
         array_to_map($ecrfmap{$ecrfid},sub {
             my $item = shift;
             return $item->{section};
@@ -872,7 +872,7 @@ sub _warn_or_error {
         _warn($context,$message);
     } else {
         _error($context,$message);
-    }    
+    }
 }
 
 sub _error {

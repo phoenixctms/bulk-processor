@@ -5,6 +5,8 @@ use strict;
 
 use Scalar::Util 'blessed';
 
+#use JSON -support_by_pp, -no_export;
+
 use URI;
 use LWP::UserAgent qw();
 
@@ -263,7 +265,7 @@ sub _post_raw {
     if (blessed($path_query_request) and $path_query_request->isa('HTTP::Request')) {
         $self->{req} = $path_query_request;
         $self->_log_request($self->{req});
-    } else {   
+    } else {
         $self->{req} = HTTP::Request->new('POST',$self->_get_request_uri($path_query_request));
         _add_headers($self->{req},$headers);
         $self->_log_request($self->{req});

@@ -10,7 +10,7 @@ use CTSMS::BulkProcessor::Globals qw(
     $enablemultithreading
     $cpucount
     create_path
-        
+
 );
 #$ctsmsrestapi_path
 
@@ -40,6 +40,7 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
     update_settings
+    check_dry
 
     $defaultsettings
     $defaultconfig
@@ -50,23 +51,24 @@ our @EXPORT_OK = qw(
 
     $skip_errors
     $force
+    $dry
 
     $proband_plain_text_ignore_duplicates
     $proband_plain_text_truncate_table
     $person_name_prefix_length
     $import_proband_page_size
     $import_proband_multithreading
-    $import_proband_numofthreads    
-    
+    $import_proband_numofthreads
+
     $proband_duplicate_truncate_table
     $create_duplicate_multithreading
     $create_duplicate_numofthreads
-    
+
     $update_proband_multithreading
     $update_proband_numofthreads
     $duplicate_proband_category
     $duplicate_comment_prefix
-    
+
 );
     #$proband_plain_text_row_block
     #$import_proband_api_page_size
@@ -82,6 +84,7 @@ our $sqlite_db_file = 'dubplicates';
 our $skip_errors = 0;
 
 our $force = 0;
+our $dry = 0;
 
 our $proband_plain_text_ignore_duplicates = 0;
 our $proband_plain_text_truncate_table = 1;
@@ -111,11 +114,11 @@ sub update_settings {
 
         $result &= _prepare_working_paths(1);
         #$dialysis_substitution_volume_file = $input_path;
-        
+
         $sqlite_db_file = $data->{sqlite_db_file} if exists $data->{sqlite_db_file};
-        
+
         $skip_errors = $data->{skip_errors} if exists $data->{skip_errors};
-        
+
         $proband_plain_text_ignore_duplicates = $data->{proband_plain_text_ignore_duplicates} if exists $data->{proband_plain_text_ignore_duplicates};
         $proband_plain_text_truncate_table = $data->{proband_plain_text_truncate_table} if exists $data->{proband_plain_text_truncate_table};
         #$proband_plain_text_row_block = $data->{proband_plain_text_row_block} if exists $data->{proband_plain_text_row_block};
@@ -128,12 +131,12 @@ sub update_settings {
         $proband_duplicate_truncate_table = $data->{proband_duplicate_truncate_table} if exists $data->{proband_duplicate_truncate_table};
         $create_duplicate_multithreading = $data->{create_duplicate_multithreading} if exists $data->{create_duplicate_multithreading};
         $create_duplicate_numofthreads = _get_numofthreads($cpucount,$data,'create_duplicate_numofthreads');
-        
+
         $update_proband_multithreading = $data->{update_proband_multithreading} if exists $data->{update_proband_multithreading};
         $update_proband_numofthreads = _get_numofthreads($cpucount,$data,'update_proband_numofthreads');
         $duplicate_proband_category = $data->{duplicate_proband_category} if exists $data->{duplicate_proband_category};
         $duplicate_comment_prefix = $data->{duplicate_comment_prefix} if exists $data->{duplicate_comment_prefix};
-        
+
         return $result;
 
     }
@@ -164,6 +167,27 @@ sub _get_numofthreads {
     $numofthreads = $data->{$key} if exists $data->{$key};
     $numofthreads = $cpucount if $numofthreads > $cpucount;
     return $numofthreads;
+}
+
+sub check_dry {
+
+    if ($dry) {
+        scriptinfo('running in dry mode (readonly)',getlogger(__PACKAGE__));
+        return 1;
+    } else {
+        scriptinfo('NO DRY MODE - RECORDS WILL BE MODIFIED!',getlogger(__PACKAGE__));
+        if (!$force) {
+            if ('yes' eq lc(prompt("Type 'yes' to proceed: "))) {
+                return 1;
+            } else {
+                return 0;
+            }
+        } else {
+            scriptinfo('force option applied',getlogger(__PACKAGE__));
+            return 1;
+        }
+    }
+
 }
 
 1;

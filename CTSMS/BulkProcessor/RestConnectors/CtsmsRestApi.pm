@@ -12,7 +12,9 @@ use URI::Escape qw();
 use HTTP::Status qw(:constants :is status_message);
 use HTTP::Request::Common qw();
 
-use JSON qw();
+use JSON -support_by_pp, -no_export;
+#*JSON::true = \1;
+#*JSON::false = \0;
 
 use CTSMS::BulkProcessor::Globals qw($LongReadLen_limit);
 use CTSMS::BulkProcessor::Logging qw(
@@ -131,7 +133,7 @@ sub _setup_ua {
 sub _encode_request_content {
     my $self = shift;
     my ($data) = @_;
-    return Encode::encode($request_charset,JSON::to_json($data));
+    return Encode::encode($request_charset,JSON::to_json($data,{ allow_nonref => 1, allow_blessed => 1, convert_blessed => 1, pretty => 0, }));
     #
                                                          #{ allow_nonref => 1 }));
 }
@@ -139,9 +141,9 @@ sub _encode_request_content {
 sub _decode_response_content {
     my $self = shift;
     my ($data) = @_;
-    my $decoded = eval {
-        ($data ? JSON::from_json(Encode::decode($response_charset,$data)) : undef);
-    };
+    my $decoded = #eval {
+        ($data ? JSON::from_json(Encode::decode($response_charset,$data),{ allow_nonref => 1, }) : undef);
+    #};
     convert_bools($decoded);
     return $decoded // $data;
 }
@@ -305,7 +307,7 @@ sub _request_error {
         resterror($self,$self->response->code . ' ' . $self->response->message .
               (defined $msg && length($msg) > 0 ? ': ' . $msg : ''),getlogger(__PACKAGE__));
     } else {
-        resterror($self,defined $msg && length($msg) > 0 ? $msg : $self->response->code . ' ' . $self->response->message,getlogger(__PACKAGE__));        
+        resterror($self,defined $msg && length($msg) > 0 ? $msg : $self->response->code . ' ' . $self->response->message,getlogger(__PACKAGE__));
     }
 }
 
@@ -367,7 +369,7 @@ sub post {
 sub post_file {
     my $self = shift;
     my ($path_query,$data,$file,$filename,$content_type,$content_encoding,$headers) = @_;
-    
+
     my $json;
 	eval {
         $json = $self->_encode_post_content($data);
@@ -375,7 +377,7 @@ sub post_file {
     if ($@) {
         restrequesterror($self,'error encoding POST request content: ' . $@,undef,$data,getlogger(__PACKAGE__));
     }
-    
+
     my %file_part_headers = ();
     $file_part_headers{'Content-Type'} = $content_type if defined $content_type;
     $file_part_headers{'Content-Encoding'} = $content_encoding if defined $content_encoding;
@@ -388,7 +390,7 @@ sub post_file {
         ],
     );
     _add_headers($req,$headers);
-    
+
     if ($self->_post_raw($req,undef,undef)->code() != HTTP_OK) {
         $self->_request_error();
         return undef;

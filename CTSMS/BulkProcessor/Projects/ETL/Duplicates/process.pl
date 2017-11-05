@@ -16,6 +16,8 @@ use CTSMS::BulkProcessor::Projects::ETL::Duplicates::Settings qw(
     $defaultsettings
     $defaultconfig
     $force
+    $dry
+    check_dry
 );
 use CTSMS::BulkProcessor::Logging qw(
     init_log
@@ -96,6 +98,7 @@ sub init {
         "task=s" => $tasks,
         "skip-errors" => \$skip_errors,
         "force" => \$force,
+        "dry" => \$dry,
     ); # or scripterror('error in command line arguments',getlogger(getscriptpath()));
 
     #$tasks = removeduplicates($tasks,1); #allowe cleanup twice
@@ -123,17 +126,20 @@ sub main() {
                 $result &= cleanup_task(\@messages,0) if taskinfo($cleanup_task_opt,$result);
 
             } elsif (lc($cleanup_all_task_opt) eq lc($task)) {
-                $result &= cleanup_task(\@messages,1) if taskinfo($cleanup_all_task_opt,$result);            
+                $result &= cleanup_task(\@messages,1) if taskinfo($cleanup_all_task_opt,$result);
 
             } elsif (lc($import_proband_task_opt) eq lc($task)) {
-                $result &= import_proband_task(\@messages) if taskinfo($import_proband_task_opt,$result);  
+                $result &= import_proband_task(\@messages) if taskinfo($import_proband_task_opt,$result);
 
             } elsif (lc($create_duplicate_task_opt) eq lc($task)) {
-                $result &= create_duplicate_task(\@messages) if taskinfo($create_duplicate_task_opt,$result); 
+                $result &= create_duplicate_task(\@messages) if taskinfo($create_duplicate_task_opt,$result);
 
             } elsif (lc($update_proband_task_opt) eq lc($task)) {
-                $result &= update_proband_task(\@messages,\$completion) if taskinfo($update_proband_task_opt,$result);  
-                
+                if (taskinfo($update_proband_task_opt,$result)) {
+                    next unless check_dry();
+                    $result &= update_proband_task(\@messages,\$completion);
+                }
+
             } else {
                 $result = 0;
                 scripterror("unknow task option '" . $task . "', must be one of " . join(', ',@TASK_OPTS),getlogger(getscriptpath()));
@@ -197,7 +203,7 @@ sub import_proband_task {
         ($result, $warning_count) = import_proband();
     };
     my $err = $@;
-    
+
     if ($err) {
         #print $@;
         push(@$messages,'import_proband error: ' . $err);
@@ -215,7 +221,7 @@ sub create_duplicate_task {
         ($result, $warning_count) = create_duplicate();
     };
     my $err = $@;
-    
+
     if ($err) {
         #print $@;
         push(@$messages,'create_duplicate error: ' . $err);
@@ -233,13 +239,13 @@ sub update_proband_task {
         ($result, $warning_count,$updated_proband_count) = update_proband();
     };
     my $err = $@;
-    
+
     if ($err) {
         #print $@;
         push(@$messages,'update_proband error: ' . $err);
         return 0;
     } else {
-        push(@$messages,'- ' . $updated_proband_count . ' probands updated');
+        push(@$messages,'- ' . $updated_proband_count . ' probands' . ($dry ? '' : ' updated'));
         $$completion_ref = $updated_proband_count > 0;
         return 1;
     }
