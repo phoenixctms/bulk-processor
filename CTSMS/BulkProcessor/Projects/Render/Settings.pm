@@ -40,7 +40,7 @@ our @EXPORT_OK = qw(
     $defaultconfig
 
     $force
-    
+
     $ecrfstatustype_wordwrapcolumns
     $ecrfstatustype_fontsize
     $ecrfstatustype_noderadius
@@ -48,7 +48,7 @@ our @EXPORT_OK = qw(
     $ecrfstatustype_usenodecolor
     $ecrfstatustype_width
     $ecrfstatustype_height
-    $ecrfstatustype_filename   
+    $ecrfstatustype_filename
 
     $ecrffieldstatustype_wordwrapcolumns
     $ecrffieldstatustype_fontsize
@@ -57,10 +57,10 @@ our @EXPORT_OK = qw(
     $ecrffieldstatustype_usenodecolor
     $ecrffieldstatustype_width
     $ecrffieldstatustype_height
-    $ecrffieldstatustype_annotation_filename   
-    $ecrffieldstatustype_validation_filename   
-    $ecrffieldstatustype_query_filename   
-    
+    $ecrffieldstatustype_annotation_filename
+    $ecrffieldstatustype_validation_filename
+    $ecrffieldstatustype_query_filename
+
     $courseparticipationstatustype_wordwrapcolumns
     $courseparticipationstatustype_fontsize
     $courseparticipationstatustype_noderadius
@@ -72,7 +72,7 @@ our @EXPORT_OK = qw(
     $courseparticipationstatustype_admin_filename
     $courseparticipationstatustype_self_registration_participant_filename
     $courseparticipationstatustype_self_registration_admin_filename
-    
+
     $privacyconsentstatustype_wordwrapcolumns
     $privacyconsentstatustype_fontsize
     $privacyconsentstatustype_noderadius
@@ -80,9 +80,9 @@ our @EXPORT_OK = qw(
     $privacyconsentstatustype_usenodecolor
     $privacyconsentstatustype_width
     $privacyconsentstatustype_height
-    $privacyconsentstatustype_filename  
-    
-    
+    $privacyconsentstatustype_filename
+
+
     $trialstatustype_wordwrapcolumns
     $trialstatustype_fontsize
     $trialstatustype_noderadius
@@ -90,8 +90,8 @@ our @EXPORT_OK = qw(
     $trialstatustype_usenodecolor
     $trialstatustype_width
     $trialstatustype_height
-    $trialstatustype_filename 
-    
+    $trialstatustype_filename
+
     $probandliststatustype_wordwrapcolumns
     $probandliststatustype_fontsize
     $probandliststatustype_noderadius
@@ -100,26 +100,28 @@ our @EXPORT_OK = qw(
     $probandliststatustype_width
     $probandliststatustype_height
     $probandliststatustype_person_filename
-    $probandliststatustype_animal_filename 
-    
-    
+    $probandliststatustype_animal_filename
+
+
     $journal_heatmap_filename
     $journal_heatmap_span_days
     $journal_heatmap_start_date
-    $journal_heatmap_end_date    
+    $journal_heatmap_end_date
     $journal_heatmap_dimension
 
     $logon_heatmap_filename
     $logon_heatmap_span_days
     $logon_heatmap_start_date
     $logon_heatmap_end_date
-    $logon_heatmap_dimension    
-    
+    $logon_heatmap_dimension
+
     $journal_histogram_filename
     $journal_histogram_dimension
     $journal_histogram_interval
     $journal_histogram_year
-    $journal_histogram_month    
+    $journal_histogram_month
+
+    $magick
 );
 
 our $defaultconfig = 'config.cfg';
@@ -208,6 +210,8 @@ our $journal_histogram_dimension = undef;
 our $journal_histogram_interval = undef;
 our ($journal_histogram_year,$journal_histogram_month) = get_year_month();
 
+our $magick = 'magick'; #'convert'
+
 sub update_settings {
 
     my ($data,$configfile) = @_;
@@ -243,7 +247,7 @@ sub update_settings {
         $ecrfstatustype_width = $data->{ecrfstatustype_width} if exists $data->{ecrfstatustype_width};
         $ecrfstatustype_height = $data->{ecrfstatustype_height} if exists $data->{ecrfstatustype_height};
         $ecrfstatustype_filename = $data->{ecrfstatustype_filename} if exists $data->{ecrfstatustype_filename};
-        
+
         $ecrffieldstatustype_wordwrapcolumns = $data->{ecrffieldstatustype_wordwrapcolumns} if exists $data->{ecrffieldstatustype_wordwrapcolumns};
         $ecrffieldstatustype_fontsize = $data->{ecrffieldstatustype_fontsize} if exists $data->{ecrffieldstatustype_fontsize};
         $ecrffieldstatustype_noderadius = $data->{ecrffieldstatustype_noderadius} if exists $data->{ecrffieldstatustype_noderadius};
@@ -251,9 +255,9 @@ sub update_settings {
         $ecrffieldstatustype_usenodecolor = $data->{ecrffieldstatustype_usenodecolor} if exists $data->{ecrffieldstatustype_usenodecolor};
         $ecrffieldstatustype_width = $data->{ecrffieldstatustype_width} if exists $data->{ecrffieldstatustype_width};
         $ecrffieldstatustype_height = $data->{ecrffieldstatustype_height} if exists $data->{ecrffieldstatustype_height};
-        $ecrffieldstatustype_annotation_filename = $data->{ecrffieldstatustype_annotation_filename} if exists $data->{ecrffieldstatustype_annotation_filename};        
-        $ecrffieldstatustype_validation_filename = $data->{ecrffieldstatustype_validation_filename} if exists $data->{ecrffieldstatustype_validation_filename};        
-        $ecrffieldstatustype_query_filename = $data->{ecrffieldstatustype_query_filename} if exists $data->{ecrffieldstatustype_query_filename};        
+        $ecrffieldstatustype_annotation_filename = $data->{ecrffieldstatustype_annotation_filename} if exists $data->{ecrffieldstatustype_annotation_filename};
+        $ecrffieldstatustype_validation_filename = $data->{ecrffieldstatustype_validation_filename} if exists $data->{ecrffieldstatustype_validation_filename};
+        $ecrffieldstatustype_query_filename = $data->{ecrffieldstatustype_query_filename} if exists $data->{ecrffieldstatustype_query_filename};
 
         $courseparticipationstatustype_wordwrapcolumns = $data->{courseparticipationstatustype_wordwrapcolumns} if exists $data->{courseparticipationstatustype_wordwrapcolumns};
         $courseparticipationstatustype_fontsize = $data->{courseparticipationstatustype_fontsize} if exists $data->{courseparticipationstatustype_fontsize};
@@ -301,7 +305,7 @@ sub update_settings {
         $journal_heatmap_start_date = $data->{journal_heatmap_start_date} if exists $data->{journal_heatmap_start_date};
         $journal_heatmap_end_date = $data->{journal_heatmap_end_date} if exists $data->{journal_heatmap_end_date};
         $journal_heatmap_dimension = $data->{journal_heatmap_dimension} if exists $data->{journal_heatmap_dimension};
-        
+
         $logon_heatmap_filename = $data->{logon_heatmap_filename} if exists $data->{logon_heatmap_filename};
         $logon_heatmap_span_days = $data->{logon_heatmap_span_days} if exists $data->{logon_heatmap_span_days};
         $logon_heatmap_start_date = $data->{logon_heatmap_start_date} if exists $data->{logon_heatmap_start_date};
@@ -313,6 +317,8 @@ sub update_settings {
         $journal_histogram_interval = $data->{journal_histogram_interval} if exists $data->{journal_histogram_interval};
         $journal_histogram_year = $data->{journal_histogram_year} if exists $data->{journal_histogram_year};
         $journal_histogram_month = $data->{journal_histogram_month} if exists $data->{journal_histogram_month};
+
+        $magick = $data->{magick} if exists $data->{magick};
 
         return $result;
 

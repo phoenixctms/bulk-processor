@@ -3,6 +3,10 @@ use strict;
 
 ## no critic
 
+use CTSMS::BulkProcessor::Projects::Render::Settings qw(
+    $magick
+);
+
 use CTSMS::BulkProcessor::Logging qw (
     getlogger
     runinfo
@@ -21,7 +25,7 @@ our @EXPORT_OK = qw(
     convert
 );
 
-my $magick = 'magick'; #'convert'
+#my $magick = 'magick'; #'convert'
 
 # Try to find the executable of Gnuplot
 my $gnuplot = 'gnuplot';
