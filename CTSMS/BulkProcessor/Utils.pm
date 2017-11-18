@@ -35,7 +35,7 @@ use Text::Wrap qw();
 #use FindBin qw($Bin);
 use Digest::MD5 qw(); #qw(md5 md5_hex md5_base64);
 use File::Temp qw(tempfile tempdir);
-use File::Path qw(remove_tree make_path);
+use File::Path 2.07 qw(remove_tree make_path);
 
 use Encode qw(encode_utf8 encode_utf8);
 #use Sys::Info;
@@ -68,7 +68,7 @@ our @EXPORT_OK = qw(
     cat_file
     wrap_text
     create_guid
-    
+
     urlencode
     urldecode
     utf8bytes_to_string
@@ -110,10 +110,10 @@ our @EXPORT_OK = qw(
 
     prompt
     check_int
-    
+
     run
     shell_args
-    
+
 );
 #create_uuid
 #check_ipnet
@@ -476,7 +476,7 @@ sub get_year_month_day {
 #    my $excel_datetime_value = shift;
 #    if ($excel_datetime_value > 0) {
 #        my $datetime = DateTime::Format::Excel->parse_datetime($excel_datetime_value);
-#        return $datetime->ymd('-') . ' ' . $datetime->hms(':');    
+#        return $datetime->ymd('-') . ' ' . $datetime->hms(':');
 #    }
 #    return undef;
 #}
@@ -936,18 +936,18 @@ sub shell_args {
     #} else {
         #unshift(@commandandargs,'/bin/bash -c');
         #push(@commandandargs,'>/dev/null'); # 2>&1');
-    }    
+    }
     return @commandandargs;
 }
 
 sub run {
-    
+
     my (@commandandargs) = @_;
-    
+
     system(@commandandargs);
-    
+
     my $command = shift @commandandargs;
-        
+
     if ($? == -1) {
         return (0,'failed to execute ' . $command . ': ' . $!);
     } elsif ($? & 127) {

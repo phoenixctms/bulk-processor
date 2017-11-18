@@ -4,7 +4,7 @@ use strict;
 ## no critic
 
 use threads qw();
-use threads::shared qw(shared_clone);
+use threads::shared 1.51 qw(shared_clone);
 
 use Encode qw();
 use URI::Escape qw();
