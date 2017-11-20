@@ -233,8 +233,8 @@ sub _create_journalentry_24hheatmap {
         print PLT_FILE <<"END_24HHEATMAP_PLT";
 set term postscript eps color size 7,1.8
 set output '$epsfile'
-clear
-reset
+#clear
+#reset
 unset key
 set view map
 set title "$title"
@@ -365,8 +365,8 @@ sub _create_journalentry_histogram {
 set term postscript eps size 7,3.5 color
 #font 'Helvetica,20' linewidth 2
 set output '$epsfile'
-clear
-reset
+#clear
+#reset
 set title "$title"
 #unset key
 # Make the x axis labels easier to read.
