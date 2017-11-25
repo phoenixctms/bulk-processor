@@ -40,6 +40,7 @@ our @EXPORT_OK = qw(
 	$executable_path
 	$working_path
     $is_perl_debug
+    $is_windows
 
     create_path
 	$appstartsecs
@@ -121,11 +122,14 @@ our $executable_path = $FindBin::Bin . '/';
 
 our $is_perl_debug = defined &DB::DB;
 
+our $is_windows;
 our $enablemultithreading;
 if ($^O eq 'MSWin32') {
     $enablemultithreading = 1; # tested ok with windows.
+    $is_windows = 1;
 } else {
     $enablemultithreading = 1; # oel 5.4 perl 5.8.8 obvoisly not ok.
+    $is_windows = 0;
 }
 if ($is_perl_debug) {
     $enablemultithreading = 0;

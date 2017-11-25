@@ -24,13 +24,13 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
     add_item
     update_item
     search
     get_list
     update_category
-    
+
     process_search_items
 );
 
@@ -47,7 +47,10 @@ my $get_list_path_query = sub {
     return 'proband/' . get_query_string(\%params);
 };
 my $get_search_path_query = sub {
-    return 'search/proband/search';
+    my ($sort) = @_;
+    my %params = ();
+    $params{a} = 'id' if $sort;
+    return 'search/proband/search' . get_query_string(\%params);
 };
 my $get_add_path_query = sub {
     return 'proband/';
@@ -153,7 +156,7 @@ sub search {
 
     my ($in,$p,$sf,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->extract_collection_items($api->post($api->get_collection_page_query_uri(&$get_search_path_query(),$p,$sf),$in,$headers),$p),$load_recursive,$restapi);
+    return builditems_fromrows($api->extract_collection_items($api->post($api->get_collection_page_query_uri(&$get_search_path_query(0),$p,$sf),$in,$headers),$p),$load_recursive,$restapi);
 
 }
 
@@ -210,7 +213,7 @@ sub process_search_items {
 
     return process_collection(
         get_restapi  => sub { return _get_api($restapi,$default_restapi); },
-        path_query   => &$get_search_path_query(),
+        path_query   => &$get_search_path_query(1), #strict order!
         post_data    => $in,
         headers      => $headers,
         extract_collection_items_params => undef,
@@ -236,7 +239,7 @@ sub get_item_path {
 }
 
 sub TO_JSON {
-    
+
     my $self = shift;
     return { %{$self} };
     #    value => $self->{zipcode},

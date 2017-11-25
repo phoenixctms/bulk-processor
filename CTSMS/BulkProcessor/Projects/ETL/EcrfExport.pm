@@ -363,7 +363,7 @@ sub _init_ecrf_data_vertical_context {
 NEXT_LISTENTRY:
         if (not defined $context->{api_listentries_page_total_count} or ($context->{api_listentries_page_num} * $ecrf_data_api_listentries_page_size < $context->{api_listentries_page_total_count} and (scalar @{$context->{api_listentries_page}}) == 0)) {
             my $p = { page_size => $ecrf_data_api_listentries_page_size , page_num => $context->{api_listentries_page_num} + 1, total_count => undef };
-            my $sf = {};
+            my $sf = { sort_by => 'position', sort_dir => 'asc', };
             #$sf->{fileName} = $dialysis_substitution_volume_file_pattern if defined $dialysis_substitution_volume_file_pattern;
             my $first = $context->{api_listentries_page_num} * $ecrf_data_api_listentries_page_size;
             _info($context,"retrieving proband list entries page: " . $first . '-' . ($first + $ecrf_data_api_listentries_page_size) . ' of ' . (defined $context->{api_listentries_page_total_count} ? $context->{api_listentries_page_total_count} : '?'),not $show_page_retreive_progress);
@@ -414,7 +414,7 @@ NEXT_ECRF:
 
         if (not defined $context->{api_values_page_total_count} or ($context->{api_values_page_num} * $ecrf_data_api_values_page_size < $context->{api_values_page_total_count} and (scalar @{$context->{api_values_page}}) == 0)) {
             my $p = { page_size => $ecrf_data_api_values_page_size , page_num => $context->{api_values_page_num} + 1, total_count => undef };
-            my $sf = {};
+            my $sf = {}; #sorted by default
             #$sf->{fileName} = $dialysis_substitution_volume_file_pattern if defined $dialysis_substitution_volume_file_pattern;
             my $first = $context->{api_values_page_num} * $ecrf_data_api_values_page_size;
             _info($context,"retrieving eCRF values page: " . $first . '-' . ($first + $ecrf_data_api_values_page_size) . ' of ' . (defined $context->{api_values_page_total_count} ? $context->{api_values_page_total_count} : '?'),not $show_page_retreive_progress);
@@ -586,7 +586,7 @@ sub _init_ecrf_data_pdfs_context {
 
         if ((scalar @{$context->{api_listentries_page}}) == 0) {
             my $p = { page_size => $ecrf_data_api_listentries_page_size , page_num => $context->{api_listentries_page_num} + 1, total_count => undef };
-            my $sf = {};
+            my $sf = { sort_by => 'position', sort_dir => 'asc', };
             #$sf->{fileName} = $dialysis_substitution_volume_file_pattern if defined $dialysis_substitution_volume_file_pattern;
             my $first = $context->{api_listentries_page_num} * $ecrf_data_api_listentries_page_size;
             _info($context,"retrieving proband list entries page: " . $first . '-' . ($first + $ecrf_data_api_listentries_page_size) . ' of ' . (defined $context->{api_listentries_page_total_count} ? $context->{api_listentries_page_total_count} : '?'),not $show_page_retreive_progress);
@@ -635,7 +635,7 @@ sub _init_ecrf_data_horizontal_context {
 
         if ((scalar @{$context->{api_listentries_page}}) == 0) {
             my $p = { page_size => $ecrf_data_api_listentries_page_size , page_num => $context->{api_listentries_page_num} + 1, total_count => undef };
-            my $sf = {};
+            my $sf = { sort_by => 'position', sort_dir => 'asc', };
             #$sf->{fileName} = $dialysis_substitution_volume_file_pattern if defined $dialysis_substitution_volume_file_pattern;
             my $first = $context->{api_listentries_page_num} * $ecrf_data_api_listentries_page_size;
             _info($context,"retrieving proband list entries page: " . $first . '-' . ($first + $ecrf_data_api_listentries_page_size) . ' of ' . (defined $context->{api_listentries_page_total_count} ? $context->{api_listentries_page_total_count} : '?'),not $show_page_retreive_progress);
@@ -826,7 +826,7 @@ sub _get_ecrffieldvalues {
         while (1) {
             if ((scalar @$api_values_page) == 0) {
                 my $p = { page_size => $ecrf_data_api_values_page_size , page_num => $api_values_page_num + 1, total_count => undef };
-                my $sf = {};
+                my $sf = {}; #sorted by default
                 #$sf->{fileName} = $dialysis_substitution_volume_file_pattern if defined $dialysis_substitution_volume_file_pattern;
                 my $first = $api_values_page_num * $ecrf_data_api_values_page_size;
                 _info($context,"retrieving eCRF values page: " . $first . '-' . ($first + $ecrf_data_api_values_page_size) . ' of ' . (defined $api_values_page_total_count ? $api_values_page_total_count : '?'),not $show_page_retreive_progress);
@@ -851,7 +851,7 @@ sub _get_probandlistentrytagvalues {
     while (1) {
         if ((scalar @$api_listentrytagvalues_page) == 0) {
             my $p = { page_size => $ecrf_data_api_tagvalues_page_size , page_num => $api_listentrytagvalues_page_num + 1, total_count => undef };
-            my $sf = {};
+            my $sf = {}; #sorted by default
             #$sf->{fileName} = $dialysis_substitution_volume_file_pattern if defined $dialysis_substitution_volume_file_pattern;
             my $first = $api_listentrytagvalues_page_num * $ecrf_data_api_tagvalues_page_size;
             _info($context,"retrieving proband list entry tag values page: " . $first . '-' . ($first + $ecrf_data_api_tagvalues_page_size) . ' of ' . (defined $api_listentrytagvalues_page_total_count ? $api_listentrytagvalues_page_total_count : '?'),not $show_page_retreive_progress);
