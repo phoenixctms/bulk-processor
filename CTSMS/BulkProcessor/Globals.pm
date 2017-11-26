@@ -111,7 +111,7 @@ our $VERSION = '1.0.2';
 our $system_version = $VERSION; #keep this filename-save
 our $system_abbreviation = 'bpf'; #keep this filename-, dbname-save
 our $system_instance = 'phoenix'; #'test'; #'2014'; #dbname-save 0-9a-z_
-our $system_instance_label = 'Phoenix CTMS MedUniGraz';
+our $system_instance_label = 'Phoenix CTMS';
 
 our $local_ip = get_ipaddress();
 our $local_fqdn = get_hostfqdn();
@@ -216,7 +216,7 @@ our $ismsexchangeserver = 0;                         # smtp server is a ms excha
 our $smtp_server = '192.168.0.99';                   # smtp sever ip/hostname
 our $smtpuser = 'WORKGROUP\rkrenn';
 our $smtppasswd = 'xyz';
-our $sender_address = 'donotreply@medunigraz.at';
+our $sender_address = 'donotreply@phoenixctms.at';
 
 
 
