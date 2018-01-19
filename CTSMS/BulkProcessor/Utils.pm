@@ -880,7 +880,7 @@ sub secs_to_years {
 sub get_cpucount {
     my $cpucount = 0;
     if ($can_cpu_affinity) {
-        $cpucount = Sys::CpuAffinity::getNumCpus() + 0;
+        $cpucount = eval { Sys::CpuAffinity::getNumCpus() + 0; };
     }
     return ($cpucount > 0) ? $cpucount : 1;
     #my $info = Sys::Info->new();
