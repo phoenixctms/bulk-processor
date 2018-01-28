@@ -24,12 +24,12 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
     get_item
     get_trialfiles
     download
     upload
-    
+
     $TRIAL_FILE_MODULE
 );
 
@@ -57,6 +57,7 @@ my $get_trialfiles_path_query = sub {
 
 my $fieldnames = [
     "active",
+    "publicFile",
     "comment",
     "contentType",
     "course",
@@ -152,7 +153,7 @@ sub builditems_fromrows {
 sub transformitem {
     my ($item,$load_recursive,$restapi) = @_;
     #$item->{rows} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValue::builditems_fromrows($item->{rows},$load_recursive,$restapi);
-    #$item->{js_rows} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryJsonValue::builditems_fromrows($item->{js_rows},$load_recursive,$restapi);    
+    #$item->{js_rows} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryJsonValue::builditems_fromrows($item->{js_rows},$load_recursive,$restapi);
 }
 
 sub get_item_path {
@@ -163,7 +164,7 @@ sub get_item_path {
 }
 
 #sub TO_JSON {
-#    
+#
 #    my $self = shift;
 #    return { %{$self} };
 #    #    value => $self->{zipcode},

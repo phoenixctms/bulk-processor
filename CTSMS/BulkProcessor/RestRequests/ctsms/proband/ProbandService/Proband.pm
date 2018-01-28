@@ -66,6 +66,7 @@ my $get_update_category_path_query = sub {
 my $fieldnames = [
     "person",
     "blinded",
+    "alias",
     "age",
     "autoDeleteDeadline",
     "category",

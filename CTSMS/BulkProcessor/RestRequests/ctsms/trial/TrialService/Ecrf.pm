@@ -23,7 +23,7 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
     get_trial_list
     get_getecrffieldvaluessectionmaxindex
 );
@@ -54,6 +54,7 @@ my $fieldnames = [
     "deferredDelete",
     "description",
     "disabled",
+    "enableBrowserFieldCalculation",
     "externalId",
     "group",
     "id",
@@ -144,7 +145,7 @@ sub get_item_path {
 }
 
 #sub TO_JSON {
-#    
+#
 #    my $self = shift;
 #    return { %{$self} };
 #    #    value => $self->{zipcode},

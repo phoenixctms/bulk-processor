@@ -21,7 +21,7 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
     get_initial_items
     get_transition_items
 );
@@ -47,6 +47,7 @@ my $fieldnames = [
     "ignoreTimelineEvents",
     "initial",
     "inquiryValueInputEnabled",
+    "ecrfValueInputEnabled",
     "lockdown",
     "name",
     "nameL10nKey",
