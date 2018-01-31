@@ -133,10 +133,7 @@ sub publish_ecrf_data_pdf {
                            $ctsmsrestapi_password,
                            '-id',
                            $ecrf_data_trial_id);
-    runerror('dbtool executable not defined',getlogger(__PACKAGE__)) unless $dbtool;
-    my ($result,$msg) = run(shell_args(@dbtoolargs)); #suppress output, to hide password
-    runerror("$dbtool failed",getlogger(__PACKAGE__)) unless $result;
-    _info(undef,"$dbtool executed");
+    my ($result,$msg) = _run_dbtool(@dbtoolargs);
 
     return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'PDF/'),
         $outputfile,$filename,$pdfmimetype),$outputfile) if $result;
@@ -170,10 +167,7 @@ sub publish_audit_trail_xls {
                            $ctsmsrestapi_password,
                            '-id',
                            $ecrf_data_trial_id);
-    runerror('dbtool executable not defined',getlogger(__PACKAGE__)) unless $dbtool;
-    my ($result,$msg) = run(shell_args(@dbtoolargs)); #suppress output, to hide password
-    runerror("$dbtool failed",getlogger(__PACKAGE__)) unless $result;
-    _info(undef,"$dbtool executed");
+    my ($result,$msg) = _run_dbtool(@dbtoolargs);
 
     return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
         $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype),$outputfile) if $result;
@@ -196,10 +190,7 @@ sub publish_ecrf_journal_xls {
                            $ctsmsrestapi_password,
                            '-id',
                            $ecrf_data_trial_id);
-    runerror('dbtool executable not defined',getlogger(__PACKAGE__)) unless $dbtool;
-    my ($result,$msg) = run(shell_args(@dbtoolargs)); #suppress output, to hide password
-    runerror("$dbtool failed",getlogger(__PACKAGE__)) unless $result;
-    _info(undef,"$dbtool executed");
+    my ($result,$msg) = _run_dbtool(@dbtoolargs);
 
     return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
         $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype),$outputfile) if $result;
@@ -222,10 +213,7 @@ sub publish_ecrfs_xls {
                            $ctsmsrestapi_password,
                            '-id',
                            $ecrf_data_trial_id);
-    runerror('dbtool executable not defined',getlogger(__PACKAGE__)) unless $dbtool;
-    my ($result,$msg) = run(shell_args(@dbtoolargs)); #suppress output, to hide password
-    runerror("$dbtool failed",getlogger(__PACKAGE__)) unless $result;
-    _info(undef,"$dbtool executed");
+    my ($result,$msg) = _run_dbtool(@dbtoolargs);
 
     return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
         $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype),$outputfile) if $result;
@@ -864,6 +852,15 @@ sub _get_probandlistentrytagvalues {
         push(@listentrytagvalues,$listentrytagvalue);
     }
     return \@listentrytagvalues;
+}
+
+sub _run_dbtool {
+    runerror('dbtool not defined',getlogger(__PACKAGE__)) unless $dbtool;
+    runerror('dbtool not found/executable',getlogger(__PACKAGE__)) unless -X $dbtool;
+    my ($result,$msg) = run(shell_args(@_)); #suppress output, to hide password
+    runerror("$dbtool failed",getlogger(__PACKAGE__)) unless $result;
+    _info(undef,"$dbtool executed");
+    return ($result,$msg);
 }
 
 sub _warn_or_error {
