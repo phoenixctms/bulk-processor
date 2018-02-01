@@ -30,7 +30,7 @@ use CTSMS::BulkProcessor::Globals qw(
 use CTSMS::BulkProcessor::Utils qw(trim file_md5 create_guid wrap_text changemod);
 
 use File::Basename;
-#use File::Temp qw(tempfile tempdir);
+#use File::Temp 0.2304 qw(tempfile tempdir);
 use MIME::Base64;
 use MIME::Lite;
 

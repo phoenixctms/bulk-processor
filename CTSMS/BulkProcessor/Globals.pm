@@ -14,7 +14,7 @@ use Tie::IxHash;
 
 use Cwd 'abs_path';
 use File::Basename qw(dirname);
-use File::Temp qw(tempdir);
+use File::Temp 0.2304 qw(tempdir);
 use FindBin qw();
 
 use CTSMS::BulkProcessor::Utils qw(

@@ -34,7 +34,7 @@ use Date::Calc qw(Normalize_DHMS Add_Delta_DHMS);
 use Text::Wrap qw();
 #use FindBin qw($Bin);
 use Digest::MD5 qw(); #qw(md5 md5_hex md5_base64);
-use File::Temp qw(tempfile tempdir);
+use File::Temp 0.2304 qw(tempfile tempdir) ;
 use File::Path 2.07 qw(remove_tree make_path);
 
 use Encode qw(encode_utf8 encode_utf8);
