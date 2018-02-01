@@ -68,6 +68,7 @@ our @EXPORT_OK = qw(
     $update_proband_numofthreads
     $duplicate_proband_category
     $duplicate_comment_prefix
+    $proband_categories_not_to_update
 
 );
     #$proband_plain_text_row_block
@@ -103,6 +104,7 @@ our $update_proband_multithreading = $enablemultithreading;
 our $update_proband_numofthreads = $cpucount;
 our $duplicate_proband_category = 'duplicate';
 our $duplicate_comment_prefix = 'this subject has duplicates: ';
+our $proband_categories_not_to_update = [];
 
 sub update_settings {
 
@@ -136,6 +138,8 @@ sub update_settings {
         $update_proband_numofthreads = _get_numofthreads($cpucount,$data,'update_proband_numofthreads');
         $duplicate_proband_category = $data->{duplicate_proband_category} if exists $data->{duplicate_proband_category};
         $duplicate_comment_prefix = $data->{duplicate_comment_prefix} if exists $data->{duplicate_comment_prefix};
+        $proband_categories_not_to_update = $data->{proband_categories_not_to_update} if exists $data->{proband_categories_not_to_update};
+        $proband_categories_not_to_update = [ $proband_categories_not_to_update ] unless ref $proband_categories_not_to_update;
 
         return $result;
 

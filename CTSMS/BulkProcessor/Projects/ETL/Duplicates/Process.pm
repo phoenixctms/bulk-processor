@@ -32,6 +32,7 @@ use CTSMS::BulkProcessor::Projects::ETL::Duplicates::Settings qw(
     $update_proband_numofthreads
     $duplicate_proband_category
     $duplicate_comment_prefix
+    $proband_categories_not_to_update
 );
     #$import_proband_api_page_size
     #$proband_plain_text_row_block
@@ -59,9 +60,9 @@ use CTSMS::BulkProcessor::Projects::ETL::Duplicates::ProjectConnectorPool qw(
 use CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText qw();
 use CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandDuplicate qw();
 
-use CTSMS::BulkProcessor::Array qw(array_to_map powerset);
+use CTSMS::BulkProcessor::Array qw(array_to_map powerset contains);
 
-#use CTSMS::BulkProcessor::Utils qw(threadid);
+use CTSMS::BulkProcessor::Utils qw(threadid);
 #excel_to_timestamp
 #use CTSMS::BulkProcessor::Serialization qw(serialize deserialize $format_json);
 
@@ -409,9 +410,11 @@ sub update_proband {
                         _warn_or_error($context,"$label: cannot find proband id $proband_id: " . $@);
                     } else {
                         $context->{original} = $category_info;
-                        my $new_category = $duplicate_proband_category || $category_info->{category};
+                        my $new_category;
+                        $new_category = $duplicate_proband_category unless contains($category_info->{category},$proband_categories_not_to_update);
+                        $new_category ||= $category_info->{category};
                         my $category_updated = $new_category ne $category_info->{category};
-                        _info($context,"$label: proband id $context->{original}->{id} category not changed",1) unless $category_updated;
+                        _info($context,"$label: proband id $context->{original}->{proband_id} category $context->{original}->{category} not changed",1) unless $category_updated;
                         my ($new_comment,$comment_updated) = _get_proband_comment($context);
                         if ($category_updated or $comment_updated) {
                             my $in = { "version" => $category_info->{version},
@@ -439,7 +442,7 @@ sub update_proband {
                             if ($@) {
                                 _warn($context,"$label: cannot update proband id $proband_id: " . $@);
                             } else {
-                                _info($context,"$label: proband id $proband_id" . ($dry ? '' : ' updated'));
+                                _info($context,"$label: proband id $proband_id" . ($dry ? ' to be modified' : ' updated'));
                                 $context->{updated_proband_count} += 1;
                             }
                         } else {
@@ -485,7 +488,7 @@ sub _get_proband_comment {
     my ($context) = @_;
 
     my %duplicate_proband_ids = map { local $_ = $_; $_ => undef; } @{$context->{duplicate_group}};
-    delete $duplicate_proband_ids{$context->{original}->{id}};
+    delete $duplicate_proband_ids{$context->{original}->{proband_id}};
     my $duplicate_comment_pattern = quotemeta($duplicate_comment_prefix) . '(\d+,?\s*)*';
     my $new_comment = $duplicate_comment_prefix . join(', ', ( sort {$a <=> $b} keys %duplicate_proband_ids ));
 
@@ -501,7 +504,7 @@ sub _get_proband_comment {
         $comment .= $new_comment;
     }
     my $updated = $comment ne $original_comment;
-    _info($context,"proband id $context->{original}->{id} comment not changed",1) unless $updated;
+    _info($context,"proband id $context->{original}->{proband_id} comment not changed",1) unless $updated;
 
     return ($comment,$updated);
 
@@ -511,6 +514,8 @@ sub _update_proband_checks {
     my ($context) = @_;
 
     my $result = 1;
+
+    $context->{tid} = threadid();
 
     my $proband_count = 0;
     eval {
@@ -539,6 +544,8 @@ sub _update_proband_checks {
         rowprocessingerror(undef,"cannot load '$duplicate_proband_category' proband category",getlogger(__PACKAGE__));
         $result = 0; #even in skip-error mode..
     }
+
+    _info($context,'proband categories that will not be changed: ' . ((scalar @$proband_categories_not_to_update) > 0 ? join(", ",@$proband_categories_not_to_update) : '[none]'),0);
 
     return $result;
 }
