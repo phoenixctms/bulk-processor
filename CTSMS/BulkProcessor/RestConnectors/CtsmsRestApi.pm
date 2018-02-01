@@ -45,7 +45,7 @@ my $defaulturi = 'http://127.0.0.1:8080/ctsms-web/rest/';
 my $defaultusername = 'user_9qxs_1_1';
 my $defaultpassword = 'user_9qxs_1_1';
 my $defaultrealm = 'api';
-my $timeout = 60;
+my $timeout = 5*60;
 
 my $default_collection_page_size = 10;
 my $first_collection_page_num = 1;
@@ -115,7 +115,7 @@ sub _setup_ua {
 		verify_hostname => 0,
 		SSL_verify_mode => 0,
 	);
-    $ua->ssl_opts($timeout);
+    $ua->timeout($timeout) if $timeout;
     if ($self->{username}) {
         $ua->credentials($netloc, $self->{realm}, $self->{username}, $self->{password});
     }
