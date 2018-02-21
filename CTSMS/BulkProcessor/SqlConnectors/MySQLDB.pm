@@ -101,7 +101,7 @@ sub tableidentifier {
 
 }
 
-sub columnidentifier {
+sub _columnidentifier {
 
     my $self = shift;
     my $columnname = shift;
@@ -238,7 +238,7 @@ sub db_connect {
     #$self->db_do('SET SESSION datetime_format = \'%Y-%m-%d %H:%i:%s\'');
     if (defined $net_read_timeout) {
         $self->db_do('SET SESSION net_read_timeout = ' . $net_read_timeout);
-    }        
+    }
 
     if (length($serialization_level) > 0) {
         $self->db_do('SET SESSION TRANSACTION ISOLATION LEVEL ' . $serialization_level);
@@ -294,14 +294,14 @@ sub getprimarykeycols {
     #        push @keycols,$fieldname;
     #    }
     #}
-    
+
     my @keycols = ();
     foreach my $field (@{$self->db_get_all_arrayref('SHOW FIELDS FROM ' . $self->tableidentifier($tablename))}) {
         if (uc($field->{'Key'}) eq 'PRI') {
             push(@keycols,$field->{Field});
-        }        
+        }
     }
-    
+
     return \@keycols;
 
 }

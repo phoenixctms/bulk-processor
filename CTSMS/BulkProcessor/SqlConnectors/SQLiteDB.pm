@@ -119,7 +119,7 @@ sub tableidentifier {
 
 }
 
-sub columnidentifier {
+sub _columnidentifier {
 
     my $self = shift;
     my $columnname = shift;
@@ -366,14 +366,14 @@ sub getprimarykeycols {
     #        push @keycols,$fieldname;
     #    }
     #}
-    
+
     my @keycols = ();
     foreach my $field (@{$self->db_get_all_arrayref('PRAGMA table_info(' . $tablename . ')')}) {
         if ($field->{'pk'}) {
             push(@keycols,$field->{name});
-        }        
+        }
     }
-    
+
     return \@keycols;
 
 }

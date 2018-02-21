@@ -98,7 +98,7 @@ sub tableidentifier {
 
 }
 
-sub columnidentifier {
+sub _columnidentifier {
 
     my $self = shift;
     my $columnname = shift;
@@ -258,7 +258,7 @@ sub db_connect {
     #print $self->db_get_value('SHOW search_path');
     #print $self->db_get_value('select count(*) from address_type');
     #GRANT usage on schema public to ctsms;
-    
+
     #http://stackoverflow.com/questions/2082686/how-do-i-cast-a-string-to-integer-and-have-0-in-case-of-error-in-the-cast-with-p
 
     if ($enable_numeric_sorting) {

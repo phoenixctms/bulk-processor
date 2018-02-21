@@ -121,7 +121,18 @@ sub columnidentifier {
     my $columnname = shift;
     my (@params) = @_;
 
+    return join('.',map { $self->_columnidentifier($_,@params); } split(/\./,$columnname,-1));
+
+}
+
+sub _columnidentifier {
+
+    my $self = shift;
+    my $columnname = shift;
+    my (@params) = @_;
+
     notimplementederror((ref $self) . ': ' . (caller(0))[3] . ' not implemented',getlogger(__PACKAGE__));
+
     return undef;
 
 }
