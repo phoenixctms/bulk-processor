@@ -62,6 +62,15 @@ sub new {
 
 }
 
+sub set_transaction_isolation {
+
+    my ($self,$level) = @_;
+
+    notimplementederror((ref $self) . ': ' . (caller(0))[3] . ' not implemented',getlogger(__PACKAGE__));
+    return undef;
+
+}
+
 sub _gettemptablename {
     my $self = shift;
     my $temp_tablename = 'TMP_TBL_' . $self->{tid} . '_';

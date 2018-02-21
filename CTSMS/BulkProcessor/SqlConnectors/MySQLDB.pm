@@ -25,7 +25,7 @@ use CTSMS::BulkProcessor::SqlConnector;
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::SqlConnector);
-our @EXPORT_OK = qw(get_tableidentifier);
+our @EXPORT_OK = qw(get_tableidentifier $READ_COMMITTED);
 
 my $defaulthost = '127.0.0.1';
 my $defaultport = '3306';
@@ -55,6 +55,8 @@ my $rowblock_transactional = 1;
 
 my $serialization_level = ''; #'SERIALIZABLE'
 
+our $READ_COMMITTED = 'READ COMMITTED';
+
 sub new {
 
     my $class = shift;
@@ -74,6 +76,13 @@ sub new {
     dbdebug($self,__PACKAGE__ . ' connector created',getlogger(__PACKAGE__));
 
     return $self;
+
+}
+
+sub set_transaction_isolation {
+
+    my ($self,$level) = @_;
+    return $self->db_do("SET TRANSACTION ISOLATION LEVEL $level");
 
 }
 
