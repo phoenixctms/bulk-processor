@@ -102,6 +102,14 @@ our @EXPORT_OK = qw(
     $probandliststatustype_person_filename
     $probandliststatustype_animal_filename
 
+    $massmailstatustype_wordwrapcolumns
+    $massmailstatustype_fontsize
+    $massmailstatustype_noderadius
+    $massmailstatustype_usenodecolor
+    $massmailstatustype_fontname
+    $massmailstatustype_width
+    $massmailstatustype_height
+    $massmailstatustype_filename
 
     $journal_heatmap_filename
     $journal_heatmap_span_days
@@ -192,6 +200,15 @@ our $probandliststatustype_width = undef;
 our $probandliststatustype_height = undef;
 our $probandliststatustype_person_filename = 'enrollment_states_person.png';
 our $probandliststatustype_animal_filename = 'enrollment_states_animal.png';
+
+our $massmailstatustype_wordwrapcolumns = undef;
+our $massmailstatustype_fontsize = undef;
+our $massmailstatustype_noderadius = undef;
+our $massmailstatustype_fontname = undef;
+our $massmailstatustype_usenodecolor = undef;
+our $massmailstatustype_width = undef;
+our $massmailstatustype_height = undef;
+our $massmailstatustype_filename = 'mass_mail_states.png';
 
 our $journal_heatmap_filename = 'journal_heatmap.png';
 our $journal_heatmap_span_days = undef;
@@ -299,6 +316,14 @@ sub update_settings {
         $probandliststatustype_person_filename = $data->{probandliststatustype_person_filename} if exists $data->{probandliststatustype_person_filename};
         $probandliststatustype_animal_filename = $data->{probandliststatustype_animal_filename} if exists $data->{probandliststatustype_animal_filename};
 
+        $massmailstatustype_wordwrapcolumns = $data->{massmailstatustype_wordwrapcolumns} if exists $data->{massmailstatustype_wordwrapcolumns};
+        $massmailstatustype_fontsize = $data->{massmailstatustype_fontsize} if exists $data->{massmailstatustype_fontsize};
+        $massmailstatustype_noderadius = $data->{massmailstatustype_noderadius} if exists $data->{massmailstatustype_noderadius};
+        $massmailstatustype_fontname = $data->{massmailstatustype_fontname} if exists $data->{massmailstatustype_fontname};
+        $massmailstatustype_usenodecolor = $data->{massmailstatustype_usenodecolor} if exists $data->{massmailstatustype_usenodecolor};
+        $massmailstatustype_width = $data->{massmailstatustype_width} if exists $data->{massmailstatustype_width};
+        $massmailstatustype_height = $data->{massmailstatustype_height} if exists $data->{massmailstatustype_height};
+        $massmailstatustype_filename = $data->{massmailstatustype_filename} if exists $data->{massmailstatustype_filename};
 
         $journal_heatmap_filename = $data->{journal_heatmap_filename} if exists $data->{journal_heatmap_filename};
         $journal_heatmap_span_days = $data->{journal_heatmap_span_days} if exists $data->{journal_heatmap_span_days};

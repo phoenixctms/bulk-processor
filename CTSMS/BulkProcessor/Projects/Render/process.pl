@@ -20,14 +20,14 @@ use CTSMS::BulkProcessor::Projects::Render::Settings qw(
     $courseparticipationstatustype_participant_filename
     $courseparticipationstatustype_admin_filename
     $courseparticipationstatustype_self_registration_participant_filename
-    $courseparticipationstatustype_self_registration_admin_filename    
-    
-    $ecrffieldstatustype_annotation_filename   
-    $ecrffieldstatustype_validation_filename   
+    $courseparticipationstatustype_self_registration_admin_filename
+
+    $ecrffieldstatustype_annotation_filename
+    $ecrffieldstatustype_validation_filename
     $ecrffieldstatustype_query_filename
-    
+
     $probandliststatustype_person_filename
-    $probandliststatustype_animal_filename     
+    $probandliststatustype_animal_filename
 );
 use CTSMS::BulkProcessor::Logging qw(
     init_log
@@ -73,6 +73,7 @@ use CTSMS::BulkProcessor::Projects::Render::StateDiagrams qw(
     create_trialstatustype_diagram
     create_probandliststatustype_diagram
     create_ecrffieldstatustype_diagram
+    create_massmailstatustype_diagram
 );
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::EcrfFieldStatusType qw(
@@ -112,6 +113,9 @@ push(@TASK_OPTS,$create_probandliststatustype_diagram_task_opt);
 
 my $create_ecrffieldstatustype_diagrams_task_opt = 'create_ecrffieldstatustype_diagrams';
 push(@TASK_OPTS,$create_ecrffieldstatustype_diagrams_task_opt);
+
+my $create_massmailstatustype_diagram_task_opt = 'create_massmailstatustype_diagram';
+push(@TASK_OPTS,$create_massmailstatustype_diagram_task_opt);
 
 my $create_logon_heatmap_task_opt = 'create_logon_heatmap';
 push(@TASK_OPTS,$create_logon_heatmap_task_opt);
@@ -167,34 +171,37 @@ sub main() {
                 $result &= cleanup_task(\@messages,0) if taskinfo($cleanup_task_opt,$result);
 
             } elsif (lc($cleanup_all_task_opt) eq lc($task)) {
-                $result &= cleanup_task(\@messages,1) if taskinfo($cleanup_all_task_opt,$result);            
+                $result &= cleanup_task(\@messages,1) if taskinfo($cleanup_all_task_opt,$result);
 
             } elsif (lc($create_ecrfstatustype_diagram_task_opt) eq lc($task)) {
-                $result &= create_ecrfstatustype_diagram_task(\@messages) if taskinfo($create_ecrfstatustype_diagram_task_opt,$result);  
+                $result &= create_ecrfstatustype_diagram_task(\@messages) if taskinfo($create_ecrfstatustype_diagram_task_opt,$result);
 
             } elsif (lc($create_courseparticipationstatustype_diagrams_task_opt) eq lc($task)) {
-                $result &= create_courseparticipationstatustype_diagrams_task(\@messages) if taskinfo($create_courseparticipationstatustype_diagrams_task_opt,$result);  
+                $result &= create_courseparticipationstatustype_diagrams_task(\@messages) if taskinfo($create_courseparticipationstatustype_diagrams_task_opt,$result);
 
             } elsif (lc($create_privacyconsentstatustype_diagram_task_opt) eq lc($task)) {
-                $result &= create_privacyconsentstatustype_diagram_task(\@messages) if taskinfo($create_privacyconsentstatustype_diagram_task_opt,$result);  
+                $result &= create_privacyconsentstatustype_diagram_task(\@messages) if taskinfo($create_privacyconsentstatustype_diagram_task_opt,$result);
 
             } elsif (lc($create_trialstatustype_diagram_task_opt) eq lc($task)) {
-                $result &= create_trialstatustype_diagram_task(\@messages) if taskinfo($create_trialstatustype_diagram_task_opt,$result);  
+                $result &= create_trialstatustype_diagram_task(\@messages) if taskinfo($create_trialstatustype_diagram_task_opt,$result);
 
             } elsif (lc($create_probandliststatustype_diagram_task_opt) eq lc($task)) {
-                $result &= create_probandliststatustype_diagram_task(\@messages) if taskinfo($create_probandliststatustype_diagram_task_opt,$result);  
+                $result &= create_probandliststatustype_diagram_task(\@messages) if taskinfo($create_probandliststatustype_diagram_task_opt,$result);
 
             } elsif (lc($create_ecrffieldstatustype_diagrams_task_opt) eq lc($task)) {
-                $result &= create_ecrffieldstatustype_diagrams_task(\@messages) if taskinfo($create_ecrffieldstatustype_diagrams_task_opt,$result);  
+                $result &= create_ecrffieldstatustype_diagrams_task(\@messages) if taskinfo($create_ecrffieldstatustype_diagrams_task_opt,$result);
+
+            } elsif (lc($create_massmailstatustype_diagram_task_opt) eq lc($task)) {
+                $result &= create_massmailstatustype_diagram_task(\@messages) if taskinfo($create_massmailstatustype_diagram_task_opt,$result);
 
             } elsif (lc($create_logon_heatmap_task_opt) eq lc($task)) {
-                $result &= create_logon_heatmap_task(\@messages) if taskinfo($create_logon_heatmap_task_opt,$result);  
+                $result &= create_logon_heatmap_task(\@messages) if taskinfo($create_logon_heatmap_task_opt,$result);
 
             } elsif (lc($create_journal_heatmap_task_opt) eq lc($task)) {
-                $result &= create_journal_heatmap_task(\@messages) if taskinfo($create_journal_heatmap_task_opt,$result);  
+                $result &= create_journal_heatmap_task(\@messages) if taskinfo($create_journal_heatmap_task_opt,$result);
 
             } elsif (lc($create_journal_histogram_task_opt) eq lc($task)) {
-                $result &= create_journal_histogram_task(\@messages) if taskinfo($create_journal_histogram_task_opt,$result);  
+                $result &= create_journal_histogram_task(\@messages) if taskinfo($create_journal_histogram_task_opt,$result);
 
 
             } else {
@@ -270,9 +277,9 @@ sub create_courseparticipationstatustype_diagrams_task {
     eval {
         create_courseparticipationstatustype_diagram(0,0,$courseparticipationstatustype_participant_filename);
         create_courseparticipationstatustype_diagram(0,1,$courseparticipationstatustype_self_registration_participant_filename);
-        
+
         create_courseparticipationstatustype_diagram(1,0,$courseparticipationstatustype_admin_filename);
-        create_courseparticipationstatustype_diagram(1,1,$courseparticipationstatustype_self_registration_admin_filename);        
+        create_courseparticipationstatustype_diagram(1,1,$courseparticipationstatustype_self_registration_admin_filename);
     };
     if ($@) {
         #print $@;
@@ -337,7 +344,7 @@ sub create_ecrffieldstatustype_diagrams_task {
         create_ecrffieldstatustype_diagram($ANNOTATION_QUEUE,$ecrffieldstatustype_annotation_filename);
         create_ecrffieldstatustype_diagram($VALIDATION_QUEUE,$ecrffieldstatustype_validation_filename);
         create_ecrffieldstatustype_diagram($QUERY_QUEUE,$ecrffieldstatustype_query_filename);
-       
+
     };
     if ($@) {
         #print $@;
@@ -345,6 +352,21 @@ sub create_ecrffieldstatustype_diagrams_task {
         return 0;
     } else {
         push(@$messages,'create_ecrffieldstatustype_diagrams done');
+        return 1;
+    }
+}
+
+sub create_massmailstatustype_diagram_task {
+    my ($messages) = @_;
+    eval {
+        create_massmailstatustype_diagram();
+    };
+    if ($@) {
+        #print $@;
+        push(@$messages,'create_massmailstatustype_diagram error: ' . $@);
+        return 0;
+    } else {
+        push(@$messages,'create_massmailstatustype_diagram done');
         return 1;
     }
 }

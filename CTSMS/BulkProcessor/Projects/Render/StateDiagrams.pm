@@ -10,7 +10,7 @@ use HTML::Entities qw(encode_entities);
 
 use CTSMS::BulkProcessor::Projects::Render::Settings qw(
     $output_path
-    
+
     $ecrfstatustype_wordwrapcolumns
     $ecrfstatustype_fontsize
     $ecrfstatustype_noderadius
@@ -19,7 +19,7 @@ use CTSMS::BulkProcessor::Projects::Render::Settings qw(
     $ecrfstatustype_width
     $ecrfstatustype_height
     $ecrfstatustype_filename
-    
+
     $ecrffieldstatustype_wordwrapcolumns
     $ecrffieldstatustype_fontsize
     $ecrffieldstatustype_noderadius
@@ -27,7 +27,7 @@ use CTSMS::BulkProcessor::Projects::Render::Settings qw(
     $ecrffieldstatustype_fontname
     $ecrffieldstatustype_width
     $ecrffieldstatustype_height
-    
+
     $courseparticipationstatustype_wordwrapcolumns
     $courseparticipationstatustype_fontsize
     $courseparticipationstatustype_noderadius
@@ -35,7 +35,7 @@ use CTSMS::BulkProcessor::Projects::Render::Settings qw(
     $courseparticipationstatustype_fontname
     $courseparticipationstatustype_width
     $courseparticipationstatustype_height
-    
+
     $privacyconsentstatustype_wordwrapcolumns
     $privacyconsentstatustype_fontsize
     $privacyconsentstatustype_noderadius
@@ -44,7 +44,7 @@ use CTSMS::BulkProcessor::Projects::Render::Settings qw(
     $privacyconsentstatustype_width
     $privacyconsentstatustype_height
     $privacyconsentstatustype_filename
-    
+
     $trialstatustype_wordwrapcolumns
     $trialstatustype_fontsize
     $trialstatustype_noderadius
@@ -53,7 +53,7 @@ use CTSMS::BulkProcessor::Projects::Render::Settings qw(
     $trialstatustype_width
     $trialstatustype_height
     $trialstatustype_filename
-    
+
     $probandliststatustype_wordwrapcolumns
     $probandliststatustype_fontsize
     $probandliststatustype_noderadius
@@ -61,10 +61,18 @@ use CTSMS::BulkProcessor::Projects::Render::Settings qw(
     $probandliststatustype_fontname
     $probandliststatustype_width
     $probandliststatustype_height
-    
+
+    $massmailstatustype_wordwrapcolumns
+    $massmailstatustype_fontsize
+    $massmailstatustype_noderadius
+    $massmailstatustype_usenodecolor
+    $massmailstatustype_fontname
+    $massmailstatustype_width
+    $massmailstatustype_height
+    $massmailstatustype_filename
 
 );
-#$probandliststatustype_filename    
+#$probandliststatustype_filename
 
 use CTSMS::BulkProcessor::Logging qw (
     getlogger
@@ -82,9 +90,10 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Priv
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::TrialStatusType qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::ProbandListStatusType qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::EcrfFieldStatusType qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::MassMailStatusType qw();
 
 #use CTSMS::BulkProcessor::ConnectorPool qw(
-#    
+#
 #);
 #get_xa_db
 
@@ -94,12 +103,13 @@ use CTSMS::BulkProcessor::Utils qw(threadid wrap_text);
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
-    create_ecrfstatustype_diagram    
+    create_ecrfstatustype_diagram
     create_courseparticipationstatustype_diagram
     create_privacyconsentstatustype_diagram
     create_trialstatustype_diagram
     create_probandliststatustype_diagram
     create_ecrffieldstatustype_diagram
+    create_massmailstatustype_diagram
 );
 
 my %color_translation = (
@@ -214,6 +224,21 @@ sub create_probandliststatustype_diagram {
     );
 }
 
+sub create_massmailstatustype_diagram {
+    _render_state_diagram(
+        initial_items => CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::MassMailStatusType::get_initial_items(),
+        get_transition_items_code => \&CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::MassMailStatusType::get_transition_items,
+        wordwrapcolumns => $massmailstatustype_wordwrapcolumns,
+        fontsize => $massmailstatustype_fontsize,
+        noderadius => $massmailstatustype_noderadius,
+        fontname => $massmailstatustype_fontname,
+        usenodecolor => $massmailstatustype_usenodecolor,
+        width => $massmailstatustype_width,
+        height => $massmailstatustype_height,
+        filename => $massmailstatustype_filename,
+    );
+}
+
 sub _render_state_diagram {
 
     my %params = @_;
@@ -249,7 +274,7 @@ sub _render_state_diagram {
     my $context = {
         wordwrapcolumns => $wordwrapcolumns,
         get_transition_items_code => $get_transition_items_code,
-        get_edge_label_code => $get_edge_label_code, 
+        get_edge_label_code => $get_edge_label_code,
         fontsize => $fontsize,
         noderadius => $noderadius,
         fontname => $fontname,
@@ -283,14 +308,14 @@ sub _render_state_diagram {
         );
         $context->{node_map}->{$initial_item->{id}} = $initial_item;
     }
-  
+
     foreach my $id (keys %{$context->{node_map}}) {
         #print $id;
         _append_transition_nodes($context,$id,'1');
     }
 
     #$context->{gv}->as_canon($output_path . time . '.dot');
-    $context->{gv}->as_png($filename);	
+    $context->{gv}->as_png($filename);
     _info($filename . ' created');
 }
 
