@@ -100,6 +100,7 @@ my $fieldnames = [
     "version",
     "yearOfBirth",
     "physician",
+    "beacon",
 ];
 
 sub new {

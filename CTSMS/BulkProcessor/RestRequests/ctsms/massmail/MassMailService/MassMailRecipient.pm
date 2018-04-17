@@ -1,4 +1,4 @@
-package CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::ContactDetailType;
+package CTSMS::BulkProcessor::RestRequests::ctsms::massmail::MassMailService::MassMailRecipient;
 use strict;
 
 ## no critic
@@ -16,7 +16,7 @@ use CTSMS::BulkProcessor::RestProcessor qw(
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
 use CTSMS::BulkProcessor::RestItem qw();
 
-use CTSMS::BulkProcessor::Utils qw(booltostring);
+#use CTSMS::BulkProcessor::Utils qw(booltostring);
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
@@ -24,40 +24,46 @@ our @EXPORT_OK = qw(
     get_item
     get_item_path
 
-    get_proband_items
+    add_item
+    reset_item
 );
 
 my $default_restapi = \&get_ctsms_restapi;
 my $get_item_path_query = sub {
     my ($id) = @_;
-    return 'selectionset/contactdetailtype/' . get_query_string({ typeId => $id });
+    return 'massmailrecipient/' . $id;
 };
-my $get_proband_item_path_query = sub {
-    my ($person,$animal) = @_;
+my $get_add_path_query = sub {
+    return 'massmailrecipient/';
+};
+my $get_reset_path_query = sub {
+    my ($id,$version) = @_;
     my %params = ();
-    $params{person} = booltostring($person) if defined $person;
-    $params{animal} = booltostring($animal) if defined $animal;
-    return 'selectionset/availableprobandcontactdetailtypes/' . get_query_string(\%params);
-};
-my $get_staff_item_path_query = sub {
-    return 'selectionset/availablestaffcontactdetailtypes/';
+    $params{version} = $version;
+    return 'massmailrecipient/' . $id . '/reset' . get_query_string(\%params);
 };
 
 my $fieldnames = [
-    "email",
     "id",
-    "maxOccurrence",
-    "mismatchMsgL10nKey",
-    "name",
-    "nameL10nKey",
-    "notifyPreset",
-    "phone",
+    "hasMimeMessage",
+    "mimeMessageSize",
+    "mimeMessageTimestamp",
+    "beacon",
+    "sent",
+    "cancelled",
+    "timesProcessed",
+    "processedTimestamp",
+    "errorMessage",
+    "read",
+    "readTimestamp",
+    "unsubscribed",
+    "unsubscribedTimestamp",
+    "modifiedTimestamp",
+    "pending",
+    "version",
+    "massMail",
     "proband",
-    "animal",
-    "business",
-    "regExp",
-    "staff",
-    "url",
+    "modifiedUser",
 ];
 
 sub new {
@@ -79,14 +85,21 @@ sub get_item {
 
 }
 
-sub get_proband_items {
+sub add_item {
 
-    my ($person,$animal,$load_recursive,$restapi,$headers) = @_;
+    my ($in,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->get(&$get_proband_item_path_query($person,$animal),$headers),$load_recursive,$restapi);
+    return builditems_fromrows($api->post(&$get_add_path_query(),$in,$headers),$load_recursive,$restapi);
 
 }
 
+sub reset_item {
+
+    my ($id,$version,$load_recursive,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return builditems_fromrows($api->put(&$get_reset_path_query($id,$version),undef,$headers),$load_recursive,$restapi);
+
+}
 
 sub builditems_fromrows {
 
@@ -118,5 +131,15 @@ sub get_item_path {
     return &$get_item_path_query($id);
 
 }
+
+#sub TO_JSON {
+#
+#    my $self = shift;
+#    return { %{$self} };
+#    #    value => $self->{zipcode},
+#    #    label => $self->{zipcode},
+#    #};
+#
+#}
 
 1;
