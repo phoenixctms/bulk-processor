@@ -240,8 +240,10 @@ sub update_settings {
         $ecrf_data_ignore_duplicates = $data->{ecrf_data_ignore_duplicates} if exists $data->{ecrf_data_ignore_duplicates};
 
         $ecrf_data_trial_id = $data->{ecrf_data_trial_id} if exists $data->{ecrf_data_trial_id};
-        #$ecrf_data_trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($ecrf_data_trial_id);
-        #configurationerror($configfile,"error loading trial",getlogger(__PACKAGE__)) unless defined $ecrf_data_trial;
+        if (defined $ecrf_data_trial_id and length($ecrf_data_trial_id) > 0) {
+            my $ecrf_data_trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($ecrf_data_trial_id);
+            configurationerror($configfile,"error loading trial id $ecrf_data_trial_id",getlogger(__PACKAGE__)) unless defined $ecrf_data_trial;
+        }
 
         $ecrf_data_api_listentries_page_size = $data->{ecrf_data_api_listentries_page_size} if exists $data->{ecrf_data_api_listentries_page_size};
         $ecrf_data_api_ecrfs_page_size = $data->{ecrf_data_api_ecrfs_page_size} if exists $data->{ecrf_data_api_ecrfs_page_size};
