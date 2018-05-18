@@ -25,7 +25,7 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
     get_trial_list
 );
 
@@ -47,7 +47,6 @@ my $fieldnames = [
     "activeSignup",
     "category",
     "comment",
-    "deferredDelete",
     "disabled",
     "excelDate",
     "excelValue",
@@ -63,6 +62,8 @@ my $fieldnames = [
     "trial",
     "uniqueName",
     "version",
+    "deferredDelete",
+    "deferredDeleteReason",
 ];
 
 sub new {
@@ -132,7 +133,7 @@ sub get_item_path {
 }
 
 sub TO_JSON {
-    
+
     my $self = shift;
     return { %{$self} };
     #    value => $self->{zipcode},

@@ -26,9 +26,9 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
     get_ecrffieldmaxselectionsetvaluecount
-    
+
     get_signup_list
     search
 );
@@ -64,7 +64,6 @@ my $get_ecrffieldmaxselectionsetvaluecount_path_query = sub {
 my $fieldnames = [
     "blockingPeriod",
     "blockingPeriodDays",
-    "deferredDelete",
     "department",
     "description",
     "dutySelfAllocationLocked",
@@ -84,6 +83,8 @@ my $fieldnames = [
     "title",
     "type",
     "version",
+    "deferredDelete",
+    "deferredDeleteReason",
 ];
 
 sub new {
@@ -177,7 +178,7 @@ sub transformitem {
         }
     }
 }
-    
+
 sub get_item_path {
 
     my ($id) = @_;
@@ -186,7 +187,7 @@ sub get_item_path {
 }
 
 sub TO_JSON {
-    
+
     my $self = shift;
     return { %{$self} };
     #    value => $self->{zipcode},

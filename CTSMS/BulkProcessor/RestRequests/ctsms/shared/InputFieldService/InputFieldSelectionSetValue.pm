@@ -23,7 +23,7 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
 );
 
 my $default_restapi = \&get_ctsms_restapi;
@@ -33,7 +33,6 @@ my $get_item_path_query = sub {
 };
 
 my $fieldnames = [
-    "deferredDelete",
     "field",
     "id",
     "inkRegions",
@@ -47,6 +46,8 @@ my $fieldnames = [
     "uniqueName",
     "value",
     "version",
+    "deferredDelete",
+    "deferredDeleteReason",
 ];
 
 sub new {
@@ -108,7 +109,7 @@ sub get_item_path {
 }
 
 sub TO_JSON {
-    
+
     my $self = shift;
     return { %{$self} };
     #    value => $self->{zipcode},

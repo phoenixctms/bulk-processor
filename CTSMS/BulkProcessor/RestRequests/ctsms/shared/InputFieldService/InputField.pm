@@ -26,7 +26,7 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
 );
 
 my $default_restapi = \&get_ctsms_restapi;
@@ -41,7 +41,6 @@ my $fieldnames = [
     "comment",
     "commentL10nKey",
     "datePreset",
-    "deferredDelete",
     "externalId",
     "fieldType",
     "floatLowerLimit",
@@ -80,6 +79,8 @@ my $fieldnames = [
     "validationErrorMsgL10nKey",
     "version",
     "width",
+    "deferredDelete",
+    "deferredDeleteReason",
 ];
 
 sub new {
@@ -152,7 +153,7 @@ sub is_select {
 
 sub is_text {
     my $self = shift;
-    my $fieldtype = $self->{fieldType}->{nameL10nKey};    
+    my $fieldtype = $self->{fieldType}->{nameL10nKey};
     if ('SINGLE_LINE_TEXT' eq $fieldtype or 'MULTI_LINE_TEXT' eq $fieldtype or 'AUTOCOMPLETE' eq $fieldtype) {
         return 1;
     }
@@ -167,7 +168,7 @@ sub get_item_path {
 }
 
 sub TO_JSON {
-    
+
     my $self = shift;
     return { %{$self} };
     #    value => $self->{zipcode},

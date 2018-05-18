@@ -81,13 +81,14 @@ my $fieldnames = [
     "attachReimbursementsPdf",
     "modifiedTimestamp",
     "version",
-    "deferredDelete",
     "department",
     "status",
     "type",
     "probandListStatus",
     "trial",
     "modifiedUser",
+    "deferredDelete",
+    "deferredDeleteReason",
 ];
 
 sub new {

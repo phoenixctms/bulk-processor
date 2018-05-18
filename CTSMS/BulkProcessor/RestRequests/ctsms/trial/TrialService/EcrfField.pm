@@ -49,7 +49,6 @@ my $get_trial_path_query = sub {
 my $fieldnames = [
     "auditTrail",
     "comment",
-    "deferredDelete",
     "disabled",
     "ecrf",
     "externalId",
@@ -68,6 +67,8 @@ my $fieldnames = [
     "trial",
     "uniqueName",
     "version",
+    "deferredDelete",
+    "deferredDeleteReason",
 ];
 
 sub new {

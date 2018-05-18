@@ -76,7 +76,6 @@ my $fieldnames = [
     "comment",
     "dateOfBirth",
     "decrypted",
-    "deferredDelete",
     "department",
     "firstName",
     "gender",
@@ -101,6 +100,8 @@ my $fieldnames = [
     "yearOfBirth",
     "physician",
     "beacon",
+    "deferredDelete",
+    "deferredDeleteReason",
 ];
 
 sub new {

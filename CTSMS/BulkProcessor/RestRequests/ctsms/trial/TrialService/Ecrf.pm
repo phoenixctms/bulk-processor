@@ -51,7 +51,6 @@ my $get_getecrffieldvaluessectionmaxindex_path_query = sub {
 
 my $fieldnames = [
     "active",
-    "deferredDelete",
     "description",
     "disabled",
     "enableBrowserFieldCalculation",
@@ -68,6 +67,8 @@ my $fieldnames = [
     "uniqueName",
     "version",
     "visit",
+    "deferredDelete",
+    "deferredDeleteReason",
 ];
 
 sub new {
