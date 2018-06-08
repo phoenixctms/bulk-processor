@@ -69,6 +69,7 @@ my $fieldnames = [
     "version",
     "deferredDelete",
     "deferredDeleteReason",
+    "notify",
 ];
 
 sub new {
