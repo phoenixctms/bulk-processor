@@ -82,6 +82,8 @@ our @EXPORT_OK = qw(
     $ecrf_data_export_pdf_filename
     $ecrf_data_export_pdfs_filename
 
+    $proband_list_filename
+
 );
 
 our $input_path = $working_path . 'input/';
@@ -119,6 +121,8 @@ our $ctsms_base_url = undef; #_get_ctsms_baseuri();
 our $dbtool = undef;
 our $ecrf_data_export_pdf_filename = '%s%s';
 our $ecrf_data_export_pdfs_filename = '%s_%s%s';
+
+our $proband_list_filename = '%s_%s%s';
 
 my $ecrfname_abbreviate_opts = {};
 my $visit_abbreviate_opts = {};
@@ -268,6 +272,8 @@ sub update_settings {
         $dbtool = $data->{dbtool} if exists $data->{dbtool};
         $ecrf_data_export_pdf_filename = $data->{ecrf_data_export_pdf_filename} if exists $data->{ecrf_data_export_pdf_filename};
         $ecrf_data_export_pdfs_filename = $data->{ecrf_data_export_pdfs_filename} if exists $data->{ecrf_data_export_pdfs_filename};
+
+        $proband_list_filename = $data->{proband_list_filename} if exists $data->{proband_list_filename};
 
         $audit_trail_export_xls_filename = $data->{audit_trail_export_xls_filename} if exists $data->{audit_trail_export_xls_filename};
         $ecrf_journal_export_xls_filename = $data->{ecrf_journal_export_xls_filename} if exists $data->{ecrf_journal_export_xls_filename};

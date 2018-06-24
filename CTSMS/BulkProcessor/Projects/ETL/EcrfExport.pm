@@ -53,6 +53,8 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $ecrf_data_export_pdf_filename
     $ecrf_data_export_pdfs_filename
 
+    $proband_list_filename
+
 );
 use CTSMS::BulkProcessor::Logging qw (
     getlogger
@@ -110,6 +112,8 @@ our @EXPORT_OK = qw(
     publish_audit_trail_xls
     publish_ecrf_journal_xls
     publish_ecrfs_xls
+
+    publish_proband_list
 );
 
 my $show_page_retreive_progress = 0;
@@ -216,6 +220,33 @@ sub publish_ecrfs_xls {
     my ($result,$msg) = _run_dbtool(@dbtoolargs);
 
     return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
+        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype),$outputfile) if $result;
+    return undef;
+
+}
+
+sub publish_proband_list {
+    my ($log_level) = @_;
+    $log_level //= '';
+    my $filename = sprintf($proband_list_filename,(length($log_level) > 0 ? lc($log_level) : 'full_subject_list'),timestampdigits(), $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsextension);
+    my $outputfile = $output_path . $filename;
+
+    #-eep "D:\ctsms\ecrf.pdf" -f -u "somebody" -p "password" -id 5949677
+    my @dbtoolargs = ($dbtool,
+                           '-epl',
+                           $outputfile,
+                           '-u',
+                           $ctsmsrestapi_username,
+                           '-p',
+                           $ctsmsrestapi_password,
+                           '-id',
+                           $ecrf_data_trial_id);
+    if (length($log_level) > 0) {
+        push(@dbtoolargs,'-ll',uc($log_level));
+    }
+    my ($result,$msg) = _run_dbtool(@dbtoolargs);
+
+    return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,''),
         $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype),$outputfile) if $result;
     return undef;
 
