@@ -96,7 +96,7 @@ our @EXPORT_OK = qw(
 
     scripterror
     scriptwarn
-    
+
     $cli
 );
 
@@ -119,11 +119,11 @@ sub done {
         my $appexitsecs = Time::HiRes::time();
         #$message .= "\n\n" . sprintf("%.2f",$appexitsecs - $appstartsecs) . ' seconds';
         $message .= "\n\n" . 'time elapsed: ' . secs_to_years(ceil($appexitsecs - $appstartsecs));
-    
+
         if (defined $logger) {
             $logger->info($message);
         }
-    
+
         if (threadid() == $root_threadid) {
             if (length($doneemailrecipient) > 0 and defined $logger) {
                 my $email = {
@@ -138,15 +138,15 @@ sub done {
                     body        => getscriptpath() . ":\n\n" . wrap_mailbody($message) . "\n\n" . $signature,
                     guid        => create_guid()
                 };
-    
+
                 my ($mailresult,$mailresultmessage) = send_email($email,$attachments,\&fileerror,\&emailwarn);
             }
-    
+
         }
     } else {
         if (defined $logger) {
             $logger->info($message);
-        }        
+        }
     }
 
 }
@@ -163,11 +163,11 @@ sub completion {
         my $appexitsecs = Time::HiRes::time();
         #$message .= "\n\n" . sprintf("%.2f",$appexitsecs - $appstartsecs) . ' seconds';
         $message .= "\n\n" . 'time elapsed: ' . secs_to_years(ceil($appexitsecs - $appstartsecs));
-    
+
         if (defined $logger) {
             $logger->info($message);
         }
-    
+
         if (threadid() == $root_threadid) {
             if (length($completionemailrecipient) > 0 and defined $logger) {
                 my $email = {
@@ -182,10 +182,10 @@ sub completion {
                     body        => getscriptpath() . ":\n\n" . wrap_mailbody($message) . "\n\n" . $signature,
                     guid        => create_guid()
                 };
-    
+
                 my ($mailresult,$mailresultmessage) = send_email($email,$attachments,\&fileerror,\&emailwarn);
             }
-    
+
             #exit(0);
         }
     } else {
@@ -207,7 +207,7 @@ sub warning {
         carp($message);
         #warn($message);
     } else {
-        
+
         if ($cli) {
             carp($message)
         } else {
