@@ -291,7 +291,7 @@ sub get_defaultcollectionpagesize {
     return $default_collection_page_size;
 }
 
-sub get_firscollectionpagenum {
+sub get_firstcollectionpagenum {
     my $self = shift;
     return $first_collection_page_num;
 }

@@ -622,7 +622,7 @@ sub get_defaultcollectionpagesize {
     notimplementederror((ref $self) . ': ' . (caller(0))[3] . ' not implemented',getlogger(__PACKAGE__));
 }
 
-sub get_firscollectionpagenum {
+sub get_firstcollectionpagenum {
     my $self = shift;
     notimplementederror((ref $self) . ': ' . (caller(0))[3] . ' not implemented',getlogger(__PACKAGE__));
 }
