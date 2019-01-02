@@ -1,4 +1,4 @@
-package CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionProperty;
+package CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::DBModule;
 use strict;
 
 ## no critic
@@ -23,61 +23,46 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_items
 
-    $NONE
-    $LONG
-    $LONG_HASH
-    $FLOAT
-    $FLOAT_HASH
-    $STRING
-    $STRING_HASH
-    $BOOLEAN
-    $BOOLEAN_HASH
-    $DATE
-    $DATE_HASH
-    $TIME
-    $TIME_HASH
-    $TIMESTAMP
-    $TIMESTAMP_HASH
+    $INVENTORY_DB
+    $STAFF_DB
+    $COURSE_DB
+    $TRIAL_DB
+    $PROBAND_DB
+    $USER_DB
+    $INPUT_FIELD_DB
+    $MASS_MAIL_DB
+
+    @DB_MODULES
 );
 
-our $NONE = 'NONE';
-our $LONG = 'LONG';
-our $LONG_HASH = 'LONG_HASH';
-our $FLOAT = 'FLOAT';
-our $FLOAT_HASH = 'FLOAT_HASH';
-our $STRING = 'STRING';
-our $STRING_HASH = 'STRING_HASH';
-our $BOOLEAN = 'BOOLEAN';
-our $BOOLEAN_HASH = 'BOOLEAN_HASH';
-our $DATE = 'DATE';
-our $DATE_HASH = 'DATE_HASH';
-our $TIME = 'TIME';
-our $TIME_HASH = 'TIME_HASH';
-our $TIMESTAMP = 'TIMESTAMP';
-our $TIMESTAMP_HASH = 'TIMESTAMP_HASH';
+our @DB_MODULES = ();
+our $INVENTORY_DB = 'INVENTORY_DB';
+push(@DB_MODULES,$INVENTORY_DB);
+our $STAFF_DB = 'STAFF_DB';
+push(@DB_MODULES,$STAFF_DB);
+our $COURSE_DB = 'COURSE_DB';
+push(@DB_MODULES,$COURSE_DB);
+our $TRIAL_DB = 'TRIAL_DB';
+push(@DB_MODULES,$TRIAL_DB);
+our $PROBAND_DB = 'PROBAND_DB';
+push(@DB_MODULES,$PROBAND_DB);
+our $USER_DB = 'USER_DB';
+push(@DB_MODULES,$USER_DB);
+our $INPUT_FIELD_DB = 'INPUT_FIELD_DB';
+push(@DB_MODULES,$INPUT_FIELD_DB);
+our $MASS_MAIL_DB = 'MASS_MAIL_DB';
+push(@DB_MODULES,$MASS_MAIL_DB);
 
 my $default_restapi = \&get_ctsms_restapi;
 my $get_items_path_query = sub {
-    my ($module) = @_;
-    return 'selectionset/criterionproperties/' . get_query_string({ module => $module });
+    return 'selectionset/dbmodules/';
 };
 #my $collection_path_query = 'api/' . $resource . '/';
 
 my $fieldnames = [
-    "completeMethodName",
-    "converter",
-    "entityName",
-    "getNameMethodName",
-    "getValueMethodName",
-    "id",
     "module",
     "name",
     "nameL10nKey",
-    "picker",
-    "property",
-    "selectionSetServiceMethodName",
-    "validRestrictions",
-    "valueType",
 ];
 
 sub new {
@@ -93,9 +78,9 @@ sub new {
 
 sub get_items {
 
-    my ($module,$load_recursive,$restapi,$headers) = @_;
+    my ($load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->get(&$get_items_path_query($module),$headers),$load_recursive,$restapi);
+    return builditems_fromrows($api->get(&$get_items_path_query(),$headers),$load_recursive,$restapi);
 
 }
 

@@ -40,23 +40,12 @@ use CTSMS::BulkProcessor::LogError qw(
     rowprocessingwarn
 );
 
-#use CTSMS::BulkProcessor::Projects::Migration::IPGallery::Dao::import::Lnp qw();
-
-#use CTSMS::BulkProcessor::Dao::Trunk::billing::lnp_providers qw();
-#use CTSMS::BulkProcessor::Dao::mr441::billing::lnp_providers qw();
-#use CTSMS::BulkProcessor::Dao::Trunk::billing::lnp_numbers qw();
-
 #use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::JournalModule qw();
 
 use CTSMS::BulkProcessor::ConnectorPool qw(
     get_ctsms_db
     destroy_dbs
 );
-#get_xa_db
-
-#use CTSMS::BulkProcessor::Projects::Migration::IPGallery::ProjectConnectorPool qw(
-#    destroy_all_dbs
-#);
 
 use CTSMS::BulkProcessor::Projects::Render::GnuPlot qw(
     plot

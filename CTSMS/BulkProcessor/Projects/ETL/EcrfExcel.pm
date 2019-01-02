@@ -33,9 +33,9 @@ our $xlsxextension = '.xlsx';
 our $xlsxmimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 sub write_workbook {
-    
+
     my ($filename,$xslx,@modules) = @_;
-    
+
     my ($workbook,$header_format,$cell_format) = _create_workbook($filename,$xslx);
     my $result = 0;
     if (defined $workbook) {
@@ -43,7 +43,7 @@ sub write_workbook {
             my $rows = 0;
             my $sheetname = &{$module . '::gettablename'}();
             my $worksheet = $workbook->add_worksheet($sheetname);
-        
+
             if (_write_output_table($worksheet,\$rows,$module,$header_format,$cell_format)) {
                 processing_info(undef,"$rows rows written to spreadsheet '$sheetname'",getlogger(__PACKAGE__));
                 $result = 1;
@@ -54,30 +54,30 @@ sub write_workbook {
         $workbook->close();
     }
     return $result;
-    
+
 }
 
 sub _create_workbook {
 
     my ($filename,$xslx) = @_;
-    
+
     my $workbook = ($xslx ?
         Excel::Writer::XLSX->new($filename) :
-        Spreadsheet::WriteExcel->new($filename)) or fileerror($_, getlogger(__PACKAGE__));
-    
-    my $header_format = $workbook->add_format(); 
+        Spreadsheet::WriteExcel->new($filename)) or fileerror($!, getlogger(__PACKAGE__));
+
+    my $header_format = $workbook->add_format();
     $header_format->set_bold();
-    
+
     my $cell_format = undef; #$workbook->add_format(); #output file size!
     #$cell_format->set_bg_color('gray');
     processing_info(undef,"workbook '$filename' created",getlogger(__PACKAGE__));
-    
+
     return ($workbook,$header_format,$cell_format);
-    
+
 }
 
 sub _write_output_table {
-    
+
     my ($worksheet,$row_ref,$module,$header_format,$cell_format) = @_;
 
     my $col = 0;
@@ -87,8 +87,8 @@ sub _write_output_table {
 		$worksheet->write_string($$row_ref, $col, $colname, $header_format);
 		$col++;
 	}
-    $$row_ref = $$row_ref + 1;    
-    
+    $$row_ref = $$row_ref + 1;
+
     return &{$module . '::process_records'}(
         #static_context => $static_context,
         process_code => sub {

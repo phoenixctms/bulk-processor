@@ -51,6 +51,7 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Prob
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionProperty qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::DBModule qw();
 
 use CTSMS::BulkProcessor::Projects::ETL::Duplicates::ProjectConnectorPool qw(
     get_sqlite_db
@@ -82,7 +83,6 @@ sub import_proband {
     my $static_context = {};
     #my $result = _init_import_proband_context($context);
     my $result = _import_proband_checks($static_context);
-    #$result &= CTSMS::BulkProcessor::Projects::Migration::IPGallery::Dao::import::FeatureOptionSetItem::create_table(0);
 
     $result = CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText::create_table($proband_plain_text_truncate_table) if $result;
 
@@ -216,7 +216,7 @@ sub _import_proband_checks {
         ($context->{criterionrestriction_map}, $keys, $values) = array_to_map(CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::get_items(),
             sub { my $item = shift; return $item->{nameL10nKey}; },sub { my $item = shift; return $item->{id}; },'last');
         ($context->{criterionproperty_map}, $keys, $values) = array_to_map(CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionProperty::get_items(
-            $CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionProperty::PROBAND_DB),
+            $CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::DBModule::PROBAND_DB),
             sub { my $item = shift; return $item->{nameL10nKey}; },sub { my $item = shift; return $item->{id}; },'last');
     };
     if ($@) {
@@ -224,7 +224,7 @@ sub _import_proband_checks {
         $result = 0; #even in skip-error mode..
     } else {
         $context->{proband_criteria} = {
-            module => $CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionProperty::PROBAND_DB,
+            module => $CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::DBModule::PROBAND_DB,
             criterions => [{
                 position => 1,
                 tieId => undef,

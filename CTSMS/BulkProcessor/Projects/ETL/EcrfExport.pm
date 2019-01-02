@@ -314,7 +314,6 @@ sub export_ecrf_data_vertical {
 
     # create tables:
     $result = CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataVertical::create_table($ecrf_data_truncate_table,$context->{ecrffieldmaxselectionsetvaluecount},$ecrf_data_listentrytags) if $result;
-    #$result &= CTSMS::BulkProcessor::Projects::Migration::IPGallery::Dao::import::FeatureOptionSetItem::create_table(0);
 
     $result = _export_items($context) if $result;
     undef $context->{db};
