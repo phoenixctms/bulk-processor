@@ -29,7 +29,7 @@ Date_Init('DateFormat=US');
 
 use Date::Calc qw(Normalize_DHMS Add_Delta_DHMS);
 
-#use DateTime::Format::Excel qw();
+use DateTime::Format::Excel qw();
 
 use Text::Wrap qw();
 #use FindBin qw($Bin);
@@ -118,11 +118,11 @@ our @EXPORT_OK = qw(
     run
     shell_args
 
+    excel_to_date
+    excel_to_timestamp
 );
 #create_uuid
 #check_ipnet
-#excel_to_date
-#excel_to_timestamp
 
 our $chmod_umask = 0777; #0644;
 #"You need the group "x" bit set in the directory to allow group searches. The "rw-" permissions allow opening a file given its name (r) or creating a file (w), but not listing or searching the files (x)."
@@ -141,7 +141,7 @@ sub float_equal {
 
 sub round {
 
-    my ($number) = shift;
+    my ($number) = @_;
     return int($number + .5 * ($number <=> 0));
 
 }
@@ -467,23 +467,23 @@ sub get_year_month_day {
 }
 
 
-#sub excel_to_date {
-#    my $excel_date_value = shift;
-#    if ($excel_date_value > 0) {
-#        my $datetime = DateTime::Format::Excel->parse_datetime($excel_date_value);
-#        return $datetime->ymd('-');     # prints 2003-02-28
-#    }
-#    return undef;
-#}
-#
-#sub excel_to_timestamp {
-#    my $excel_datetime_value = shift;
-#    if ($excel_datetime_value > 0) {
-#        my $datetime = DateTime::Format::Excel->parse_datetime($excel_datetime_value);
-#        return $datetime->ymd('-') . ' ' . $datetime->hms(':');
-#    }
-#    return undef;
-#}
+sub excel_to_date {
+    my $excel_date_value = shift;
+    if ($excel_date_value > 0) {
+        my $datetime = DateTime::Format::Excel->parse_datetime($excel_date_value);
+        return $datetime->ymd('-');     # prints 2003-02-28
+    }
+    return undef;
+}
+
+sub excel_to_timestamp {
+    my $excel_datetime_value = shift;
+    if ($excel_datetime_value > 0) {
+        my $datetime = DateTime::Format::Excel->parse_datetime($excel_datetime_value);
+        return $datetime->ymd('-') . ' ' . $datetime->hms(':');
+    }
+    return undef;
+}
 
 sub zerofill {
   my ($integer,$digits) = @_;

@@ -23,8 +23,9 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
     addsignup_item
+    add_item
     get_trial_list
 );
 
@@ -44,6 +45,9 @@ my $get_trial_path_query = sub {
 };
 my $get_addsignup_path_query = sub {
     return 'probandlistentry/signup/';
+};
+my $get_add_path_query = sub {
+    return 'probandlistentry/';
 };
 #my $get_update_path_query = sub {
 #    return 'probandlistentry/';
@@ -91,6 +95,14 @@ sub addsignup_item {
 
 }
 
+sub add_item {
+
+    my ($in,$load_recursive,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return builditems_fromrows($api->post(&$get_add_path_query(),$in,$headers),$load_recursive,$restapi);
+
+}
+
 sub get_trial_list {
 
     my ($trial_id,$probandgroup_id,$proband_id,$total,$p,$sf,$load_recursive,$restapi,$headers) = @_;
@@ -131,7 +143,7 @@ sub get_item_path {
 }
 
 sub TO_JSON {
-    
+
     my $self = shift;
     return { %{$self} };
     #    value => $self->{zipcode},

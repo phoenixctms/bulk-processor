@@ -20,6 +20,26 @@ use CTSMS::BulkProcessor::RestItem qw();
 use CTSMS::BulkProcessor::Array qw(array_to_map);
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputFieldSelectionSetValue qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::InputFieldType qw(
+    $SINGLE_LINE_TEXT
+    $MULTI_LINE_TEXT
+    $AUTOCOMPLETE
+
+    $SELECT_ONE_DROPDOWN
+    $SELECT_ONE_RADIO_H
+    $SELECT_ONE_RADIO_V
+    $SELECT_MANY_H
+    $SELECT_MANY_V
+
+    $SKETCH
+);
+#$CHECKBOX
+#$DATE
+#$TIME
+#$TIMESTAMP
+
+#$INTEGER
+#$FLOAT
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
@@ -143,9 +163,9 @@ sub transformitem {
 sub is_select {
     my $self = shift;
     my $fieldtype = $self->{fieldType}->{nameL10nKey};
-    if ('SELECT_ONE_RADIO_V' eq $fieldtype or 'SELECT_ONE_RADIO_H' eq $fieldtype
-             or 'SELECT_ONE_DROPDOWN' eq $fieldtype or 'SKETCH' eq $fieldtype
-             or 'SELECT_MANY_V' eq $fieldtype or 'SELECT_MANY_H' eq $fieldtype) {
+    if ($SELECT_ONE_RADIO_V eq $fieldtype or $SELECT_ONE_RADIO_H eq $fieldtype
+             or $SELECT_ONE_DROPDOWN eq $fieldtype or $SKETCH eq $fieldtype
+             or $SELECT_MANY_V eq $fieldtype or $SELECT_MANY_H eq $fieldtype) {
         return 1;
     }
     return 0;
@@ -154,7 +174,7 @@ sub is_select {
 sub is_text {
     my $self = shift;
     my $fieldtype = $self->{fieldType}->{nameL10nKey};
-    if ('SINGLE_LINE_TEXT' eq $fieldtype or 'MULTI_LINE_TEXT' eq $fieldtype or 'AUTOCOMPLETE' eq $fieldtype) {
+    if ($SINGLE_LINE_TEXT eq $fieldtype or $MULTI_LINE_TEXT eq $fieldtype or $AUTOCOMPLETE eq $fieldtype) {
         return 1;
     }
     return 0;

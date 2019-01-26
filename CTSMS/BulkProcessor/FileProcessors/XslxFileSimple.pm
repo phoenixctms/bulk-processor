@@ -158,7 +158,7 @@ sub process {
         if ($skip_errors) {
             fileprocessingwarn($file,$err,getlogger(__PACKAGE__));
         } else {
-            fileprocessingfailed($file,$err,getlogger(__PACKAGE__));
+            fileprocessingfailed($file,getlogger(__PACKAGE__));
         }
         $result = 0;
     } else {
