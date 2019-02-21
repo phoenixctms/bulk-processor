@@ -130,6 +130,11 @@ my $group_abbreviate_opts = {};
 my $inputfieldname_abbreviate_opts = {};
 my $selectionvalue_abbreviate_opts = {};
 
+my $ecrf_data_include_ecrffield_code = sub {
+    my ($ecrffield) = @_;
+    return 1;
+};
+
 our %export_colname_abbreviation = (
     ignore_external_ids => undef,
     ecrf_position_digits => 2,
@@ -218,15 +223,14 @@ sub abbreviate {
 }
 
 sub ecrf_data_include_ecrffield {
-    my ($ecrffield) = @_;
-    return 1; #todo
+    return &$ecrf_data_include_ecrffield_code(shift);
 }
 
 sub update_settings {
 
     my ($data,$configfile) = @_;
 
-    if (defined $data and defined ($data = $data->[0])) {
+    if (defined $data) { # and defined ($data = $data->[0])) {
 
         my $result = 1;
         #my $regexp_result;
@@ -266,6 +270,14 @@ sub update_settings {
         $ecrf_data_export_horizontal_csv_filename = $data->{ecrf_data_export_horizontal_csv_filename} if exists $data->{ecrf_data_export_horizontal_csv_filename};
         $ecrf_data_export_xls_filename = $data->{ecrf_data_export_xls_filename} if exists $data->{ecrf_data_export_xls_filename};
         $ecrf_data_export_xlsx = $data->{ecrf_data_export_xlsx} if exists $data->{ecrf_data_export_xlsx};
+
+        if (exists $data->{ecrf_data_include_ecrffield_code}) {
+            if ('CODE' eq ref $data->{ecrf_data_include_ecrffield_code}) {
+                $ecrf_data_include_ecrffield_code = $data->{ecrf_data_include_ecrffield_code};
+            } else {
+                configurationerror($configfile,"perl code reference required for ecrf_data_include_ecrffield_code",getlogger(__PACKAGE__));
+            }
+        }
 
         $ctsms_base_url = $data->{ctsms_base_uri} if exists $data->{ctsms_base_uri};
         $ctsms_base_url = _get_ctsms_baseuri() unless $ctsms_base_url;

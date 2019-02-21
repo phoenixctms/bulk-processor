@@ -31,7 +31,9 @@ use CTSMS::BulkProcessor::LogError qw(
     configurationerror
 );
 
-use YAML::Tiny qw();
+#use YAML::Tiny qw();
+use YAML qw();
+$YAML::UseCode = 1;
 use Config::Any qw();
 use CTSMS::BulkProcessor::Utils qw(format_number trim);
 
@@ -312,7 +314,7 @@ sub _parse_yaml_config {
 
     my $config = undef;
     eval {
-        $config = YAML::Tiny->read($file);
+        $config = YAML::LoadFile($file);
     };
     if ($@) {
         configurationerror($file,'parsing yaml format - error: ' . $@,getlogger(__PACKAGE__));
