@@ -25,7 +25,7 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
     get_trial_list
 );
 
@@ -35,11 +35,10 @@ my $get_item_path_query = sub {
     return 'probandlistentrytag/' . $id;
 };
 my $get_trial_path_query = sub {
-    my ($trial_id) = @_;
-    #my %params = ();
-    #$params{active} = booltostring($active) if defined $active;
-    #$params{activeSignup} = booltostring($active_signup) if defined $active_signup;
-    return 'trial/' . $trial_id . '/list/probandlistentrytag'; # . get_query_string(\%params);
+    my ($trial_id,$stratification) = @_;
+    my %params = ();
+    $params{stratification} = booltostring($stratification) if defined $stratification;
+    return 'trial/' . $trial_id . '/list/probandlistentrytag' . get_query_string(\%params);
 };
 
 my $fieldnames = [
@@ -61,6 +60,8 @@ my $fieldnames = [
     "trial",
     "uniqueName",
     "version",
+    "stratification",
+    "randomize",
 ];
 
 sub new {
@@ -84,9 +85,9 @@ sub get_item {
 
 sub get_trial_list {
 
-    my ($trial_id,$p,$sf,$load_recursive,$restapi,$headers) = @_;
+    my ($trial_id,$stratification,$p,$sf,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_trial_path_query($trial_id),$p,$sf),$headers),$p),$load_recursive,$restapi);
+    return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_trial_path_query($trial_id,$stratification),$p,$sf),$headers),$p),$load_recursive,$restapi);
 
 }
 
