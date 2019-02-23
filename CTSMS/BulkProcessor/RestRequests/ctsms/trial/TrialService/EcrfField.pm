@@ -164,6 +164,7 @@ sub get_export_colnames {
         $ecrf_position_digits,
         $ecrffield_position_digits,
         $index_digits,
+        $col_per_selection_set_value,
         $selectionValues,
         $sanitize_colname_symbols_code) = @params{qw/
             ecrffield
@@ -179,11 +180,12 @@ sub get_export_colnames {
             ecrf_position_digits
             ecrffield_position_digits
             index_digits
+            col_per_selection_set_value
             selectionValues
             sanitize_colname_symbols_code
         /};
     $get_colname_parts_code = sub { return (); } unless 'CODE' eq ref $get_colname_parts_code;
-    $abbreviate_selectionvalue_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_selectionvalue_code;
+    $abbreviate_selectionvalue_code = sub { my ($value,$id) = @_; return $value; } unless 'CODE' eq ref $abbreviate_selectionvalue_code;
     my $selectionSetValues = $ecrffield->{field}->{selectionSetValues};
     $selectionSetValues = $selectionValues if exists $params{selectionValues};
     $selectionSetValues //= [];
@@ -191,41 +193,46 @@ sub get_export_colnames {
     my $prefix;
     my @parts = &$get_colname_parts_code($ecrffield,$index);
     unless ((scalar @parts) > 0) {
-        unless ($ignore_external_ids) {
-            push(@parts,$ecrffield->{ecrf}->{externalId}) if defined $ecrffield->{ecrf}->{externalId} and length($ecrffield->{ecrf}->{externalId}) > 0;
-            push(@parts,$ecrffield->{externalId}) if defined $ecrffield->{externalId} and length($ecrffield->{externalId}) > 0;
-            push(@parts,$ecrffield->{field}->{externalId}) if defined $ecrffield->{field}->{externalId} and length($ecrffield->{field}->{externalId}) > 0;
-        }
-        if (defined $ecrffield->{externalId} and length($ecrffield->{externalId}) > 0
-            or defined $ecrffield->{field}->{externalId} and length($ecrffield->{field}->{externalId}) > 0) {
-            push(@parts,zerofill($index,$index_digits)) if $ecrffield->{series};
-            $abbreviate_selectionvalue_code = sub { my ($value,$id) = @_; return $value; };
+        my $external_id_used = 0;
+        if (not $ignore_external_ids and defined $ecrffield->{ecrf}->{externalId} and length($ecrffield->{ecrf}->{externalId}) > 0) {
+            push(@parts,$ecrffield->{ecrf}->{externalId});
+            $external_id_used = 1;
         } else {
-            $prefix = 'p';
             $abbreviate_ecrf_name_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_ecrf_name_code;
             $abbreviate_visit_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_visit_code;
             $abbreviate_group_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_group_code;
-            $abbreviate_section_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_section_code;
-            $abbreviate_inputfield_name_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_inputfield_name_code;
             $ecrf_position_digits //= 2;
-            $ecrffield_position_digits //= 2;
-            $index_digits //= 2;
-            #$section_digits //= 2;
-            #push(@parts,'C');
             push(@parts,&$abbreviate_group_code($ecrffield->{ecrf}->{group}->{token},$ecrffield->{ecrf}->{group}->{title},$ecrffield->{ecrf}->{group}->{id})) if $ecrffield->{ecrf}->{group};
             push(@parts,zerofill($ecrffield->{ecrf}->{position},$ecrf_position_digits));
             push(@parts,&$abbreviate_visit_code($ecrffield->{ecrf}->{visit}->{token},$ecrffield->{ecrf}->{visit}->{title},$ecrffield->{ecrf}->{visit}->{id})) if $ecrffield->{ecrf}->{visit};
             my $ecrf_name = &$abbreviate_ecrf_name_code($ecrffield->{ecrf}->{name},$ecrffield->{ecrf}->{id});
             push(@parts,$ecrf_name) if defined $ecrf_name and length($ecrf_name) > 0;
-            #'SECT' . chopstring($ecrffield->{section},2,'')
+        }
+        $index_digits //= 2;
+        if (not $ignore_external_ids and defined $ecrffield->{externalId} and length($ecrffield->{externalId}) > 0) {
+            push(@parts,$ecrffield->{externalId});
+            push(@parts,zerofill($index,$index_digits)) if $ecrffield->{series};
+            $abbreviate_selectionvalue_code = sub { my ($value,$id) = @_; return $value; };
+            $external_id_used = 1;
+        # relying on collisison detection
+        } elsif (not $ignore_external_ids and defined $ecrffield->{field}->{externalId} and length($ecrffield->{field}->{externalId}) > 0) {
+            push(@parts,$ecrffield->{field}->{externalId});
+            push(@parts,zerofill($index,$index_digits)) if $ecrffield->{series};
+            $abbreviate_selectionvalue_code = sub { my ($value,$id) = @_; return $value; };
+            $external_id_used = 1;
+        } else {
+            $abbreviate_inputfield_name_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_inputfield_name_code;
+            $abbreviate_section_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_section_code;
+            $ecrffield_position_digits //= 2;
             push(@parts,&$abbreviate_section_code($ecrffield->{section})) if length($ecrffield->{section}) > 0;
             push(@parts,zerofill($ecrffield->{position},$ecrffield_position_digits));
             push(@parts,&$abbreviate_inputfield_name_code($ecrffield->{field}->{nameL10nKey},$ecrffield->{field}->{id}));
             push(@parts,'i' . zerofill($index,$index_digits)) if $ecrffield->{series};
             #my $fieldtype = $ecrffield->{field}->{fieldType}->{nameL10nKey};
         }
+        $prefix = 'p' unless $external_id_used;
     }
-    if ($ecrffield->{field}->is_select()) {
+    if ($col_per_selection_set_value and $ecrffield->{field}->is_select()) {
         foreach my $selectionsetvalue (@$selectionSetValues) {
             push(@export_colnames,_sanitize_export_colname(join(' ',@parts,&$abbreviate_selectionvalue_code($selectionsetvalue->{value},$selectionsetvalue->{id})),$sanitize_colname_symbols_code,$prefix));
         }

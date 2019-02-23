@@ -66,6 +66,8 @@ our @EXPORT_OK = qw(
     $ecrf_data_listentrytags
 
     %export_colname_abbreviation
+    $col_per_selection_set_value
+    $selection_set_value_separator
     ecrf_data_include_ecrffield
     $ecrf_data_export_upload_folder
     $ecrf_data_export_sqlite_filename
@@ -129,6 +131,9 @@ my $visit_abbreviate_opts = {};
 my $group_abbreviate_opts = {};
 my $inputfieldname_abbreviate_opts = {};
 my $selectionvalue_abbreviate_opts = {};
+
+our $col_per_selection_set_value = 1;
+our $selection_set_value_separator = ',';
 
 my $ecrf_data_include_ecrffield_code = sub {
     my ($ecrffield) = @_;
@@ -270,6 +275,10 @@ sub update_settings {
         $ecrf_data_export_horizontal_csv_filename = $data->{ecrf_data_export_horizontal_csv_filename} if exists $data->{ecrf_data_export_horizontal_csv_filename};
         $ecrf_data_export_xls_filename = $data->{ecrf_data_export_xls_filename} if exists $data->{ecrf_data_export_xls_filename};
         $ecrf_data_export_xlsx = $data->{ecrf_data_export_xlsx} if exists $data->{ecrf_data_export_xlsx};
+
+        $col_per_selection_set_value = $data->{col_per_selection_set_value} if exists $data->{col_per_selection_set_value};
+        $selection_set_value_separator = $data->{selection_set_value_separator} if exists $data->{selection_set_value_separator};
+        $selection_set_value_separator //= '';
 
         if (exists $data->{ecrf_data_include_ecrffield_code}) {
             if ('CODE' eq ref $data->{ecrf_data_include_ecrffield_code}) {
