@@ -8,17 +8,17 @@ call ppm install Config-Any
 call ppm install Spreadsheet-ParseExcel
 call ppm install XML-LibXML
 
-call cpan -T -f -i Log::Log4perl
-call cpan -T -i DateTime::Format::Excel
-call cpan -T -i Locale::Recode
-call cpan -T -i Unicode::Map
-call cpan -T -i MIME::Parser
-call cpan -T -i Spreadsheet::WriteExcel
-call cpan -T -i Excel::Writer::XLSX
+call cpan -T Log::Log4perl
+call cpan -T DateTime::Format::Excel
+call cpan -T Locale::Recode
+call cpan -T Unicode::Map
+call cpan -T MIME::Parser
+call cpan -T Spreadsheet::WriteExcel
+call cpan -T Excel::Writer::XLSX
 
 call ppm install Cookie-Baker
-call cpan -T -i Dancer
-call cpan -T -i Dancer::Plugin::I18N
-call cpan -T -i Template::Toolkit
+call cpan -T Dancer
+call cpan -T Dancer::Plugin::I18N
+call cpan -T Template::Toolkit
 
-call cpan -T -f -i GraphViz
+call cpan -T GraphViz
