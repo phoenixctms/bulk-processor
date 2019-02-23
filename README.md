@@ -9,6 +9,7 @@ The Bulk-Processor is a perl-based framework for ETL programs which hosts a grow
 - data cleaning (eg. duplicate subject signups)
 - various other ETL programs (reporting, query definition import/export, ...)
 - rendering tools (system usage stats, workflow diagrams, data analysis, ...)
+
 It can be installed and executed locally, connecting to a remote Phoenix CTMS instance via Rest-API (or to PostgreSQL, MySQL, ... database directly).
 
 Installation on Windows
@@ -25,7 +26,7 @@ The following was tested on a vanilla Windows 8 VM.
 2. Put together your local installation:
 * download https://github.com/phoenixctms/bulk-processor/archive/master.zip and extract to C:\
 * download https://github.com/phoenixctms/config-default/archive/master.zip and extract to C:\
-* create a folder c:\bulk-processor
+* create a folder C:\bulk-processor
 * move content from C:\bulk-processor-master to C:\bulk-processor
 * move content from C:\config-default-master\bulk_processor to C:\bulk-processor
 * optional: 
@@ -37,7 +38,7 @@ The following was tested on a vanilla Windows 8 VM.
 ```
 install_dependencies.bat
 ```
-* done. change to a project (eg. C:\bulk-processor\CTSMS\BulkProcessor\Projects\ETL\EcrfExporter), adjust .cfg/.yml files and run
+* done. change to a project (eg. C:\bulk-processor\CTSMS\BulkProcessor\Projects\ETL\EcrfExporter), adjust the settings in .cfg/.yml files and run
 ```
 perl process.pl
 ```
