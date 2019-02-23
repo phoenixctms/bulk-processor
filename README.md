@@ -18,10 +18,11 @@ The following was tested on a vanilla Windows 8 VM.
 
 1. Prerequisites:
 * download and install a recent ActivePerl for Windows (eg. ActivePerl-5.26.3.2603-MSWin32-x64-a95bce075.exe)
-* optional: download and install GraphViz (eg. graphviz-2.38.msi), add C:\Program Files (x86)\Graphviz2.38\bin to your "Path" environment variable
-* optional: download and install GNUPlot (eg. gp526-win64-mingw_2.exe)
-* optional: download and install GhostScript (eg. gs926aw64.exe)
-* optional: download and install ImageMagick (eg. ImageMagick-7.0.8-28-Q16-x64-static.exe)
+* optional:
+  - download and install GraphViz (eg. graphviz-2.38.msi), add C:\Program Files (x86)\Graphviz2.38\bin to your "Path" environment variable
+  - download and install GNUPlot (eg. gp526-win64-mingw_2.exe)
+  - download and install GhostScript (eg. gs926aw64.exe)
+  - download and install ImageMagick (eg. ImageMagick-7.0.8-28-Q16-x64-static.exe)
 
 2. Put together your local installation:
 * download https://github.com/phoenixctms/bulk-processor/archive/master.zip and extract to C:\
