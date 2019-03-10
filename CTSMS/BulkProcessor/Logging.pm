@@ -86,7 +86,7 @@ our @EXPORT_OK = qw(
 
     faketimeinfo
     faketimedebug
-    
+
     runinfo
     rundebug
 
@@ -99,7 +99,7 @@ our @EXPORT_OK = qw(
     tablefixed
     servicedebug
     serviceinfo
-    
+
 );
 #rowskipped
 
@@ -658,7 +658,7 @@ sub processing_info {
 
     my ($tid, $message, $logger) = @_;
     if (defined $logger) {
-        $logger->info(($enablemultithreading ? '[' . $tid . '] ' : '') . $message);
+        $logger->info((($enablemultithreading and defined $tid) ? '[' . $tid . '] ' : '') . $message);
     }
 
 }
@@ -667,7 +667,7 @@ sub processing_debug {
 
     my ($tid, $message, $logger) = @_;
     if (defined $logger) {
-        $logger->debug(($enablemultithreading ? '[' . $tid . '] ' : '') . $message);
+        $logger->debug((($enablemultithreading and defined $tid) ? '[' . $tid . '] ' : '') . $message);
     }
 
 }
