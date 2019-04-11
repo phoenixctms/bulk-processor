@@ -101,6 +101,7 @@ my $fieldnames = [
     "width",
     "deferredDelete",
     "deferredDeleteReason",
+    "userTimeZone",
 ];
 
 sub new {

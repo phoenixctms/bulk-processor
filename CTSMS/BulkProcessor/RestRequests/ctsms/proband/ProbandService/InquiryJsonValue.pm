@@ -23,11 +23,11 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputF
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
-    
+
 );
 #   get_item
 #   get_item_path
- 
+
 
 #my $default_restapi = \&get_ctsms_restapi;
 #my $get_item_path_query = sub {
@@ -57,6 +57,7 @@ my $fieldnames = [
     "textValue",
     "timeValue",
     "timestampValue",
+    "userTimeZone",
 ];
 
 sub new {
@@ -111,7 +112,7 @@ sub transformitem {
 }
 
 sub TO_JSON {
-    
+
     my $self = shift;
     return { %{$self} };
     #    value => $self->{zipcode},
