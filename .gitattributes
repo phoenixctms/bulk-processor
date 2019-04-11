@@ -6,6 +6,7 @@
 *.pl           text
 *.pm            text
 *.md            text
+*.sh            text
 
 # Declare files that will always have CRLF line endings on checkout.
 *.bat text eol=crlf
