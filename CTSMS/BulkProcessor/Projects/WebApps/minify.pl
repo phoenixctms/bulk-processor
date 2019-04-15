@@ -17,7 +17,7 @@ use CTSMS::BulkProcessor::Utils qw(fixdirpath run);
 my $yuicompressor_jar = fixdirpath(Cwd::abs_path(File::Basename::dirname(__FILE__))) . 'yuicompressor-2.4.7.jar';
 
 my @fileextensions = ('.js','.css');
-my $rfileextensions = join('|',map { quotemeta($_); } @fileextensions);
+my $rfileextensions = join('|',map { quotemeta($_) . '$'; } @fileextensions);
 my $minified_suffix = '.min';
 my $minified_pattern = quotemeta($minified_suffix) . '$';
 my $root;
