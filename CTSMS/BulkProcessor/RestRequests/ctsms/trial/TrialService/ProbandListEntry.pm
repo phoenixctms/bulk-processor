@@ -44,15 +44,17 @@ my $get_trial_path_query = sub {
     return 'trial/' . $trial_id . '/list/probandlistentry' . get_query_string(\%params);
 };
 my $get_addsignup_path_query = sub {
-    my ($randomize) = @_;
+    my ($randomize,$create_proband) = @_;
     my %params = ();
     $params{randomize} = booltostring($randomize) if defined $randomize;
+    $params{createProband} = booltostring($create_proband) if defined $create_proband;
     return 'probandlistentry/signup/' . get_query_string(\%params);
 };
 my $get_add_path_query = sub {
-    my ($randomize) = @_;
+    my ($randomize,$create_proband) = @_;
     my %params = ();
     $params{randomize} = booltostring($randomize) if defined $randomize;
+    $params{createProband} = booltostring($create_proband) if defined $create_proband;
     return 'probandlistentry/' . get_query_string(\%params);
 };
 #my $get_update_path_query = sub {
@@ -95,17 +97,17 @@ sub get_item {
 
 sub addsignup_item {
 
-    my ($in,$randomize,$load_recursive,$restapi,$headers) = @_;
+    my ($in,$randomize,$create_proband,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->post(&$get_addsignup_path_query($randomize),$in,$headers),$load_recursive,$restapi);
+    return builditems_fromrows($api->post(&$get_addsignup_path_query($randomize,$create_proband),$in,$headers),$load_recursive,$restapi);
 
 }
 
 sub add_item {
 
-    my ($in,$randomize,$load_recursive,$restapi,$headers) = @_;
+    my ($in,$randomize,$create_proband,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->post(&$get_add_path_query($randomize),$in,$headers),$load_recursive,$restapi);
+    return builditems_fromrows($api->post(&$get_add_path_query($randomize,$create_proband),$in,$headers),$load_recursive,$restapi);
 
 }
 
