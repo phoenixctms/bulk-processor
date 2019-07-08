@@ -9,6 +9,8 @@ use threads;
 use POSIX qw(strtod locale_h floor fmod);
 setlocale(LC_NUMERIC, 'C');
 
+use Fcntl qw(LOCK_EX LOCK_NB);
+
 use Data::UUID qw();
 #use UUID qw();
 
@@ -120,6 +122,8 @@ our @EXPORT_OK = qw(
 
     excel_to_date
     excel_to_timestamp
+
+    checkrunning
 );
 #create_uuid
 #check_ipnet
@@ -1247,6 +1251,27 @@ sub run {
         } else {
             return (0,sprintf($command . ' exited with value %d', $? >> 8));
         }
+    }
+
+}
+
+#https://www.perlmonks.org/?node_id=590619
+sub checkrunning {
+
+    my ($lockfile,$errorcode,$logger) = @_;
+
+    #local *LOCKFILE;
+
+    if (not open (LOCKFILE, '>' . $lockfile)) {
+      if (defined $errorcode and ref $errorcode eq 'CODE') {
+        return &$errorcode('cannot open file ' . $lockfile . ': ' . $!,$logger);
+      }
+      return 0;
+    } else {
+      unless (flock(LOCKFILE, LOCK_EX|LOCK_NB)) {
+        return &$errorcode('program already running',$logger);
+      }
+      return 1;
     }
 
 }
