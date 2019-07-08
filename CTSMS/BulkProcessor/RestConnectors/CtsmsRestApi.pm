@@ -420,6 +420,38 @@ sub put {
     }
 }
 
+sub put_file {
+    my $self = shift;
+    my ($path_query,$data,$file,$filename,$content_type,$content_encoding,$headers) = @_;
+
+    my $json;
+	eval {
+        $json = $self->_encode_put_content($data);
+    };
+    if ($@) {
+        restrequesterror($self,'error encoding PUT request content: ' . $@,undef,$data,getlogger(__PACKAGE__));
+    }
+
+    my %file_part_headers = ();
+    $file_part_headers{'Content-Type'} = $content_type if defined $content_type;
+    $file_part_headers{'Content-Encoding'} = $content_encoding if defined $content_encoding;
+    my $req = HTTP::Request::Common::PUT($self->_get_request_uri($path_query),
+        Content_Type    => 'form-data',
+        Content         => [
+            json    => $json,
+            data    => ('SCALAR' eq ref $file ? [ undef, $filename, 'Content' => $$file, %file_part_headers, ] :
+                       [ $file, $filename, %file_part_headers, ] )
+        ],
+    );
+    _add_headers($req,$headers);
+
+    if ($self->_put_raw($req,undef,undef)->code() != HTTP_OK) {
+        $self->_request_error();
+        return undef;
+    } else {
+        return $self->responsedata();
+    }
+}
 
 sub delete {
     my $self = shift;
