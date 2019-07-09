@@ -17,6 +17,7 @@ use CTSMS::BulkProcessor::Logging qw(
     getlogger
     scriptinfo
     configurationinfo
+    $attachmentlogfile
 );
 
 use CTSMS::BulkProcessor::LogError qw(
@@ -35,7 +36,7 @@ use CTSMS::BulkProcessor::ConnectorPool qw(
 
 );
 
-use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring); #check_ipnet
+use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring cat_file); #check_ipnet
 
 #use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Ecrf qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
@@ -44,6 +45,7 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
     update_settings
+    update_job
 
     $input_path
     $output_path
@@ -55,6 +57,8 @@ our @EXPORT_OK = qw(
     $ecrf_data_truncate_table
     $ecrf_data_ignore_duplicates
     $ecrf_data_trial_id
+    $job_id
+    @job_file
 
     $ecrf_data_api_listentries_page_size
     $ecrf_data_api_ecrfs_page_size
@@ -81,6 +85,7 @@ our @EXPORT_OK = qw(
 
     $ctsms_base_url
     $dbtool
+    $lockfile
     $ecrf_data_export_pdf_filename
     $ecrf_data_export_pdfs_filename
 
@@ -99,6 +104,9 @@ our $skip_errors = 0;
 our $ecrf_data_truncate_table = 1;
 our $ecrf_data_ignore_duplicates = 0;
 our $ecrf_data_trial_id = undef;
+our $job_id = undef;
+my $job = undef;
+our @job_file = ();
 
 our $ecrf_data_api_listentries_page_size = 10;
 our $ecrf_data_api_ecrfs_page_size  = 10;
@@ -121,6 +129,7 @@ our $ecrfs_export_xls_filename = "%s%s";
 
 our $ctsms_base_url = undef; #_get_ctsms_baseuri();
 our $dbtool = undef;
+our $lockfile = undef;
 our $ecrf_data_export_pdf_filename = '%s%s';
 our $ecrf_data_export_pdfs_filename = '%s_%s%s';
 
@@ -257,6 +266,11 @@ sub update_settings {
             my $ecrf_data_trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($ecrf_data_trial_id);
             configurationerror($configfile,"error loading trial id $ecrf_data_trial_id",getlogger(__PACKAGE__)) unless defined $ecrf_data_trial;
         }
+        $job_id = $data->{job_id} if exists $data->{job_id};
+        if (defined $job_id and length($job_id) > 0) {
+            $job = CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job::get_item($job_id);
+            configurationerror($configfile,"error loading job id $job_id",getlogger(__PACKAGE__)) unless defined $job;
+        }
 
         $ecrf_data_api_listentries_page_size = $data->{ecrf_data_api_listentries_page_size} if exists $data->{ecrf_data_api_listentries_page_size};
         $ecrf_data_api_ecrfs_page_size = $data->{ecrf_data_api_ecrfs_page_size} if exists $data->{ecrf_data_api_ecrfs_page_size};
@@ -291,6 +305,7 @@ sub update_settings {
         $ctsms_base_url = $data->{ctsms_base_uri} if exists $data->{ctsms_base_uri};
         $ctsms_base_url = _get_ctsms_baseuri() unless $ctsms_base_url;
         $dbtool = $data->{dbtool} if exists $data->{dbtool};
+        $lockfile = $data->{lockfile} if exists $data->{lockfile};
         $ecrf_data_export_pdf_filename = $data->{ecrf_data_export_pdf_filename} if exists $data->{ecrf_data_export_pdf_filename};
         $ecrf_data_export_pdfs_filename = $data->{ecrf_data_export_pdfs_filename} if exists $data->{ecrf_data_export_pdfs_filename};
 
@@ -312,6 +327,25 @@ sub update_settings {
 
     }
     return 0;
+
+}
+
+sub update_job {
+
+    my ($status) = @_;
+    if (defined $job) {
+        my $in = {
+            id => $job->{id},
+            version => $job->{version},
+            status => $status,
+            jobOutput => cat_file($attachmentlogfile,\&fileerror,getlogger(__PACKAGE__)),
+        };
+
+        my @args = ($in);
+        push(@args,@job_file) if $job->{type}->{outputFile};
+
+        $job = CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job::update_item(@args);
+    }
 
 }
 

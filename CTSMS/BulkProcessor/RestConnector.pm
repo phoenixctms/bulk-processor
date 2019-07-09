@@ -471,6 +471,32 @@ sub _put {
 
 }
 
+sub _put_raw {
+
+    my $self = shift;
+    my ($path_query_request,$data,$headers) = @_;
+    $self->_clearrequestdata();
+    $self->{requestdata} = $data;
+    if (blessed($path_query_request) and $path_query_request->isa('HTTP::Request')) {
+        $self->{req} = $path_query_request;
+        $self->_log_request($self->{req});
+    } else {
+        $self->{req} = HTTP::Request->new('PUT',$self->_get_request_uri($path_query_request));
+        _add_headers($self->{req},$headers);
+        $self->_log_request($self->{req});
+        $self->{req}->content($data);
+    }
+	$self->{res} = $self->_ua_request($self->{req});
+	$self->_log_response($self->{res});
+	eval {
+        $self->{responsedata} = $self->_decode_put_response($self->{res}->decoded_content());
+    };
+    if ($@) {
+        restresponseerror($self,'error decoding PUT response content: ' . $@,$self->{res},getlogger(__PACKAGE__));
+    }
+	return $self->{res};
+
+}
 
 sub put {
     my $self = shift;

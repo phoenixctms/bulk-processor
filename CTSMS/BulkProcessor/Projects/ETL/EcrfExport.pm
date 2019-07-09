@@ -126,6 +126,7 @@ my $pdfmimetype = 'application/pdf';
 
 sub publish_ecrf_data_pdf {
 
+    my ($upload_files) = @_;
     my $filename = sprintf($ecrf_data_export_pdf_filename,timestampdigits(), $pdfextension);
     my $outputfile = $output_path . $filename;
 
@@ -141,15 +142,17 @@ sub publish_ecrf_data_pdf {
                            $ecrf_data_trial_id);
     my ($result,$msg) = _run_dbtool(@dbtoolargs);
 
-    return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'PDF/'),
-        $outputfile,$filename,$pdfmimetype),$outputfile) if $result;
+    return (($upload_files ? CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'PDF/'),
+        $outputfile,$filename,$pdfmimetype) : undef),
+        $outputfile,$filename,$pdfmimetype) if $result;
     return undef;
 
 }
 
 sub publish_ecrf_data_pdfs {
 
-    my $context = {};
+    my ($upload_files) = @_;
+    my $context = { upload_files => $upload_files, };
     my $result = _init_ecrf_data_pdfs_context($context);
 
     $result = _export_items($context) if $result;
@@ -160,6 +163,7 @@ sub publish_ecrf_data_pdfs {
 
 sub publish_audit_trail_xls {
 
+    my ($upload_files) = @_;
     my $filename = sprintf($audit_trail_export_xls_filename,timestampdigits(), $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsextension);
     my $outputfile = $output_path . $filename;
 
@@ -175,14 +179,16 @@ sub publish_audit_trail_xls {
                            $ecrf_data_trial_id);
     my ($result,$msg) = _run_dbtool(@dbtoolargs);
 
-    return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
-        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype),$outputfile) if $result;
+    return (($upload_files ? CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
+        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype) : undef),
+        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype) if $result;
     return undef;
 
 }
 
 sub publish_ecrf_journal_xls {
 
+    my ($upload_files) = @_;
     my $filename = sprintf($ecrf_journal_export_xls_filename,timestampdigits(), $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsextension);
     my $outputfile = $output_path . $filename;
 
@@ -198,14 +204,16 @@ sub publish_ecrf_journal_xls {
                            $ecrf_data_trial_id);
     my ($result,$msg) = _run_dbtool(@dbtoolargs);
 
-    return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
-        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype),$outputfile) if $result;
+    return (($upload_files ? CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
+        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype) : undef),
+        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype) if $result;
     return undef;
 
 }
 
 sub publish_ecrfs_xls {
 
+    my ($upload_files) = @_;
     my $filename = sprintf($ecrfs_export_xls_filename,timestampdigits(), $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsextension);
     my $outputfile = $output_path . $filename;
 
@@ -221,14 +229,16 @@ sub publish_ecrfs_xls {
                            $ecrf_data_trial_id);
     my ($result,$msg) = _run_dbtool(@dbtoolargs);
 
-    return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
-        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype),$outputfile) if $result;
+    return (($upload_files ? CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
+        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype) : undef),
+        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype) if $result;
     return undef;
 
 }
 
 sub publish_proband_list {
-    my ($log_level) = @_;
+
+    my ($log_level,$upload_files) = @_;
     $log_level //= '';
     my $filename = sprintf($proband_list_filename,(length($log_level) > 0 ? lc($log_level) : 'full_subject_list'),timestampdigits(), $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsextension);
     my $outputfile = $output_path . $filename;
@@ -248,40 +258,46 @@ sub publish_proband_list {
     }
     my ($result,$msg) = _run_dbtool(@dbtoolargs);
 
-    return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,''),
-        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype),$outputfile) if $result;
+    return (($upload_files ? CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,''),
+        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype) : undef),
+        $outputfile,$filename,$CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype) if $result;
     return undef;
 
 }
 
 sub publish_ecrf_data_sqlite {
 
+    my ($upload_files) = @_;
     my $db = &get_sqlite_db();
     my $dbfilename = $db->{dbfilename};
     destroy_all_dbs();
 
     my $filename = sprintf($ecrf_data_export_sqlite_filename,timestampdigits(), $CTSMS::BulkProcessor::SqlConnectors::SQLiteDB::dbextension);
 
-    return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'SQLite/'),
-        $dbfilename,$filename,$CTSMS::BulkProcessor::SqlConnectors::SQLiteDB::mimetype),$dbfilename);
+    return (($upload_files ? CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'SQLite/'),
+        $dbfilename,$filename,$CTSMS::BulkProcessor::SqlConnectors::SQLiteDB::mimetype) : undef),
+        $dbfilename,$filename,$CTSMS::BulkProcessor::SqlConnectors::SQLiteDB::mimetype);
 
 }
 
 sub publish_ecrf_data_horizontal_csv {
 
+    my ($upload_files) = @_;
     my $db = &get_csv_db();
     my $tablefilename = $db->_gettablefilename(CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataHorizontal::gettablename());
     destroy_all_dbs();
 
     my $filename = sprintf($ecrf_data_export_horizontal_csv_filename,timestampdigits(), $CTSMS::BulkProcessor::SqlConnectors::CSVDB::csvextension);
 
-    return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'CSV/'),
-        $tablefilename,$filename,$CTSMS::BulkProcessor::SqlConnectors::CSVDB::mimetype),$tablefilename);
+    return (($upload_files ? CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'CSV/'),
+        $tablefilename,$filename,$CTSMS::BulkProcessor::SqlConnectors::CSVDB::mimetype) : undef),
+        $tablefilename,$filename,$CTSMS::BulkProcessor::SqlConnectors::CSVDB::mimetype);
 
 }
 
 sub publish_ecrf_data_xls {
 
+    my ($upload_files) = @_;
     my @modules = ();
     push(@modules,'CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataHorizontal');
     push(@modules,'CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataVertical');
@@ -289,9 +305,11 @@ sub publish_ecrf_data_xls {
     my $outputfile = $output_path . $filename;
 
     my $result = CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::write_workbook($outputfile,$ecrf_data_export_xlsx,@modules);
+    destroy_all_dbs();
 
-    return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
-        $outputfile,$filename,($ecrf_data_export_xlsx ? $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsxmimetype : $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype)),$outputfile) if $result;
+    return (($upload_files ? CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'Excel/'),
+        $outputfile,$filename,($ecrf_data_export_xlsx ? $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsxmimetype : $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype)) : undef),
+        $outputfile,$filename,($ecrf_data_export_xlsx ? $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsxmimetype : $CTSMS::BulkProcessor::Projects::ETL::EcrfExcel::xlsmimetype)) if $result;
     return undef;
 
 }
@@ -599,11 +617,14 @@ sub _init_ecrf_data_pdfs_context {
         if ($lwp_response and defined $lwp_response->content_ref) {
             my $filename = sprintf($ecrf_data_export_pdfs_filename,$context->{listentry}->{proband}->{id},$context->{timestamp_digits}, $pdfextension);
 
-            my $out = CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'PDF/'), #'PDF/' . $context->{listentry}->{proband}->{id} . '/'
-                $lwp_response->content_ref,$filename,$pdfmimetype);
+            my $out;
+            $out = CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'PDF/' . $context->{timestamp_digits} . '/'), #'PDF/' . $context->{listentry}->{proband}->{id} . '/'
+                $lwp_response->content_ref,$filename,$pdfmimetype) if $context->{upload_files};
             if ($out) {
-                push(@{$context->{uploads}}, [ $out,undef ] );
+                push(@{$context->{uploads}}, [ $out,undef,$filename,$pdfmimetype ] );
                 return 1;
+            } else {
+                return not $context->{upload_files};
             }
         }
         return 0;
