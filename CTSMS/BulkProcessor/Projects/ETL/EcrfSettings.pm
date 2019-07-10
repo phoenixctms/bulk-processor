@@ -11,6 +11,7 @@ use CTSMS::BulkProcessor::Globals qw(
     $cpucount
     create_path
     $ctsmsrestapi_path
+    $completionemailrecipient
 );
 
 use CTSMS::BulkProcessor::Logging qw(
@@ -270,6 +271,7 @@ sub update_settings {
         if (defined $job_id and length($job_id) > 0) {
             $job = CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job::get_item($job_id);
             configurationerror($configfile,"error loading job id $job_id",getlogger(__PACKAGE__)) unless defined $job;
+            $completionemailrecipient = $job->{emailRecipients};
         }
 
         $ecrf_data_api_listentries_page_size = $data->{ecrf_data_api_listentries_page_size} if exists $data->{ecrf_data_api_listentries_page_size};
