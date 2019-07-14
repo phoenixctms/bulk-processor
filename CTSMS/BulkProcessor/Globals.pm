@@ -310,6 +310,7 @@ sub update_masterconfig {
         $smtp_server = $data->{smtp_server} if exists $data->{smtp_server};
         $smtpuser = $data->{smtpuser} if exists $data->{smtpuser};
         $smtppasswd = $data->{smtppasswd} if exists $data->{smtppasswd};
+        $sender_address = $data->{sender_address} if exists $data->{sender_address};
 
         $fileloglevel = $data->{fileloglevel} if exists $data->{fileloglevel};
         $screenloglevel = $data->{screenloglevel} if exists $data->{screenloglevel};
