@@ -88,7 +88,7 @@ sub _set_expected_fieldnames {
 }
 
 # table creation:
-my $primarykey_fieldnames = [ 'proband_id','ecrf_subject_group','ecrf_position','ecrf_section','ecrf_field_position','series_index','value_version' ]; 
+my $primarykey_fieldnames = [ 'proband_id','ecrf_subject_group','ecrf_position','ecrf_section','ecrf_field_position','series_index','value_version' ];
 my $indexes = {
     $tablename . '_ecrf_name_section_position' => [ 'ecrf_name(32)','ecrf_section(32)','ecrf_position(32)' ],
     #$tablename . '_ecrf_name' => [ 'ecrf_name(32)' ],
@@ -113,7 +113,7 @@ sub create_table {
     my ($truncate,$option_col_count,$listentrytags) = @_;
 
     my $db = &$get_db();
-    
+
     _set_expected_fieldnames($option_col_count,$listentrytags);
 
     registertableinfo($db,__PACKAGE__,$tablename,$expected_fieldnames,$indexes,$primarykey_fieldnames);
@@ -142,7 +142,8 @@ sub process_records {
 
     check_table();
     my $db = &$get_db();
-    
+    my $table = $db->tableidentifier($tablename);
+
     $static_context //= {};
     $static_context->{is_utf8} = 0;
 
@@ -159,6 +160,12 @@ sub process_records {
         destroy_reader_dbs_code     => \&destroy_all_dbs,
         multithreading              => $multithreading,
         tableprocessing_threads     => $numofthreads,
+        'select'                    => $db->paginate_sort_query('SELECT * FROM ' . $table,undef,undef,[{
+                                            column => 'proband_id',
+                                            #numeric => 1,
+                                            dir => 1,
+                                        }]),
+        'selectcount'               => 'SELECT COUNT(*) FROM ' . $table,
     );
 }
 
