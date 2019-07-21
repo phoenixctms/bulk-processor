@@ -1,0 +1,17 @@
+<form id="form" action="/" method="post" autocomplete="off">
+<input type="submit" name="ts" id="ts" value="[% ts %]" class="ui-helper-hidden"/>
+
+[% PROCESS start_details.tt %]
+
+<ul id="sites"></ul>
+
+<div class="ui-grid">
+  <div class="ui-grid-row">
+    <div class="ui-grid-col-12">
+  
+<div id="messages"></div>
+
+    </div>
+  </div>
+</div>
+</form>

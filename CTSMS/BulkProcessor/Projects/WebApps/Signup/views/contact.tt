@@ -1,0 +1,96 @@
+[% USE HTML %]
+[% USE TTUTILS %]
+<form id="form" action="/contact" method="post" autocomplete="off">
+<input type="submit" name="ts" id="ts" value="[% ts %]" class="ui-helper-hidden"/>
+
+[% PROCESS contact_details.tt %]
+
+<div class="ui-grid">
+  <div class="ui-grid-row">
+    <div class="ui-grid-col-12">
+
+    <div id="address_panel" class="ctsms-panel-row" title="[% l('address_panel_title') %]">
+
+        <div class="ctsms-form-entry">
+        <label class="ctsms-required">[% l('proband_address_country_name_label') %]</label>
+        <input name="proband_address_country_name" id="country_name" type="text" class="ctsms-control" value="[% HTML.escape(session.proband_address_country_name) %]" required/>
+        </div>
+
+        <div class="ctsms-form-entry">
+        <label class="ctsms-required">[% l('proband_address_zip_code_label') %]</label>
+        <input name="proband_address_zip_code" id="zip_code" type="text" class="ctsms-control-smaller" value="[% HTML.escape(session.proband_address_zip_code) %]" required/>
+        <label class="ctsms-required ctsms-adjacent">[% l('proband_address_city_name_label') %]</label>
+        <input name="proband_address_city_name" id="city_name" type="text" class="ctsms-control" value="[% HTML.escape(session.proband_address_city_name) %]" required/>
+        </div>
+
+        <div class="ctsms-form-entry">
+        <label class="ctsms-required">[% l('proband_address_street_name_label') %]</label>
+        <input name="proband_address_street_name" id="street_name" type="text" class="ctsms-control" value="[% HTML.escape(session.proband_address_street_name) %]" required/>
+        </div>
+
+        <div class="ctsms-form-entry">
+        <label class="ctsms-required">[% l('proband_address_house_number_label') %]</label>
+        <input name="proband_address_house_number" id="house_number" type="text" class="ctsms-control-smaller" value="[% HTML.escape(session.proband_address_house_number) %]" required/>
+        <label class="ctsms-adjacent">[% l('proband_address_entrance_label') %]</label>
+        <input name="proband_address_entrance" id="entrance" type="text" class="ctsms-control-smaller" value="[% HTML.escape(session.proband_address_entrance) %]"/>
+        <label class="ctsms-adjacent">[% l('proband_address_door_number_label') %]</label>
+        <input name="proband_address_door_number" id="door_number" type="text" class="ctsms-control-smaller" value="[% HTML.escape(session.proband_address_door_number) %]"/>
+        </div>
+
+    </div>
+
+    </div>
+  </div>
+
+  <div class="ui-grid-row">
+    <div class="ui-grid-col-12">
+
+    <div id="contact_details_panel" class="ctsms-panel-row" title="[% l('contact_details_panel_title') %]">
+        <div class="ctsms-form-entry">
+        <label>[% l('proband_phone_label') %]</label>
+        <input name="proband_phone_value" id="phone" type="text" class="ctsms-control" value="[% HTML.escape(session.proband_phone_value) %]"/>
+        </div>
+
+        <div class="ui-grid-row">
+          <div class="ui-grid-col-5">
+            <div class="ctsms-form-entry">
+            <label>[% l('proband_email_label') %]</label>
+            <input name="proband_email_value" id="email" type="text" class="ctsms-control" value="[% HTML.escape(session.proband_email_value) %]"/>
+            </div>
+          </div>
+
+          <div class="ui-grid-col-7" style="padding-top:4px;">
+            <div class="ctsms-form-entry">
+            <input name="proband_email_notify" id="email_notify" type="checkbox" value="true"[% TTUTILS.stringtobool(session.proband_email_notify) ? ' checked="checked"' : '' %]/>
+            <label for="email_notify">[% l('proband_email_notify_label') %]</label>
+            </div>
+          </div>
+        </div>
+
+    </div>
+
+    </div>
+  </div>
+
+  <div class="ui-grid-row">
+    <div class="ui-grid-col-12">
+
+<div id="messages"></div>
+
+    </div>
+  </div>
+
+  <div class="ui-grid-row ctsms-toolbar-row">
+    <div class="ui-grid-col-6">
+        <span class="mandatory-hint ui-state-disabled"><span class="mandatory">*</span> = [% l('mandatory_field_label') %]</span>
+    </div>
+    <div class="ui-grid-col-6 ctsms-btn-cell">
+    [% IF trials_na %]
+        <button id="save_done_btn" name="done" value="1" class="ctsms-btn" type="submit">[% l('save_done_btn_label') %]</button>
+    [% ELSE %]
+        <button id="save_next_btn" name="done" value="0" class="ctsms-btn" type="submit">[% l('save_next_btn_label') %]</button>
+    [% END %]
+    </div>
+  </div>
+</div>
+</form>

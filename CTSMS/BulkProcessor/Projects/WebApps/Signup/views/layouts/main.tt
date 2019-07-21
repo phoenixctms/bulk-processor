@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />  <!-- ... mod_expires -->
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta http-equiv="Content-type" content="text/html; charset=[% settings.charset %]" />
+<meta name="robots" content="nofollow" />
+[% IF google_site_verification %]
+<meta name="google-site-verification" content="[% google_site_verification %]" />
+[% END %]
+<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="description" content="[% l('meta_description') %]">
+<link rel="alternate" href="[% request.uri_base %]/?lang=en" hreflang="en" />
+<link rel="alternate" href="[% request.uri_base %]/?lang=de" hreflang="de" />
+<link rel="shortcut icon" href="[% request.uri_base %]/favicon.ico" type="image/x-icon">
+<title>[% l('page_title') %]</title>
+
+<link rel="stylesheet" type="text/css" href="[% request.uri_base %]/css/reset.min.css" />
+<link rel="stylesheet" href="[% request.uri_base %]/themes/aristo/theme.min.css" />
+<link rel="stylesheet" type="text/css" href="[% request.uri_base %]/css/font-awesome.min.css" />
+<link rel="stylesheet" href="[% request.uri_base %]/css/jquery-ui.min.css" />
+<link rel="stylesheet" href="[% request.uri_base %]/css/primeui.min.css" />
+<link rel="stylesheet" href="[% request.uri_base %]/css/jquery.ui.timepicker.min.css" />
+<script type="text/javascript" src="[% request.uri_base %]/js/jquery-2.2.4.min.js"></script>
+<script type="text/javascript" src="[% request.uri_base %]/js/jquery-ui.min.js"></script>
+<!-- Dependencies of some widgets -->
+<script type="text/javascript" src="[% request.uri_base %]/js/plugins/plugins-all.min.js"></script>
+<!-- Mustache for templating support -->
+<script type="text/javascript" src="[% request.uri_base %]/js/plugins/mustache.min.js"></script>
+<!-- X-TAG for PrimeElements -->
+<script type="text/javascript" src="[% request.uri_base %]/js/plugins/jquery.ui.timepicker.min.js"></script>
+<!-- <script type="text/javascript" src="[% request.uri_base %]/js/x-tag-core.min.js"></script> -->
+<!-- <script type="text/javascript" src="[% request.uri_base %]/js/primeui.min.js"></script> -->
+<script type="text/javascript" src="[% request.uri_base %]/js/primeui.min.js"></script>
+<!-- <script type="text/javascript" src="[% request.uri_base %]/js/primeelements.js"></script> -->
+
+<script type="text/javascript">
+  function parseJson(json) {
+    return jQuery.parseJSON(json);
+  }
+  var context = parseJson([% js_context_json %]);
+
+  var ID_SEPARATOR_STRING = context.idSeparatorString;
+
+  var ENABLE_GEOLOCATION_SERVICES = context.enableGeolocationServices;
+  var FORCE_DEFAULT_GEOLOCATION = context.forceDefaultGeolocation;
+  var DEFAULT_GEOLOCATION_LATITUDE = parseFloat(context.defaultGeolocationLatitude);
+  var DEFAULT_GEOLOCATION_LONGITUDE = parseFloat(context.defaultGeolocationLongitude);
+
+  var REST_API_URL = context.restApiUrl;
+
+
+  //var SESSION_EXPIRED_MESSAGE =
+  var SESSION_TIMER_PATTERN = context.sessionTimerPattern;
+
+  $(document).ready(function() {
+	$(window).keydown(function(event){
+      if(event.keyCode == 13) {
+        event.preventDefault();
+        return false;
+      }
+    });
+    initMainPrimeUI(context);
+    initPrimeUI(context);
+  });
+
+</script>
+
+<link rel="stylesheet" href="[% request.uri_base %]/css/default.min.css" />
+
+[% INCLUDE layouts/css.tt %]
+
+<!-- <script type="text/javascript" src="[% request.uri_base %]/js/date.min.js"></script> -->
+<script type="text/javascript" src="[% request.uri_base %]/js/countdown.min.js"></script>
+<script type="text/javascript" src="[% request.uri_base %]/js/sprintf.min.js"></script>
+<script type="text/javascript" src="[% request.uri_base %]/js/common.min.js"></script>
+
+[% head %]
+
+</head>
+<body>
+
+[% INCLUDE layouts/header.tt %]
+
+[% INCLUDE layouts/content.tt %]
+
+[% INCLUDE layouts/footer.tt %]
+
+</body>
+</html>

@@ -1,0 +1,26 @@
+<form id="form" action="/end" method="post" autocomplete="off">
+<input type="submit" name="ts" id="ts" value="[% ts %]" class="ui-helper-hidden"/>
+
+[% PROCESS end_details.tt %]
+
+<div class="ui-grid">
+    
+  <div class="ui-grid-row">
+    <div class="ui-grid-col-12">
+  
+<div id="messages"></div>
+
+    </div>
+  </div>
+
+  <div class="ui-grid-row ctsms-toolbar-row">
+    <div class="ui-grid-col-12 ctsms-btn-cell">
+        <button id="probandletter_btn" class="ctsms-btn" type="button">[% l('probandletter_btn_label') %]</button>
+      [% IF saved_inquiry_count > 0 %]
+        <button id="inquiryforms_btn" class="ctsms-btn" type="button">[% l('inquiryforms_btn_label') %]</button>
+      [% END %]
+        <button id="finish_btn" class="ctsms-btn" type="submit">[% l('finish_btn_label') %]</button>
+    </div>
+  </div>
+</div>
+</form>
