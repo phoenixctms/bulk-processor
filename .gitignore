@@ -2,6 +2,7 @@
 *.yml
 *.cfg
 *.bak
+!CTSMS/BulkProcessor/Projects/WebApps/Signup/config.yml
 
 # Windows thumbnail cache files
 Thumbs.db
