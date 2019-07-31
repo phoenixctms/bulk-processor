@@ -1,13 +1,13 @@
-<form id="form" action="/end" method="post" autocomplete="off">
+<form id="form" action="[% request.uri_base %]/end" method="post" autocomplete="off">
 <input type="submit" name="ts" id="ts" value="[% ts %]" class="ui-helper-hidden"/>
 
 [% PROCESS end_details.tt %]
 
 <div class="ui-grid">
-    
+
   <div class="ui-grid-row">
     <div class="ui-grid-col-12">
-  
+
 <div id="messages"></div>
 
     </div>

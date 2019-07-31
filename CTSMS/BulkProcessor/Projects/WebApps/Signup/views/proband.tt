@@ -1,6 +1,6 @@
 [% USE HTML %]
 [% USE TTUTILS %]
-<form id="form" action="/proband" method="post" autocomplete="off">
+<form id="form" action="[% request.uri_base %]/proband" method="post" autocomplete="off">
 <input type="submit" name="ts" id="ts" value="[% ts %]" class="ui-helper-hidden"/>
 
 [% PROCESS proband_details.tt %]
