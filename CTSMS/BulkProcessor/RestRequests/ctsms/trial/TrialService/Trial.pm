@@ -28,8 +28,10 @@ our @EXPORT_OK = qw(
     get_item_path
 
     get_ecrffieldmaxselectionsetvaluecount
+    get_inquirymaxselectionsetvaluecount
 
     get_signup_list
+    get_inquiry_proband_list
     search
 );
 #    add_item
@@ -47,12 +49,23 @@ my $get_signuplist_path_query = sub {
     #return 'trial/signup/' . get_query_string(\%params);
     return 'trial/signup' . get_query_string(\%params);
 };
+my $get_inquiryproband_path_query = sub {
+    my ($trial_id, $active, $active_signup) = @_;
+    my %params = ();
+    $params{active} = booltostring($active) if defined $active;
+    $params{active_signup} = booltostring($active_signup) if defined $active_signup;
+    return 'trial/' . $trial_id . '/list/inquiryproband/' . get_query_string(\%params);
+};
 my $get_search_path_query = sub {
     return 'search/trial/search';
 };
 my $get_ecrffieldmaxselectionsetvaluecount_path_query = sub {
     my ($id) = @_;
     return 'trial/' . $id . '/ecrffieldmaxselectionsetvaluecount';
+};
+my $get_inquirymaxselectionsetvaluecount_path_query = sub {
+    my ($id) = @_;
+    return 'trial/' . $id . '/inquirymaxselectionsetvaluecount';
 };
 #my $get_add_path_query = sub {
 #    return 'proband/';
@@ -118,11 +131,27 @@ sub get_ecrffieldmaxselectionsetvaluecount {
 
 }
 
+sub get_inquirymaxselectionsetvaluecount {
+
+    my ($id,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return $api->get(&$get_inquirymaxselectionsetvaluecount_path_query($id),$headers);
+
+}
+
 sub get_signup_list {
 
     my ($department_id,$p,$sf,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
     return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_signuplist_path_query($department_id),$p,$sf),$headers),$p),$load_recursive,$restapi);
+
+}
+
+sub get_inquiry_proband_list {
+
+    my ($trial_id,$active,$active_signup,$p,$sf,$load_recursive,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_inquiryproband_path_query($trial_id,$active,$active_signup),$p,$sf),$headers),$p),$load_recursive,$restapi);
 
 }
 
@@ -172,6 +201,7 @@ sub transformitem {
             my $inquiries = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Inquiry::get_trial_list(
                 $item->{id},
                 undef,
+                1,
                 1,
                 $p,
                 undef,

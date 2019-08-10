@@ -1,9 +1,9 @@
-package CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataVertical;
+package CTSMS::BulkProcessor::Projects::ETL::Dao::InquiryDataVertical;
 use strict;
 
 ## no critic
 
-use CTSMS::BulkProcessor::Projects::ETL::EcrfConnectorPool qw(
+use CTSMS::BulkProcessor::Projects::ETL::InquiryConnectorPool qw(
     get_sqlite_db
     destroy_all_dbs
 );
@@ -37,7 +37,7 @@ our @EXPORT_OK = qw(
 #$expected_fieldnames_count
 #getupsertstatement
 
-my $tablename = 'ecrf_data_vertical';
+my $tablename = 'inquiry_data_vertical';
 my $get_db = \&get_sqlite_db;
 #my $get_tablename = \&sqlite_db_tableidentifier;
 
@@ -45,35 +45,34 @@ my $expected_fieldnames;
 _set_expected_fieldnames();
 
 sub _set_expected_fieldnames {
-    my ($option_col_count,$listentrytags) = @_;
+    my ($option_col_count) = @_; #,$listentrytags
     $option_col_count //= 0;
     my @fieldnames = (
         'proband_id',
         #'screening_number',
         #'random_number',
-        (sort keys %$listentrytags),
-        'subject_group',
-        'enrollment_status',
-        'ecrf_status',
-        'ecrf_name',
-        'ecrf_external_id',
-        'ecrf_id',
-        'ecrf_visit',
-        'ecrf_subject_group',
-        'ecrf_position',
-        'ecrf_section',
-        'ecrf_field_id',
-        'ecrf_field_position',
-        'ecrf_field_title',
-        'ecrf_field_external_id',
+        #(sort keys %$listentrytags),
+        #'subject_group',
+        #'enrollment_status',
+        #'ecrf_status',
+        #'ecrf_name',
+        #'ecrf_id',
+        #'ecrf_visit',
+        #'ecrf_subject_group',
+        #'ecrf_position',
+        'inquiry_category',
+        'inquiry_id',
+        'inquiry_position',
+        'inquiry_title',
+        'inquiry_external_id',
         'input_field_name',
         'input_field_title',
-        'input_field_external_id',
+        'input_field_externals_id',
         'input_field_id',
         'input_field_type',
-        'ecrf_field_optional',
-        'ecrf_field_series',
-        'series_index',
+        'inquiry_optional',
+        #'ecrf_field_series',
+        #'series_index',
         'horizontal_colnames',
         'value_version',
         'value_user',
@@ -92,9 +91,9 @@ sub _set_expected_fieldnames {
 }
 
 # table creation:
-my $primarykey_fieldnames = [ 'proband_id','ecrf_subject_group','ecrf_position','ecrf_section','ecrf_field_position','series_index','value_version' ];
+my $primarykey_fieldnames = [ 'proband_id','inquiry_category','inquiry_position','value_version' ];
 my $indexes = {
-    $tablename . '_ecrf_name_section_position' => [ 'ecrf_name(32)','ecrf_section(32)','ecrf_position(32)' ],
+    $tablename . '_inquiry_category_position' => [ 'inquiry_category(32)','inquiry_position(32)' ],
     #$tablename . '_ecrf_name' => [ 'ecrf_name(32)' ],
 };
 #my $fixtable_statements = [];
@@ -114,11 +113,11 @@ sub new {
 
 sub create_table {
 
-    my ($truncate,$option_col_count,$listentrytags) = @_;
+    my ($truncate,$option_col_count) = @_; #$listentrytags
 
     my $db = &$get_db();
 
-    _set_expected_fieldnames($option_col_count,$listentrytags);
+    _set_expected_fieldnames($option_col_count); #$listentrytags
 
     registertableinfo($db,__PACKAGE__,$tablename,$expected_fieldnames,$indexes,$primarykey_fieldnames);
     return create_targettable($db,__PACKAGE__,$db,__PACKAGE__,$tablename,$truncate,0,undef);

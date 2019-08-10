@@ -1,10 +1,10 @@
-package CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataVertical;
+package CTSMS::BulkProcessor::Projects::ETL::Dao::InquiryDataHorizontal;
 use strict;
 
 ## no critic
 
-use CTSMS::BulkProcessor::Projects::ETL::EcrfConnectorPool qw(
-    get_sqlite_db
+use CTSMS::BulkProcessor::Projects::ETL::InquiryConnectorPool qw(
+    get_csv_db
     destroy_all_dbs
 );
 
@@ -37,66 +37,34 @@ our @EXPORT_OK = qw(
 #$expected_fieldnames_count
 #getupsertstatement
 
-my $tablename = 'ecrf_data_vertical';
-my $get_db = \&get_sqlite_db;
-#my $get_tablename = \&sqlite_db_tableidentifier;
+my $tablename = 'inquiy_data_horizontal';
+my $get_db = \&get_csv_db;
+#my $get_tablename = \&import_db_tableidentifier;
 
 my $expected_fieldnames;
 _set_expected_fieldnames();
 
 sub _set_expected_fieldnames {
-    my ($option_col_count,$listentrytags) = @_;
-    $option_col_count //= 0;
+    my ($inquiryvalue_cols) = @_; #,$listentrytags
+    $inquiryvalue_cols = [] unless defined $inquiryvalue_cols;
     my @fieldnames = (
         'proband_id',
         #'screening_number',
         #'random_number',
-        (sort keys %$listentrytags),
-        'subject_group',
-        'enrollment_status',
-        'ecrf_status',
-        'ecrf_name',
-        'ecrf_external_id',
-        'ecrf_id',
-        'ecrf_visit',
-        'ecrf_subject_group',
-        'ecrf_position',
-        'ecrf_section',
-        'ecrf_field_id',
-        'ecrf_field_position',
-        'ecrf_field_title',
-        'ecrf_field_external_id',
-        'input_field_name',
-        'input_field_title',
-        'input_field_external_id',
-        'input_field_id',
-        'input_field_type',
-        'ecrf_field_optional',
-        'ecrf_field_series',
-        'series_index',
-        'horizontal_colnames',
-        'value_version',
-        'value_user',
-        'value_timestamp',
-        'value',
-        'value_boolean',
-        'value_text',
-        'value_integer',
-        'value_decimal',
-        'value_date',
+        #(sort keys %$listentrytags),
+        #'subject_group',
+        #'enrollment_status',
     );
-    foreach my $i (1..$option_col_count) {
-        push(@fieldnames,'value_option_' . $i);
-    }
+    push(@fieldnames,@$inquiryvalue_cols);
     $expected_fieldnames = \@fieldnames;
 }
 
 # table creation:
-my $primarykey_fieldnames = [ 'proband_id','ecrf_subject_group','ecrf_position','ecrf_section','ecrf_field_position','series_index','value_version' ];
-my $indexes = {
-    $tablename . '_ecrf_name_section_position' => [ 'ecrf_name(32)','ecrf_section(32)','ecrf_position(32)' ],
-    #$tablename . '_ecrf_name' => [ 'ecrf_name(32)' ],
-};
+#my $primarykey_fieldnames = [ 'proband_id','ecrf_subject_group','ecrf_position','ecrf_section','ecrf_field_position','series_index','value_version' ];
+#my $indexes = {
+#    $tablename . '_ecrf_name_section_position' => [ 'ecrf_name(32)','ecrf_section(32)','ecrf_position(32)' ],
+#    #$tablename . '_ecrf_name' => [ 'ecrf_name(32)' ],
+#};
 #my $fixtable_statements = [];
 
 
@@ -104,7 +72,7 @@ sub new {
 
     my $class = shift;
     my $self = CTSMS::BulkProcessor::SqlRecord->new($class,$get_db,
-                           $tablename,$expected_fieldnames,$indexes);
+                           $tablename,$expected_fieldnames,undef);
 
     copy_row($self,shift,$expected_fieldnames);
 
@@ -114,13 +82,13 @@ sub new {
 
 sub create_table {
 
-    my ($truncate,$option_col_count,$listentrytags) = @_;
+    my ($truncate,$inquiryvalue_cols) = @_; #,$listentrytags
 
     my $db = &$get_db();
 
-    _set_expected_fieldnames($option_col_count,$listentrytags);
+    _set_expected_fieldnames($inquiryvalue_cols); #,$listentrytags
 
-    registertableinfo($db,__PACKAGE__,$tablename,$expected_fieldnames,$indexes,$primarykey_fieldnames);
+    registertableinfo($db,__PACKAGE__,$tablename,$expected_fieldnames,undef,[]);
     return create_targettable($db,__PACKAGE__,$db,__PACKAGE__,$tablename,$truncate,0,undef);
 
 }
@@ -149,7 +117,7 @@ sub process_records {
     my $table = $db->tableidentifier($tablename);
 
     $static_context //= {};
-    $static_context->{is_utf8} = 0;
+    $static_context->{is_utf8} = 1;
 
     return process_table(
         get_db                      => $get_db,
@@ -226,7 +194,7 @@ sub check_table {
     return checktableinfo($get_db,
                    __PACKAGE__,$tablename,
                    $expected_fieldnames,
-                   $indexes);
+                   undef);
 
 }
 

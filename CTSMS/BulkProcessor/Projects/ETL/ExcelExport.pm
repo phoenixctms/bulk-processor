@@ -1,4 +1,4 @@
-package CTSMS::BulkProcessor::Projects::ETL::EcrfExcel;
+package CTSMS::BulkProcessor::Projects::ETL::ExcelExport;
 use strict;
 
 ## no critic
@@ -135,6 +135,5 @@ sub _mark_utf8 {
     #    return $result;
     #}
 }
-
 
 1;

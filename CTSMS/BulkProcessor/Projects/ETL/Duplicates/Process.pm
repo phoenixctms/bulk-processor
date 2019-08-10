@@ -75,8 +75,6 @@ our @EXPORT_OK = qw(
     update_proband
 );
 
-#my $show_page_retreive_progress = 0;
-
 sub import_proband {
 
     #my $context = { tid => threadid(), };

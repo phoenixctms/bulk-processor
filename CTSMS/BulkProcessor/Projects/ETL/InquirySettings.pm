@@ -1,4 +1,4 @@
-package CTSMS::BulkProcessor::Projects::ETL::EcrfSettings;
+package CTSMS::BulkProcessor::Projects::ETL::InquirySettings;
 use strict;
 
 ## no critic
@@ -55,125 +55,133 @@ our @EXPORT_OK = qw(
 
     $skip_errors
 
-    $ecrf_data_truncate_table
-    $ecrf_data_ignore_duplicates
-    $ecrf_data_trial_id
+    $inquiry_data_truncate_table
+    $inquiry_data_ignore_duplicates
+    $inquiry_data_trial_id
     $job_id
     @job_file
 
-    $ecrf_data_api_listentries_page_size
-    $ecrf_data_api_ecrfs_page_size
-    $ecrf_data_api_values_page_size
-    $ecrf_data_row_block
-    $ecrf_data_api_tagvalues_page_size
-    $ecrf_data_api_ecrffields_page_size
+    $active
+    $active_signup
 
-    $ecrf_data_listentrytags
+    $inquiry_data_truncate_table
+    $inquiry_data_ignore_duplicates
+    $inquiry_data_trial_id
+
+    $inquiry_data_api_probands_page_size
+    $inquiry_data_api_inquiries_page_size
+    $inquiry_data_api_values_page_size
+    $inquiry_data_row_block
 
     %export_colname_abbreviation
+    inquiry_data_include_inquiry
     $col_per_selection_set_value
     $selection_set_value_separator
-    ecrf_data_include_ecrffield
-    $ecrf_data_export_upload_folder
-    $ecrf_data_export_sqlite_filename
-    $ecrf_data_export_horizontal_csv_filename
-    $ecrf_data_export_xls_filename
-    $ecrf_data_export_xlsx
 
-    $audit_trail_export_xls_filename
-    $ecrf_journal_export_xls_filename
-    $ecrfs_export_xls_filename
+    $inquiry_data_export_upload_folder
+    $inquiry_data_export_sqlite_filename
+    $inquiry_data_export_horizontal_csv_filename
+    $inquiry_data_export_xls_filename
+    $inquiry_data_export_xlsx
+
+    $inquiry_data_export_pdfs_filename
 
     $ctsms_base_url
-    $dbtool
-    $lockfile
-    $ecrf_data_export_pdf_filename
-    $ecrf_data_export_pdfs_filename
 
-    $proband_list_filename
+    $lockfile
 
 );
+
+#$dbtool
+#$ecrf_data_api_listentries_page_size
+#$ecrf_data_api_ecrfs_page_size
+#$ecrf_data_api_values_page_size
+#$ecrf_data_row_block
+#$ecrf_data_api_tagvalues_page_size
+#$ecrf_data_api_ecrffields_page_size
+#
+#$ecrf_data_listentrytags
+#
+#%export_colname_abbreviation
+#$col_per_selection_set_value
+#$selection_set_value_separator
+#ecrf_data_include_ecrffield
+#$ecrf_data_export_upload_folder
+#$ecrf_data_export_sqlite_filename
+#$ecrf_data_export_horizontal_csv_filename
+#$ecrf_data_export_xls_filename
+#$ecrf_data_export_xlsx
+#
+#$audit_trail_export_xls_filename
+#$ecrf_journal_export_xls_filename
+#$ecrfs_export_xls_filename
+#
+#$ecrf_data_export_pdf_filename
+#$ecrf_data_export_pdfs_filename
+#
+#$proband_list_filename
 
 our $input_path = $working_path . 'input/';
 our $output_path = $working_path . 'output/';
 #our $rollback_path = $working_path . 'rollback/';
-our $sqlite_db_file = 'ecrf';
-our $csv_dir = 'ecrf';
+our $sqlite_db_file = 'inquiry';
+our $csv_dir = 'inquiry';
 
 our $skip_errors = 0;
 
-our $ecrf_data_truncate_table = 1;
-our $ecrf_data_ignore_duplicates = 0;
-our $ecrf_data_trial_id = undef;
+our $inquiry_data_truncate_table = 1;
+our $inquiry_data_ignore_duplicates = 0;
+our $inquiry_data_trial_id = undef;
 our $job_id = undef;
 my $job = undef;
 our @job_file = ();
 
-our $ecrf_data_api_listentries_page_size = 10;
-our $ecrf_data_api_ecrfs_page_size  = 10;
-our $ecrf_data_api_values_page_size = 10;
-our $ecrf_data_row_block = 100;
-our $ecrf_data_api_tagvalues_page_size = 10;
-our $ecrf_data_api_ecrffields_page_size = 100;
+our $inquiry_data_api_probands_page_size = 10;
+our $inquiry_data_api_inquiries_page_size = 10;
+our $inquiry_data_api_values_page_size = 10;
+our $inquiry_data_row_block = 100;
 
-our $ecrf_data_listentrytags = {};
+our $inquiry_data_export_upload_folder = '';
+our $inquiry_data_export_sqlite_filename = '%s%s';
+our $inquiry_data_export_horizontal_csv_filename = '%s%s';
+our $inquiry_data_export_xls_filename = '%s%s';
+our $inquiry_data_export_xlsx = 0;
 
-our $ecrf_data_export_upload_folder = '';
-our $ecrf_data_export_sqlite_filename = '%s%s';
-our $ecrf_data_export_horizontal_csv_filename = '%s%s';
-our $ecrf_data_export_xls_filename = '%s%s';
-our $ecrf_data_export_xlsx = 0;
-
-our $audit_trail_export_xls_filename = "%s%s";
-our $ecrf_journal_export_xls_filename = "%s%s";
-our $ecrfs_export_xls_filename = "%s%s";
+#our $audit_trail_export_xls_filename = "%s%s";
+#our $ecrf_journal_export_xls_filename = "%s%s";
+#our $ecrfs_export_xls_filename = "%s%s";
 
 our $ctsms_base_url = undef; #_get_ctsms_baseuri();
-our $dbtool = undef;
+#our $dbtool = undef;
 our $lockfile = undef;
-our $ecrf_data_export_pdf_filename = '%s%s';
-our $ecrf_data_export_pdfs_filename = '%s_%s%s';
+#our $ecrf_data_export_pdf_filename = '%s%s';
+our $inquiry_data_export_pdfs_filename = '%s_%s%s';
 
-our $proband_list_filename = '%s_%s%s';
+#our $proband_list_filename = '%s_%s%s';
 
 my $ecrfname_abbreviate_opts = {};
-my $visit_abbreviate_opts = {};
-my $group_abbreviate_opts = {};
+#my $visit_abbreviate_opts = {};
+#my $group_abbreviate_opts = {};
 my $inputfieldname_abbreviate_opts = {};
 my $selectionvalue_abbreviate_opts = {};
 
 our $col_per_selection_set_value = 1;
 our $selection_set_value_separator = ',';
 
-my $ecrf_data_include_ecrffield_code = sub {
-    my ($ecrffield) = @_;
+my $inquiry_data_include_inquiry_code = sub {
+    my ($inquiry) = @_;
     return 1;
 };
 
 our %export_colname_abbreviation = (
     ignore_external_ids => undef,
-    ecrf_position_digits => 2,
-    ecrffield_position_digits => 2,
-    index_digits => 2,
-    abbreviate_ecrf_name_code => sub {
-        my ($ecrf_name,$ecrf_id) = @_;
-        $ecrf_name = abbreviate(string => $ecrf_name, %$ecrfname_abbreviate_opts); #word_count_limit => 0);
-        #$inputfield_name = s/^remoc //i;
-        return $ecrf_name;
-    },
-    abbreviate_visit_code => sub {
-        my ($token,$title,$id) = @_;
-        $token = abbreviate(string => $token, %$visit_abbreviate_opts);
-        return $token;
-    },
-    abbreviate_group_code => sub {
-        my ($token,$title,$id) = @_;
-        $token = abbreviate(string => $token, %$group_abbreviate_opts);
-        return $token;
-    },
-    abbreviate_section_code => sub {
-        my $section = shift;
-        return 's' . chopstring($section,2,'')
+    #ecrf_position_digits => 2,
+    inquiry_position_digits => 2,
+    #index_digits => 2,
+
+    abbreviate_category_code => sub {
+        my $category = shift;
+        return 'c' . chopstring($category,2,'')
     },
     abbreviate_inputfield_name_code => sub {
         my ($inputfield_name,$inputfield_id) = @_;
@@ -237,8 +245,8 @@ sub abbreviate {
     return join(' ',@abbreviated_words);
 }
 
-sub ecrf_data_include_ecrffield {
-    return &$ecrf_data_include_ecrffield_code(shift);
+sub inquiry_data_include_inquiry {
+    return &$inquiry_data_include_inquiry_code(shift);
 }
 
 sub update_settings {
@@ -259,13 +267,13 @@ sub update_settings {
 
         $skip_errors = $data->{skip_errors} if exists $data->{skip_errors};
 
-        $ecrf_data_truncate_table = $data->{ecrf_data_truncate_table} if exists $data->{ecrf_data_truncate_table};
-        $ecrf_data_ignore_duplicates = $data->{ecrf_data_ignore_duplicates} if exists $data->{ecrf_data_ignore_duplicates};
+        $inquiry_data_truncate_table = $data->{inquiry_data_truncate_table} if exists $data->{inquiry_data_truncate_table};
+        $inquiry_data_ignore_duplicates = $data->{inquiry_data_ignore_duplicates} if exists $data->{inquiry_data_ignore_duplicates};
 
-        $ecrf_data_trial_id = $data->{ecrf_data_trial_id} if exists $data->{ecrf_data_trial_id};
-        if (defined $ecrf_data_trial_id and length($ecrf_data_trial_id) > 0) {
-            my $ecrf_data_trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($ecrf_data_trial_id);
-            configurationerror($configfile,"error loading trial id $ecrf_data_trial_id",getlogger(__PACKAGE__)) unless defined $ecrf_data_trial;
+        $inquiry_data_trial_id = $data->{inquiry_data_trial_id} if exists $data->{inquiry_data_trial_id};
+        if (defined $inquiry_data_trial_id and length($inquiry_data_trial_id) > 0) {
+            my $inquiry_data_trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($inquiry_data_trial_id);
+            configurationerror($configfile,"error loading trial id $inquiry_data_trial_id",getlogger(__PACKAGE__)) unless defined $inquiry_data_trial;
         }
         $job_id = $data->{job_id} if exists $data->{job_id};
         if (defined $job_id and length($job_id) > 0) {
@@ -274,56 +282,61 @@ sub update_settings {
             $completionemailrecipient = $job->{emailRecipients};
         }
 
-        $ecrf_data_api_listentries_page_size = $data->{ecrf_data_api_listentries_page_size} if exists $data->{ecrf_data_api_listentries_page_size};
-        $ecrf_data_api_ecrfs_page_size = $data->{ecrf_data_api_ecrfs_page_size} if exists $data->{ecrf_data_api_ecrfs_page_size};
-        $ecrf_data_api_values_page_size = $data->{ecrf_data_api_values_page_size} if exists $data->{ecrf_data_api_values_page_size};
+        $inquiry_data_api_probands_page_size = $data->{inquiry_data_api_probands_page_size} if exists $data->{inquiry_data_api_probands_page_size};
+        $inquiry_data_api_inquiries_page_size = $data->{inquiry_data_api_inquiries_page_size} if exists $data->{inquiry_data_api_inquiries_page_size};
+        $inquiry_data_api_values_page_size = $data->{inquiry_data_api_values_page_size} if exists $data->{inquiry_data_api_values_page_size};
+        $inquiry_data_row_block = $data->{inquiry_data_row_block} if exists $data->{inquiry_data_row_block};
 
-        $ecrf_data_row_block = $data->{ecrf_data_row_block} if exists $data->{ecrf_data_row_block};
+        #$ecrf_data_api_listentries_page_size = $data->{ecrf_data_api_listentries_page_size} if exists $data->{ecrf_data_api_listentries_page_size};
+        #$ecrf_data_api_ecrfs_page_size = $data->{ecrf_data_api_ecrfs_page_size} if exists $data->{ecrf_data_api_ecrfs_page_size};
+        #$ecrf_data_api_values_page_size = $data->{ecrf_data_api_values_page_size} if exists $data->{ecrf_data_api_values_page_size};
+        #
+        #$ecrf_data_row_block = $data->{ecrf_data_row_block} if exists $data->{ecrf_data_row_block};
+        #
+        #$ecrf_data_api_tagvalues_page_size = $data->{ecrf_data_api_tagvalues_page_size} if exists $data->{ecrf_data_api_tagvalues_page_size};
+        #$ecrf_data_api_ecrffields_page_size = $data->{ecrf_data_api_ecrffields_page_size} if exists $data->{ecrf_data_api_ecrffields_page_size};
+        #
+        #$ecrf_data_listentrytags = $data->{ecrf_data_listentrytags} if exists $data->{ecrf_data_listentrytags};
 
-        $ecrf_data_api_tagvalues_page_size = $data->{ecrf_data_api_tagvalues_page_size} if exists $data->{ecrf_data_api_tagvalues_page_size};
-        $ecrf_data_api_ecrffields_page_size = $data->{ecrf_data_api_ecrffields_page_size} if exists $data->{ecrf_data_api_ecrffields_page_size};
+        $inquiry_data_export_upload_folder = $data->{inquiry_data_export_upload_folder} if exists $data->{inquiry_data_export_upload_folder};
 
-        $ecrf_data_listentrytags = $data->{ecrf_data_listentrytags} if exists $data->{ecrf_data_listentrytags};
-
-        $ecrf_data_export_upload_folder = $data->{ecrf_data_export_upload_folder} if exists $data->{ecrf_data_export_upload_folder};
-
-        $ecrf_data_export_sqlite_filename = $data->{ecrf_data_export_sqlite_filename} if exists $data->{ecrf_data_export_sqlite_filename};
-        $ecrf_data_export_horizontal_csv_filename = $data->{ecrf_data_export_horizontal_csv_filename} if exists $data->{ecrf_data_export_horizontal_csv_filename};
-        $ecrf_data_export_xls_filename = $data->{ecrf_data_export_xls_filename} if exists $data->{ecrf_data_export_xls_filename};
-        $ecrf_data_export_xlsx = $data->{ecrf_data_export_xlsx} if exists $data->{ecrf_data_export_xlsx};
+        $inquiry_data_export_sqlite_filename = $data->{inquiry_data_export_sqlite_filename} if exists $data->{inquiry_data_export_sqlite_filename};
+        $inquiry_data_export_horizontal_csv_filename = $data->{inquiry_data_export_horizontal_csv_filename} if exists $data->{inquiry_data_export_horizontal_csv_filename};
+        $inquiry_data_export_xls_filename = $data->{inquiry_data_export_xls_filename} if exists $data->{inquiry_data_export_xls_filename};
+        $inquiry_data_export_xlsx = $data->{inquiry_data_export_xlsx} if exists $data->{inquiry_data_export_xlsx};
 
         $col_per_selection_set_value = $data->{col_per_selection_set_value} if exists $data->{col_per_selection_set_value};
         $selection_set_value_separator = $data->{selection_set_value_separator} if exists $data->{selection_set_value_separator};
         $selection_set_value_separator //= '';
 
-        if (exists $data->{ecrf_data_include_ecrffield_code}) {
-            if ('CODE' eq ref $data->{ecrf_data_include_ecrffield_code}) {
-                $ecrf_data_include_ecrffield_code = $data->{ecrf_data_include_ecrffield_code};
+        if (exists $data->{inquiry_data_include_inquiry_code}) {
+            if ('CODE' eq ref $data->{inquiry_data_include_inquiry_code}) {
+                $inquiry_data_include_inquiry_code = $data->{inquiry_data_include_inquiry_code};
             } else {
-                configurationerror($configfile,"perl code reference required for ecrf_data_include_ecrffield_code",getlogger(__PACKAGE__));
+                configurationerror($configfile,"perl code reference required for inquiry_data_include_inquiry_code",getlogger(__PACKAGE__));
             }
         }
 
         $ctsms_base_url = $data->{ctsms_base_uri} if exists $data->{ctsms_base_uri};
         $ctsms_base_url = _get_ctsms_baseuri() unless $ctsms_base_url;
-        $dbtool = $data->{dbtool} if exists $data->{dbtool};
+        #$dbtool = $data->{dbtool} if exists $data->{dbtool};
         $lockfile = $data->{lockfile} if exists $data->{lockfile};
-        $ecrf_data_export_pdf_filename = $data->{ecrf_data_export_pdf_filename} if exists $data->{ecrf_data_export_pdf_filename};
-        $ecrf_data_export_pdfs_filename = $data->{ecrf_data_export_pdfs_filename} if exists $data->{ecrf_data_export_pdfs_filename};
+        #$ecrf_data_export_pdf_filename = $data->{ecrf_data_export_pdf_filename} if exists $data->{ecrf_data_export_pdf_filename};
+        $inquiry_data_export_pdfs_filename = $data->{inquiry_data_export_pdfs_filename} if exists $data->{inquiry_data_export_pdfs_filename};
 
-        $proband_list_filename = $data->{proband_list_filename} if exists $data->{proband_list_filename};
+        #$proband_list_filename = $data->{proband_list_filename} if exists $data->{proband_list_filename};
 
-        $audit_trail_export_xls_filename = $data->{audit_trail_export_xls_filename} if exists $data->{audit_trail_export_xls_filename};
-        $ecrf_journal_export_xls_filename = $data->{ecrf_journal_export_xls_filename} if exists $data->{ecrf_journal_export_xls_filename};
-        $ecrfs_export_xls_filename = $data->{ecrfs_export_xls_filename} if exists $data->{ecrfs_export_xls_filename};
+        #$audit_trail_export_xls_filename = $data->{audit_trail_export_xls_filename} if exists $data->{audit_trail_export_xls_filename};
+        #$ecrf_journal_export_xls_filename = $data->{ecrf_journal_export_xls_filename} if exists $data->{ecrf_journal_export_xls_filename};
+        #$ecrfs_export_xls_filename = $data->{ecrfs_export_xls_filename} if exists $data->{ecrfs_export_xls_filename};
 
         $export_colname_abbreviation{ignore_external_ids} = $data->{ignore_external_ids} if exists $data->{ignore_external_ids};
         $ecrfname_abbreviate_opts = $data->{ecrfname_abbreviate_opts} if exists $data->{ecrfname_abbreviate_opts};
         $inputfieldname_abbreviate_opts = $data->{inputfieldname_abbreviate_opts} if exists $data->{inputfieldname_abbreviate_opts};
         $selectionvalue_abbreviate_opts = $data->{selectionvalue_abbreviate_opts} if exists $data->{selectionvalue_abbreviate_opts};
 
-        $visit_abbreviate_opts = $data->{visit_abbreviate_opts} if exists $data->{visit_abbreviate_opts};
-        $group_abbreviate_opts = $data->{group_abbreviate_opts} if exists $data->{group_abbreviate_opts};
+        #$visit_abbreviate_opts = $data->{visit_abbreviate_opts} if exists $data->{visit_abbreviate_opts};
+        #$group_abbreviate_opts = $data->{group_abbreviate_opts} if exists $data->{group_abbreviate_opts};
 
         return $result;
 

@@ -16,7 +16,7 @@ use CTSMS::BulkProcessor::RestProcessor qw(
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
 use CTSMS::BulkProcessor::RestItem qw();
 
-use CTSMS::BulkProcessor::Utils qw(booltostring);
+use CTSMS::BulkProcessor::Utils qw(booltostring zerofill chopstring);
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputField qw();
 
@@ -27,6 +27,8 @@ our @EXPORT_OK = qw(
     get_item_path
 
     get_trial_list
+
+    get_export_colnames
 );
 
 my $default_restapi = \&get_ctsms_restapi;
@@ -35,10 +37,11 @@ my $get_item_path_query = sub {
     return 'inquiry/' . $id;
 };
 my $get_trial_path_query = sub {
-    my ($trial_id, $active, $active_signup) = @_;
+    my ($trial_id, $active, $active_signup, $sort) = @_;
     my %params = ();
     $params{active} = booltostring($active) if defined $active;
     $params{activeSignup} = booltostring($active_signup) if defined $active_signup;
+    $params{sort} = booltostring($sort);
     return 'trial/' . $trial_id . '/list/inquiry' . get_query_string(\%params);
 };
 
@@ -64,6 +67,7 @@ my $fieldnames = [
     "version",
     "deferredDelete",
     "deferredDeleteReason",
+    "externalId",
 ];
 
 sub new {
@@ -87,9 +91,9 @@ sub get_item {
 
 sub get_trial_list {
 
-    my ($trial_id,$active,$active_signup,$p,$sf,$load_recursive,$restapi,$headers) = @_;
+    my ($trial_id,$active,$active_signup,$sort,$p,$sf,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_trial_path_query($trial_id,$active,$active_signup),$p,$sf),$headers),$p),$load_recursive,$restapi);
+    return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_trial_path_query($trial_id,$active,$active_signup,$sort),$p,$sf),$headers),$p),$load_recursive,$restapi);
 
 }
 
@@ -132,14 +136,107 @@ sub get_item_path {
 
 }
 
-sub TO_JSON {
+#sub TO_JSON {
+#
+#    my $self = shift;
+#    return { %{$self} };
+#    #    value => $self->{zipcode},
+#    #    label => $self->{zipcode},
+#    #};
+#
+#}
 
-    my $self = shift;
-    return { %{$self} };
-    #    value => $self->{zipcode},
-    #    label => $self->{zipcode},
-    #};
+sub get_export_colnames {
+    my %params = @_;
+    my ($inquiry,
+        #$index,
+        $get_colname_parts_code,
+        $ignore_external_ids,
+        #$abbreviate_ecrf_name_code,
+        #$abbreviate_visit_code,
+        #$abbreviate_group_code,
+        $abbreviate_category_code,
+        $abbreviate_inputfield_name_code,
+        $abbreviate_selectionvalue_code,
+        #$ecrf_position_digits,
+        $inquiry_position_digits,
+        #$index_digits,
+        $col_per_selection_set_value,
+        $selectionValues,
+        $sanitize_colname_symbols_code) = @params{qw/
+            inquiry
 
+            get_colname_parts_code
+            ignore_external_ids
+
+            abbreviate_category_code
+            abbreviate_inputfield_name_code
+            abbreviate_selectionvalue_code
+
+            inquiry_position_digits
+
+            col_per_selection_set_value
+            selectionValues
+            sanitize_colname_symbols_code
+        /};
+    #index
+    #abbreviate_ecrf_name_code
+    #abbreviate_visit_code
+    #abbreviate_group_code
+    #ecrf_position_digits
+    #index_digits
+    $get_colname_parts_code = sub { return (); } unless 'CODE' eq ref $get_colname_parts_code;
+    $abbreviate_selectionvalue_code = sub { my ($value,$id) = @_; return $value; } unless 'CODE' eq ref $abbreviate_selectionvalue_code;
+    my $selectionSetValues = $inquiry->{field}->{selectionSetValues};
+    $selectionSetValues = $selectionValues if exists $params{selectionValues};
+    $selectionSetValues //= [];
+    my @export_colnames = ();
+    my $prefix;
+    my @parts = &$get_colname_parts_code($inquiry); #,$index);
+    unless ((scalar @parts) > 0) {
+        my $external_id_used = 0;
+        if (not $ignore_external_ids and defined $inquiry->{externalId} and length($inquiry->{externalId}) > 0) {
+            push(@parts,$inquiry->{externalId});
+            #push(@parts,zerofill($index,$index_digits)) if $ecrffield->{series};
+            $abbreviate_selectionvalue_code = sub { my ($value,$id) = @_; return $value; };
+            $external_id_used = 1;
+        # relying on collisison detection
+        } elsif (not $ignore_external_ids and defined $inquiry->{field}->{externalId} and length($inquiry->{field}->{externalId}) > 0) {
+            push(@parts,$inquiry->{field}->{externalId});
+            #push(@parts,zerofill($index,$index_digits)) if $ecrffield->{series};
+            $abbreviate_selectionvalue_code = sub { my ($value,$id) = @_; return $value; };
+            $external_id_used = 1;
+        } else {
+            $abbreviate_inputfield_name_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_inputfield_name_code;
+            $abbreviate_category_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_category_code;
+            $inquiry_position_digits //= 2;
+            push(@parts,&$abbreviate_category_code($inquiry->{category})) if length($inquiry->{category}) > 0;
+            push(@parts,zerofill($inquiry->{position},$inquiry_position_digits));
+            push(@parts,&$abbreviate_inputfield_name_code($inquiry->{field}->{nameL10nKey},$inquiry->{field}->{id}));
+            #push(@parts,'i' . zerofill($index,$index_digits)) if $ecrffield->{series};
+            ##my $fieldtype = $ecrffield->{field}->{fieldType}->{nameL10nKey};
+        }
+        $prefix = 'p' unless $external_id_used;
+    }
+    if ($col_per_selection_set_value and $inquiry->{field}->is_select()) {
+        foreach my $selectionsetvalue (@$selectionSetValues) {
+            push(@export_colnames,_sanitize_export_colname(join(' ',@parts,&$abbreviate_selectionvalue_code($selectionsetvalue->{value},$selectionsetvalue->{id})),$sanitize_colname_symbols_code,$prefix));
+        }
+    } else {
+        push(@export_colnames,_sanitize_export_colname(join(' ',@parts),$sanitize_colname_symbols_code,$prefix));
+    }
+    return @export_colnames;
+}
+
+sub _sanitize_export_colname {
+    my ($colname,$sanitize_colname_symbols_code,$p_prefix) = @_;
+
+    $colname = &$sanitize_colname_symbols_code($colname) if 'CODE' eq ref $sanitize_colname_symbols_code;
+
+    $colname =~ s/[^0-9a-z_]/_/gi;
+    $colname =~ s/_+/_/g;
+    return $p_prefix . $colname if defined $p_prefix;
+    return $colname;
 }
 
 1;
