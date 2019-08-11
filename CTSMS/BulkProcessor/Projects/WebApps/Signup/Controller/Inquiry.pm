@@ -362,7 +362,7 @@ sub _save_page {
     my $trial_inquiries_saved_map = Dancer::session('trial_inquiries_saved_map') // {};
     my $inquiries_saved_map = $trial_inquiries_saved_map->{$trial->{id}} // {};
     my $in = _get_inquiryvalues_in($posted_inquiries_map,$inquiries_saved_map);
-    my $out = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::set_inquiryvalues($in,0,$restapi);
+    my $out = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::set_inquiryvalues($in,0,0,$restapi);
     foreach my $inquiry_value (@{$out->{rows}}) {
        $inquiries_saved_map->{$inquiry_value->{inquiry}->{id}} = { id => $inquiry_value->{id}, version => $inquiry_value->{version}, user_timezone => $inquiry_value->{inquiry}->{field}->{userTimeZone}, };
        Dancer::debug('inquiry value ' . $inquiry_value->{id} . ' set');

@@ -28,7 +28,7 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
     get_ecrffieldvalues
     set_ecrffieldvalues
     get_getecrffieldvaluessectionmaxindex
@@ -51,7 +51,10 @@ my $get_getecrffieldvalues_path_query = sub {
 };
 
 my $get_setecrffieldvalues_path_query = sub {
-    return 'ecrffieldvalue/';
+    my ($force) = @_;
+    my %params = ();
+    $params{force} = booltostring($force) if defined $force;
+    return 'ecrffieldvalue/' . get_query_string(\%params);
 };
 my $get_getecrffieldvaluessectionmaxindex_path_query = sub {
     my ($listentry_id, $ecrf_id, $section) = @_;
@@ -109,9 +112,9 @@ sub get_ecrffieldvalues {
 
 sub set_ecrffieldvalues {
 
-    my ($in,$load_recursive,$restapi,$headers) = @_;
+    my ($in,$force,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->put(&$get_setecrffieldvalues_path_query(),$in,$headers),$load_recursive,$restapi);
+    return builditems_fromrows($api->put(&$get_setecrffieldvalues_path_query($force),$in,$headers),$load_recursive,$restapi);
 
 }
 
@@ -168,10 +171,10 @@ sub builditems_fromrows {
 
 sub transformitem {
     my ($item,$load_recursive,$restapi) = @_;
-    
+
     $item->{rows} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValue::builditems_fromrows($item->{rows},$load_recursive,$restapi);
-    $item->{js_rows} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldJsonValue::builditems_fromrows($item->{js_rows},$load_recursive,$restapi);   
-    
+    $item->{js_rows} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldJsonValue::builditems_fromrows($item->{js_rows},$load_recursive,$restapi);
+
 }
 
 sub get_item_path {
@@ -182,7 +185,7 @@ sub get_item_path {
 }
 
 #sub TO_JSON {
-#    
+#
 #    my $self = shift;
 #    return { %{$self} };
 #    #    value => $self->{zipcode},

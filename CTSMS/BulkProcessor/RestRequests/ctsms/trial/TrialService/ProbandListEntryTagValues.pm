@@ -28,7 +28,7 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
     get_probandlistentrytagvalues
     get_probandlistentrytagvalues
 
@@ -48,7 +48,10 @@ my $get_getprobandlistentrytagvalues_path_query = sub {
 };
 
 my $get_setprobandlistentrytagvalues_path_query = sub {
-    return 'probandlistentrytagvalue/';
+    my ($force) = @_;
+    my %params = ();
+    $params{force} = booltostring($force) if defined $force;
+    return 'probandlistentrytagvalue/' . get_query_string(\%params);
 };
 
 #my $get_renderinquiries_path_query = sub {
@@ -101,9 +104,9 @@ sub get_probandlistentrytagvalues {
 
 sub set_probandlistentrytagvalues {
 
-    my ($in,$load_recursive,$restapi,$headers) = @_;
+    my ($in,$force,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->put(&$get_setprobandlistentrytagvalues_path_query(),$in,$headers),$load_recursive,$restapi);
+    return builditems_fromrows($api->put(&$get_setprobandlistentrytagvalues_path_query($force),$in,$headers),$load_recursive,$restapi);
 
 }
 
@@ -153,10 +156,10 @@ sub builditems_fromrows {
 
 sub transformitem {
     my ($item,$load_recursive,$restapi) = @_;
-    
+
     $item->{rows} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValue::builditems_fromrows($item->{rows},$load_recursive,$restapi);
-    $item->{js_rows} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagJsonValue::builditems_fromrows($item->{js_rows},$load_recursive,$restapi);   
-    
+    $item->{js_rows} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagJsonValue::builditems_fromrows($item->{js_rows},$load_recursive,$restapi);
+
 }
 
 sub get_item_path {
@@ -167,7 +170,7 @@ sub get_item_path {
 }
 
 #sub TO_JSON {
-#    
+#
 #    my $self = shift;
 #    return { %{$self} };
 #    #    value => $self->{zipcode},
