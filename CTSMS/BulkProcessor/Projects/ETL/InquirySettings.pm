@@ -162,6 +162,7 @@ our $inquiry_data_export_pdfs_filename = '%s_%s%s';
 my $ecrfname_abbreviate_opts = {};
 #my $visit_abbreviate_opts = {};
 #my $group_abbreviate_opts = {};
+my $category_abbreviate_opts = {};
 my $inputfieldname_abbreviate_opts = {};
 my $selectionvalue_abbreviate_opts = {};
 
@@ -181,8 +182,11 @@ our %export_colname_abbreviation = (
 
     abbreviate_category_code => sub {
         my $category = shift;
-        return 'c' . chopstring($category,2,'')
+        #return 'c' . chopstring($category,2,'');
+        $category = abbreviate(string => $category, %$category_abbreviate_opts);
+        return $category;
     },
+
     abbreviate_inputfield_name_code => sub {
         my ($inputfield_name,$inputfield_id) = @_;
         $inputfield_name = abbreviate(string => $inputfield_name, %$inputfieldname_abbreviate_opts); #word_blacklist => $inputfieldname_word_blacklist);
@@ -337,6 +341,7 @@ sub update_settings {
 
         #$visit_abbreviate_opts = $data->{visit_abbreviate_opts} if exists $data->{visit_abbreviate_opts};
         #$group_abbreviate_opts = $data->{group_abbreviate_opts} if exists $data->{group_abbreviate_opts};
+        $category_abbreviate_opts = $data->{category_abbreviate_opts} if exists $data->{category_abbreviate_opts};
 
         return $result;
 

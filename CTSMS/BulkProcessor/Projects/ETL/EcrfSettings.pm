@@ -139,6 +139,7 @@ our $proband_list_filename = '%s_%s%s';
 my $ecrfname_abbreviate_opts = {};
 my $visit_abbreviate_opts = {};
 my $group_abbreviate_opts = {};
+my $section_abbreviate_opts = {};
 my $inputfieldname_abbreviate_opts = {};
 my $selectionvalue_abbreviate_opts = {};
 
@@ -173,7 +174,9 @@ our %export_colname_abbreviation = (
     },
     abbreviate_section_code => sub {
         my $section = shift;
-        return 's' . chopstring($section,2,'')
+        #return 's' . chopstring($section,2,'')
+        $section = abbreviate(string => $section, %$section_abbreviate_opts);
+        return $section;
     },
     abbreviate_inputfield_name_code => sub {
         my ($inputfield_name,$inputfield_id) = @_;
@@ -324,6 +327,7 @@ sub update_settings {
 
         $visit_abbreviate_opts = $data->{visit_abbreviate_opts} if exists $data->{visit_abbreviate_opts};
         $group_abbreviate_opts = $data->{group_abbreviate_opts} if exists $data->{group_abbreviate_opts};
+        $section_abbreviate_opts = $data->{section_abbreviate_opts} if exists $data->{section_abbreviate_opts};
 
         return $result;
 
