@@ -136,15 +136,15 @@ sub get_item_path {
 
 }
 
-#sub TO_JSON {
-#
-#    my $self = shift;
-#    return { %{$self} };
+sub TO_JSON {
+
+    my $self = shift;
+    return { %{$self} };
 #    #    value => $self->{zipcode},
 #    #    label => $self->{zipcode},
 #    #};
 #
-#}
+}
 
 sub get_export_colnames {
     my %params = @_;
