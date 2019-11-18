@@ -103,7 +103,7 @@ our $proband_agreed_preset = 0;
 our $language_menu = 0;
 
 our $google_maps_api_url = 'https://www.google.at/maps/api/js?sensor=false';
-our $enable_geolocation_services = 1;
+our $enable_geolocation_services = 0; #1;
 our $force_default_geolocation = 1;
 
 our $ctsms_base_uri = undef;
