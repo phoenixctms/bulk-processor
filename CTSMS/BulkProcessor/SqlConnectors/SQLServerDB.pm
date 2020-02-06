@@ -49,14 +49,14 @@ my $client_encoding = 'LATIN1';
 my $LongReadLen = $LongReadLen_limit; #bytes
 my $LongTruncOk = 0;
 
-#my $logger = getlogger(__PACKAGE__);
 
-#my $lock_do_chunk = 0;
-#my $lock_get_chunk = 0;
+
+
+
 
 my $rowblock_transactional = 1;
 
-my $transaction_isolation_level = ''; #'SERIALIZABLE'
+my $transaction_isolation_level = '';
 
 sub new {
 
@@ -160,7 +160,7 @@ sub _dbd_connect {
     if ($^O eq 'MSWin32') {
         $connection_string = 'DBI:ODBC:Driver={SQL Server};Server=' . $self->{host} . ',' . $self->{port};
     } else {
-        $connection_string = 'dbi:ODBC:driver=SQL Server Native Client 11.0;server=tcp:' . $self->{host} . ',' . $self->{port}; # . ';database=DB_TOWNE;MARS_Connection=yes;
+        $connection_string = 'dbi:ODBC:driver=SQL Server Native Client 11.0;server=tcp:' . $self->{host} . ',' . $self->{port};
     }
     if (length($databasename) > 0) {
         $connection_string .= ';database=' . $databasename;
@@ -170,7 +170,7 @@ sub _dbd_connect {
                 PrintError      => 0,
                 RaiseError      => 0,
                 AutoCommit      => 1,
-                #AutoCommit      => 0,
+
             }
         ) or dberror($self,'error connecting: ' . $self->{drh}->errstr(),getlogger(__PACKAGE__)));
 }
@@ -214,9 +214,9 @@ sub db_connect {
 
     $self->SUPER::db_connect($databasename,$username,$password,$host,$port);
 
-    #if (defined $self->{dbh}) {
-    #    $self->db_disconnect();
-    #}
+
+
+
 
     $host = $defaulthost if (not $host);
     $port = $defaultport if (not $port);
@@ -245,7 +245,7 @@ sub db_connect {
 
     $self->{dbh} = $dbh;
 
-    #$self->db_do('SET CLIENT_ENCODING TO ?',$client_encoding);
+
 
     if (length($transaction_isolation_level) > 0) {
         $self->db_do('SET TRANSACTION ISOLATION LEVEL ' . $transaction_isolation_level);
@@ -277,7 +277,7 @@ sub getfieldnames {
     my $self = shift;
     my $tablename = shift;
     return $self->db_get_col('SELECT column_name FROM information_schema.columns WHERE table_name = ?',$tablename);
-    #return $self->db_get_col('SELECT name FROM sys.columns WHERE object_id = OBJECT_ID(?)', 'dbo.' . $tablename);
+
 
 }
 
@@ -313,12 +313,12 @@ sub create_temptable {
     if (defined $indexes and ref $indexes eq 'HASH' and scalar keys %$indexes > 0) {
         foreach my $indexname (keys %$indexes) {
             my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
-            #if (not arrayeq($indexcols,$keycols,1)) {
-                #$statement .= ', INDEX ' . $indexname . ' (' . join(', ',@{$indexes->{$indexname}}) . ')';
+
+
                 $indexname = lc($index_tablename) . '_' . $indexname;
                 $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $temp_tablename . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
                 indexcreated($self,$index_tablename,$indexname,getlogger(__PACKAGE__));
-            #}
+
         }
     }
 
@@ -356,7 +356,7 @@ sub create_indexes {
                 foreach my $indexname (keys %$indexes) {
                     my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
                     if (not arrayeq($indexcols,$keycols,1)) {
-                        #$statement .= ', INDEX ' . $indexname . ' (' . join(', ',@{$indexes->{$indexname}}) . ')';
+
                         $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $self->tableidentifier($tablename) . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
                         indexcreated($self,$tablename,$indexname,getlogger(__PACKAGE__));
                     }
@@ -373,23 +373,23 @@ sub create_texttable {
     my $self = shift;
     my ($tablename,$fieldnames,$keycols,$indexes,$truncate,$defer_indexes) = @_;
 
-    #my $tablename = $self->getsafetablename($tableidentifier);
-    #my ($tableidentifier,$fieldnames,$keycols,$indexes,$truncate) = @_;
 
-    #my $tablename = $self->getsafetablename($tableidentifier);
+
+
+
 
     if (length($tablename) > 0 and defined $fieldnames and ref $fieldnames eq 'ARRAY') {
 
         my $created = 0;
         if ($self->table_exists($tablename) == 0) {
             my $statement = 'CREATE TABLE ' . $self->tableidentifier($tablename) . ' (';
-            #$statement .= join(' TEXT, ',@$fieldnames) . ' TEXT';
+
 
             my $allindexcols = [];
             if (defined $indexes and ref $indexes eq 'HASH' and scalar keys %$indexes > 0) {
                 foreach my $indexname (keys %$indexes) {
                     $allindexcols = mergearrays($allindexcols,$self->_extract_indexcols($indexes->{$indexname}));
-                    #push(@allindexcols, $self->_extract_indexcols($indexes->{$indexname}));
+
                 }
             }
             $allindexcols = removeduplicates($allindexcols,1);
@@ -398,24 +398,24 @@ sub create_texttable {
             foreach my $fieldname (@$fieldnames) {
                 if (contains($fieldname,$keycols,1)) {
                     push @fieldspecs,$self->columnidentifier($fieldname) . ' VARCHAR(' . $varcharsize . ') NOT NULL';
-                    #$statement .= $fieldname . ' VARCHAR(256)';
+
                 } elsif (contains($fieldname,$allindexcols,1)) {
                     push @fieldspecs,$self->columnidentifier($fieldname) . ' VARCHAR(' . $varcharsize . ')';
-                    #$statement .= $fieldname . ' VARCHAR(256)';
+
                 } else {
                     push @fieldspecs,$self->columnidentifier($fieldname) . ' VARCHAR(MAX)';
-                    #$statement .= $fieldname . ' TEXT';
+
                 }
             }
             $statement .= join(', ',@fieldspecs);
 
 
-            #if (defined $keycols and ref $keycols eq 'ARRAY' and scalar @$keycols > 0 and setcontains($keycols,$fieldnames,1)) {
+
             if (not $defer_indexes and defined $keycols and ref $keycols eq 'ARRAY' and scalar @$keycols > 0 and setcontains($keycols,$fieldnames,1)) {
                 $statement .= ', PRIMARY KEY (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$keycols) . ')';
             }
 
-            $statement .= ')'; # CHARACTER SET ' . $texttable_charset . ', COLLATE ' . $texttable_collation . ', ENGINE ' . $texttable_engine;
+            $statement .= ')';
 
             $self->db_do($statement);
             texttablecreated($self,$tablename,getlogger(__PACKAGE__));
@@ -424,7 +424,7 @@ sub create_texttable {
                 foreach my $indexname (keys %$indexes) {
                     my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
                     if (not arrayeq($indexcols,$keycols,1)) {
-                        #$statement .= ', INDEX ' . $indexname . ' (' . join(', ',@{$indexes->{$indexname}}) . ')';
+
                         $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $self->tableidentifier($tablename) . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
                         indexcreated($self,$tablename,$indexname,getlogger(__PACKAGE__));
                     }
@@ -448,7 +448,7 @@ sub create_texttable {
         return 0;
     }
 
-    #return $tablename;
+
 
 }
 
@@ -503,7 +503,7 @@ sub db_do_begin {
 
     my $self = shift;
     my $query = shift;
-    #my $tablename = shift;
+
 
     $self->SUPER::db_do_begin($query,$rowblock_transactional,@_);
 
@@ -513,8 +513,8 @@ sub db_get_begin {
 
     my $self = shift;
     my $query = shift;
-    #my $tablename = shift;
-    #my $lock = shift;
+
+
 
     $self->SUPER::db_get_begin($query,$rowblock_transactional,@_);
 
@@ -523,7 +523,7 @@ sub db_get_begin {
 sub db_finish {
 
     my $self = shift;
-    #my $unlock = shift;
+
     my $rollback = shift;
 
     $self->SUPER::db_finish($rowblock_transactional,$rollback);

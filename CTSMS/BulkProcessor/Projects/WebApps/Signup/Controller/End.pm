@@ -5,8 +5,8 @@ use strict;
 ## no critic
 
 use Dancer qw();
-#use JSON -support_by_pp, -no_export;
-#no use Dancer::Plugin::I18N !!;
+
+
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     $restapi
     get_site
@@ -50,21 +50,21 @@ Dancer::get('/end/inquiryformspdf',sub {
 
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created();
-    #return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_selected();
-    #return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_inquiries_na();
+
+
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_trials_na();
 
     my $proband_id = Dancer::session('proband_id');
     my $site = get_site();
 
-    #my $trial = Dancer::session('trial');
+
     return apply_lwp_file_response(CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::render_inquiries_signup(
         $site->{trial_department} ? $site->{trial_department}->{id} : undef,
         $proband_id,
         1,
         $restapi,
     ), $proband_id . '_inquiryforms.pdf',0);
-    #$proband_id . '_' .XX $trial->{id} . '_inquiryform.pdf',0);
+
 
 });
 
@@ -107,7 +107,7 @@ Dancer::get('/end',sub {
         style_names => 'end',
         js_model => {
             apiError => get_error(1),
-            #siteOptions => get_site_options(),
+
         },
         saved_inquiry_count => $saved_inquiry_count,
         auto_delete_deadline => date_iso_to_ui(Dancer::session('proband_out')->{autoDeleteDeadline},1),
@@ -115,19 +115,19 @@ Dancer::get('/end',sub {
 });
 
 Dancer::post('/end',sub {
-    #using forward will not preserve session data set on the forwarding rule. ?
+
     my $last_created = Dancer::session("proband_created_timestamp");
     Dancer::session->destroy();
-    #Dancer::Session::engine()->write_session_id(undef);
-    #Dancer::Session->get_current_session();
+
+
     Dancer::session("proband_created_timestamp",$last_created);
-    #return Dancer::forward('/', undef, { method => 'GET' });
+
     return get_template('start',
         script_names => 'start',
         style_names => 'start',
         js_model => {
             apiError => get_error(1),
-            probandCreated => \0, #JSON::false,
+            probandCreated => \0,
             probandDepartmentId => undef,
             CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Start::start_js_model(),
         },
@@ -150,7 +150,7 @@ sub _mass_mail_recipient_created {
 }
 
 sub _get_mass_mail_recipient_ins {
-    #my $params = shift;
+
     my $site = get_site();
     my $lang = get_lang();
     return () unless defined $site->{mass_mail}->{$lang};

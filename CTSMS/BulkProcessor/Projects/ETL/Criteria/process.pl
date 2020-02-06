@@ -84,7 +84,7 @@ sub init {
 
     my $configfile = $defaultconfig;
     my $settingsfile = $defaultsettings;
-    #print STDERR (join("|",@ARGV),"\n");
+
     return 0 unless GetOptions(
         "config=s" => \$configfile,
         "settings=s" => \$settingsfile,
@@ -92,14 +92,14 @@ sub init {
         "skip-errors" => \$skip_errors,
         "force" => \$force,
         "dry" => \$dry,
-    ); # or scripterror('error in command line arguments',getlogger(getscriptpath()));
+    );
 
-    #$tasks = removeduplicates($tasks,1); #allowe cleanup twice
+
 
     my $result = load_config($configfile);
     init_log();
     $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::Criteria::Settings::update_settings,$YAML_CONFIG_TYPE);
-    #$result &= load_config($some_yml,\&update_something,$YAML_CONFIG_TYPE);
+
     return $result;
 
 }
@@ -128,14 +128,14 @@ sub main() {
             } elsif (lc($import_criteria_task_opt) eq lc($task)) {
                 if (taskinfo($import_criteria_task_opt,$result)) {
                     next unless check_dry();
-                    $result &= import_criteria_task(\@messages,0); #,\$completion);
+                    $result &= import_criteria_task(\@messages,0);
                     $completion = 1;
                 }
 
             } elsif (lc($create_criteria_task_opt) eq lc($task)) {
                 if (taskinfo($create_criteria_task_opt,$result)) {
                     next unless check_dry();
-                    $result &= import_criteria_task(\@messages,1); #,\$completion);
+                    $result &= import_criteria_task(\@messages,1);
                     $completion = 1;
                 }
 
@@ -145,7 +145,7 @@ sub main() {
                 last;
             }
         }
-        #destroy_dbs();
+
     } else {
         $result = 0;
         scripterror('at least one task option is required. supported tasks: ' . join(', ',@TASK_OPTS),getlogger(getscriptpath()));
@@ -166,26 +166,26 @@ sub main() {
 sub taskinfo {
     my ($task,$result) = @_;
     scriptinfo($result ? "starting task: '$task'" : "skipping task '$task' due to previous problems",getlogger(getscriptpath()));
-    #if (!$batch_supported and $batch) {
-    #    scriptwarn("no batch processing supported for this mode",getlogger(getscriptpath()));
-    #}
+
+
+
     return $result;
 }
 
 sub cleanup_task {
     my ($messages,$clean_generated) = @_;
     my $result = 0;
-    #if (!$clean_generated or $force or 'yes' eq lc(prompt("Type 'yes' to proceed: "))) {
-        #destroy_dbs();
+
+
         eval {
-            #cleanupcvsdirs() if $clean_generated;
-            #cleanupdbfiles() if $clean_generated;
+
+
             cleanuplogfiles(\&fileerror,\&filewarn,($currentlogfile,$attachmentlogfile));
             cleanupmsgfiles(\&fileerror,\&filewarn);
             cleanupdir($output_path,1,\&filewarn,getlogger(getscriptpath())) if $clean_generated;
             $result = 1;
         };
-    #}
+
     if ($@ or !$result) {
         push(@$messages,'working directory cleanup error');
         return 0;
@@ -226,16 +226,16 @@ sub import_criteria_task {
         push(@$messages,'- ' . ($updated_count + $added_count) . ' criteria imported (' . $warning_count . ' warnings)');
         push(@$messages,"  " . $updated_count . ' updated');
         push(@$messages,"  " . $added_count . ' added');
-        #$$completion_ref = $updated_proband_count > 0;
+
         return 1;
     }
 }
 
-#END {
-#    # this should not be required explicitly, but prevents Log4Perl's
-#    # "rootlogger not initialized error upon exit..
-#    destroy_dbs
-#}
+
+
+
+
+
 
 __DATA__
 This exists to allow the locking code at the beginning of the file to work.

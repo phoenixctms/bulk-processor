@@ -29,12 +29,12 @@ our @EXPORT_OK = qw(get_tableidentifier);
 
 my $defaultport = '1521';
 
-#$NLS_LANG = 'GERMAN_AUSTRIA.WE8ISO8859P1';
+
 
 my $connNLS_LANGUAGE = 'GERMAN';
 my $connNLS_TERRITORY = 'AUSTRIA';
 
-#my $connNLS_CHARACTERSET = 'WE8ISO8859P1';
+
 
 my $varcharsize = 4000;
 my $max_identifier_length = 30;
@@ -42,14 +42,14 @@ my $max_identifier_length = 30;
 my $LongReadLen = $LongReadLen_limit; #bytes
 my $LongTruncOk = 0;
 
-#my $logger = getlogger(__PACKAGE__);
 
-#my $lock_do_chunk = 0;
-#my $lock_get_chunk = 0;
+
+
+
 
 my $rowblock_transactional = 1;
 
-my $isolation_level = ''; #'SERIALIZABLE'
+my $isolation_level = '';
 
 my $enable_numeric_sorting = 0;
 
@@ -138,11 +138,11 @@ sub getsafetablename {
     my $self = shift;
     my $tableidentifier = shift;
     return uc($self->SUPER::getsafetablename($tableidentifier));
-    #if (defined $self->{schema}) {
-    #    return $self->{schema} . '.' . $tablename;
-    #} else {
-    #    return $tablename;
-    #}
+
+
+
+
+
 
 }
 
@@ -178,21 +178,21 @@ sub getdatabases {
 
 }
 
-#sub _createdatabase {
-#
-#    my $self = shift;
-#    my ($schema) = @_;
-#
-#    #SQL> create tablespace test datafile 'C:\oraclexe\app\oracle\oradata\XE\test.dbf' size 10M autoextend on;
-#    #Tablespace created.
-#    #SQL> create user test identified by test default tablespace test;
-#    #User created.
-#    #alter user test quota unlimited on test
-#
-#    $self->db_do('CREATE SCHEMA AUTHORIZATION ' . $schema);
-#    dbinfo($self,'schema \'' . $schema . '\' created',getlogger(__PACKAGE__));
-#
-#}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 sub db_connect {
 
@@ -222,7 +222,7 @@ sub db_connect {
                 PrintError      => 0,
                 RaiseError      => 0,
                 AutoCommit      => 1,
-                #AutoCommit      => 0,
+
             }
         ) or dberror($self,'error connecting - service name: ' . $self->{drh}->errstr(),getlogger(__PACKAGE__));
     } elsif ($sid) {
@@ -251,7 +251,7 @@ sub db_connect {
 
     $self->db_do('ALTER SESSION SET NLS_LANGUAGE = \'' . $connNLS_LANGUAGE . '\'');
     $self->db_do('ALTER SESSION SET NLS_TERRITORY = \'' . $connNLS_TERRITORY . '\'');
-    #$self->db_do('ALTER SESSION SET NLS_CHARACTERSET = \'' . $connNLS_CHARACTERSET . '\'');
+
     $self->db_do('ALTER SESSION SET NLS_NUMERIC_CHARACTERS = \'.,\'');
     $self->db_do('ALTER SESSION SET NLS_DATE_FORMAT = \'YYYY-MM-DD HH24:MI:SS\'');
 
@@ -332,23 +332,23 @@ sub create_temptable {
     my $index_tablename = $self->_gettemptablename();
     my $temp_tablename = $self->tableidentifier($index_tablename);
 
-    #$self->db_do('CREATE GLOBAL TEMPORARY TABLE ' . $temp_tablename . ' ON COMMIT PRESERVE ROWS AS ' . $select_stmt);
+
     $self->db_do('CREATE TABLE ' . $temp_tablename . ' AS ' . $select_stmt);
     push(@{$self->{temp_tables}},$index_tablename);
 
     temptablecreated($self,$index_tablename,getlogger(__PACKAGE__));
 
-    #$self->{temp_table_count} += 1;
+
 
     if (defined $indexes and ref $indexes eq 'HASH' and scalar keys %$indexes > 0) {
         foreach my $indexname (keys %$indexes) {
             my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
-            #if (not arrayeq($indexcols,$keycols,1)) {
-                #$statement .= ', INDEX ' . $indexname . ' (' . join(', ',@{$indexes->{$indexname}}) . ')';
+
+
                 $indexname = _chopidentifier(lc($index_tablename) . '_' . $indexname);
                 $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $temp_tablename . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
                 indexcreated($self,$index_tablename,$indexname,getlogger(__PACKAGE__));
-            #}
+
         }
     }
 
@@ -387,7 +387,7 @@ sub create_indexes {
                 foreach my $indexname (keys %$indexes) {
                     my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
                     if (not arrayeq($indexcols,$keycols,1)) {
-                        #$statement .= ', INDEX ' . $indexname . ' (' . join(', ',@{$indexes->{$indexname}}) . ')';
+
                         $indexname = _chopidentifier($indexname);
                         $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $self->tableidentifier($tablename) . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
                         indexcreated($self,$tablename,$indexname,getlogger(__PACKAGE__));
@@ -404,9 +404,9 @@ sub create_texttable {
 
     my $self = shift;
     my ($tablename,$fieldnames,$keycols,$indexes,$truncate,$defer_indexes) = @_;
-    #my ($tableidentifier,$fieldnames,$keycols,$indexes,$truncate) = @_;
 
-    #my $tablename = $self->getsafetablename($tableidentifier);
+
+
 
     if (length($tablename) > 0 and defined $fieldnames and ref $fieldnames eq 'ARRAY') {
 
@@ -415,14 +415,14 @@ sub create_texttable {
             my $statement = 'CREATE TABLE ' . $self->tableidentifier($tablename) . ' (';
             $statement .= join(' VARCHAR2(' . $varcharsize . '), ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$fieldnames) . ' VARCHAR2(' . $varcharsize . ')';
             if (not $defer_indexes and defined $keycols and ref $keycols eq 'ARRAY' and scalar @$keycols > 0 and setcontains($keycols,$fieldnames,1)) {
-                #$statement .= ', CONSTRAINT ' . $tablename . '_pk PRIMARY KEY (' . join(', ',@$keycols) . ')';
+
                 $statement .= ', CONSTRAINT PRIMARY KEY (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$keycols) . ')';
             }
-            #if (defined $indexes and ref $indexes eq 'HASH' and scalar keys %$indexes > 0) {
-            #    foreach my $indexname (keys %$indexes) {
-            #        $statement .= ', INDEX ' . $indexname . ' (' . join(', ',@{$indexes->{$indexname}}) . ')';
-            #    }
-            #}
+
+
+
+
+
             $statement .= ')';
 
             $self->db_do($statement);
@@ -432,7 +432,7 @@ sub create_texttable {
                 foreach my $indexname (keys %$indexes) {
                     my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
                     if (not arrayeq($indexcols,$keycols,1)) {
-                        #$statement .= ', INDEX ' . $indexname . ' (' . join(', ',@{$indexes->{$indexname}}) . ')';
+
                         $indexname = _chopidentifier($indexname);
                         $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $self->tableidentifier($tablename) . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
                         indexcreated($self,$tablename,$indexname,getlogger(__PACKAGE__));
@@ -497,7 +497,7 @@ sub drop_table {
     my $tablename = shift;
 
     if ($self->table_exists($tablename) > 0) {
-        $self->db_do('DROP TABLE ' . $self->tableidentifier($tablename) . ' PURGE'); #CASCADE CONSTRAINTS PURGE');
+        $self->db_do('DROP TABLE ' . $self->tableidentifier($tablename) . ' PURGE');
         tabledropped($self,$tablename,getlogger(__PACKAGE__));
         return 1;
     }
@@ -509,7 +509,7 @@ sub db_do_begin {
 
     my $self = shift;
     my $query = shift;
-    #my $tablename = shift;
+
 
     $self->SUPER::db_do_begin($query,$rowblock_transactional,@_);
 
@@ -519,7 +519,7 @@ sub db_get_begin {
 
     my $self = shift;
     my $query = shift;
-    #my $tablename = shift;
+
 
     $self->SUPER::db_get_begin($query,$rowblock_transactional,@_);
 
@@ -528,7 +528,7 @@ sub db_get_begin {
 sub db_finish {
 
     my $self = shift;
-    #my $unlock = shift;
+
     my $rollback = shift;
 
     $self->SUPER::db_finish($rowblock_transactional,$rollback);

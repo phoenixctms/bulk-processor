@@ -23,7 +23,7 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
     render_ecrf
 );
 
@@ -111,7 +111,7 @@ sub builditems_fromrows {
 
 sub transformitem {
     my ($item,$load_recursive,$restapi) = @_;
-    #$item->{field} = CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputField::builditems_fromrows($item->{field},$load_recursive,$restapi);
+
 
 }
 
@@ -122,14 +122,5 @@ sub get_item_path {
 
 }
 
-#sub TO_JSON {
-#    
-#    my $self = shift;
-#    return { %{$self} };
-#    #    value => $self->{zipcode},
-#    #    label => $self->{zipcode},
-#    #};
-#
-#}
 
 1;

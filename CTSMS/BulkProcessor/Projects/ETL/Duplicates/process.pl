@@ -46,11 +46,11 @@ use CTSMS::BulkProcessor::Utils qw(getscriptpath prompt cleanupdir);
 use CTSMS::BulkProcessor::Mail qw(
     cleanupmsgfiles
 );
-#use CTSMS::BulkProcessor::SqlConnectors::CSVDB qw(cleanupcvsdirs);
+
 use CTSMS::BulkProcessor::SqlConnectors::SQLiteDB qw(cleanupdbfiles);
 
 use CTSMS::BulkProcessor::Projects::ETL::Duplicates::ProjectConnectorPool qw(destroy_all_dbs);
-#use CTSMS::BulkProcessor::ConnectorPool qw(destroy_dbs);
+
 
 use CTSMS::BulkProcessor::Projects::ETL::Duplicates::Process qw(
     import_proband
@@ -91,7 +91,7 @@ sub init {
 
     my $configfile = $defaultconfig;
     my $settingsfile = $defaultsettings;
-    #print STDERR (join("|",@ARGV),"\n");
+
     return 0 unless GetOptions(
         "config=s" => \$configfile,
         "settings=s" => \$settingsfile,
@@ -99,14 +99,14 @@ sub init {
         "skip-errors" => \$skip_errors,
         "force" => \$force,
         "dry" => \$dry,
-    ); # or scripterror('error in command line arguments',getlogger(getscriptpath()));
+    );
 
-    #$tasks = removeduplicates($tasks,1); #allowe cleanup twice
+
 
     my $result = load_config($configfile);
     init_log();
     $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::Duplicates::Settings::update_settings,$YAML_CONFIG_TYPE);
-    #$result &= load_config($some_yml,\&update_something,$YAML_CONFIG_TYPE);
+
     return $result;
 
 }
@@ -119,7 +119,7 @@ sub main() {
     my $completion = 0;
 
     if (defined $tasks and 'ARRAY' eq ref $tasks and (scalar @$tasks) > 0) {
-        #scriptinfo('skip-errors: processing won\'t stop upon errors',getlogger(__PACKAGE__)) if $skip_errors;
+
         foreach my $task (@$tasks) {
 
             if (lc($cleanup_task_opt) eq lc($task)) {
@@ -167,26 +167,26 @@ sub main() {
 sub taskinfo {
     my ($task,$result) = @_;
     scriptinfo($result ? "starting task: '$task'" : "skipping task '$task' due to previous problems",getlogger(getscriptpath()));
-    #if (!$batch_supported and $batch) {
-    #    scriptwarn("no batch processing supported for this mode",getlogger(getscriptpath()));
-    #}
+
+
+
     return $result;
 }
 
 sub cleanup_task {
     my ($messages,$clean_generated) = @_;
     my $result = 0;
-    #if (!$clean_generated or $force or 'yes' eq lc(prompt("Type 'yes' to proceed: "))) {
+
         destroy_all_dbs();
         eval {
-            #cleanupcvsdirs() if $clean_generated;
+
             cleanupdbfiles() if $clean_generated;
             cleanuplogfiles(\&fileerror,\&filewarn,($currentlogfile,$attachmentlogfile));
             cleanupmsgfiles(\&fileerror,\&filewarn);
             cleanupdir($output_path,1,\&filewarn,getlogger(getscriptpath())) if $clean_generated;
             $result = 1;
         };
-    #}
+
     if ($@ or !$result) {
         push(@$messages,'working directory cleanup error');
         return 0;
@@ -205,7 +205,7 @@ sub import_proband_task {
     my $err = $@;
 
     if ($err) {
-        #print $@;
+
         push(@$messages,'import_proband error: ' . $err);
         return 0;
     } else {
@@ -223,7 +223,7 @@ sub create_duplicate_task {
     my $err = $@;
 
     if ($err) {
-        #print $@;
+
         push(@$messages,'create_duplicate error: ' . $err);
         return 0;
     } else {
@@ -241,7 +241,7 @@ sub update_proband_task {
     my $err = $@;
 
     if ($err) {
-        #print $@;
+
         push(@$messages,'update_proband error: ' . $err);
         return 0;
     } else {
@@ -251,11 +251,11 @@ sub update_proband_task {
     }
 }
 
-#END {
-#    # this should not be required explicitly, but prevents Log4Perl's
-#    # "rootlogger not initialized error upon exit..
-#    destroy_all_dbs
-#}
+
+
+
+
+
 
 __DATA__
 This exists to allow the locking code at the beginning of the file to work.

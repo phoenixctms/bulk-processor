@@ -3,7 +3,7 @@ use strict;
 
 ## no critic
 
-#use JSON -support_by_pp, -no_export;
+
 use Storable qw(dclone);
 
 use CTSMS::BulkProcessor::Globals qw(
@@ -34,7 +34,7 @@ use CTSMS::BulkProcessor::ConnectorPool qw(
     get_ctsms_restapi
 );
 
-use CTSMS::BulkProcessor::Utils qw(format_number prompt get_year_month stringtobool); #check_ipnet
+use CTSMS::BulkProcessor::Utils qw(format_number prompt get_year_month stringtobool);
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Department qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::ProbandCategory qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::ContactDetailType qw();
@@ -93,7 +93,7 @@ our $default_decimal_separator = '.'; # expected by the user
 
 our $ctsms_sites = {};
 our $default_site = undef;
-#our $rest_api_path = 'rest';
+
 our $decimal_point = '.'; # expected by the rest-api
 
 our $proband_create_interval_limit = 300; #less than session timeout
@@ -103,7 +103,7 @@ our $proband_agreed_preset = 0;
 our $language_menu = 0;
 
 our $google_maps_api_url = 'https://www.google.at/maps/api/js?sensor=false';
-our $enable_geolocation_services = 0; #1;
+our $enable_geolocation_services = 0;
 our $force_default_geolocation = 1;
 
 our $ctsms_base_uri = undef;
@@ -114,11 +114,11 @@ sub update_settings {
 
     my ($data,$configfile) = @_;
 
-    if (defined $data) { # and defined ($data = $data->[0])) {
+    if (defined $data) {
 
         my $result = 1;
 
-        #&$configurationinfocode("testinfomessage",$configlogger);
+
 
         $result &= _prepare_working_paths(1);
 
@@ -177,17 +177,17 @@ sub update_settings {
                             if ($trial_department_nameL10nKey) {
                                 my $trial_department = [ grep { local $_ = $_; $_->{nameL10nKey} eq $trial_department_nameL10nKey; } @$departments ]->[0];
                                 configurationerror($configfile,"$site_name - no or unknown trial department",getlogger(__PACKAGE__)) unless defined $trial_department;
-                                #if ($trial_department) {
+
                                     if (ref $site->{trial_department}) {
                                         $site->{trial_department}->{name}->{$lang} = $trial_department->{name};
                                     } else {
                                         $site->{trial_department} = dclone($trial_department);
                                         $site->{trial_department}->{name} = { $lang => $trial_department->{name} };
                                     }
-                                #} elsif ($trial_department_nameL10nKey) { #not ref $site->{trial_department}) {
-                                #    configurationwarn($configfile,"$site_name - unknown trial department",getlogger(__PACKAGE__));
-                                #    $site->{trial_department} = $department;
-                                #}
+
+
+
+
                             }
 
                             my $probandcategory = CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::ProbandCategory::get_preset_item(1,1,0,get_ctsms_site_lang_restapi($site_name,$lang));
@@ -238,9 +238,9 @@ sub update_settings {
                             } elsif (defined $site->{inquiry_trial} and length($site->{inquiry_trial}) > 0) {
                                 $site->{inquiry_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item(
                                     $site->{inquiry_trial},
-                                    { _activeInquiryCount => 1, _overrides => { signupInquiries => \1, }, }, #JSON::true, }, },
+                                    { _activeInquiryCount => 1, _overrides => { signupInquiries => \1, }, },
                                     get_ctsms_site_lang_restapi($site_name,$lang)
-                                ); #238743
+                                );
                                 configurationerror($configfile,"$site_name - default inquiry form has no form fields",getlogger(__PACKAGE__)) unless $site->{inquiry_trial}->{_activeInquiryCount};
                             }
 
@@ -249,7 +249,7 @@ sub update_settings {
                             } elsif (defined $site->{mass_mail}->{$lang} and length($site->{mass_mail}->{$lang}) > 0) {
                                 my @mails = map { CTSMS::BulkProcessor::RestRequests::ctsms::massmail::MassMailService::MassMail::get_item($_,0,get_ctsms_site_lang_restapi($site_name,$lang)); } split_tuple($site->{mass_mail}->{$lang});
                                 $site->{mass_mail}->{$lang} = \@mails;
-                                #configurationerror($configfile,"$site_name - unknown mass mail",getlogger(__PACKAGE__)) if $site->{mass_mail}->{$lang}->{status};
+
                             }
 
                         }
@@ -265,15 +265,15 @@ sub update_settings {
         }
         configurationerror($configfile,"no default site specified",getlogger(__PACKAGE__)) unless defined $default_site;
 
-        #get_ctsms_restapi("anon",);
 
-        #CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::Department::get_items()
 
-        #$ctsmsrestapi_username_en = $data->{ctsmsrestapi_username_en} if exists $data->{ctsmsrestapi_username_en};
-        #$ctsmsrestapi_password_en = $data->{ctsmsrestapi_password_en} if exists $data->{ctsmsrestapi_password_en};
 
-        #$ctsmsrestapi_username_de = $data->{ctsmsrestapi_username_de} if exists $data->{ctsmsrestapi_username_de};
-        #$ctsmsrestapi_password_de = $data->{ctsmsrestapi_password_de} if exists $data->{ctsmsrestapi_password_de};
+
+
+
+
+
+
 
         return $result;
 
@@ -300,10 +300,10 @@ sub _prepare_working_paths {
 
     ($path_result,$dancer_sessions_path) = create_path($working_path . 'sessions',$dancer_sessions_path,$create,\&fileerror,getlogger(__PACKAGE__));
     $result &= $path_result;
-    #($path_result,$output_path) = create_path($working_path . 'output',$output_path,$create,\&fileerror,getlogger(__PACKAGE__));
-    #$result &= $path_result;
-    #($path_result,$rollback_path) = create_path($working_path . 'rollback',$rollback_path,$create,\&fileerror,getlogger(__PACKAGE__));
-    #$result &= $path_result;
+
+
+
+
 
     return $result;
 

@@ -42,7 +42,7 @@ my $get_trial_path_query = sub {
     my ($trial_id,$ecrf_id,$sort) = @_;
     my %params = ();
     $params{ecrfId} = $ecrf_id if defined $ecrf_id;
-    $params{sort} = booltostring($sort); # if defined $section;
+    $params{sort} = booltostring($sort);
     return 'trial/' . $trial_id . '/list/ecrffield' . get_query_string(\%params);
 };
 
@@ -139,15 +139,15 @@ sub get_item_path {
 
 }
 
-#sub TO_JSON {
-#
-#    my $self = shift;
-#    return { %{$self} };
-#    #    value => $self->{zipcode},
-#    #    label => $self->{zipcode},
-#    #};
-#
-#}
+
+
+
+
+
+
+
+
+
 
 sub get_export_colnames {
     my %params = @_;
@@ -228,7 +228,7 @@ sub get_export_colnames {
             push(@parts,zerofill($ecrffield->{position},$ecrffield_position_digits));
             push(@parts,&$abbreviate_inputfield_name_code($ecrffield->{field}->{nameL10nKey},$ecrffield->{field}->{id}));
             push(@parts,'i' . zerofill($index,$index_digits)) if $ecrffield->{series};
-            #my $fieldtype = $ecrffield->{field}->{fieldType}->{nameL10nKey};
+
         }
         $prefix = 'p' unless $external_id_used;
     }

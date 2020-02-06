@@ -17,7 +17,7 @@ use CTSMS::BulkProcessor::RestProcessor qw(
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
 use CTSMS::BulkProcessor::RestItem qw();
 
-#use CTSMS::BulkProcessor::Utils qw(booltostring);
+
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
@@ -40,10 +40,10 @@ my $get_item_path_query = sub {
     return 'proband/' . $id;
 };
 my $get_list_path_query = sub {
-    my ($department_id) = @_; #,$proband_id) = @_;
+    my ($department_id) = @_;
     my %params = ();
     $params{department_id} = $department_id if defined $department_id;
-    #$params{proband_id} = $proband_id if defined $proband_id;
+
     return 'proband/' . get_query_string(\%params);
 };
 my $get_search_path_query = sub {
@@ -245,9 +245,9 @@ sub TO_JSON {
 
     my $self = shift;
     return { %{$self} };
-    #    value => $self->{zipcode},
-    #    label => $self->{zipcode},
-    #};
+
+
+
 
 }
 

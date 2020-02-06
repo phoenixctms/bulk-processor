@@ -5,7 +5,7 @@ use strict;
 
 use Scalar::Util 'blessed';
 
-#use JSON -support_by_pp, -no_export;
+
 
 use URI;
 use LWP::UserAgent qw();
@@ -30,7 +30,7 @@ our @EXPORT_OK = qw(
     convert_bools
 );
 
-#my $logger = getlogger(__PACKAGE__);
+
 
 sub new {
 
@@ -204,7 +204,7 @@ sub _get_request_uri {
         $path_query = '';
     }
     if (defined $self->{path} and length($self->{path}) > 0) {
-        #$path_query =~ s!^$self->{path}!!;
+
         $path_query =~ s!^/!!;
         $path_query = $self->{path} . $path_query;
     }
@@ -582,13 +582,13 @@ sub get_collection_page_query_uri {
         $total_count_expected = 0;
         $sf = undef;
     }
-    #my ($collection_path_query,$page_size,$page_num) = @_;
-    #if ($page_size <= 0) {
-    #    resterror($self,"positive collection page size required",getlogger(__PACKAGE__));
-    #}
-    #if ($page_size < 0) {
-    #    resterror($self,"positive collection page size required",getlogger(__PACKAGE__));
-    #}
+
+
+
+
+
+
+
     my $page_uri = $self->_get_request_uri($collection_path_query);
     my $page_size_query_param = $self->_get_page_size_query_param($page_size);
     my $page_num_query_param = $self->_get_page_num_query_param($page_num);

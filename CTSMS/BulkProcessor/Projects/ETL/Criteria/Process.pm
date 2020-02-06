@@ -8,7 +8,7 @@ use threads::shared qw();
 use Tie::IxHash;
 
 use Excel::Writer::XLSX qw();
-#use Excel::Reader::XLSX; qw();
+
 use Encode qw();
 
 use CTSMS::BulkProcessor::Projects::ETL::Criteria::Settings qw(
@@ -35,7 +35,7 @@ use CTSMS::BulkProcessor::LogError qw(
 );
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SearchService::Criteria qw();
-#use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SearchService::Criterion gw();
+
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionProperty qw(
@@ -58,7 +58,7 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Crit
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::DBModule qw(@DB_MODULES);
 
-use CTSMS::BulkProcessor::Array qw(array_to_map); #powerset contains
+use CTSMS::BulkProcessor::Array qw(array_to_map);
 
 use CTSMS::BulkProcessor::Utils qw(threadid timestampdigits booltostring stringtobool);
 
@@ -119,7 +119,7 @@ tie(%criterion_out_to_excel_map, 'Tie::IxHash',
                     return $criterion_out->{timeValue};
                 } elsif ($value_type eq $TIMESTAMP or $value_type eq $TIMESTAMP_HASH) {
                     return $criterion_out->{timestampValue};
-                #} else { #$NONE
+
 
                 }
             }
@@ -174,7 +174,7 @@ sub _get_criterion_in {
                 $in{ 'timeValue'} = $val;
             } elsif ($value_type eq $TIMESTAMP or $value_type eq $TIMESTAMP_HASH) {
                 $in{ 'timestampValue'} = $val;
-            #} else { #$NONE
+
 
             }
         }
@@ -190,7 +190,7 @@ sub export_criteria {
     my $static_context = {};
     my $result = _init_export_criteria_context($static_context);
 
-    my $warning_count = 0; #:shared = 0;
+    my $warning_count = 0;
     my $criteria_count = 0;
     foreach my $module (map { CTSMS::BulkProcessor::RestRequests::ctsms::shared::SearchService::Criteria::get_module($_); } @DB_MODULES) {
         $result &= CTSMS::BulkProcessor::RestRequests::ctsms::shared::SearchService::Criteria::process_items(
@@ -206,7 +206,7 @@ sub export_criteria {
                     foreach my $colname (keys %criteria_out_to_excel_map) {
                         my $cell_value = &{$criteria_out_to_excel_map{$colname}}($criteria);
                         $context->{criteria_worksheet}->write_blank( $context->{criteria_row}, $col, $context->{cell_format} ) unless defined $cell_value;
-                        #$context->{criteria_worksheet}->write_string($context->{criteria_row}, $col, ($context->{is_utf8} ? $record->{$colname} : _mark_utf8($record->{$colname})),$context->{cell_format}) if defined $cell_value;
+
                         $context->{criteria_worksheet}->write_string($context->{criteria_row}, $col, (($criteria->{deferredDelete} and $col == 0) ? $comment_char : '') . $cell_value,$context->{cell_format}) if defined $cell_value;
                         $col++;
                     }
@@ -218,7 +218,7 @@ sub export_criteria {
                             foreach my $colname (keys %criterion_out_to_excel_map) {
                                 my $cell_value = &{$criterion_out_to_excel_map{$colname}}($criteria,$criterion);
                                 $context->{criterion_worksheet}->write_blank( $context->{criterion_row}, $col, $context->{cell_format} ) unless defined $cell_value;
-                                #$context->{criterion_worksheet}->write_string($context->{criterion_row}, $col, ($context->{is_utf8} ? $record->{$colname} : _mark_utf8($record->{$colname})),$context->{cell_format}) if defined $cell_value;
+
                                 $context->{criterion_worksheet}->write_string($context->{criterion_row}, $col, (($criteria->{deferredDelete} and $col == 0) ? $comment_char : '') . $cell_value,$context->{cell_format}) if defined $cell_value;
                                 $col++;
                             }
@@ -231,7 +231,7 @@ sub export_criteria {
             },
             init_process_context_code => sub {
                 my ($context)= @_;
-                #$context->{db} = &get_sqlite_db();
+
                 $context->{error_count} = 0;
                 $context->{warning_count} = 0;
 
@@ -262,7 +262,7 @@ sub export_criteria {
             blocksize => $export_criteria_page_size,
             load_recursive => 0,
             multithreading => 0,
-            #numofthreads => 0,
+
         ) if $result;
     }
     $static_context->{workbook}->close() if $static_context->{workbook};
@@ -284,8 +284,8 @@ sub _init_export_criteria_context {
         $context->{header_format} = $context->{workbook}->add_format();
         $context->{header_format}->set_bold();
 
-        $context->{cell_format} = undef; #$workbook->add_format(); #output file size!
-        #$context->{cell_format}->set_bg_color('gray');
+        $context->{cell_format} = undef;
+
         processing_info(undef,"workbook '$context->{filename}' created",getlogger(__PACKAGE__));
         $result = 1;
     } else {
@@ -323,7 +323,7 @@ sub import_criteria {
                     $rownum++;
                     $context->{rownum} = $rownum;
                     next if (scalar @$row) == 0 or (scalar @$row) == 1;
-                    #$row = [ map { local $_ = $_; trim($_); $_; } @$row ]; #Encode::encode('utf8',Encode::decode('cp1252',$_));
+
                     next if substr($row->[0],0,length($comment_char)) eq $comment_char;
 
                     my ($criteria_id,$criterion_in) = _get_criterion_in($context,$row);
@@ -362,7 +362,7 @@ sub import_criteria {
                         $rownum++;
                         $context->{rownum} = $rownum;
                         next if (scalar @$row) == 0 or (scalar @$row) == 1;
-                        #$row = [ map { local $_ = $_; trim($_); $_; } @$row ]; #Encode::encode('utf8',Encode::decode('cp1252',$_));
+
                         next if substr($row->[0],0,length($comment_char)) eq $comment_char;
 
                         my ($update,$criteria_in) = _get_criteria_in($context,$row,$criterion_map);
@@ -461,19 +461,19 @@ sub _init_import_criteria_context {
     return $result;
 }
 
-#sub _mark_utf8 {
-#    return Encode::decode("UTF-8", shift);
-#    #my $string = shift;
-#    ##return Encode::decode_utf8($string);
-#    #my $result = eval {
-#    #    Encode::decode("UTF-8", $string);
-#    #};
-#    #if ($@) {
-#    #    return $string;
-#    #} else {
-#    #    return $result;
-#    #}
-#}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 sub _warn_or_error {
     my ($context,$message) = @_;

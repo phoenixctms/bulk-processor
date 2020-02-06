@@ -59,7 +59,7 @@ use CTSMS::BulkProcessor::SqlConnectors::CSVDB qw(cleanupcvsdirs);
 use CTSMS::BulkProcessor::SqlConnectors::SQLiteDB qw(cleanupdbfiles);
 
 use CTSMS::BulkProcessor::Projects::ETL::EcrfConnectorPool qw(destroy_all_dbs);
-#use CTSMS::BulkProcessor::ConnectorPool qw(destroy_dbs);
+
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job qw(
     $PROCESSING_JOB_STATUS
@@ -151,7 +151,7 @@ sub init {
 
     my $configfile = $defaultconfig;
     my $settingsfile = $defaultsettings;
-    #print STDERR (join("|",@ARGV),"\n");
+
     my $auth;
     return 0 unless GetOptions(
         "config=s" => \$configfile,
@@ -163,10 +163,10 @@ sub init {
         "jid=i" => \$job_id,
         "auth=s" => \$auth,
         "upload" => \$upload_files,
-        #"er:s" => \$emailrecipients,
-    ); # or scripterror('error in command line arguments',getlogger(getscriptpath()));
 
-    #$tasks = removeduplicates($tasks,1); #allowe cleanup twice
+    );
+
+
 
     my $result = load_config($configfile);
     #support credentials via args for jobs:
@@ -176,7 +176,7 @@ sub init {
     init_log();
     $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::EcrfSettings::update_settings,$YAML_CONFIG_TYPE);
     $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::EcrfExporter::Settings::update_settings,$YAML_CONFIG_TYPE);
-    #$result &= load_config($some_yml,\&update_something,$YAML_CONFIG_TYPE);
+
     return $result;
 
 }
@@ -195,7 +195,7 @@ sub main() {
         return 0;
     },getlogger(getscriptpath()));
     if (defined $tasks and 'ARRAY' eq ref $tasks and (scalar @$tasks) > 0) {
-        #scriptinfo('skip-errors: processing won\'t stop upon errors',getlogger(__PACKAGE__)) if $skip_errors;
+
         foreach my $task (@$tasks) {
 
             if (lc($cleanup_task_opt) eq lc($task)) {
@@ -321,7 +321,7 @@ sub export_ecrf_data_vertical_task {
     my $err = $@;
 
     if ($err) {
-        #print $@;
+
         push(@$messages,'export_ecrf_data_vertical error: ' . $err);
         return 0;
     } else {
@@ -339,7 +339,7 @@ sub export_ecrf_data_horizontal_task {
     my $err = $@;
 
     if ($err) {
-        #print $@;
+
         push(@$messages,'export_ecrf_data_horizontal error: ' . $err);
         return 0;
     } else {
@@ -353,12 +353,12 @@ sub publish_ecrf_data_sqlite_task {
     my $out = undef;
     eval {
         ($out,@job_file) = publish_ecrf_data_sqlite($upload_files);
-        #push(@$attachmentfiles,$filename);
+
     };
     my $err = $@;
-    #$err ||= 'no file created' unless $out;
+
     if ($err) {
-        #print $@;
+
         push(@$messages,'publish_ecrf_data_sqlite error: ' . $err);
         return 0;
     } else {
@@ -372,12 +372,12 @@ sub publish_ecrf_data_horizontal_csv_task {
     my $out = undef;
     eval {
         ($out,@job_file) = publish_ecrf_data_horizontal_csv($upload_files);
-        #push(@$attachmentfiles,$filename);
+
     };
     my $err = $@;
-    #$err ||= 'no file created' unless $out;
+
     if ($err) {
-        #print $@;
+
         push(@$messages,'publish_ecrf_data_horizontal_csv error: ' . $err);
         return 0;
     } else {
@@ -392,12 +392,12 @@ sub publish_ecrf_data_xls_task {
     my $out = undef;
     eval {
         ($out,@job_file) = publish_ecrf_data_xls($upload_files);
-        #push(@$attachmentfiles,$filename);
+
     };
     my $err = $@;
-    #$err ||= 'no file created' unless $out;
+
     if ($err) {
-        #print $@;
+
         push(@$messages,'publish_ecrf_data_xls error: ' . $err);
         return 0;
     } else {
@@ -412,12 +412,12 @@ sub publish_ecrf_data_pdf_task {
     my $out = undef;
     eval {
         ($out,@job_file) = publish_ecrf_data_pdf($upload_files);
-        #push(@$attachmentfiles,$filename);
+
     };
     my $err = $@;
-    #$err ||= 'no file created' unless $out;
+
     if ($err) {
-        #print $@;
+
         push(@$messages,'publish_ecrf_data_pdf error: ' . $err);
         return 0;
     } else {
@@ -436,7 +436,7 @@ sub publish_ecrf_data_pdfs_task {
     my $err = $@;
     $err ||= 'no files downloaded' unless ('ARRAY' eq ref $uploads and (scalar @$uploads > 0));
     if ($err) {
-        #print $@;
+
         push(@$messages,'publish_ecrf_data_pdfs error: ' . $err);
         return 0;
     } else {
@@ -453,12 +453,12 @@ sub publish_audit_trail_xls_task {
     my $out = undef;
     eval {
         ($out,@job_file) = publish_audit_trail_xls($upload_files);
-        #push(@$attachmentfiles,$filename);
+
     };
     my $err = $@;
-    #$err ||= 'no file created' unless $out;
+
     if ($err) {
-        #print $@;
+
         push(@$messages,'publish_audit_trail_xls error: ' . $err);
         return 0;
     } else {
@@ -473,12 +473,12 @@ sub publish_ecrf_journal_xls_task {
     my $out = undef;
     eval {
         ($out,@job_file) = publish_ecrf_journal_xls($upload_files);
-        #push(@$attachmentfiles,$filename);
+
     };
     my $err = $@;
-    #$err ||= 'no file created' unless $out;
+
     if ($err) {
-        #print $@;
+
         push(@$messages,'publish_ecrf_journal_xls error: ' . $err);
         return 0;
     } else {
@@ -493,12 +493,12 @@ sub publish_ecrfs_xls_task {
     my $out = undef;
     eval {
         ($out,@job_file) = publish_ecrfs_xls($upload_files);
-        #push(@$attachmentfiles,$filename);
+
     };
     my $err = $@;
-    #$err ||= 'no file created' unless $out;
+
     if ($err) {
-        #print $@;
+
         push(@$messages,'publish_ecrfs_xls error: ' . $err);
         return 0;
     } else {
@@ -513,12 +513,12 @@ sub publish_proband_list_task {
     my $out = undef;
     eval {
         ($out,@job_file) = publish_proband_list($log_level,$upload_files);
-        #push(@$attachmentfiles,$filename);
+
     };
     my $err = $@;
-    #$err ||= 'no file created' unless $out;
+
     if ($err) {
-        #print $@;
+
         push(@$messages,'publish_proband_list error: ' . $err);
         return 0;
     } else {
@@ -528,8 +528,8 @@ sub publish_proband_list_task {
     }
 }
 
-#END {
-#    # this should not be required explicitly, but prevents Log4Perl's
-#    # "rootlogger not initialized error upon exit..
-#    destroy_all_dbs
-#}
+
+
+
+
+

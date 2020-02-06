@@ -6,7 +6,7 @@ use strict;
 use threads::shared qw();
 
 use Tie::IxHash;
-#use Chart::Gnuplot qw();
+
 
 use CTSMS::BulkProcessor::Projects::Render::Settings qw(
     $output_path
@@ -40,7 +40,7 @@ use CTSMS::BulkProcessor::LogError qw(
     rowprocessingwarn
 );
 
-#use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::JournalModule qw();
+
 
 use CTSMS::BulkProcessor::ConnectorPool qw(
     get_ctsms_db
@@ -76,14 +76,14 @@ tie(%journal_entry_history_root_entities, 'Tie::IxHash',
 
 sub create_journal_heatmap {
     _create_journalentry_24hheatmap(
-        #filter => "(left(title,22)='erfolgreiche Anmeldung' or left(title,16)='successful logon')",
+
         title => "hourly data modifications",
         span_days => $journal_heatmap_span_days,
         start_date => $journal_heatmap_start_date,
         end_date => $journal_heatmap_end_date,
         colorboxlabel => "journal records created",
         filename => $journal_heatmap_filename,
-        #rotate => 90,
+
         dpi => 300,
         dimension => $journal_heatmap_dimension,
     );
@@ -98,7 +98,7 @@ sub create_logon_heatmap {
         end_date => $logon_heatmap_end_date,
         colorboxlabel => "successful logins",
         filename => $logon_heatmap_filename,
-        #rotate => 90,
+
         dpi => 300,
         dimension => $logon_heatmap_dimension,
     );
@@ -106,13 +106,13 @@ sub create_logon_heatmap {
 
 sub create_journal_histogram {
     _create_journalentry_histogram(
-        #filter => "(left(title,22)='erfolgreiche Anmeldung' or left(title,16)='successful logon')",
+
         title => "data modification histogram",
         year => $journal_histogram_year,
         month => $journal_histogram_month,
         interval => $journal_histogram_interval,
         filename => $journal_histogram_filename,
-        #rotate => 90,
+
         dpi => 300,
         dimension => $journal_histogram_dimension,
     );
@@ -189,29 +189,28 @@ sub _create_journalentry_24hheatmap {
         push(@tmp_files,$datafile);
         my $start = $start_date;
         my $stop = add_days(split_date($start),1);
-        #my $end_date = $start_date;
+
         my $max = 0;
-        #my @months = ();
+
         my $filter_and = (defined $filter and length($filter) > 0 ? $filter . ' and' : '');
         for (my $day = 0; $day <= $days; $day++) {
-            #my $daily_total = 0;
+
     	    for (my $hour = 0; $hour <= 23; $hour++) {
     		    $statement = "select count(*) from journal_entry where" . $filter_and . " modified_timestamp >= ? and modified_timestamp < ? and EXTRACT(HOUR FROM modified_timestamp) = ?";
     		    my $count = $db->db_get_value($statement, $start . ' 00:00:00', $stop . ' 00:00:00', $hour);
     		    print DATA_FILE substr($start,0,10) . "\t" . $hour . "\t" . $count . "\n";
     		    $max = $count > $max ? $count : $max;
-    		    #$daily_total += $count;
+
     	    }
-    	    #_info($start . '-' . $stop . ': ' . $daily_total);
-    	    #$end_date = $start;
-    	    #push(@dates,substr($start,0,10));
+
+
+
     	    $start = $stop;
     	    $stop = add_days(split_date($start),1);
     	    print DATA_FILE "\n";
         }
         close DATA_FILE;
         _info('hourly max: ' . $max);
-        #print $end_date;
         #https://fossies.org/diffs/gnuplot/4.6.6_vs_5.0.0/demo/heatmaps.dem-diff.html
         #gnuplot v5 does not work!
         #my $blah = join(',',map { local $_ = $_; '"" "'.$_.'"'; } @dates);
@@ -294,7 +293,7 @@ sub _create_journalentry_histogram {
             dimension
         /};
 
-    #my $journal_modules = CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::JournalModule::get_items();
+
 
     my $db = get_ctsms_db();
 
@@ -478,7 +477,7 @@ END_STATEMENT
 sub _error {
 
     my ($message) = @_;
-    #$context->{error_count} = $context->{error_count} + 1;
+
     rowprocessingerror(threadid(),$message,getlogger(__PACKAGE__));
 
 }
@@ -486,7 +485,7 @@ sub _error {
 sub _warn {
 
     my ($message) = @_;
-    #$context->{warning_count} = $context->{warning_count} + 1;
+
     rowprocessingwarn(threadid(),$message,getlogger(__PACKAGE__));
 
 }

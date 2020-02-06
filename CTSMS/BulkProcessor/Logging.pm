@@ -101,12 +101,12 @@ our @EXPORT_OK = qw(
     serviceinfo
 
 );
-#rowskipped
+ExcelExport
 
 my $logfileextension = '.log';
 
 our $currentlogfile;
-#our $weblogfile;
+ExcelExport
 our $attachmentlogfile;
 
 my $loginitialized = 0;
@@ -129,11 +129,11 @@ sub createlogfile {
 
 sub init_log_default {
 
-    # log configuration
+    ExcelExport
     my $conf = "log4perl.logger                       = DEBUG, ScreenApp\n" .
 
                "log4perl.appender.ScreenApp           = Log::Log4perl::Appender::Screen\n" .
-               #"log4perl.appender.ScreenApp           = Log::Log4perl::Appender::ScreenColoredLevels\n" .
+               ExcelExport
                "log4perl.appender.ScreenApp.Threshold = INFO\n" .
                "log4perl.appender.ScreenApp.stderr    = 0\n" .
                "log4perl.appender.ScreenApp.layout    = Log::Log4perl::Layout::PatternLayout\n" .
@@ -151,8 +151,8 @@ sub init_log {
     createlogfile($currentlogfile);
     $attachmentlogfile = $logfile_path . 'email_' . timestampdigits() . $logfileextension;
     createlogfile($attachmentlogfile);
-    #$weblogfile = $logfile_path . 'web_' . datestampdigits() .  $logfileextension;
-    #createlogfile($weblogfile);
+    ExcelExport
+    ExcelExport
 
     # log configuration
     my $conf = "log4perl.logger                       = DEBUG, FileApp, ScreenApp, MailAttApp\n" .
@@ -178,7 +178,7 @@ sub init_log {
                'log4perl.appender.MailAttApp.layout.ConversionPattern = %d> %m%n' . "\n\n" .
 
                "log4perl.appender.ScreenApp           = Log::Log4perl::Appender::Screen\n" .
-               #"log4perl.appender.ScreenApp           = Log::Log4perl::Appender::ScreenColoredLevels\n" .
+               ExcelExport
                'log4perl.appender.ScreenApp.Threshold = ' . $screenloglevel . "\n" .
                "log4perl.appender.ScreenApp.stderr    = ' . $screenlogstderr . \n" .
                "log4perl.appender.ScreenApp.layout    = Log::Log4perl::Layout::SimpleLayout\n" .
@@ -192,33 +192,19 @@ sub init_log {
     get_logger(__PACKAGE__)->debug('log4perl configuration loaded');
 }
 
-#my $loglogger;
-#eval {
-#    $loglogger = get_logger(__PACKAGE__);
-#};
-#my $loglogger = undef; #deferred initialisation required, as log options are loaded from configs
-
-#sub _get_loglogger {
-#    return get_logger(__PACKAGE__);
-#    #if (!defined $loglogger) {
-#    #    $loglogger = get_logger(__PACKAGE__);
-#    #}
-#    #return $loglogger;
-#}
-
 sub getlogger {
 
     my $package = shift;
-    #my $newlogger;
-    #eval {
-    #    $newlogger = get_logger($package);
-    #};
-    #if (defined $loglogger and defined $newlogger) {
-    #    $loglogger->debug('logger for category ' . $package . ' created');
-    #}
+
+
+
+
+
+
+
     return get_logger($package);
-    #_get_loglogger()->debug('logger for category ' . $package . ' created');
-    #return $newlogger;
+
+
 
 }
 
@@ -236,10 +222,10 @@ sub cleanuplogfiles {
     my @files = grep { /$rlogfileextension$/ && -f $logfile_path . $_} readdir(LOGDIR);
     closedir LOGDIR;
     foreach my $file (@files) {
-        #print $file;
+
         my $filepath = $logfile_path . $file;
-        #print $filepath . "\n";
-        #print $remaininglogfiles[0] . "\n\n";
+
+
         if (not contains($filepath,\@remaininglogfiles)) {
             if ((unlink $filepath) == 0) {
                 if (defined $filewarncode and ref $filewarncode eq 'CODE') {
@@ -276,7 +262,7 @@ sub dbdebug {
         $logger->debug(_getsqlconnectorinstanceprefix($db) . _getsqlconnectidentifiermessage($db,$message));
     }
 
-    #die();
+
 
 }
 
@@ -287,7 +273,7 @@ sub dbinfo {
         $logger->info(_getsqlconnectorinstanceprefix($db) . _getsqlconnectidentifiermessage($db,$message));
     }
 
-    #die();
+
 
 }
 
@@ -298,7 +284,7 @@ sub restdebug {
         $logger->debug(_getrestconnectorinstanceprefix($restapi) . _getrestconnectidentifiermessage($restapi,$message));
     }
 
-    #die();
+
 
 }
 
@@ -309,7 +295,7 @@ sub restinfo {
         $logger->info(_getrestconnectorinstanceprefix($restapi) . _getrestconnectidentifiermessage($restapi,$message));
     }
 
-    #die();
+
 
 }
 
@@ -466,14 +452,14 @@ sub rowtransferred {
 
 }
 
-#sub rowskipped {
-#
-#    my ($db,$tablename,$target_db,$targettablename,$i,$numofrows,$logger) = @_;
-#    if (defined $logger) {
-#        $logger->debug(_getsqlconnectorinstanceprefix($db) . 'row ' . $i . '/' . $numofrows . ' skipped');
-#    }
-#
-#}
+
+
+
+
+
+
+
+
 
 sub rowinserted {
 
@@ -718,15 +704,15 @@ sub restprocessingdone {
 
 }
 
-#sub mainconfigurationloaded {
-#
-#    my ($configfile,$logger) = @_;
-#    if (defined $logger) {
-#        $logger->info('system configuration file ' . $configfile . ' loaded');
-#    }
-#    log_mainconfig(\&configinfo,$logger);
-#
-#}
+
+
+
+
+
+
+
+
+
 
 sub configurationinfo {
 
@@ -789,7 +775,7 @@ sub servicedebug {
         $logger->debug($message);
     }
 
-    #die();
+
 
 }
 
@@ -801,7 +787,7 @@ sub serviceinfo {
         $logger->info($message);
     }
 
-    #die();
+
 
 }
 

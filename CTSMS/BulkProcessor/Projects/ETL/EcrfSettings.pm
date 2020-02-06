@@ -37,9 +37,9 @@ use CTSMS::BulkProcessor::ConnectorPool qw(
 
 );
 
-use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring cat_file); #check_ipnet
+use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring cat_file);
 
-#use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Ecrf qw();
+
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 
 require Exporter;
@@ -96,7 +96,7 @@ our @EXPORT_OK = qw(
 
 our $input_path = $working_path . 'input/';
 our $output_path = $working_path . 'output/';
-#our $rollback_path = $working_path . 'rollback/';
+
 our $sqlite_db_file = 'ecrf';
 our $csv_dir = 'ecrf';
 
@@ -128,7 +128,7 @@ our $audit_trail_export_xls_filename = "%s%s";
 our $ecrf_journal_export_xls_filename = "%s%s";
 our $ecrfs_export_xls_filename = "%s%s";
 
-our $ctsms_base_url = undef; #_get_ctsms_baseuri();
+our $ctsms_base_url = undef;
 our $dbtool = undef;
 our $lockfile = undef;
 our $ecrf_data_export_pdf_filename = '%s%s';
@@ -158,8 +158,8 @@ our %export_colname_abbreviation = (
     index_digits => 2,
     abbreviate_ecrf_name_code => sub {
         my ($ecrf_name,$ecrf_id) = @_;
-        $ecrf_name = abbreviate(string => $ecrf_name, %$ecrfname_abbreviate_opts); #word_count_limit => 0);
-        #$inputfield_name = s/^remoc //i;
+        $ecrf_name = abbreviate(string => $ecrf_name, %$ecrfname_abbreviate_opts);
+
         return $ecrf_name;
     },
     abbreviate_visit_code => sub {
@@ -174,18 +174,18 @@ our %export_colname_abbreviation = (
     },
     abbreviate_section_code => sub {
         my $section = shift;
-        #return 's' . chopstring($section,2,'')
+
         $section = abbreviate(string => $section, %$section_abbreviate_opts);
         return $section;
     },
     abbreviate_inputfield_name_code => sub {
         my ($inputfield_name,$inputfield_id) = @_;
-        $inputfield_name = abbreviate(string => $inputfield_name, %$inputfieldname_abbreviate_opts); #word_blacklist => $inputfieldname_word_blacklist);
+        $inputfield_name = abbreviate(string => $inputfield_name, %$inputfieldname_abbreviate_opts);
         return $inputfield_name;
     },
     abbreviate_selectionvalue_code => sub {
         my ($selectionvalue_value,$selectionvalue_id) = @_;
-        $selectionvalue_value = abbreviate(string => $selectionvalue_value, %$selectionvalue_abbreviate_opts); # word_count_limit => 1);
+        $selectionvalue_value = abbreviate(string => $selectionvalue_value, %$selectionvalue_abbreviate_opts);
         return 'o' . $selectionvalue_value;
     },
     sanitize_colname_symbols_code => sub {
@@ -232,7 +232,7 @@ sub abbreviate {
     $string =~ s/[^a-zA-Z0-9 <>=äöüÄÖÜß_-]//g;
     $string =~ s/[ _-]+/ /g;
     my @words = grep { local $_ = $_; (not exists $word_blacklist->{$_}) or (not $word_blacklist->{$_}); } split(/ /,$string,-1);
-    return join(' ',@words) if (scalar grep { local $_ = $_; length($_) > $word_abbreviation_length; } @words) <= $word_count_limit; # and length() < (($word_count_limit * $word_limit) + $word_count_limit));
+    return join(' ',@words) if (scalar grep { local $_ = $_; length($_) > $word_abbreviation_length; } @words) <= $word_count_limit;
     my @abbreviated_words = ();
     foreach my $word (@words) {
         push(@abbreviated_words,(length($word) > $word_limit ? chopstring($word,$word_abbreviation_length,'') : $word));
@@ -248,14 +248,14 @@ sub update_settings {
 
     my ($data,$configfile) = @_;
 
-    if (defined $data) { # and defined ($data = $data->[0])) {
+    if (defined $data) {
 
         my $result = 1;
-        #my $regexp_result;
-        #&$configurationinfocode("testinfomessage",$configlogger);
+
+
 
         $result &= _prepare_working_paths(1);
-        #$dialysis_substitution_volume_file = $input_path;
+
 
         $sqlite_db_file = $data->{sqlite_db_file} if exists $data->{sqlite_db_file};
         $csv_dir = $data->{csv_dir} if exists $data->{csv_dir};
@@ -365,8 +365,8 @@ sub _prepare_working_paths {
     $result &= $path_result;
     ($path_result,$output_path) = create_path($working_path . 'output',$output_path,$create,\&fileerror,getlogger(__PACKAGE__));
     $result &= $path_result;
-    #($path_result,$rollback_path) = create_path($working_path . 'rollback',$rollback_path,$create,\&fileerror,getlogger(__PACKAGE__));
-    #$result &= $path_result;
+
+
 
     return $result;
 
@@ -376,9 +376,9 @@ sub _get_ctsms_baseuri {
     my $api = get_ctsms_restapi();
     my $path = $api->path // '';
     $path =~ s!/*$ctsmsrestapi_path/*$!!;
-    #if (length($path) > 0) {
+
         $path .= '/' if $path !~ m!/$!;
-    #}
+
     my $uri = $api->baseuri;
     $uri->path_query($path);
     return $uri->as_string();

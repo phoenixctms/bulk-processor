@@ -112,9 +112,6 @@ sub TO_JSON {
 
     my $self = shift;
     return { %{$self} };
-    #    value => $self->{zipcode},
-    #    label => $self->{zipcode},
-    #};
 
 }
 

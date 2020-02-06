@@ -2,7 +2,7 @@ package CTSMS::BulkProcessor::LoadConfig;
 use strict;
 
 ## no critic
-#use File::Basename qw();
+
 use Cwd qw();
 
 use CTSMS::BulkProcessor::Globals qw(
@@ -31,7 +31,7 @@ use CTSMS::BulkProcessor::LogError qw(
     configurationerror
 );
 
-#use YAML::Tiny qw();
+
 use YAML qw();
 $YAML::UseCode = 1;
 use Config::Any qw();
@@ -50,14 +50,14 @@ our @EXPORT_OK = qw(
 
 my $tuplesplitpattern = join('|',(quotemeta(','),
                                   quotemeta(';'),
-                                  #quotemeta('/')
+
                                   )
                              );
 
 our $SIMPLE_CONFIG_TYPE = 1;
 our $YAML_CONFIG_TYPE = 2;
 our $ANY_CONFIG_TYPE = 3;
-#my $logger = getlogger(__PACKAGE__);
+
 
 my $windows_config_ext_prefix = 'windows';
 my $debug_config_ext_prefix = 'debug';
@@ -99,9 +99,9 @@ sub load_config {
                     push(@search_paths,map { eval{ Cwd::abs_path($_  . '/') . '/'; }; } @INC);
                     ($variant,$data) = _search_path($variant,$configtype,$configparser_args,\@search_paths,\@paths,\%path_dupes);
                 }
-                #if (not defined $data) {
-                #    configurationwarn($variant,'no ' . ($is_master ? 'master config' : 'config') . ' found in ' . join(', ',@paths),getlogger(__PACKAGE__));
-                #}
+
+
+
 
             }
         }
@@ -172,8 +172,8 @@ sub _search_path {
         if (-e $relative_configfile) {
             $configfile = $relative_configfile;
             $data = _parse_config($configfile,$configtype,$configparser_args);
-        #} else {
-        #    configurationwarn($configfile,'no ' . ($is_master ? 'master config' : 'config') . ' file ' . $relative_configfile,getlogger(__PACKAGE__));
+
+
         }
     }
     return ($configfile,$data);
@@ -236,28 +236,6 @@ sub parse_regexp {
 
 }
 
-#sub parse_float {
-#
-#  my ($value) = @_;
-#  my $output = $value;
-#  if (index($output,",") > -1) {
-#    $output =~ s/,/\./g;
-#  }
-#  $output = sprintf("%f",$output);
-#  #$output =~ s/0+$//g;
-#  #$output =~ s/\.$//g;
-#  #if ($output =~ /\..+/) {
-#  #  $output =~ s/0+$//g;
-#  #  $output =~ s/\.$//g;
-#  #}
-#  if (index($output,".") > -1) {
-#    $output =~ s/0+$//g;
-#    $output =~ s/\.$//g;
-#  }
-#  return $output;
-#
-#}
-
 sub _parse_simple_config {
 
     my ($file,$configparser_args) = @_;
@@ -282,10 +260,10 @@ sub _parse_simple_config {
         next if($line =~ /^\s*#/);
         next if($line !~ /^\s*\S+\s*=.*$/);
 
-        #my $cindex = index($line,'#');
-        #if ($cindex >= 0) {
-        #    $line = substr($line,0,$cindex);
-        #}
+
+
+
+
 
         my ($key,$value) = split(/=/,$line,2);
 
@@ -301,7 +279,7 @@ sub _parse_simple_config {
         }
 
         $config->{$key} = $value;
-        #print $key . "\n";
+
     }
 
     return $config;

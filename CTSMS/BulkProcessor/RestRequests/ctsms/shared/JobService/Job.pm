@@ -16,7 +16,7 @@ use CTSMS::BulkProcessor::RestProcessor qw(
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
 use CTSMS::BulkProcessor::RestItem qw();
 
-#use CTSMS::BulkProcessor::Utils qw(booltostring);
+
 
 
 require Exporter;
@@ -37,7 +37,7 @@ our @EXPORT_OK = qw(
 my $default_restapi = \&get_ctsms_restapi;
 my $get_item_path_query = sub {
     my ($job_id) = @_;
-    return 'job/' . $job_id; # . '/head';
+    return 'job/' . $job_id;
 };
 my $download_job_file_path_query = sub {
     my ($job_id) = @_;
@@ -144,14 +144,14 @@ sub get_item_path {
 
 }
 
-#sub TO_JSON {
-#
-#    my $self = shift;
-#    return { %{$self} };
-#    #    value => $self->{zipcode},
-#    #    label => $self->{zipcode},
-#    #};
-#
-#}
+
+
+
+
+
+
+
+
+
 
 1;

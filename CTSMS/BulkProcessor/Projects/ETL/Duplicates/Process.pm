@@ -7,9 +7,9 @@ use threads::shared qw();
 
 use Unicode::Normalize qw();
 
-#use JSON -support_by_pp, -no_export;
-#*JSON::true = \1;
-#*JSON::false = \0;
+
+
+
 
 use Encode qw();
 
@@ -34,8 +34,8 @@ use CTSMS::BulkProcessor::Projects::ETL::Duplicates::Settings qw(
     $duplicate_comment_prefix
     $proband_categories_not_to_update
 );
-    #$import_proband_api_page_size
-    #$proband_plain_text_row_block
+
+
 use CTSMS::BulkProcessor::Logging qw (
     getlogger
     processing_info
@@ -64,8 +64,8 @@ use CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandDuplicate qw();
 use CTSMS::BulkProcessor::Array qw(array_to_map powerset contains);
 
 use CTSMS::BulkProcessor::Utils qw(threadid);
-#excel_to_timestamp
-#use CTSMS::BulkProcessor::Serialization qw(serialize deserialize $format_json);
+
+
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -77,9 +77,9 @@ our @EXPORT_OK = qw(
 
 sub import_proband {
 
-    #my $context = { tid => threadid(), };
+
     my $static_context = {};
-    #my $result = _init_import_proband_context($context);
+
     my $result = _import_proband_checks($static_context);
 
     $result = CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText::create_table($proband_plain_text_truncate_table) if $result;
@@ -103,27 +103,27 @@ sub import_proband {
                     _warn_or_error($context,"proband id $item->{id} is blinded");
                 } else {
                     my $cnt = 0;
-                    #my $serialized = serialize($item,$format_json);
+
                     foreach my $first_names (@{powerset(_normalize_person_name($item->{firstName},0,1))}) {
                         next unless @$first_names;
                         foreach my $last_names (@{powerset(_normalize_person_name($item->{lastName},1,1))}) {
                             next unless @$last_names;
                             my @row = ();
-                            push(@row,join(' ',@$first_names)); #first_name
-                            push(@row,join(' ',@$last_names)); #last_name'
-                            push(@row,$item->{dateOfBirth}); #date_of_birth
-                            push(@row,$item->{id}); #proband_id
-                            push(@row,$item->{version}); #version
-                            push(@row,$item->{category}->{nameL10nKey}); #category
-                            push(@row,$item->{comment}); #comment
-                            #push(@row,$serialized); #serialized
+                            push(@row,join(' ',@$first_names));
+                            push(@row,join(' ',@$last_names));
+                            push(@row,$item->{dateOfBirth});
+                            push(@row,$item->{id});
+                            push(@row,$item->{version});
+                            push(@row,$item->{category}->{nameL10nKey});
+                            push(@row,$item->{comment});
+
                             push(@rows,\@row);
                             $cnt++;
                         }
                     }
                     _info($context,"$cnt name variants for proband id $item->{id}") if $cnt > 1;
                 }
-                #_info($context,(scalar keys %matches) . " duplicates for proband id $record->{proband_id}") if (scalar keys %matches) > 0;
+
             }
 
             if ((scalar @rows) > 0) {
@@ -173,7 +173,7 @@ sub import_proband {
 sub _normalize_person_name {
 
     my ($name,$suppress_prefixes,$split) = @_;
-    #use utf8;
+
     #$name = "Vous avez aimé l'épée offerte par les elfes à Frodon";
 
     $name = Unicode::Normalize::NFKD($name);
@@ -233,19 +233,19 @@ sub _import_proband_checks {
                 tieId => $context->{criteriontie_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::AND},
                 propertyId => $context->{criterionproperty_map}->{'proband.person'},
                 restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
-                booleanValue => \1, #JSON::true,
+                booleanValue => \1,
             },{
                 position => 3,
                 tieId => $context->{criteriontie_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::AND},
                 propertyId => $context->{criterionproperty_map}->{'proband.blinded'},
                 restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
-                booleanValue => \0, #JSON::false,
+                booleanValue => \0,
             },{
                 position => 4,
                 tieId => $context->{criteriontie_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::AND},
                 propertyId => $context->{criterionproperty_map}->{'proband.deferredDelete'},
                 restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
-                booleanValue => \0, #JSON::false,
+                booleanValue => \0,
             }],
         };
     }
@@ -258,17 +258,17 @@ sub create_duplicate {
     my $result = _create_duplicate_checks($static_context);
     $result = CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandDuplicate::create_table($proband_duplicate_truncate_table) if $result;
 
-    #destroy_all_dbs();
+
     my $warning_count :shared = 0;
-    #my $updated_password_count :shared = 0;
+
     $result = CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText::process_records(
         static_context => $static_context,
         process_code => sub {
             my ($context,$records,$row_offset) = @_;
             my $rownum = $row_offset;
-            #my @rows = ();
-            #$context->{db}->db_finish();
-            #$context->{db}->db_begin();
+
+
+
             foreach my $record (@$records) {
                 $rownum++;
                 if (CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandDuplicate::countby_probandidduplicateid(undef,$record->{proband_id}) > 0) {
@@ -276,11 +276,11 @@ sub create_duplicate {
                     next;
                 }
                 my %matches = ();
-                #if ($record->{last_name} eq "romano") {
-                #    print"stop";
-                #}
 
-                foreach my $match (@{CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText::findby_lastnamefirstnamedateofbirthprobandid(#$context->{db},
+
+
+
+                foreach my $match (@{CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText::findby_lastnamefirstnamedateofbirthprobandid(
                         $record->{last_name},
                         $record->{first_name},
                         $record->{date_of_birth},
@@ -288,7 +288,7 @@ sub create_duplicate {
                     next if $match->{proband_id} == $record->{proband_id};
                     $matches{$match->{proband_id}} = $match unless exists $matches{$match->{proband_id}};
                 }
-                foreach my $match (@{CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText::findby_lastnamefirstnamedateofbirthprobandid(#$context->{db},
+                foreach my $match (@{CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText::findby_lastnamefirstnamedateofbirthprobandid(
                         $record->{last_name},
                         $record->{first_name},
                     )}) {
@@ -302,7 +302,7 @@ sub create_duplicate {
                 }
                 _info($context,(scalar keys %matches) . " duplicates for proband id $record->{proband_id}") if (scalar keys %matches) > 0;
                 if ((scalar @rows) > 0) {
-                #if ($context->{multithread}) {
+
                     $context->{db}->db_do_begin(
                         CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandDuplicate::getinsertstatement(1),
                     );
@@ -324,8 +324,8 @@ sub create_duplicate {
         },
         init_process_context_code => sub {
             my ($context)= @_;
-            #$context->{api} = &get_ctsms_restapi();
-            #$context->{tid} = threadid();
+
+
             $context->{db} = &get_sqlite_db();
             $context->{error_count} = 0;
             $context->{warning_count} = 0;
@@ -356,7 +356,7 @@ sub _create_duplicate_checks {
     eval {
         $proband_count = CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText::countby_lastnamefirstnamedateofbirth();
     };
-    if ($@) { # or $proband_count == 0) {
+    if ($@) {
         rowprocessingerror(undef,'please import probands first',getlogger(__PACKAGE__));
         $result = 0; #even in skip-error mode..
     }
@@ -369,7 +369,7 @@ sub update_proband {
     my $static_context = {};
     my $result = _update_proband_checks($static_context);
 
-    #destroy_all_dbs();
+
     my $warning_count :shared = 0;
     my $updated_proband_count :shared = 0;
     $result = CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandDuplicate::process_records(
@@ -379,9 +379,9 @@ sub update_proband {
             my $rownum = $row_offset;
             foreach my $record (@$records) {
                 $rownum++;
-                #if ($record->{proband_id} == 790079) {
-                #    print "stop";
-                #}
+
+
+
 
                 my %duplicate_proband_ids = ();
                 $duplicate_proband_ids{$record->{proband_id}} = undef;
@@ -390,15 +390,15 @@ sub update_proband {
                 }
                 my @duplicate_group = sort {$a <=> $b} keys %duplicate_proband_ids;
                 $context->{duplicate_group} = \@duplicate_group;
-                #_info($context,"duplicate group - proband ids " . join (', ',@duplicate_group));
+
                 my $label = "duplicate group - proband ids " . join (', ',@duplicate_group);
                 foreach my $proband_id (@duplicate_group) {
-                    #my $proband;
-                    #eval {
-                    #    $proband = deserialize(CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText::get_serialized_ref($proband_id),$format_json);
-                    #};
-                    #if ($@ or not $proband) {
-                    #    _warn_or_error($context,"cannot deserialize proband id $proband_id: " . $@);
+
+
+
+
+
+
                     my $category_info;
                     eval {
                         $category_info = CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText::findby_lastnamefirstnamedateofbirthprobandid(
@@ -419,16 +419,16 @@ sub update_proband {
                                 "categoryId" => $context->{proband_categories}->{$new_category}->{id},
                                 "comment" => $new_comment,
                             };
-                            #delete $in->{category};
-                            #if ($in->{childen}) {
-                            #    my @child_ids = ();
-                            #    foreach my $child (@{$in->{childen}}) {
-                            #        push(@child_ids,$child->{id});
-                            #    }
-                            #}
-                            #foreach my $field (keys %$in) {
-                            #    delete $in->{$field} if ref $in->{$field};
-                            #}
+
+
+
+
+
+
+
+
+
+
                             my $out;
                             eval {
                                 if ($dry) {
@@ -449,21 +449,21 @@ sub update_proband {
                     }
                 }
 
-                #_info($context,(scalar keys %matches) . " duplicates for proband id $record->{proband_id}") if (scalar keys %matches) > 0;
+
             }
 
             return 1;
         },
         init_process_context_code => sub {
             my ($context)= @_;
-            #$context->{db} = &get_sqlite_db();
+
             $context->{error_count} = 0;
             $context->{warning_count} = 0;
             $context->{updated_proband_count} = 0;
         },
         uninit_process_context_code => sub {
             my ($context)= @_;
-            #undef $context->{db};
+
             destroy_all_dbs();
             {
                 lock $warning_count;
@@ -519,7 +519,7 @@ sub _update_proband_checks {
     eval {
         $proband_count = CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText::countby_lastnamefirstnamedateofbirth();
     };
-    if ($@) { # or $proband_count == 0) {
+    if ($@) {
         rowprocessingerror(undef,'please import probands first',getlogger(__PACKAGE__));
         $result = 0; #even in skip-error mode..
     }
@@ -528,7 +528,7 @@ sub _update_proband_checks {
     eval {
         $duplicate_count = CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandDuplicate::countby_probandidduplicateid();
     };
-    if ($@) { # or $duplicate_count == 0) {
+    if ($@) {
         rowprocessingerror(undef,'please identify duplicates first',getlogger(__PACKAGE__));
         $result = 0; #even in skip-error mode..
     }
@@ -550,16 +550,16 @@ sub _update_proband_checks {
 
 sub _mark_utf8 {
     return Encode::decode("UTF-8", shift);
-    #my $string = shift;
-    ##return Encode::decode_utf8($string);
-    #my $result = eval {
-    #    Encode::decode("UTF-8", $string);
-    #};
-    #if ($@) {
-    #    return $string;
-    #} else {
-    #    return $result;
-    #}
+
+
+
+
+
+
+
+
+
+
 }
 
 sub _warn_or_error {

@@ -18,7 +18,7 @@ our @EXPORT_OK = qw(
     sort_by_configs
 );
 
-#my $logger = getlogger(__PACKAGE__);
+
 
 sub new {
 
@@ -161,7 +161,7 @@ sub sort_by_configs {
                 my $sorter = CTSMS::BulkProcessor::DSSorter->new();
                 my $sorting_id = -1;
                 foreach my $sc (@scs) {
-                    #my $sc = $sortingconfigurations->{$sorting_id};
+
                     if (defined $sc and ref $sc eq 'HASH') {
                         $sorter->add_sorting($sorting_id,
                                              $sc->{numeric},

@@ -12,16 +12,16 @@ use CTSMS::BulkProcessor::ConnectorPool qw(
     get_connectorinstancename
 );
 
-#use CTSMS::BulkProcessor::SqlConnectors::MySQLDB;
-#use CTSMS::BulkProcessor::SqlConnectors::OracleDB;
-#use CTSMS::BulkProcessor::SqlConnectors::PostgreSQLDB;
+
+
+
 use CTSMS::BulkProcessor::SqlConnectors::SQLiteDB qw(
     $staticdbfilemode
 );
-#cleanupdbfiles
+
 use CTSMS::BulkProcessor::SqlConnectors::CSVDB;
-#use CTSMS::BulkProcessor::SqlConnectors::SQLServerDB;
-#use CTSMS::BulkProcessor::RestConnectors::CTSMSRestApi;
+
+
 
 use CTSMS::BulkProcessor::SqlProcessor qw(cleartableinfo);
 
@@ -30,7 +30,7 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
     get_sqlite_db
     sqlite_db_tableidentifier
-    
+
     get_csv_db
     csv_db_tableidentifier
 
@@ -45,9 +45,9 @@ my $csv_dbs = {};
 sub get_csv_db {
 
     my ($instance_name,$reconnect) = @_;
-    my $name = get_connectorinstancename($instance_name); #threadid(); #shift;
+    my $name = get_connectorinstancename($instance_name);
     if (not defined $csv_dbs->{$name}) {
-        $csv_dbs->{$name} = CTSMS::BulkProcessor::SqlConnectors::CSVDB->new($instance_name); #$name);
+        $csv_dbs->{$name} = CTSMS::BulkProcessor::SqlConnectors::CSVDB->new($instance_name);
         if (not defined $reconnect) {
             $reconnect = 1;
         }
@@ -56,24 +56,24 @@ sub get_csv_db {
         $csv_dbs->{$name}->db_connect($csv_dir);
     }
     return $csv_dbs->{$name};
-      
+
 }
 
 sub csv_db_tableidentifier {
-    
+
     my ($get_target_db,$tablename) = @_;
     my $target_db = (ref $get_target_db eq 'CODE') ? &$get_target_db() : $get_target_db;
     return $target_db->getsafetablename(CTSMS::BulkProcessor::SqlConnectors::CSVDB::get_tableidentifier($tablename,$csv_dir));
-    
+
 }
 
 sub get_sqlite_db {
 
     my ($instance_name,$reconnect) = @_;
-    my $name = get_connectorinstancename($instance_name); #threadid(); #shift;
+    my $name = get_connectorinstancename($instance_name);
 
     if (not defined $sqlite_dbs->{$name}) {
-        $sqlite_dbs->{$name} = CTSMS::BulkProcessor::SqlConnectors::SQLiteDB->new($instance_name); #$name);
+        $sqlite_dbs->{$name} = CTSMS::BulkProcessor::SqlConnectors::SQLiteDB->new($instance_name);
         if (not defined $reconnect) {
             $reconnect = 1;
         }
@@ -106,7 +106,7 @@ sub destroy_dbs {
         undef $sqlite_dbs->{$name};
         delete $sqlite_dbs->{$name};
     }
-    
+
     foreach my $name (keys %$csv_dbs) {
         cleartableinfo($csv_dbs->{$name});
         undef $csv_dbs->{$name};

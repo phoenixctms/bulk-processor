@@ -4,7 +4,7 @@ use strict;
 ## no critic
 
 use threads qw(yield);
-use threads::shared; # qw(shared_clone);
+use threads::shared;
 use Thread::Queue;
 
 use Time::HiRes qw(sleep);
@@ -33,17 +33,17 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(new_async_do new_do);
 
-#my $logger = getlogger(__PACKAGE__);
+
 
 use Gearman::Client;
-#sub RECEIVE_EXCEPTIONS {
-#    print "RECEIVE_EXCEPTIONS";
-#    return 1;
-#}
+
+
+
+
 use Gearman::Task;
 
 my $timeout_secs_default = 0;
-#my $try_timeout_secs_default = 0;
+
 my $retry_count_default = 0;
 my $high_priority_default = 0;
 
@@ -63,18 +63,18 @@ sub new {
     $self->{client} = undef;
 
     $self->{timeout_secs} = ((defined $timeout_secs) ? $timeout_secs : $timeout_secs_default);
-    #$self->{try_timeout_secs} = $try_timeout_secs_default;
+
     $self->{retry_count} = $retry_count_default;
     $self->{high_priority} = $high_priority_default;
 
     $self->{block_destroy} = ((defined $block_destroy) ? $block_destroy : $block_destroy_default);
 
     $self->{arg} = undef;
-    #my $ret = undef;
-    $self->{ret} = undef; # = share($ret);
+
+    $self->{ret} = undef;
     $self->{function} = undef;
-    #my $exception = undef;
-    $self->{exception} = undef; #share($exception);
+
+    $self->{exception} = undef;
     $self->{on_error} = undef;
 
     $self->{on_complete} = undef;
@@ -92,8 +92,8 @@ sub new {
     $self->{instance} = $instance_count;
     $instance_count++;
 
-    #$self->{taskset} = undef;
-    #$self->{task} = undef;
+
+
 
     servicedebug($self,'service proxy created, job servers ' . join(',',@jobservers),getlogger(__PACKAGE__));
 
@@ -107,22 +107,22 @@ sub identifier {
 }
 
 sub new_async_do {
-    #my ($function_name,$on_complete,$on_error,@args) = @_;
-    #my $serialization_format = shift;
-    #my $timeout_secs = shift;
-    #my $block_destroy = shift;
-    my $proxy = __PACKAGE__->new(); #$serialization_format,$timeout_secs,$block_destroy);
+
+
+
+
+    my $proxy = __PACKAGE__->new();
     if ($proxy->do_async(@_)) {
         return $proxy;
     }
     return undef;
 }
 sub new_do {
-    #my ($function_name,$on_complete,$on_error,@args) = @_;
-    #my $serialization_format = shift;
-    #my $timeout_secs = shift;
-    #my $block_destroy = shift;
-    my $proxy = __PACKAGE__->new(); #$serialization_format,$timeout_secs,$block_destroy);
+
+
+
+
+    my $proxy = __PACKAGE__->new();
     return $proxy->do(@_);
 }
 
@@ -140,10 +140,10 @@ sub do_async {
     $self->{ret} = undef;
     $self->{exception} = undef;
 
-    #$self->{taskset} = undef;
-    #$self->{task} = undef;
-    #$self->{thread} = undef;
-    #$self->{wait_tid} = undef;
+
+
+
+
 
     $self->{on_error} = $on_error;
     $self->{on_complete} = $on_complete;
@@ -153,20 +153,20 @@ sub do_async {
     my $arg = serialize(\@args,$self->{serialization_format});
     $self->{arg} = \$arg;
 
-    #if (!defined $self->{queue}) {
+
         $self->{queue} = Thread::Queue->new();
-    #}
+
 
     servicedebug($self,'start waiting do_async \'' . $function_name . '\', args length: ' . length(encode_utf8($arg)),getlogger(__PACKAGE__));
     $self->{thread} = threads->create(\&_wait_thread,
 
                                           { proxy                => $self,
-                                            #logger               => $logger,
+
                                           }
 
                                           );
-    #$self->{wait_tid} = $self->{thread}->tid();
-    #$self->{thread}->detach();
+
+
 
     return 1;
 }
@@ -181,17 +181,17 @@ sub _get_task_opts {
                        on_exception => undef,
                        retry_count => $self->{retry_count},
                        high_priority => $self->{high_priority},
-                       #timeout => $self->{timeout_secs}
+
                        };
 }
 
 sub _wait_thread {
 
     my $context = shift;
-    #my $tid = threadid();
-    #${$context->{proxy}->{tid_ref}} = $tid;
+
+
     my $proxy = $context->{proxy};
-    #$proxy->{create_tid} = undef;
+
     $proxy->{wait_tid} = threadid();
     $proxy->{tid} = $proxy->{wait_tid};
     servicedebug($proxy,'wait thread tid ' . $proxy->{tid} . ' started',getlogger(__PACKAGE__));
@@ -212,32 +212,32 @@ sub _wait_thread {
     if ($proxy->{timeout_secs} > 0) {
         $task->timeout($proxy->{timeout_secs});
     }
-    #$proxy->{task} = $task;
+
 
     my $task_set = $proxy->{client}->new_task_set();
-    #$proxy->{taskset} = $task_set;
+
     $task_set->add_task($task);
 
     local $SIG{'KILL'} = sub {
         servicedebug($proxy,'kill signal received, exiting wait thread tid ' . $proxy->{tid} . ' ...',getlogger(__PACKAGE__));
-        #{
-        #    lock $async_running_ref;
-        #    $$async_running_ref = 0;
-        #}
+
+
+
+
         threads->exit();
 
     };
 
     servicedebug($proxy,'start waiting (do_async) ...',getlogger(__PACKAGE__));
     $task_set->wait(timeout => $task->timeout);
-    #return wantarray ? @{$self->{ret}} : $self->{ret}->[0];
+
     {
         lock $async_running_ref;
         $$async_running_ref = 0;
     }
 
     servicedebug($proxy,'shutting down wait thread tid ' . $proxy->{tid} . ' ...',getlogger(__PACKAGE__));
-    #threads->exit();
+
 }
 
 sub do {
@@ -252,11 +252,11 @@ sub do {
     $self->{ret} = undef;
     $self->{exception} = undef;
 
-    #$self->{taskset} = undef;
-    #$self->{task} = undef;
-    #$self->{thread} = undef;
-    #$self->{wait_tid} = undef;
-    #$self->{queue} = undef;
+
+
+
+
+
 
     $self->{on_error} = $on_error;
     $self->{on_complete} = undef;
@@ -278,13 +278,13 @@ sub do {
                                              exceptions => 1));
 
     my $task = Gearman::Task->new($function_name, \$arg, $task_opts);
-    #$self->{task} = $task;
+
     if ($self->{timeout_secs} > 0) {
         $task->timeout($self->{timeout_secs});
     }
 
     my $task_set = $self->{client}->new_task_set();
-    #$self->{taskset} = $task_set;
+
     $task_set->add_task($task);
 
     servicedebug($self,'start waiting do \'' . $function_name . '\', args length: ' . length(encode_utf8($arg)),getlogger(__PACKAGE__));
@@ -362,7 +362,7 @@ sub _on_exception {
     $self->{exception} = $exception;
     if ($self->_is_wait_thread()) {
         $self->_enqueue_event('_on_exception',[$exception]);
-        #${$self->{async_running_ref}} = 0;
+
     } elsif ($self->_is_create_thread()) {
         if (defined $self->{on_error} and ref $self->{on_error} eq 'CODE') {
             servicedebug($self,'on_exception event received: ' . $exception,getlogger(__PACKAGE__));
@@ -390,8 +390,8 @@ sub _check_async_running {
         } elsif ($async_running) {
             $$async_running_ref = 1;
         }
-    #} else {
-    #    servicewarn($self,$message,getlogger(__PACKAGE__));
+
+
     }
     return 0;
 }
@@ -419,7 +419,7 @@ sub _get_stop_wait_thread {
 sub wait {
     my $self = shift;
     my $timeout_secs = shift;
-    if ($self->_is_create_thread()) { #$self->_check_async_running()) {
+    if ($self->_is_create_thread()) {
             while (not $self->_get_stop_wait_thread($timeout_secs)) {
                 my $packet = $self->{queue}->dequeue_nb();
                 if (defined $packet) {
@@ -449,32 +449,32 @@ sub wait {
                 $self->{thread}->join();
                 servicedebug($self,'wait thread joined',getlogger(__PACKAGE__));
             }
-            ##if ($self->{thread}) {
-            #    if ($killtread) {
-            #        servicedebug($self,'killing thread XX',getlogger(__PACKAGE__));
-            #        $self->{thread}->kill('KILL')->detach();
-            #    } else {
-            #        $self->{thread}->join();
-            #        servicedebug($self,'thread joined',getlogger(__PACKAGE__));
-            #    }
-            ##}
+
+
+
+
+
+
+
+
+
             $self->{queue} = undef;
             $self->{thread} = undef;
             $self->{wait_tid} = undef;
 
-            #if ($killtread) {
-            #    #servicedebug($self,'killing thread XX',getlogger(__PACKAGE__));
-            #    #$self->{thread}->kill('KILL')->detach();
-            #} else {
-            #    $self->{thread}->join();
-            #    servicedebug($self,'thread joined',getlogger(__PACKAGE__));
-            #}
-            #$self->{queue} = undef;
-            #$self->{thread} = undef;
-            ##$self->{wait_tid} = undef;
-        #}
-    #} else {
-    #    print "INGORE WAIT??????????\n";
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 }
 

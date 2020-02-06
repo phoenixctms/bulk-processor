@@ -20,15 +20,15 @@ use CTSMS::BulkProcessor::Globals qw(
 
 
 use CTSMS::BulkProcessor::Logging qw(getlogger);
-use CTSMS::BulkProcessor::LogError qw(dbclustererror dbclusterwarn); #nodumpdbset
+use CTSMS::BulkProcessor::LogError qw(dbclustererror dbclusterwarn);
 
-#use CTSMS::BulkProcessor::SqlConnectors::MySQLDB;
-#use CTSMS::BulkProcessor::SqlConnectors::OracleDB;
+
+
 use CTSMS::BulkProcessor::SqlConnectors::PostgreSQLDB;
-#use CTSMS::BulkProcessor::SqlConnectors::SQLiteDB qw($staticdbfilemode
-#                              cleanupdbfiles);
-#use CTSMS::BulkProcessor::SqlConnectors::CSVDB;
-#use CTSMS::BulkProcessor::SqlConnectors::SQLServerDB;
+
+
+
+
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi;
 
 use CTSMS::BulkProcessor::SqlProcessor qw(cleartableinfo);
@@ -53,14 +53,14 @@ our @EXPORT_OK = qw(
     destroy_dbs
     get_connectorinstancename
     get_cluster_db
-    
+
     ping_dbs
     ping
 );
 
 my $connectorinstancenameseparator = '_';
 
-#my $logger = getlogger(__PACKAGE__);
+
 
 # thread connector pools:
 my $ctsms_dbs = {};
@@ -157,7 +157,7 @@ sub destroy_dbs {
 sub get_cluster_db { # oracle RAC and the like ...
 
     my ($cluster,$instance_name,$reconnect) = @_;
-    #if ((defined $cluster) and ref $cluster ne 'HASH') {
+
         my $node = undef;
         my $tid = threadid();
         if ((!defined $cluster->{scheduling_vars}) or ref $cluster->{scheduling_vars} ne 'HASH') {
@@ -184,7 +184,7 @@ sub get_cluster_db { # oracle RAC and the like ...
         } else {
             $nodes = $scheduling_vars->{nodes};
         }
-        my @active_nodes = @{$nodes}{sort keys(%$nodes)}; #hash slice
+        my @active_nodes = @{$nodes}{sort keys(%$nodes)};
         if (defined $cluster->{scheduling_code} and ref $cluster->{scheduling_code} eq 'CODE') {
             my $cluster_instance_name;
             if (length($instance_name) > 0) {
@@ -205,7 +205,7 @@ sub get_cluster_db { # oracle RAC and the like ...
                         delete $nodes->{$node->{label}};
                         return get_cluster_db($cluster,$instance_name,$reconnect);
                     } else {
-                        #$db->cluster($cluster);
+
                         return $db;
                     }
                 } else {
@@ -219,7 +219,7 @@ sub get_cluster_db { # oracle RAC and the like ...
             return undef;
         }
 
-    #}
+
     dbclustererror($cluster->{name},'cannot switch to next active node',getlogger(__PACKAGE__));
     return undef;
 

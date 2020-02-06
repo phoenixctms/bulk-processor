@@ -17,7 +17,7 @@ use CTSMS::BulkProcessor::Logging qw(
 use CTSMS::BulkProcessor::LogError qw(dberror fieldnamesdiffer);
 
 use DBI;
-use DBD::mysql 4.014; # 4.035;
+use DBD::mysql 4.014;
 
 use CTSMS::BulkProcessor::Array qw(arrayeq itemcount contains setcontains);
 
@@ -37,7 +37,7 @@ my $varcharsize = 256;
 
 my $texttable_charset = 'latin1';
 my $texttable_collation = 'latin1_swedish_ci';
-my $default_texttable_engine = 'MyISAM'; #InnoDB'; # ... provide transactions y/n?
+my $default_texttable_engine = 'MyISAM';
 
 my $session_charset = 'latin1';
 
@@ -46,10 +46,10 @@ my $LongTruncOk = 0;
 
 my $net_read_timeout = 300;
 
-#my $logger = getlogger(__PACKAGE__);
 
-#my $lock_do_chunk = 0; #1;
-#my $lock_get_chunk = 0;
+
+
+
 
 my $rowblock_transactional = 1;
 
@@ -208,7 +208,7 @@ sub db_connect {
             PrintError      => 0,
             RaiseError      => 0,
             AutoCommit      => 1,
-            #AutoCommit      => 0,
+
         }
     ) or dberror($self,'error connecting: ' . $self->{drh}->errstr(),getlogger(__PACKAGE__));
 
@@ -221,30 +221,30 @@ sub db_connect {
 
     my $server_version = substr($self->db_get_all_hashref('SHOW VARIABLES LIKE \'version\'','Variable_name')->{version}->{Value},0,2);
     if ($server_version ge '4.1') {
-    #    $self->db_do('SET SESSION character_set_client = \'utf8\'');
-    #    $self->db_do('SET SESSION character_set_connection = \'utf8\'');
-    #    $self->db_do('SET SESSION character_set_results = \'utf8\'');
+
+
+
         $self->db_do('SET CHARACTER SET ' . $session_charset . '');
         dbdebug($self,'session charset ' . $session_charset . ' applied',getlogger(__PACKAGE__));
     } else {
-    #    $self->db_do('SET SESSION CHARACTER SET = \'utf8\'');
-        #$self->db_do('SET SESSION CHARACTER SET = \'latin1\'');
 
-        #$self->db_do('SET SESSION CHARACTER SET \'cp1251_koi8\''); # the only valid if convert.cc on server is not modified
+
+
+
     }
 
 
-    #$self->db_do('SET character_set_client = \'utf8\'');
-    #$self->db_do('SET character_set_connection = \'utf8\'');
-    #$self->db_do('SET character_set_results = \'utf8\'');
-    #$self->db_do('SET SESSION NAMES = \'utf8\'');
-    #$self->db_do('SET character_set_connection = \'utf8\'');
-    #$self->db_do('SET character_set_results = \'utf8\'');
 
-    #$self->db_do('SET SESSION date_format = \'%Y-%m-%d\'');
-    #$self->db_do('SET SESSION time_format = \'%H:%i:%s\'');
-    #$self->db_do('SET SESSION time_zone = \'Europe/Paris\'');
-    #$self->db_do('SET SESSION datetime_format = \'%Y-%m-%d %H:%i:%s\'');
+
+
+
+
+
+
+
+
+
+
     if (defined $net_read_timeout) {
         $self->db_do('SET SESSION net_read_timeout = ' . $net_read_timeout);
     }
@@ -296,13 +296,13 @@ sub getprimarykeycols {
 
     my $self = shift;
     my $tablename = shift;
-    #my $fieldinfo = $self->db_get_all_hashref('SHOW FIELDS FROM ' . $self->tableidentifier($tablename),'Field');
-    #my @keycols = ();
-    #foreach my $fieldname (keys %$fieldinfo) {
-    #    if (uc($fieldinfo->{$fieldname}->{'Key'}) eq 'PRI') {
-    #        push @keycols,$fieldname;
-    #    }
-    #}
+
+
+
+
+
+
+
 
     my @keycols = ();
     foreach my $field (@{$self->db_get_all_arrayref('SHOW FIELDS FROM ' . $self->tableidentifier($tablename))}) {
@@ -329,13 +329,13 @@ sub create_temptable {
 
     if (defined $indexes and ref $indexes eq 'HASH' and scalar keys %$indexes > 0) {
         foreach my $indexname (keys %$indexes) {
-            #my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
-            #if (not arrayeq($indexcols,$keycols,1)) {
-                #$statement .= ', INDEX ' . $indexname . ' (' . join(', ',@{$indexes->{$indexname}}) . ')';
+
+
+
                 my $temptable_indexname = lc($index_tablename) . '_' . $indexname;
                 $self->db_do('CREATE INDEX ' . $temptable_indexname . ' ON ' . $temp_tablename . ' (' . join(', ', map { local $_ = $_; my @indexcol = _split_indexcol($_); $_ = $self->columnidentifier($indexcol[0]) . $indexcol[1]; $_; } @{$indexes->{$indexname}}) . ')');
                 indexcreated($self,$index_tablename,$indexname,getlogger(__PACKAGE__));
-            #}
+
         }
     }
 
@@ -391,32 +391,32 @@ sub create_texttable {
     my $self = shift;
     my ($tablename,$fieldnames,$keycols,$indexes,$truncate,$defer_indexes,$texttable_engine) = @_;
 
-    #my $tablename = $self->getsafetablename($tableidentifier);
-    #my ($tableidentifier,$fieldnames,$keycols,$indexes,$truncate) = @_;
 
-    #my $tablename = $self->getsafetablename($tableidentifier);
+
+
+
 
     if (length($tablename) > 0 and defined $fieldnames and ref $fieldnames eq 'ARRAY') {
 
         my $created = 0;
         if ($self->table_exists($tablename) == 0) {
             my $statement = 'CREATE TABLE ' . $self->tableidentifier($tablename) . ' (';
-            #$statement .= join(' TEXT, ',@$fieldnames) . ' TEXT';
+
 
             my @fieldspecs = ();
             foreach my $fieldname (@$fieldnames) {
                 if (contains($fieldname,$keycols,1)) {
                     push @fieldspecs,$self->columnidentifier($fieldname) . ' VARCHAR(' . $varcharsize . ')';
-                    #$statement .= $fieldname . ' VARCHAR(256)';
+
                 } else {
                     push @fieldspecs,$self->columnidentifier($fieldname) . ' TEXT';
-                    #$statement .= $fieldname . ' TEXT';
+
                 }
             }
             $statement .= join(', ',@fieldspecs);
 
 
-            #if (defined $keycols and ref $keycols eq 'ARRAY' and scalar @$keycols > 0 and setcontains($keycols,$fieldnames,1)) {
+
             if (not $defer_indexes and defined $keycols and ref $keycols eq 'ARRAY' and scalar @$keycols > 0 and setcontains($keycols,$fieldnames,1)) {
                 $statement .= ', PRIMARY KEY (' . join(', ',map { local $_ = $_; my @indexcol = _split_indexcol($_); $_ = $self->columnidentifier($indexcol[0]) . $indexcol[1]; $_; } @$keycols) . ')';
             }
@@ -492,7 +492,7 @@ sub table_exists {
 
     # ... again, avoid using mysql's information_schema table,
     # since its availability is obviously user/version dependent.
-    return itemcount($tablename,$self->db_get_col('SHOW TABLES')); #,1);
+    return itemcount($tablename,$self->db_get_col('SHOW TABLES'));
 
 }
 
@@ -510,39 +510,39 @@ sub drop_table {
 
 }
 
-# too dangerous:
-#sub lock_tables {
-#
-#    my $self = shift;
-#    my $tablestolock = shift;
-#
-#    if (defined $self->{dbh} and defined $tablestolock and ref $tablestolock eq 'HASH') {
-#
-#       my $locks = join(', ',map { local $_ = $_; $_ = $self->tableidentifier($_) . ' ' . $tablestolock->{$_}; $_; } keys %$tablestolock);
-#       dbdebug($self,"lock_tables:\n" . $locks,getlogger(__PACKAGE__));
-#       $self->db_do('LOCK TABLES ' . $locks);
-#
-#    }
-#
-#}
-#
-#sub unlock_tables {
-#
-#    my $self = shift;
-#    if (defined $self->{dbh}) {
-#
-#       dbdebug($self,'unlock_tables',getlogger(__PACKAGE__));
-#       $self->db_do('UNLOCK TABLES');
-#
-#    }
-#
-#}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 sub db_do_begin {
 
     my $self = shift;
     my $query = shift;
-    #my $tablename = shift;
+
 
     $self->SUPER::db_do_begin($query,$rowblock_transactional,@_);
 
@@ -552,8 +552,8 @@ sub db_get_begin {
 
     my $self = shift;
     my $query = shift;
-    #my $tablename = shift;
-    #my $lock = shift;
+
+
 
     $self->SUPER::db_get_begin($query,$rowblock_transactional,@_);
 
@@ -562,7 +562,7 @@ sub db_get_begin {
 sub db_finish {
 
     my $self = shift;
-    #my $unlock = shift;
+
     my $rollback = shift;
 
     $self->SUPER::db_finish($rowblock_transactional,$rollback);

@@ -20,7 +20,7 @@ use CTSMS::BulkProcessor::SqlProcessor qw(
 );
 use CTSMS::BulkProcessor::SqlRecord qw();
 
-#use CTSMS::BulkProcessor::Array qw(contains);
+
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::SqlRecord);
@@ -34,23 +34,23 @@ our @EXPORT_OK = qw(
     countby_probandidduplicateid
     findby_probandid
 );
-#getupsertstatement
+
 
 my $tablename = 'proband_duplicate';
 my $get_db = \&get_sqlite_db;
-#my $get_tablename = \&sqlite_db_tableidentifier;
+
 
 
 my $expected_fieldnames = [
     'proband_id',
     'duplicate_proband_id',
-    #'comment',
+
 ];
 
 # table creation:
-my $primarykey_fieldnames = [ 'proband_id', 'duplicate_proband_id' ]; #'filename'
-my $indexes = {}; #{ $tablename . '_duplicate_proband_id' => [ 'duplicate_proband_id' ] };
-#my $fixtable_statements = [];
+my $primarykey_fieldnames = [ 'proband_id', 'duplicate_proband_id' ];
+my $indexes = {};
+
 
 
 sub new {
@@ -82,7 +82,7 @@ sub findby_probandid {
 
     check_table();
     my $db = &$get_db();
-    #$xa_db //= $db;
+
     my $table = $db->tableidentifier($tablename);
 
     my $stmt = 'SELECT * FROM ' . $table . ' WHERE 1=1';
@@ -90,7 +90,7 @@ sub findby_probandid {
     if (defined $proband_id) {
         $stmt .= ' AND ' . $db->columnidentifier('proband_id') . ' = ?';
         push(@params,$proband_id);
-    } 
+    }
 
     my $rows = $db->db_get_all_arrayref($stmt,@params);
     return buildrecords_fromrows($rows,$load_recursive);
@@ -114,7 +114,7 @@ sub countby_probandidduplicateid {
     if (defined $duplicate_proband_id) {
         $stmt .= ' AND ' . $db->columnidentifier('duplicate_proband_id') . ' = ?';
         push(@params,$duplicate_proband_id);
-    }  
+    }
 
     return $db->db_get_value($stmt,@params);
 

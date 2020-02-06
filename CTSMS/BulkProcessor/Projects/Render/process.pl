@@ -81,10 +81,10 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Ecrf
     $VALIDATION_QUEUE
     $QUERY_QUEUE
 );
-#set_call_forwards
-#set_call_forwards_batch
 
-scripterror(getscriptpath() . ' already running',getlogger(getscriptpath())) unless flock DATA, LOCK_EX | LOCK_NB; # not tested on windows yet
+
+
+scripterror(getscriptpath() . ' already running',getlogger(getscriptpath())) unless flock DATA, LOCK_EX | LOCK_NB;
 
 my @TASK_OPTS = ();
 
@@ -138,20 +138,20 @@ sub init {
 
     my $configfile = $defaultconfig;
     my $settingsfile = $defaultsettings;
-    #print STDERR (join("|",@ARGV),"\n");
+
     return 0 unless GetOptions(
         "config=s" => \$configfile,
         "settings=s" => \$settingsfile,
         "task=s" => $tasks,
         "force" => \$force,
-    ); # or scripterror('error in command line arguments',getlogger(getscriptpath()));
+    );
 
     $tasks = removeduplicates($tasks,1);
 
     my $result = load_config($configfile);
     init_log();
     $result &= load_config($settingsfile,\&update_settings,$SIMPLE_CONFIG_TYPE);
-    #$result &= load_config($some_yml,\&update_something,$YAML_CONFIG_TYPE);
+
     return $result;
 
 }
@@ -164,7 +164,7 @@ sub main() {
     my $completion = 0;
 
     if (defined $tasks and 'ARRAY' eq ref $tasks and (scalar @$tasks) > 0) {
-        #scriptinfo('skip-errors: processing won\'t stop upon errors',getlogger(__PACKAGE__)) if $skip_errors;
+
         foreach my $task (@$tasks) {
 
             if (lc($cleanup_task_opt) eq lc($task)) {
@@ -229,9 +229,9 @@ sub main() {
 sub taskinfo {
     my ($task,$result) = @_;
     scriptinfo($result ? "starting task: '$task'" : "skipping task '$task' due to previous problems",getlogger(getscriptpath()));
-    #if (!$batch_supported and $batch) {
-    #    scriptwarn("no batch processing supported for this mode",getlogger(getscriptpath()));
-    #}
+
+
+
     return $result;
 }
 
@@ -263,7 +263,7 @@ sub create_ecrfstatustype_diagram_task {
         create_ecrfstatustype_diagram();
     };
     if ($@) {
-        #print $@;
+
         push(@$messages,'create_ecrfstatustype_diagram error: ' . $@);
         return 0;
     } else {
@@ -282,7 +282,7 @@ sub create_courseparticipationstatustype_diagrams_task {
         create_courseparticipationstatustype_diagram(1,1,$courseparticipationstatustype_self_registration_admin_filename);
     };
     if ($@) {
-        #print $@;
+
         push(@$messages,'create_courseparticipationstatustype_diagrams error: ' . $@);
         return 0;
     } else {
@@ -297,7 +297,7 @@ sub create_privacyconsentstatustype_diagram_task {
         create_privacyconsentstatustype_diagram();
     };
     if ($@) {
-        #print $@;
+
         push(@$messages,'create_privacyconsentstatustype_diagram error: ' . $@);
         return 0;
     } else {
@@ -312,7 +312,7 @@ sub create_trialstatustype_diagram_task {
         create_trialstatustype_diagram();
     };
     if ($@) {
-        #print $@;
+
         push(@$messages,'create_trialstatustype_diagram error: ' . $@);
         return 0;
     } else {
@@ -328,7 +328,7 @@ sub create_probandliststatustype_diagram_task {
         create_probandliststatustype_diagram(0,0,$probandliststatustype_animal_filename);
     };
     if ($@) {
-        #print $@;
+
         push(@$messages,'create_probandliststatustype_diagram error: ' . $@);
         return 0;
     } else {
@@ -347,7 +347,7 @@ sub create_ecrffieldstatustype_diagrams_task {
 
     };
     if ($@) {
-        #print $@;
+
         push(@$messages,'create_ecrffieldstatustype_diagrams error: ' . $@);
         return 0;
     } else {
@@ -362,7 +362,7 @@ sub create_massmailstatustype_diagram_task {
         create_massmailstatustype_diagram();
     };
     if ($@) {
-        #print $@;
+
         push(@$messages,'create_massmailstatustype_diagram error: ' . $@);
         return 0;
     } else {
@@ -378,7 +378,7 @@ sub create_logon_heatmap_task {
         create_logon_heatmap();
     };
     if ($@) {
-        #print $@;
+
         push(@$messages,'create_logon_heatmap error: ' . $@);
         return 0;
     } else {
@@ -394,7 +394,7 @@ sub create_journal_heatmap_task {
         create_journal_heatmap();
     };
     if ($@) {
-        #print $@;
+
         push(@$messages,'create_journal_heatmap error: ' . $@);
         return 0;
     } else {
@@ -410,7 +410,7 @@ sub create_journal_histogram_task {
         create_journal_histogram();
     };
     if ($@) {
-        #print $@;
+
         push(@$messages,'create_journal_histogram error: ' . $@);
         return 0;
     } else {
@@ -420,11 +420,11 @@ sub create_journal_histogram_task {
 
 }
 
-#END {
-#    # this should not be required explicitly, but prevents Log4Perl's
-#    # "rootlogger not initialized error upon exit..
-#    destroy_all_dbs
-#}
+
+
+
+
+
 
 __DATA__
 This exists to allow the locking code at the beginning of the file to work.

@@ -25,7 +25,7 @@ our @EXPORT_OK = qw(
     convert
 );
 
-#my $magick = 'magick'; #'convert'
+
 
 # Try to find the executable of Gnuplot
 my $gnuplot = 'gnuplot';
@@ -81,14 +81,14 @@ sub convert {
         push(@args,$dimension);
     }
     if ($rotate) {
-        #push(@args,'-rotate 90');
+
         push(@args,'-rotate');
         push(@args,$rotate);
     }
     push(@args,'-quality');
     push(@args,'100%');
-    #push(@args,'-colorspace');
-    #push(@args,'RGB');
+
+
     push(@args,$outputfile);
 
     my ($result,$msg) = run($magick,@args);

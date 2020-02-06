@@ -12,7 +12,7 @@ use CTSMS::BulkProcessor::Globals qw(
     create_path
 
 );
-#$ctsmsrestapi_path
+
 
 use CTSMS::BulkProcessor::Logging qw(
     getlogger
@@ -32,9 +32,9 @@ use CTSMS::BulkProcessor::LoadConfig qw(
 );
 
 
-use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring); #check_ipnet
+use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring);
 
-#use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
+
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -71,15 +71,15 @@ our @EXPORT_OK = qw(
     $proband_categories_not_to_update
 
 );
-    #$proband_plain_text_row_block
-    #$import_proband_api_page_size
+
+
 
 our $defaultconfig = 'config.cfg';
 our $defaultsettings = 'settings.yml';
 
 our $input_path = $working_path . 'input/';
 our $output_path = $working_path . 'output/';
-#our $rollback_path = $working_path . 'rollback/';
+
 our $sqlite_db_file = 'dubplicates';
 
 our $skip_errors = 0;
@@ -89,8 +89,8 @@ our $dry = 0;
 
 our $proband_plain_text_ignore_duplicates = 0;
 our $proband_plain_text_truncate_table = 1;
-#our $proband_plain_text_row_block = 100;
-#our $import_proband_api_page_size = 10;
+
+
 our $person_name_prefix_length = 2;
 our $import_proband_page_size = 100;
 our $import_proband_multithreading = $enablemultithreading;
@@ -110,12 +110,12 @@ sub update_settings {
 
     my ($data,$configfile) = @_;
 
-    if (defined $data) { # and defined ($data = $data->[0])) {
+    if (defined $data) {
 
         my $result = 1;
 
         $result &= _prepare_working_paths(1);
-        #$dialysis_substitution_volume_file = $input_path;
+
 
         $sqlite_db_file = $data->{sqlite_db_file} if exists $data->{sqlite_db_file};
 
@@ -123,8 +123,8 @@ sub update_settings {
 
         $proband_plain_text_ignore_duplicates = $data->{proband_plain_text_ignore_duplicates} if exists $data->{proband_plain_text_ignore_duplicates};
         $proband_plain_text_truncate_table = $data->{proband_plain_text_truncate_table} if exists $data->{proband_plain_text_truncate_table};
-        #$proband_plain_text_row_block = $data->{proband_plain_text_row_block} if exists $data->{proband_plain_text_row_block};
-        #$import_proband_api_page_size = $data->{import_proband_api_page_size} if exists $data->{import_proband_api_page_size};
+
+
         $person_name_prefix_length = $data->{person_name_prefix_length} if exists $data->{person_name_prefix_length};
         $import_proband_page_size = $data->{import_proband_page_size} if exists $data->{import_proband_page_size};
         $import_proband_multithreading = $data->{import_proband_multithreading} if exists $data->{import_proband_multithreading};
@@ -158,8 +158,8 @@ sub _prepare_working_paths {
     $result &= $path_result;
     ($path_result,$output_path) = create_path($working_path . 'output',$output_path,$create,\&fileerror,getlogger(__PACKAGE__));
     $result &= $path_result;
-    #($path_result,$rollback_path) = create_path($working_path . 'rollback',$rollback_path,$create,\&fileerror,getlogger(__PACKAGE__));
-    #$result &= $path_result;
+
+
 
     return $result;
 

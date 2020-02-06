@@ -19,15 +19,12 @@ use CTSMS::BulkProcessor::RestItem qw();
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
-    
+
     get_items
 );
 
 my $default_restapi = \&get_ctsms_restapi;
-#my $get_item_path_query = sub {
-#    my ($id) = @_;
-#    return 'selectionset/trialstatustype/' . get_query_string({ typeId => $id });
-#};
+
 my $get_items_path_query = sub {
     return 'selectionset/departments/';
 };
@@ -83,7 +80,7 @@ sub builditems_fromrows {
 }
 
 sub TO_JSON {
-    
+
     my $self = shift;
     return {
         value => $self->{id},

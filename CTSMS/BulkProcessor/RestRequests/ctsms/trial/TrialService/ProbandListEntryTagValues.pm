@@ -19,9 +19,9 @@ use CTSMS::BulkProcessor::RestItem qw();
 use CTSMS::BulkProcessor::Utils qw(booltostring);
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValue qw();
-#use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValue qw();
+
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagJsonValue qw();
-#use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryJsonValue qw();
+
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
@@ -42,7 +42,7 @@ my $get_item_path_query = sub {
 my $get_getprobandlistentrytagvalues_path_query = sub {
     my ($listentry_id, $sort, $load_all_js_values) = @_;
     my %params = ();
-    $params{load_all_js_values} = booltostring($load_all_js_values); # if defined $load_all_js_values;
+    $params{load_all_js_values} = booltostring($load_all_js_values);
     $params{sort} = booltostring($sort);
     return 'probandlistentry/' . $listentry_id . '/tagvalues' . get_query_string(\%params);
 };
@@ -54,21 +54,21 @@ my $get_setprobandlistentrytagvalues_path_query = sub {
     return 'probandlistentrytagvalue/' . get_query_string(\%params);
 };
 
-#my $get_renderinquiries_path_query = sub {
-#    my ($proband_id, $trial_id, $active, $active_signup, $blank) = @_;
-#    my %params = ();
-#    $params{blank} = booltostring($blank); # if defined $blank;
-#    $params{active} = booltostring($active) if defined $active;
-#    $params{active_signup} = booltostring($active_signup) if defined $active_signup;
-#    return 'proband/' . $proband_id . '/inquiryvalues/' . $trial_id . '/pdf' . get_query_string(\%params);
-#};
-#my $get_renderinquiriessignup_path_query = sub {
-#    my ($department_id,$proband_id, $active_signup) = @_;
-#    my %params = ();
-#    $params{department_id} = $department_id if defined $department_id;
-#    $params{active_signup} = booltostring($active_signup) if defined $active_signup;
-#    return 'proband/' . $proband_id . '/inquiryvalues/signuppdf' . get_query_string(\%params);
-#};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 my $fieldnames = [
     "rows",
@@ -112,21 +112,21 @@ sub set_probandlistentrytagvalues {
 
 
 
-#sub render_inquiries {
-#
-#    my ($proband_id,$trial_id,$active, $active_signup,$blank,$restapi,$headers) = @_;
-#    my $api = _get_api($restapi,$default_restapi);
-#    return $api->get_file(&$get_renderinquiries_path_query($proband_id,$trial_id,$active, $active_signup,$blank),$headers);
-#
-#}
-#
-#sub render_inquiries_signup {
-#
-#    my ($department_id,$proband_id, $active_signup,$restapi,$headers) = @_;
-#    my $api = _get_api($restapi,$default_restapi);
-#    return $api->get_file(&$get_renderinquiriessignup_path_query($department_id,$proband_id, $active_signup),$headers);
-#
-#}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 sub builditems_fromrows {
 
@@ -169,14 +169,14 @@ sub get_item_path {
 
 }
 
-#sub TO_JSON {
-#
-#    my $self = shift;
-#    return { %{$self} };
-#    #    value => $self->{zipcode},
-#    #    label => $self->{zipcode},
-#    #};
-#
-#}
+
+
+
+
+
+
+
+
+
 
 1;

@@ -183,11 +183,11 @@ sub process_collection {
                                               { queue                => $queue,
                                                 errorstates          => \%errorstates,
                                                 readertid              => $reader->tid(),
-                                                #path_query            => $path_query,
+
                                                 process_code         => $process_code,
                                                 init_process_context_code => $init_process_context_code,
                                                 uninit_process_context_code => $uninit_process_context_code,
-                                                #blocksize            => $blocksize,
+
                                               }));
                 if (!defined $processor) {
                     restthreadingdebug('processor thread ' . ($i + 1) . ' of ' . $collectionprocessing_threads . ' NOT started',getlogger(__PACKAGE__));
@@ -212,7 +212,7 @@ sub process_collection {
 
         } else {
 
-            my $restapi = &$get_restapi(); #$reader_connection_name);
+            my $restapi = &$get_restapi();
             $blocksize //= $restapi->get_defaultcollectionpagesize();
 
             my $context = _create_process_context($static_context,{ tid => $tid });
@@ -252,7 +252,7 @@ sub process_collection {
             if ($@) {
                 $errorstate = $ERROR;
             } else {
-                $errorstate = $COMPLETED; #(not $rowblock_result) ? $ERROR : $COMPLETED;
+                $errorstate = $COMPLETED;
             }
 
             eval {
@@ -293,11 +293,11 @@ sub _reader {
 
     my $blockcount = 0;
     eval {
-        $restapi = &{$context->{get_restapi}}(); #$reader_connection_name);
+        $restapi = &{$context->{get_restapi}}();
         my $blocksize = $context->{blocksize} // $restapi->get_defaultcollectionpagesize();
         restthreadingdebug('[' . $tid . '] reader thread waiting for consumer threads',getlogger(__PACKAGE__));
         while ((_get_other_threads_state($context->{errorstates},$tid) & $RUNNING) == 0) { #wait on cosumers to come up
-            #yield();
+
             sleep($thread_sleep_secs);
         }
         my $i = 0;
@@ -315,11 +315,11 @@ sub _reader {
             $packet{size} = $realblocksize;
             $packet{row_offset} = $i;
             if ($realblocksize > 0) {
-                $context->{queue}->enqueue(\%packet); #$packet);
+                $context->{queue}->enqueue(\%packet);
                 $blockcount++;
                 #wait if thequeue is full and there there is one running consumer
                 while (((($state = _get_other_threads_state($context->{errorstates},$tid)) & $RUNNING) == $RUNNING) and $context->{queue}->pending() >= $context->{threadqueuelength}) {
-                    #yield();
+
                     sleep($thread_sleep_secs);
                 }
                 $i += $realblocksize;
@@ -328,7 +328,7 @@ sub _reader {
                     last;
                 }
             } else {
-                $context->{queue}->enqueue(\%packet); #$packet);
+                $context->{queue}->enqueue(\%packet);
                 restthreadingdebug('[' . $tid . '] reader thread is shutting down (end of data - empty block) ...',getlogger(__PACKAGE__));
                 last;
             }
@@ -390,8 +390,8 @@ sub _process {
                     last;
                 }
             } else {
-                #yield();
-                sleep($thread_sleep_secs); #2015-01
+
+                sleep($thread_sleep_secs);
             }
         }
     };
@@ -406,7 +406,7 @@ sub _process {
     if ($err) {
         $context->{errorstates}->{$tid} = $ERROR;
     } else {
-        $context->{errorstates}->{$tid} = $COMPLETED; #(not $rowblock_result) ? $ERROR : $COMPLETED;
+        $context->{errorstates}->{$tid} = $COMPLETED;
     }
     return $context->{errorstates}->{$tid};
 }
@@ -465,7 +465,7 @@ sub _create_process_context {
         if (defined $ctx and 'HASH' eq ref $ctx) {
             foreach my $key (keys %$ctx) {
                 $context->{$key} = $ctx->{$key};
-                #delete $ctx->{$key};
+
             }
         }
     }

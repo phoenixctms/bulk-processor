@@ -4,7 +4,7 @@ use strict;
 ## no critic
 
 use threads::shared qw();
-#use List::Util qw();
+
 use GraphViz qw();
 use HTML::Entities qw(encode_entities);
 
@@ -72,7 +72,7 @@ use CTSMS::BulkProcessor::Projects::Render::Settings qw(
     $massmailstatustype_filename
 
 );
-#$probandliststatustype_filename
+
 
 use CTSMS::BulkProcessor::Logging qw (
     getlogger
@@ -92,10 +92,10 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Prob
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::EcrfFieldStatusType qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::MassMailStatusType qw();
 
-#use CTSMS::BulkProcessor::ConnectorPool qw(
-#
-#);
-#get_xa_db
+
+
+
+
 
 
 use CTSMS::BulkProcessor::Utils qw(threadid wrap_text);
@@ -117,7 +117,7 @@ my %color_translation = (
     LIME => 'GREEN',
     DARKGREY => 'gray66',
     DARKGRAY => 'gray66',
-    #LIGHTSKYBLUE => 'gray66',
+
 );
 
 sub create_courseparticipationstatustype_diagram {
@@ -159,14 +159,14 @@ sub create_ecrffieldstatustype_diagram {
     _render_state_diagram(
         initial_items => CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::EcrfFieldStatusType::get_initial_items($queue),
         get_transition_items_code => \&CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::EcrfFieldStatusType::get_transition_items,
-        #get_edge_label_code => sub {
-        #    my ($from,$to) = @_;
-        #    #print $from->{system} . "\n";
-        #    if ($from->{system}) {
-        #        return 'system';
-        #    }
-        #    return '';
-        #},
+
+
+
+
+
+
+
+
         wordwrapcolumns => $ecrffieldstatustype_wordwrapcolumns,
         fontsize => $ecrffieldstatustype_fontsize,
         noderadius => $ecrffieldstatustype_noderadius,
@@ -220,7 +220,7 @@ sub create_probandliststatustype_diagram {
         usenodecolor => $probandliststatustype_usenodecolor,
         width => $probandliststatustype_width,
         height => $probandliststatustype_height,
-        filename => $filename, #$probandliststatustype_filename,
+        filename => $filename,
     );
 }
 
@@ -281,21 +281,21 @@ sub _render_state_diagram {
         usenodecolor => $usenodecolor,
     };
     $context->{gv} = GraphViz->new(
-        layout => 'dot', #'fdp',
+        layout => 'dot',
         directed => 1,
         rankdir => 'LR',
-        #ranksep => 10,
+
         epsilon => 0.01,
         ratio => 'compress',
-        #name => $name,
+
         width => $width,
         height => $height,
         concentrate=> 1,
     );
     $context->{node_map} = {};
     foreach my $initial_item (@$initial_items) {
-        #use Data::Dumper;
-        #print Dumper($initial_item);
+
+
         $context->{gv}->add_node($initial_item->{id},
             label => _prepare_node_label($initial_item->{name},$wordwrapcolumns),
             ($usenodecolor ? (style => 'filled', fillcolor => _translate_color($initial_item->{color})) : ()),
@@ -310,11 +310,11 @@ sub _render_state_diagram {
     }
 
     foreach my $id (keys %{$context->{node_map}}) {
-        #print $id;
+
         _append_transition_nodes($context,$id,'1');
     }
 
-    #$context->{gv}->as_canon($output_path . time . '.dot');
+
     $context->{gv}->as_png($filename);
     _info($filename . ' created');
 }
@@ -371,7 +371,7 @@ sub _prepare_node_label {
 sub _error {
 
     my ($message) = @_;
-    #$context->{error_count} = $context->{error_count} + 1;
+
     rowprocessingerror(threadid(),$message,getlogger(__PACKAGE__));
 
 }
@@ -379,7 +379,7 @@ sub _error {
 sub _warn {
 
     my ($message) = @_;
-    #$context->{warning_count} = $context->{warning_count} + 1;
+
     rowprocessingwarn(threadid(),$message,getlogger(__PACKAGE__));
 
 }

@@ -12,16 +12,16 @@ use CTSMS::BulkProcessor::ConnectorPool qw(
     get_connectorinstancename
 );
 
-#use CTSMS::BulkProcessor::SqlConnectors::MySQLDB;
-#use CTSMS::BulkProcessor::SqlConnectors::OracleDB;
-#use CTSMS::BulkProcessor::SqlConnectors::PostgreSQLDB;
+
+
+
 use CTSMS::BulkProcessor::SqlConnectors::SQLiteDB qw(
     $staticdbfilemode
 );
-#cleanupdbfiles
+
 use CTSMS::BulkProcessor::SqlConnectors::CSVDB;
-#use CTSMS::BulkProcessor::SqlConnectors::SQLServerDB;
-#use CTSMS::BulkProcessor::RestConnectors::CTSMSRestApi;
+
+
 
 use CTSMS::BulkProcessor::SqlProcessor qw(cleartableinfo);
 
@@ -45,9 +45,9 @@ my $csv_dbs = {};
 sub get_csv_db {
 
     my ($instance_name,$reconnect) = @_;
-    my $name = get_connectorinstancename($instance_name); #threadid(); #shift;
+    my $name = get_connectorinstancename($instance_name);
     if (not defined $csv_dbs->{$name}) {
-        $csv_dbs->{$name} = CTSMS::BulkProcessor::SqlConnectors::CSVDB->new($instance_name); #$name);
+        $csv_dbs->{$name} = CTSMS::BulkProcessor::SqlConnectors::CSVDB->new($instance_name);
         if (not defined $reconnect) {
             $reconnect = 1;
         }
@@ -70,10 +70,10 @@ sub csv_db_tableidentifier {
 sub get_sqlite_db {
 
     my ($instance_name,$reconnect) = @_;
-    my $name = get_connectorinstancename($instance_name); #threadid(); #shift;
+    my $name = get_connectorinstancename($instance_name);
 
     if (not defined $sqlite_dbs->{$name}) {
-        $sqlite_dbs->{$name} = CTSMS::BulkProcessor::SqlConnectors::SQLiteDB->new($instance_name); #$name);
+        $sqlite_dbs->{$name} = CTSMS::BulkProcessor::SqlConnectors::SQLiteDB->new($instance_name);
         if (not defined $reconnect) {
             $reconnect = 1;
         }

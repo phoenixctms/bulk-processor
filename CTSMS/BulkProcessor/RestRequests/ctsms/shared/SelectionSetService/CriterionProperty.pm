@@ -16,7 +16,7 @@ use CTSMS::BulkProcessor::RestProcessor qw(
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
 use CTSMS::BulkProcessor::RestItem qw();
 
-#use CTSMS::BulkProcessor::Utils qw(booltostring);
+
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
@@ -61,7 +61,7 @@ my $get_items_path_query = sub {
     my ($module) = @_;
     return 'selectionset/criterionproperties/' . get_query_string({ module => $module });
 };
-#my $collection_path_query = 'api/' . $resource . '/';
+
 
 my $fieldnames = [
     "completeMethodName",

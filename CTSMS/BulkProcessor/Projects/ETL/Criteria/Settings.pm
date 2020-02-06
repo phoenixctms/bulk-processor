@@ -12,7 +12,7 @@ use CTSMS::BulkProcessor::Globals qw(
     create_path
 
 );
-#$ctsmsrestapi_path
+
 
 use CTSMS::BulkProcessor::Logging qw(
     getlogger
@@ -32,9 +32,9 @@ use CTSMS::BulkProcessor::LoadConfig qw(
 );
 
 
-use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring); #check_ipnet
+use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring);
 
-#use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
+
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -77,7 +77,7 @@ sub update_settings {
 
     my ($data,$configfile) = @_;
 
-    if (defined $data) { # and defined ($data = $data->[0])) {
+    if (defined $data) {
 
         my $result = 1;
 
@@ -106,8 +106,8 @@ sub _prepare_working_paths {
     $result &= $path_result;
     ($path_result,$output_path) = create_path($working_path . 'output',$output_path,$create,\&fileerror,getlogger(__PACKAGE__));
     $result &= $path_result;
-    #($path_result,$rollback_path) = create_path($working_path . 'rollback',$rollback_path,$create,\&fileerror,getlogger(__PACKAGE__));
-    #$result &= $path_result;
+
+
 
     return $result;
 

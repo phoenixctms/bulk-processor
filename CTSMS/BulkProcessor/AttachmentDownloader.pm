@@ -19,11 +19,11 @@ use CTSMS::BulkProcessor::LogError qw(
 use Email::MIME;
 use Email::MIME::Attachment::Stripper;
 use URI::Find;
-#use File::Fetch;
-#use LWP::Simple;
+
+
 use LWP::UserAgent;
 use HTTP::Request;
-#use HTTP::Cookies;
+
 
 use CTSMS::BulkProcessor::Utils qw(kbytes2gigs changemod);
 
@@ -39,7 +39,7 @@ our $attachment_no_match = 0;
 our $attachment_match = 1;
 our $attachment_found = 2;
 
-#my $logger = getlogger(__PACKAGE__);
+
 
 sub new {
 
@@ -81,7 +81,7 @@ sub _process_message {
     my ($subject,$message_string,$filedir,$files_saved) = @_;
 
 
-    #if (length($message_string)) {
+
 
     attachmentdownloaderinfo('processing message "' . $subject . '"',getlogger(__PACKAGE__));
 
@@ -93,7 +93,7 @@ sub _process_message {
 
 
 
-    #}
+
 
     return $found;
 
@@ -146,7 +146,7 @@ sub _save_file {
     local *ATTACHMENTFILE;
     if (not open (ATTACHMENTFILE,'>' . $filepath)) {
     fileerror('cannot open file ' . $filepath . ': ' . $!,getlogger(__PACKAGE__));
-    return; # $files_saved;
+    return;
     }
     binmode(ATTACHMENTFILE);
     print ATTACHMENTFILE $attachment->{payload};
@@ -248,7 +248,7 @@ sub _download_file { # .. dropbox links and the like
     my $attachment = {};
     $attachment->{uri} = $uri;
     $attachment->{payload} = $response->decoded_content( charset => 'none' );
-    #$attachment->{size} = $response->header('content-length'); # -s $attachment->{payload};
+
     ($attachment->{filename}) = ($response->header('Content-Disposition') =~ m/"([^"]+)"/);
     return $attachment;
     } else {

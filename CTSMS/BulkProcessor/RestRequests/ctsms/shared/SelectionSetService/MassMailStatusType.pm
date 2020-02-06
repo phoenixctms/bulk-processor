@@ -38,7 +38,7 @@ my $get_transition_items_path_query = sub {
     my ($id) = @_;
     return 'selectionset/massmailstatustypetransitions/' . get_query_string({ typeId => $id });
 };
-#my $collection_path_query = 'api/' . $resource . '/';
+
 
 my $fieldnames = [
     "color",
@@ -86,14 +86,7 @@ sub get_transition_items {
 
 }
 
-#sub get_itemX {
-#
-#    my ($filters,$load_recursive,$headers) = @_;
-#    my $restapi = &$default_restapi();
-#    return builditems_fromrows($restapi->extract_collection_items($restapi->get(&$get_item_filter_path_query($filters),$headers),undef,undef,
-#        { $CTSMS::BulkProcessor::RestConnectors::CTSMSRestApi::ITEM_REL_PARAM => $item_relation }),$load_recursive)->[0];
-#
-#}
+
 
 sub builditems_fromrows {
 

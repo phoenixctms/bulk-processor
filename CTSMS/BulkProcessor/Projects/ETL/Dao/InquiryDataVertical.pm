@@ -17,10 +17,10 @@ use CTSMS::BulkProcessor::SqlProcessor qw(
     insert_stmt
     process_table
 );
-    #process_table
+
 use CTSMS::BulkProcessor::SqlRecord qw();
 
-#use CTSMS::BulkProcessor::Array qw(contains);
+
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::SqlRecord);
@@ -32,34 +32,34 @@ our @EXPORT_OK = qw(
 
     process_records
 );
-#countby_filename
-#process_records
-#$expected_fieldnames_count
-#getupsertstatement
+
+
+
+
 
 my $tablename = 'inquiry_data_vertical';
 my $get_db = \&get_sqlite_db;
-#my $get_tablename = \&sqlite_db_tableidentifier;
+
 
 my $expected_fieldnames;
 _set_expected_fieldnames();
 
 sub _set_expected_fieldnames {
-    my ($option_col_count) = @_; #,$listentrytags
+    my ($option_col_count) = @_;
     $option_col_count //= 0;
     my @fieldnames = (
         'proband_id',
-        #'screening_number',
-        #'random_number',
-        #(sort keys %$listentrytags),
-        #'subject_group',
-        #'enrollment_status',
-        #'ecrf_status',
-        #'ecrf_name',
-        #'ecrf_id',
-        #'ecrf_visit',
-        #'ecrf_subject_group',
-        #'ecrf_position',
+
+
+
+
+
+
+
+
+
+
+
         'inquiry_category',
         'inquiry_id',
         'inquiry_position',
@@ -71,8 +71,8 @@ sub _set_expected_fieldnames {
         'input_field_id',
         'input_field_type',
         'inquiry_optional',
-        #'ecrf_field_series',
-        #'series_index',
+
+
         'horizontal_colnames',
         'value_version',
         'value_user',
@@ -90,13 +90,13 @@ sub _set_expected_fieldnames {
     $expected_fieldnames = \@fieldnames;
 }
 
-# table creation:
+
 my $primarykey_fieldnames = [ 'proband_id','inquiry_category','inquiry_position','value_version' ];
 my $indexes = {
     $tablename . '_inquiry_category_position' => [ 'inquiry_category(32)','inquiry_position(32)' ],
-    #$tablename . '_ecrf_name' => [ 'ecrf_name(32)' ],
+
 };
-#my $fixtable_statements = [];
+
 
 
 sub new {
@@ -113,11 +113,11 @@ sub new {
 
 sub create_table {
 
-    my ($truncate,$option_col_count) = @_; #$listentrytags
+    my ($truncate,$option_col_count) = @_;
 
     my $db = &$get_db();
 
-    _set_expected_fieldnames($option_col_count); #$listentrytags
+    _set_expected_fieldnames($option_col_count);
 
     registertableinfo($db,__PACKAGE__,$tablename,$expected_fieldnames,$indexes,$primarykey_fieldnames);
     return create_targettable($db,__PACKAGE__,$db,__PACKAGE__,$tablename,$truncate,0,undef);
@@ -165,7 +165,7 @@ sub process_records {
         tableprocessing_threads     => $numofthreads,
         'select'                    => $db->paginate_sort_query('SELECT * FROM ' . $table,undef,undef,[{
                                             column => 'proband_id',
-                                            #numeric => 1,
+
                                             dir => 1,
                                         }]),
         'selectcount'               => 'SELECT COUNT(*) FROM ' . $table,
@@ -230,7 +230,7 @@ sub check_table {
 }
 
 sub gettablefieldnames {
-    #check_table();
+
     my $db = &$get_db();
     if ($db->table_exists($tablename)) {
         $expected_fieldnames = $db->getfieldnames($tablename);

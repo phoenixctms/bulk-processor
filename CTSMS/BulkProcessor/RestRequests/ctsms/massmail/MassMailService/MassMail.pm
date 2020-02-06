@@ -17,7 +17,7 @@ use CTSMS::BulkProcessor::RestProcessor qw(
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
 use CTSMS::BulkProcessor::RestItem qw();
 
-#use CTSMS::BulkProcessor::Utils qw(booltostring);
+
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
@@ -27,8 +27,8 @@ our @EXPORT_OK = qw(
 
     search
 );
-#    add_item
-#    update_item
+
+
 
 my $default_restapi = \&get_ctsms_restapi;
 my $get_item_path_query = sub {
@@ -38,12 +38,12 @@ my $get_item_path_query = sub {
 my $get_search_path_query = sub {
     return 'search/massmail/search';
 };
-#my $get_add_path_query = sub {
-#    return 'proband/';
-#};
-#my $get_update_path_query = sub {
-#    return 'proband/';
-#};
+
+
+
+
+
+
 
 my $fieldnames = [
     "id",
@@ -131,15 +131,15 @@ sub builditems_fromrows {
         foreach my $row (@$rows) {
             $item = __PACKAGE__->new($row);
 
-            # transformations go here ...
-            #transformitem($item,$load_recursive,$restapi);
+
+
 
             push @items,$item;
         }
         return \@items;
     } elsif (defined $rows and ref $rows eq 'HASH') {
         $item = __PACKAGE__->new($rows);
-        #transformitem($item,$load_recursive,$restapi);
+
         return $item;
     }
     return undef;
@@ -157,9 +157,9 @@ sub TO_JSON {
 
     my $self = shift;
     return { %{$self} };
-    #    value => $self->{zipcode},
-    #    label => $self->{zipcode},
-    #};
+
+
+
 
 }
 

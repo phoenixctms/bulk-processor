@@ -17,7 +17,7 @@ use CTSMS::BulkProcessor::RestProcessor qw(
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
 use CTSMS::BulkProcessor::RestItem qw();
 
-#use CTSMS::BulkProcessor::Utils qw(booltostring);
+
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
@@ -32,18 +32,18 @@ our @EXPORT_OK = qw(
     process_items
     get_module
 );
-#@modules
 
-#our @modules = qw(
-#    inventory
-#    staff
-#    course
-#    trial
-#    proband
-#    inputfield
-#    massmail
-#    user
-#);
+
+
+
+
+
+
+
+
+
+
+
 
 sub get_module {
     my ($db_module) = @_;
@@ -68,10 +68,10 @@ my $get_list_path_query = sub {
     my %params = ();
     $params{a} = 'id' if $sort;
     return 'search/' . $module . get_query_string(\%params);
-    #my %params = ();
-    #$params{department_id} = $department_id if defined $department_id;
-    #return 'trial/signup/' . get_query_string(\%params);
-    #return 'search/' . $module;
+
+
+
+
 };
 
 my $fieldnames = [
@@ -186,7 +186,7 @@ sub process_items {
     return process_collection(
         get_restapi  => sub { return _get_api($restapi,$default_restapi); },
         path_query   => &$get_list_path_query($module,1), #strict order!
-        #post_data    => $in,
+
         headers      => $headers,
         extract_collection_items_params => undef,
         process_code => sub {
@@ -214,9 +214,9 @@ sub TO_JSON {
 
     my $self = shift;
     return { %{$self} };
-    #    value => $self->{zipcode},
-    #    label => $self->{zipcode},
-    #};
+
+
+
 
 }
 

@@ -30,7 +30,7 @@ use CTSMS::BulkProcessor::Globals qw(
 use CTSMS::BulkProcessor::Utils qw(trim file_md5 create_guid wrap_text changemod);
 
 use File::Basename;
-#use File::Temp 0.2304 qw(tempfile tempdir);
+
 use MIME::Base64;
 use MIME::Lite;
 
@@ -62,19 +62,19 @@ my %msmailpriority = (
   $lowpriority    => 'Low',
   $highpriority   => 'High');
 
-# sample email data structure:
-#my $message = {
-#    to          => 'rkrenn@phoenixctms.org,
-#    cc          => 'rkrenn@alumni.tugraz.at',
-#    bcc         => '',
-#    return_path => '',
-#    priority    => $normalpriority,
-#    sender_name => 'Rene Krenn',
-#    from        => 'rkrenn@phoenixctms.org',
-#    subject     => 'subject...',
-#    body        => wrap_mailbody('test.......'),
-#    guid        => create_guid()
-#};
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 my $mailsentsuccessfully = 1;
@@ -143,7 +143,7 @@ my $mailerr_messages = {
 
 };
 
-#my $logger = getlogger(__PACKAGE__);
+
 
 # email body wordwrapping:
 sub wrap_mailbody {
@@ -213,7 +213,7 @@ sub send_mail_with_attachments {
           my $attachmentfilepath = $attachmentfilepaths[$i];
           if (-e $attachmentfilepath) {
               my $filesize = -s $attachmentfilepath;
-              #push @filestocleanup,$attachmentfilepath;
+
               if ($filesize > 0) {
                   $mime_mail->attach(
                       Id          => file_md5($attachmentfilepath,$fileerrorcode,getlogger(__PACKAGE__)),
@@ -326,7 +326,7 @@ sub send_smtp {
 
     if (defined $smtpuser and $smtpuser ne '') {
 
-        #use MIME::Base64;
+
         print MAIL 'ehlo ' . $smtp_server . "\r\n";
 
         my $authloginavailable = 0;
@@ -361,7 +361,7 @@ sub send_smtp {
 
         print MAIL encode_base64($smtppasswd,'') . "\r\n";
         $_ = <MAIL>;
-        #emaildebug($_,getlogger(__PACKAGE__));
+
         if (/^[45]/) {
         close(MAIL);
         return $smtpprotocolerrorpass; #auth unsuccessful
@@ -400,9 +400,9 @@ sub send_smtp {
         close(MAIL);
         return $smtpprotocolerrordata;
     }
-    #print MAIL "123";
-    #print MAIL $crlf . '.' . $crlf;
-    #$_ = <MAIL>;
+
+
+
 
     } elsif ($mailtype == 0) {
     if (not open(MAIL,"| $mailprog -t")) {
@@ -416,10 +416,10 @@ sub send_smtp {
         use Net::SMTP;
         my $smtp;
         if (not $smtp = Net::SMTP->new($smtp_server, Debug => 0)) {
-            #emailwarn('unable to create Net::SMTP object - ' . $smtp_server);
-        #if (defined $emailwarncode and ref $emailwarncode eq 'CODE') {
-        #  &$emailwarncode('unable to create Net::SMTP object - ' . $smtp_server);
-        #}
+
+
+
+
         die('unable to create Net::SMTP object - ' . $smtp_server);
         } else {
         $smtp->mail($fromemail);
@@ -434,7 +434,7 @@ sub send_smtp {
         }
     };
     if ($@) {
-        #emailwarn('Net::SMTP fatal error: ' . $@);
+
         if (defined $emailwarncode and ref $emailwarncode eq 'CODE') {
           &$emailwarncode('Net::SMTP fatal error: ' . $@);
         }
@@ -445,7 +445,7 @@ sub send_smtp {
 
     print MAIL $data;
     print MAIL $crlf . '.' . $crlf;
-    #print MAIL "\n.\n"; #$crlf . '.' . $crlf;
+
 
     if ($mailtype == 1) {
         $_ = <MAIL>;
@@ -476,7 +476,7 @@ sub send_smtp {
         }
             local *MAILFILE;
         if (not open (MAILFILE,'>' . $emailfile)) {
-        #fileerror('cannot open file ' . $emailfile . ': ' . $!,getlogger(__PACKAGE__));
+
         if (defined $fileerrorcode and ref $fileerrorcode eq 'CODE') {
           &$fileerrorcode('cannot open file ' . $emailfile . ': ' . $!,getlogger(__PACKAGE__));
         }
@@ -499,7 +499,7 @@ sub cleanupmsgfiles {
         my $rmsgextension = quotemeta($msgextension);
         local *MAILDIR;
         if (not opendir(MAILDIR, $mailfile_path)) {
-        #fileerror('cannot opendir ' . $mailfile_path . ': ' . $!,getlogger(__PACKAGE__));
+
         if (defined $fileerrorcode and ref $fileerrorcode eq 'CODE') {
             &$fileerrorcode('cannot opendir ' . $mailfile_path . ': ' . $!,getlogger(__PACKAGE__));
         }
@@ -510,7 +510,7 @@ sub cleanupmsgfiles {
         foreach my $file (@files) {
             my $filepath = $mailfile_path . $file;
         if ((unlink $filepath) == 0) {
-                #filewarn('cannot remove ' . $filepath . ': ' . $!,getlogger(__PACKAGE__));
+
             if (defined $filewarncode and ref $filewarncode eq 'CODE') {
             &$filewarncode('cannot remove ' . $filepath . ': ' . $!,getlogger(__PACKAGE__));
             }
@@ -567,7 +567,7 @@ sub send_message {
     if ($emailenable) {
     $errormsg = send_simple_mail($to,$subject,$message,$sender_address,$system_instance_label, $sender_address,$fileerrorcode, $emailwarncode);
     if ($errormsg != $mailsentsuccessfully ) {
-        #emailwarn('error sending email to ' . $to . ' via ' . $smtp_server . ' (' . $errorcode . ')',$_,getlogger(__PACKAGE__));
+
         if (defined $emailwarncode and ref $emailwarncode eq 'CODE') {
           &$emailwarncode('error sending email to ' . $to . ' via ' . $smtp_server,$mailerr_messages->{$errormsg},$_,getlogger(__PACKAGE__));
         }
@@ -606,7 +606,7 @@ sub send_email {
 
     $errormsg = send_mail_with_attachments($email,$attachments,$fileerrorcode, $emailwarncode);
     if ($errormsg != $mailsentsuccessfully ) {
-        #emailwarn('error sending email to ' . mergercpts(($email->{to},$email->{cc},$email->{bcc})) . ' via ' . $smtp_server . ' (' . $errorcode . ')',$_,getlogger(__PACKAGE__));
+
             if (defined $emailwarncode and ref $emailwarncode eq 'CODE') {
           &$emailwarncode('error sending email to ' . mergercpts(($email->{to},$email->{cc},$email->{bcc})) . ' via ' . $smtp_server,$mailerr_messages->{$errormsg},$_,getlogger(__PACKAGE__));
         }

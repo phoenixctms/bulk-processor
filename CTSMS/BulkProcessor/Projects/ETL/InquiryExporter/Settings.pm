@@ -27,9 +27,9 @@ use CTSMS::BulkProcessor::LoadConfig qw(
     split_tuple
     parse_regexp
 );
-use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring); #check_ipnet
+use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring);
 
-#use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Ecrf qw();
+
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 
 require Exporter;
@@ -58,7 +58,7 @@ sub update_settings {
 
     my ($data,$configfile) = @_;
 
-    if (defined $data) { # and defined ($data = $data->[0])) {
+    if (defined $data) {
 
         my $result = 1;
 

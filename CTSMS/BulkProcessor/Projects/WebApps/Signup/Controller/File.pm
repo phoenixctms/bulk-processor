@@ -16,10 +16,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File qw();
 
 Dancer::get('/file/:file_id',sub {
-    
-    #return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created(); trial preview cannot be loaded otherwise
-    #return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created();
-    
+
     my $params = Dancer::params();
 
     my $file_response;
@@ -34,7 +31,7 @@ Dancer::get('/file/:file_id',sub {
     } else {
         return apply_lwp_file_response($file_response);
     }
-    
+
 });
 
 1;

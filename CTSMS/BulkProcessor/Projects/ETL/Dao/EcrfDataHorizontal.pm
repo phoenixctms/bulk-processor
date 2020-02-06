@@ -17,10 +17,10 @@ use CTSMS::BulkProcessor::SqlProcessor qw(
     insert_stmt
     process_table
 );
-    #process_table
+
 use CTSMS::BulkProcessor::SqlRecord qw();
 
-#use CTSMS::BulkProcessor::Array qw(contains);
+
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::SqlRecord);
@@ -32,14 +32,14 @@ our @EXPORT_OK = qw(
 
     process_records
 );
-#countby_filename
-#process_records
-#$expected_fieldnames_count
-#getupsertstatement
+
+
+
+
 
 my $tablename = 'ecrf_data_horizontal';
 my $get_db = \&get_csv_db;
-#my $get_tablename = \&import_db_tableidentifier;
+
 
 my $expected_fieldnames;
 _set_expected_fieldnames();
@@ -49,8 +49,8 @@ sub _set_expected_fieldnames {
     $ecrfvalue_cols = [] unless defined $ecrfvalue_cols;
     my @fieldnames = (
         'proband_id',
-        #'screening_number',
-        #'random_number',
+
+
         (sort keys %$listentrytags),
         'subject_group',
         'enrollment_status',
@@ -59,13 +59,13 @@ sub _set_expected_fieldnames {
     $expected_fieldnames = \@fieldnames;
 }
 
-# table creation:
-#my $primarykey_fieldnames = [ 'proband_id','ecrf_subject_group','ecrf_position','ecrf_section','ecrf_field_position','series_index','value_version' ];
-#my $indexes = {
-#    $tablename . '_ecrf_name_section_position' => [ 'ecrf_name(32)','ecrf_section(32)','ecrf_position(32)' ],
-#    #$tablename . '_ecrf_name' => [ 'ecrf_name(32)' ],
-#};
-#my $fixtable_statements = [];
+
+
+
+
+
+
+
 
 
 sub new {
@@ -134,7 +134,7 @@ sub process_records {
         tableprocessing_threads     => $numofthreads,
         'select'                    => $db->paginate_sort_query('SELECT * FROM ' . $table,undef,undef,[{
                                             column => 'proband_id',
-                                            #numeric => 1,
+
                                             dir => 1,
                                         }]),
         'selectcount'               => 'SELECT COUNT(*) FROM ' . $table,
@@ -199,7 +199,7 @@ sub check_table {
 }
 
 sub gettablefieldnames {
-    #check_table();
+
     my $db = &$get_db();
     if ($db->table_exists($tablename)) {
         $expected_fieldnames = $db->getfieldnames($tablename);

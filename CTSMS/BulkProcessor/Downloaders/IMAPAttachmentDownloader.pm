@@ -14,21 +14,21 @@ use CTSMS::BulkProcessor::LogError qw(
     attachmentdownloaderwarn
 );
 
-use CTSMS::BulkProcessor::Utils qw(kbytes2gigs); # changemod);
+use CTSMS::BulkProcessor::Utils qw(kbytes2gigs);
 
 use IO::Socket::SSL;
 use Mail::IMAPClient;
 use MIME::Base64;
-#use GSSAPI;
-#use Authen::SASL::Perl;
-#use Authen::SASL::Perl::GSSAPI;
-#use Authen::SASL qw(Perl);
+
+
+
+
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::AttachmentDownloader);
 our @EXPORT_OK = qw();
 
-#my $logger = getlogger(__PACKAGE__);
+
 
 sub new {
 
@@ -55,7 +55,7 @@ sub logout {
 sub setup {
 
     my $self = shift;
-    my ($server,$ssl,$user,$pass,$foldername,$checkfilenamecode,$download_urls) = @_; #,$mimetypes) = @_;
+    my ($server,$ssl,$user,$pass,$foldername,$checkfilenamecode,$download_urls) = @_;
 
     $self->logout();
 
@@ -64,9 +64,9 @@ sub setup {
     $self->{server} = $server;
     $self->{ssl} = $ssl;
     $self->{foldername} = $foldername;
-    #$self->{mimetypes} = $mimetypes;
+
     $self->{checkfilenamecode} = $checkfilenamecode;
-    #$self->{imap} = undef;
+
     $self->{download_urls} = $download_urls;
 
     #* OK The Microsoft Exchange IMAP4 service is ready.
@@ -81,7 +81,7 @@ sub setup {
         Debug    => 0,
         IgnoreSizeErrors => 1,
         Authmechanism  => 'LOGIN',
-        #Authmechanism  => 'NTLM', #'DIGEST-MD5', # DIGEST-MD5 'LOGIN', #CRAM-MD5 NTLM
+
         );
 
     if ($ssl) {
@@ -96,29 +96,29 @@ sub setup {
 
     my $imap = Mail::IMAPClient->new(%opts) or attachmentdownloadererror($@,getlogger(__PACKAGE__));
 
-    #eval {
-    #my ($gss_api_step, $sasl, $conn, $cred) = (0, undef, undef, GSSAPI::Cred);
-    #$imap->authenticate('GSSAPI', sub  {
-    #        $gss_api_step++;
-    #        if ($gss_api_step == 1) {
-    #            $sasl = Authen::SASL->new(
-    #                    mechanism => 'GSSAPI',
-    #                    debug => 1,
-    #                    callback => { pass => $pass,
-    #                                  user => $user,
-    #                                  }
-    #                );
-    #            $conn = $sasl->client_new('imap', $server);
-    #            my $mesg = $conn->client_start() or attachmentdownloadererror($@,getlogger(__PACKAGE__));
-    #            print "mesg $gss_api_step: " . $mesg;
-    #            return encode_base64($mesg, '');
-    #        } else {
-    #            my $mesg = $conn->client_step(decode_base64($_[0]));
-    #            print "mesg $gss_api_step: " . $mesg;
-    #            return encode_base64($mesg, '');
-    #        }
-    #    });
-    #};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     if ($@) {
         attachmentdownloadererror($@,getlogger(__PACKAGE__));
     } else {

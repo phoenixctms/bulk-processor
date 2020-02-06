@@ -7,8 +7,8 @@ use strict;
 use HTTP::Status qw();
 
 use Dancer qw();
-#use JSON -support_by_pp, -no_export;
-#no use Dancer::Plugin::I18N !!;
+
+
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     save_params
     $restapi
@@ -20,14 +20,14 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     date_ui_to_iso
     json_error
 );
-#check_date_ui
-#check_finish
+
+
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $proband_create_interval_limit
     $proband_agreed_preset
 );
-#clear_error
-#get_site_options
+
+
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband qw();
 
@@ -40,10 +40,10 @@ our $navigation_options = sub {
         $CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::navigation_options);
 };
 
-#Dancer::hook('before', sub {
-#    my $route_handler = shift;
-#    save_site();
-#});
+
+
+
+
 
 Dancer::get('/proband',sub {
     Dancer::session("referer",Dancer::request->referer) unless Dancer::session("referer");
@@ -52,25 +52,25 @@ Dancer::get('/proband',sub {
     unless (defined Dancer::session('proband_agreed')) {
         Dancer::session('proband_agreed',($proband_agreed_preset ? 'true' : ''));
     }
-    #my $params = Dancer::params();
-    #if (exists $params->{'site'}) {
-    #    Dancer::session('site',$params->{'site'});
-    #}
-    #if (created()) {
-    #    my $site = get_site();
-    #    if ($site->{department}->{id} ne Dancer::session('proband_department_id')) {
-    #        Dancer::session("proband_id",undef);
-    #    }
-    #}
+
+
+
+
+
+
+
+
+
+
     my $site = get_site();
     return get_template('proband',
-        script_names => 'proband', #[ 'date', 'proband' ],
+        script_names => 'proband',
         style_names => 'proband',
         js_model => {
             apiError => get_error(1),
 
             probandCreated => (created() ? \1 : \0),
-            #probandVersion => Dancer::session("proband_version") // 0;
+
             probandAgreedTooltip => Dancer::Plugin::I18N::localize('proband_agreed_tooltip'),
             probandPrefixedTitlesTooltip => Dancer::Plugin::I18N::localize('proband_prefixed_titles_tooltip'),
             probandFirstNameTooltip => Dancer::Plugin::I18N::localize('proband_first_name_tooltip'),
@@ -101,7 +101,7 @@ Dancer::post('/proband',sub {
     );
     if (!created()) {
         Dancer::session('proband_agreed','') unless defined $params->{'proband_agreed'};
-        #return unless _check_last_created();
+
         unless (stringtobool($params->{'proband_agreed'} // '')) {
             set_error(Dancer::Plugin::I18N::localize('error_proband_not_agreed'));
             return Dancer::forward('/proband', undef, { method => 'GET' });
@@ -117,7 +117,7 @@ Dancer::post('/proband',sub {
             $out = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::add_item($in,0,$restapi);
             Dancer::debug('proband id ' . $out->{id} . ' created');
             Dancer::session("proband_created_timestamp",timestamp());
-            #Dancer::session("proband_created_ip",timestamp());
+
         } else {
             Dancer::error("proband create rate limit of $proband_create_interval_limit, last proband created at: ",Dancer::session("proband_created_timestamp"));
             die(Dancer::Plugin::I18N::localize('error_proband_create_rate_limit') . "\n");
@@ -153,10 +153,10 @@ sub save_site {
             Dancer::session('proband_list_entry_id_map',undef);
             Dancer::session('trial',undef);
             Dancer::session('enabled_trial',undef);
-            #Dancer::session('inquiry_page',undef);
+
             Dancer::session('trial_inquiries_saved_map',undef);
-            #Dancer::session->destroy();
-            #Dancer::session('site',$params->{'site'}) if exists $params->{'site'};
+
+
             Dancer::debug('site changed, starting new proband');
         }
     }
@@ -175,9 +175,9 @@ sub save_enabled_trial {
                 $p,
                 $sf,
                 undef,$restapi)->[0];
-            #$enabled_trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($params->{'trial'},
-            #undef,
-            #$restapi);
+
+
+
         };
         if ($enabled_trial) {
             Dancer::session('enabled_trial', $enabled_trial);
@@ -216,25 +216,25 @@ sub _proband_create_interval_limit_ok {
         and defined $proband_create_interval_limit
         and $proband_create_interval_limit > 0
         and (my $delta = datetime_delta($last_created,timestamp())) < $proband_create_interval_limit) {
-        #set_error(Dancer::Plugin::I18N::localize('error_proband_create_rate_limit')); #,secs_to_years($proband_create_interval_limit - $delta)));
-        #Dancer::forward('/proband', undef, { method => 'GET' });
+
+
         return 0;
     }
     return 1;
 }
 
-#sub _check_last_created {
-#    my $last_created = Dancer::session("proband_created_timestamp");
-#    if (defined $last_created
-#        and defined $proband_create_interval_limit
-#        and $proband_create_interval_limit > 0
-#        and (my $delta = datetime_delta($last_created,timestamp())) < $proband_create_interval_limit) {
-#        set_error(Dancer::Plugin::I18N::localize('error_proband_create_rate_limit')); #,secs_to_years($proband_create_interval_limit - $delta)));
-#        Dancer::forward('/proband', undef, { method => 'GET' });
-#        return 0;
-#    }
-#    return 1;
-#}
+
+
+
+
+
+
+
+
+
+
+
+
 
 sub _get_in {
     my $params = shift;
@@ -246,14 +246,14 @@ sub _get_in {
             "version" => Dancer::session('proband_version'),
         ) : ()),
         "categoryId" => $site->{proband_category}->{id},
-        #"childIds": [
-        #    "Long"
-        #],
-        "person" => \1, #JSON::true,
-        "blinded" => \0, #JSON::false,
+
+
+
+        "person" => \1,
+        "blinded" => \0,
         "citizenship" => trim($params->{proband_citizenship}),
         "comment" => Dancer::Plugin::I18N::localize('proband_comment',Dancer::request->uri_base(),Dancer::Plugin::I18N::localize($site->{label}),(defined $enabled_trial ? $enabled_trial->{name} : ''),Dancer::request->address(),Dancer::request->user_agent,Dancer::session("referer")),
-        "dateOfBirth" => date_ui_to_iso($params->{proband_dob}), #'2017-01-01 00:00:00', #$params->{dob},
+        "dateOfBirth" => date_ui_to_iso($params->{proband_dob}),
         "departmentId" => $site->{department}->{id},
         "firstName" => trim($params->{proband_first_name}),
         "gender" => $params->{proband_gender},

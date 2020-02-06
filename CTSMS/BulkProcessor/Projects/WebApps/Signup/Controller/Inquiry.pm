@@ -5,9 +5,9 @@ use strict;
 ## no critic
 
 use Dancer qw();
-#use JSON -support_by_pp, -no_export;
+
 use HTTP::Status qw();
-#no use Dancer::Plugin::I18N !!;
+
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     json_response
     json_error
@@ -45,18 +45,18 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     check_done
     check_prev
 );
-#check_date_ui
-#check_time_ui
-#check_done
-#    get_site_name
+
+
+
+
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $enable_geolocation_services
     $force_default_geolocation
     $system_timezone
 );
 
-#use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
-#use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry qw();
+
+
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::InputFieldType qw(
     $SINGLE_LINE_TEXT
@@ -98,7 +98,7 @@ my %field_to_param_type_map = (
     $SKETCH => [ 'ink' ],
     $FLOAT => [ 'float' ],
 );
-my $param_value_types = removeduplicates([ map { @{$_}; } values %field_to_param_type_map ]); #qw(text boolean float long date time timestampdate timestamptime selection);
+my $param_value_types = removeduplicates([ map { @{$_}; } values %field_to_param_type_map ]);
 my $param_value_types_re = '^(' . join('|',@$param_value_types) . ')_(\\d+)$';
 $param_value_types_re = qr/$param_value_types_re/;
 
@@ -114,7 +114,7 @@ our $navigation_options = sub {
         $inquiries_open ? '/inquiry' : undef, #id exist...
         undef,
         $CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::End::navigation_options);
-        #$CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::BankAccount::navigation_options);
+
 };
 
 Dancer::get('/inquiry/pdf',sub {
@@ -134,7 +134,7 @@ Dancer::get('/inquiry/pdf',sub {
         $trial->{id},
         undef,
         1,
-        $params->{blank}, #stringtobool
+        $params->{blank},
         $restapi,
     ), $proband_id . '_' . $trial->{id} . '_inquiryform' . ($params->{blank} ? '_blank' : '') . '.pdf',0);
 
@@ -142,11 +142,11 @@ Dancer::get('/inquiry/pdf',sub {
 
 Dancer::get('/inquiry',sub {
 
-    #Dancer::session('trial', CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item(5845575,{ _activeInquiryCount => 0 },$restapi)); #238743
-    #Dancer::session('proband_id', 5849789); #5843441);
-    #Dancer::session('proband_phone_id', 5849793);
-    #Dancer::session('proband_email_id', 5849795);
-    #Dancer::session('proband_address_id',5849791);
+
+
+
+
+
 
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created();
@@ -156,26 +156,26 @@ Dancer::get('/inquiry',sub {
 
     my $site = get_site();
     my $trial = Dancer::session('trial');
-    #Dancer::session('proband_address_country_name',Dancer::session('proband_address_country_name') || Dancer::session('proband_citizenship'));
-    #Dancer::session('proband_phone_value',Dancer::session('proband_phone_value') || $phone_number_prefix_preset);
+
+
     return get_template('inquiry',
         script_names => [ 'sketch/jquery.colorPicker', 'sketch/raphael-2.2.0', 'sketch/raphael.sketchpad', 'sketch/json2.min', 'sketch/sketch',
-                          'fieldcalculation/js-joda', 'fieldcalculation/js-joda-timezone', 'fieldcalculation/strip-comments', 'fieldcalculation/jquery.base64', #'fieldcalculation/date',
+                          'fieldcalculation/js-joda', 'fieldcalculation/js-joda-timezone', 'fieldcalculation/strip-comments', 'fieldcalculation/jquery.base64',
                           'fieldcalculation/restApi', 'fieldcalculation/locationDistance', 'fieldcalculation/fieldCalculation', 'inquiry'],
         style_names => [ 'sketch/colorPicker', 'sketch/sketch', 'inquiry' ],
         js_model => {
-            enableGeolocationServices => ($enable_geolocation_services ? \1 : \0), #JSON::true : JSON::false),
-            forceDefaultGeolocation => ($force_default_geolocation ? \1 : \0), #JSON::true : JSON::false),
+            enableGeolocationServices => ($enable_geolocation_services ? \1 : \0),
+            forceDefaultGeolocation => ($force_default_geolocation ? \1 : \0),
             defaultGeolocationLatitude => $site->{default_geolocation_latitude},
             defaultGeolocationLongitude => $site->{default_geolocation_longitude},
             apiError => get_error(1),
-            saveAllPages => ($save_all_pages ? \1 : \0), #JSON::true : JSON::false),
+            saveAllPages => ($save_all_pages ? \1 : \0),
             trial => $trial,
             trialBase64 => to_json_base64($trial),
             probandBase64 => to_json_base64(Dancer::session('proband_out')),
             probandAddressesBase64 => to_json_base64([ Dancer::session('proband_address_out') ]),
-            #probandListEntryBase64 => to_json_base64(Dancer::session('proband_list_entry_' . $trial->{id})),
-            #posted_inquiries_map => Dancer::session('posted_inquiries_map') // {},
+
+
             ctsmsBaseUri => get_ctsms_baseuri(),
             restApiUrl => get_restapi_uri(),
             inquiryPage => Dancer::session('inquiry_page') // 0,
@@ -198,7 +198,7 @@ Dancer::get('/inquiry',sub {
             sketchUndoTooltip => Dancer::Plugin::I18N::localize('sketch_undo_tooltip'),
             sketchRedoTooltip => Dancer::Plugin::I18N::localize('sketch_redo_tooltip'),
             sketchClearTooltip => Dancer::Plugin::I18N::localize('sketch_clear_tooltip'),
-            #sketch_color_picker_tooltip=select pen color
+
 
             sketchPenWidth0Tooltip => Dancer::Plugin::I18N::localize('sketch_pen_width_0_tooltip'),
             sketchPenWidth1Tooltip => Dancer::Plugin::I18N::localize('sketch_pen_width_1_tooltip'),
@@ -210,7 +210,7 @@ Dancer::get('/inquiry',sub {
             sketchPenOpacity2Tooltip => Dancer::Plugin::I18N::localize('sketch_pen_opacity_2_tooltip'),
 
         },
-        #trial => $trial,
+
     );
 });
 
@@ -221,16 +221,16 @@ Dancer::post('/inquiries',sub {
     return $ajax_error if $ajax_error = CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_selected_ajax();
 
     my $params = Dancer::params();
-    #my $site = get_site();
+
     my $trial = Dancer::session('trial');
     return get_paginated_response($params,sub { my $p = shift;
         my $values = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::get_inquiryvalues(
             Dancer::session('proband_id'), #null will give error...
-            $trial->{id}, #XXX$params->{trial_id},
+            $trial->{id},
             undef,
             1,
             1,
-            $params->{load_all_js_values}, #tringtobool($params->{load_all_js_values}),
+            $params->{load_all_js_values},
             $p,
             undef,
             { _selectionSetValueMap => 1, _inputFieldSelectionSelectionSetValueMap => 1 },$restapi);
@@ -247,7 +247,7 @@ Dancer::post('/inquiries',sub {
             if (not $inquiry_value->{inquiry}->{disabled}) {
                 _restore_from_session($posted_inquiries_map,$inquiry_value);
             }
-            $inquiry_value->{_posted} = (exists $posted_inquiries_map->{$inquiry_value->{inquiry}->{id}} ? \1 : \0); #JSON::true : JSON::false);
+            $inquiry_value->{_posted} = (exists $posted_inquiries_map->{$inquiry_value->{inquiry}->{id}} ? \1 : \0);
 
             foreach my $selection_set_value (@{$inquiry_value->{inquiry}->{field}->{selectionSetValues}}) {
                 $strokes_id_map->{$selection_set_value->{strokesId}} = $selection_set_value->{id} if (defined $selection_set_value->{strokesId} and length($selection_set_value->{strokesId}) > 0);
@@ -255,7 +255,7 @@ Dancer::post('/inquiries',sub {
             $inquiries_saved_map->{$inquiry_value->{inquiry}->{id}} = { id => $inquiry_value->{id}, version => $inquiry_value->{version}, user_timezone => $inquiry_value->{inquiry}->{field}->{userTimeZone}, };
         }
         $trial_inquiries_saved_map->{$trial->{id}} = $inquiries_saved_map;
-        Dancer::session('trial_inquiries_saved_map', $trial_inquiries_saved_map); #optional..?
+        Dancer::session('trial_inquiries_saved_map', $trial_inquiries_saved_map);
         $trial->{_activeInquiryCount} = $p->{total_count};
         CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::set_inquiry_counts($trial,$inquiries_saved_map,$posted_inquiries_map);
         Dancer::session('trial',$trial);
@@ -275,7 +275,7 @@ Dancer::post('/inquiries',sub {
             $inquiry_value->{dateValue} = date_ui_to_json($inquiry_value->{dateValue},0);
             $inquiry_value->{timeValue} = time_ui_to_json($inquiry_value->{timeValue},0);
             $inquiry_value->{timestampValue} = datetime_ui_to_json(delete $inquiry_value->{timestampdateValue},delete $inquiry_value->{timestamptimeValue},$inquiry_value->{userTimeZone});
-            #($inquiry_value->{inkValues},undef) = _unpack_inkvalue(delete $inquiry_value->{inkValue},$inquiry_value->{inputFieldSelectionSetValues});
+
             $inquiry_value->{inkValues} = string_to_utf8bytes(delete $inquiry_value->{inkValue});
         }
         $values->{js_rows_base64} = to_json_base64(delete $values->{js_rows});
@@ -286,16 +286,16 @@ Dancer::post('/inquiries',sub {
     });
 });
 
-#Dancer::post('/inquiry/savepage',sub {
-#    my $ajax_error;
-#    return $ajax_error if $ajax_error = CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_selected_ajax();
-#    my $trial = Dancer::session('trial');
-#    my $posted_inquiries_map = _save_page_params($trial);
-#    CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::set_inquiry_counts($trial,undef,$posted_inquiries_map);
-#    Dancer::session('trial',$trial);
-#    return json_response($trial);
-#    #Dancer::status(200);
-#});
+
+
+
+
+
+
+
+
+
+
 
 Dancer::post('/inquiry/savepage',sub {
     my $ajax_error;
@@ -324,18 +324,18 @@ Dancer::post('/inquiry/savepage',sub {
         }
     }
 
-    #Dancer::status(200);
+
 });
 
 Dancer::post('/inquiry',sub {
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_selected();
     my $trial = Dancer::session('trial');
     my $posted_inquiries_map = _save_page_params($trial,$save_all_pages);
-    # ....--> save the map
 
-    #my $trial = Dancer::session('trial');
 
-    #return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
+
+
+
     return check_done(sub {
         check_prev(sub {
             return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
@@ -415,7 +415,7 @@ sub _restore_from_session {
         if (defined $session_value) {
             my $override_value;
             if ('boolean' eq $type) {
-                $override_value = (stringtobool($session_value->[-1]->{value}) ? \1 : \0); #JSON::true : JSON::false);
+                $override_value = (stringtobool($session_value->[-1]->{value}) ? \1 : \0);
             } elsif ('selection' eq $type) {
                 $override_value = [];
                 foreach my $selection (@$session_value) {
@@ -475,7 +475,7 @@ sub _pack_inkvalue {
         push(@stroke_ids,$selection_value->{strokesId});
     }
     push(@$ink_value_w_ids,join($id_separator_string,@stroke_ids));
-    #$ink_value_w_ids = Dancer::to_json($ink_value_w_ids, { pretty => 0 });
+
     $ink_value_w_ids = to_json_safe($ink_value_w_ids);
     return $ink_value_w_ids;
 
@@ -498,7 +498,7 @@ sub _unpack_inkvalue {
                     }
                 }
             }
-            #return (Dancer::to_json($ink_value_w_ids, { pretty => 0 }),\@selection_values);
+
             return (to_json_safe($ink_value_w_ids),\@selection_values);
         }
     }
@@ -506,16 +506,16 @@ sub _unpack_inkvalue {
 
 }
 
-#Dancer::get('/inquiries/:inquiry_id',sub {
-#    my $params = Dancer::params();
-#    #my $site = get_site();
-#    return get_paginated_response($params,sub { my $p = shift; return
-#        CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::get_item(
-#            Dancer::session('proband_id'), #null will give error...
-#            $params->{inquiry_id},
-#            0,$restapi)
-#        ;});
-#});
+
+
+
+
+
+
+
+
+
+
 
 sub _save_page_params {
     my ($trial,$all_pages) = @_;
@@ -563,8 +563,8 @@ sub _get_inquiryvalues_in {
     foreach my $inquiry_id (keys %$posted_inquiries_map) {
         my $session_values = $posted_inquiries_map->{$inquiry_id};
         my %in = ();
-        #$in{selectionValues} = [];
-        #$in{inkValues} = [];
+
+
         my $error_code = sub { my ($parser,$msg) = @_; &$restapi()->responsedata(add_error_data($msg,$inquiry_id)); die($msg . "\n"); };
         my ($date,$time,$user_timezone);
         if (exists $inquiries_saved_map->{$inquiry_id}) {
@@ -576,7 +576,7 @@ sub _get_inquiryvalues_in {
             my $type = $session_value->{type};
             my $field_name = $type . 'Value';
             if ('boolean' eq $type) {
-                $in{$field_name} = (stringtobool($session_value->{value}) ? \1 : \0); #JSON::true : JSON::false);
+                $in{$field_name} = (stringtobool($session_value->{value}) ? \1 : \0);
             } elsif ('selection' eq $type) {
                 $field_name = 'selectionValueIds';
                 $in{$field_name} = [] unless exists $in{$field_name};
@@ -606,7 +606,7 @@ sub _get_inquiryvalues_in {
         $in{probandId} = $proband_id;
         push(@result,\%in);
     }
-    #return { items => \@result };
+
     return \@result;
 }
 

@@ -29,15 +29,15 @@ use Encode qw(encode_utf8);
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(); #get_tableidentifier);
+our @EXPORT_OK = qw();
 
-#my $logger = getlogger(__PACKAGE__);
+
 
 use Gearman::Worker;
-#use Time::HiRes qw(usleep);
+
 use Time::HiRes qw(sleep);
 
-my $sleep_secs_default = 0.1; # = 0.1;
+my $sleep_secs_default = 0.1;
 
 my $instance_counts = {};
 
@@ -45,13 +45,13 @@ sub new {
 
     my $base_class = shift;
     my $class = shift;
-    #my $self = bless {}, $class;
+
     my ($functions,$serialization_format,$no_autostart) = @_;
     my $self = bless {}, $class;
 
     $self->{worker} = undef;
     $self->{functions} = $functions;
-    #$self->_register_functions();
+
 
     my $running = 0;
     $self->{running_ref} = share($running);
@@ -77,8 +77,8 @@ sub new {
         $self->start();
     }
 
-    #$self = share($self);
-    #autostart??
+
+
     servicedebug($self,$class . ' service created',getlogger(__PACKAGE__));
 
     return $self;
@@ -102,15 +102,15 @@ sub _register_functions {
             if (defined $code and ref $code eq 'CODE') {
                 $self->{worker}->register_function($name,
                     sub {
-                        #servicedebug($self,(ref $self) . ' connector destroyed',getlogger(__PACKAGE__));
-                        #my $resultref = serialize(&$code(deserialize($_[0]->argref())));
-                        #servicedebug($self,(ref $self) . ' connector destroyed',getlogger(__PACKAGE__));
+
+
+
                         servicedebug($self,'invoking \'' . $name . '\', args length: ' . length(encode_utf8($_[0]->arg())),getlogger(__PACKAGE__));
                         my $arg = deserialize($_[0]->arg(),$self->{serialization_format});
                         my (@ret) = &$code(@$arg);
                         my $result = serialize(\@ret,$self->{serialization_format});
                         servicedebug($self,'returning from \'' . $name . '\', result length: ' . length(encode_utf8($result)),getlogger(__PACKAGE__));
-                        #$_[0]->set_status($numerator, $denominator);???
+
                         return $result;
                     }
                 );
@@ -149,9 +149,9 @@ sub _unregister_functions {
 sub _worker {
 
     my $context = shift;
-    #my $tid = threadid();
+
     my $service = $context->{service};
-    #${$context->{service}->{tid_ref}} = $tid;
+
     $service->{worker_tid} = threadid();
     $service->{tid} = $service->{worker_tid};
     servicedebug($service,'worker thread ' . $service->{worker_tid} . ' started',getlogger(__PACKAGE__));
@@ -159,7 +159,7 @@ sub _worker {
 
     my $stop_if = sub {
                         lock($running_ref);
-                        #print join ',',@_ . "\n";
+
                         if (not $$running_ref) {
                             servicedebug($service,'shutting down work and worker thread ' . $service->{worker_tid} . ' ...',getlogger(__PACKAGE__));
                             return 1;
@@ -186,8 +186,8 @@ sub _worker {
         }
     }
     $service->_unregister_functions();
-    #servicedebug($service,'worker thread ' . $service->{worker_tid} . ' shutting down',getlogger(__PACKAGE__));
-    #threads->exit();
+
+
 }
 
 sub start {
@@ -208,11 +208,11 @@ sub start {
             $self->{thread} = threads->create(\&_worker,
 
                                               { service                => $self,
-                                                #logger               => $logger,
+
                                               }
 
                                               );
-            #$self->{worker_tid} = $self->{thread}->tid();
+
         } else {
             servicewarn($self,'worker thread already running?',getlogger(__PACKAGE__));
         }
@@ -271,7 +271,7 @@ sub _on_fail {
 sub DESTROY {
 
     my $self = shift;
-    #print "DESTROY is worker: " . $self->_is_worker_thread() . "\n";
+
     if ($self->_is_create_thread()) {
         servicedebug($self,'destroying service ...',getlogger(__PACKAGE__));
         $self->stop();

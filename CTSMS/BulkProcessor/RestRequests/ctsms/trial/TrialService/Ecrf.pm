@@ -38,13 +38,13 @@ my $get_trial_path_query = sub {
     my ($trial_id,$sort) = @_;
     my %params = ();
     $params{sort} = booltostring($sort);
-    #$params{section} = $section; # if defined $section;
+
     return 'trial/' . $trial_id . '/list/ecrf' . get_query_string(\%params);
 };
 my $get_getecrffieldvaluessectionmaxindex_path_query = sub {
     my ($ecrf_id, $section) = @_;
     my %params = ();
-    $params{section} = $section; # if defined $load_all_js_values;
+    $params{section} = $section;
     return 'ecrf/' . $ecrf_id . '/ecrffieldvalues/maxindex' . get_query_string(\%params);
 };
 
@@ -134,7 +134,7 @@ sub builditems_fromrows {
 
 sub transformitem {
     my ($item,$load_recursive,$restapi) = @_;
-    #$item->{field} = CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputField::builditems_fromrows($item->{field},$load_recursive,$restapi);
+
 
 }
 
@@ -145,14 +145,14 @@ sub get_item_path {
 
 }
 
-#sub TO_JSON {
-#
-#    my $self = shift;
-#    return { %{$self} };
-#    #    value => $self->{zipcode},
-#    #    label => $self->{zipcode},
-#    #};
-#
-#}
+
+
+
+
+
+
+
+
+
 
 1;

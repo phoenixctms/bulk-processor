@@ -21,10 +21,10 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
     get_initial_items
     get_transition_items
-    
+
     $ANNOTATION_QUEUE
     $VALIDATION_QUEUE
     $QUERY_QUEUE
@@ -43,7 +43,7 @@ my $get_transition_items_path_query = sub {
     my ($id) = @_;
     return 'selectionset/ecrffieldstatustypetransitions/' . get_query_string({ typeId => $id, 'system' => 'false' });
 };
-#my $collection_path_query = 'api/' . $resource . '/';
+
 
 my $fieldnames = [
     "color",
@@ -53,7 +53,7 @@ my $fieldnames = [
     "name",
     "nameL10nKey",
     "resolved",
-    "system",    
+    "system",
 ];
 
 our $ANNOTATION_QUEUE = 'ANNOTATION';
@@ -94,14 +94,7 @@ sub get_transition_items {
 
 }
 
-#sub get_itemX {
-#
-#    my ($filters,$load_recursive,$headers) = @_;
-#    my $restapi = &$default_restapi();
-#    return builditems_fromrows($restapi->extract_collection_items($restapi->get(&$get_item_filter_path_query($filters),$headers),undef,undef,
-#        { $CTSMS::BulkProcessor::RestConnectors::CTSMSRestApi::ITEM_REL_PARAM => $item_relation }),$load_recursive)->[0];
-#
-#}
+
 
 sub builditems_fromrows {
 

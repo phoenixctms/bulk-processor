@@ -25,7 +25,7 @@ my $default_encoding = 'UTF-8';
 my $buffersize = 100 * 1024;
 my $threadqueuelength = 10;
 my $default_numofthreads = 3;
-#my $multithreading = 0;
+
 my $blocksize = 100;
 
 my $default_quotechar = '"';
@@ -50,7 +50,7 @@ sub new {
     $self->{encoding} = shift // $default_encoding;
     $self->{buffersize} = $buffersize;
     $self->{threadqueuelength} = $threadqueuelength;
-    #$self->{multithreading} = $multithreading;
+
     $self->{blocksize} = $blocksize;
 
     $self->{quote_char} = shift // $default_quotechar;
@@ -60,7 +60,7 @@ sub new {
 
     bless($self,$class);
 
-    #restdebug($self,__PACKAGE__ . ' file processor created',getlogger(__PACKAGE__));
+
 
     return $self;
 
@@ -190,18 +190,18 @@ sub extractlines {
 sub extractfields {
     my ($context,$line_ref) = @_;
     if ('ARRAY' eq ref $line_ref) {
-        return $line_ref; #[ map { $context->{instance}->_encode($_); } @$line_ref ];
+        return $line_ref;
     } else {
         my @last_line = ();
         extractlines($context,$line_ref,\@last_line);
         return $last_line[0];
-        #return [ map { $context->{instance}->_encode($_); } @{$last_line[0]} ];
+
     }
 }
 
 sub _encode {
     my $self = shift;
-    return Encode::encode($self->{encoding}, shift); #"UTF-8"
+    return Encode::encode($self->{encoding}, shift);
 }
 
 1;

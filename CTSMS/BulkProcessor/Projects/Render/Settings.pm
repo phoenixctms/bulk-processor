@@ -26,7 +26,7 @@ use CTSMS::BulkProcessor::LoadConfig qw(
     split_tuple
     parse_regexp
 );
-use CTSMS::BulkProcessor::Utils qw(format_number prompt get_year_month); #check_ipnet
+use CTSMS::BulkProcessor::Utils qw(format_number prompt get_year_month);
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -137,7 +137,7 @@ our $defaultsettings = 'settings.cfg';
 
 our $input_path = $working_path . 'input/';
 our $output_path = $working_path . 'output/';
-#our $rollback_path = $working_path . 'rollback/';
+
 
 our $force = 0;
 
@@ -227,7 +227,7 @@ our $journal_histogram_dimension = undef;
 our $journal_histogram_interval = undef;
 our ($journal_histogram_year,$journal_histogram_month) = get_year_month();
 
-our $magick = 'magick'; #'convert'
+our $magick = 'magick';
 
 sub update_settings {
 
@@ -237,7 +237,7 @@ sub update_settings {
 
         my $result = 1;
 
-        #&$configurationinfocode("testinfomessage",$configlogger);
+
 
         $result &= _prepare_working_paths(1);
         $ecrfstatustype_filename = $output_path . $ecrfstatustype_filename;
@@ -362,8 +362,8 @@ sub _prepare_working_paths {
     $result &= $path_result;
     ($path_result,$output_path) = create_path($working_path . 'output',$output_path,$create,\&fileerror,getlogger(__PACKAGE__));
     $result &= $path_result;
-    #($path_result,$rollback_path) = create_path($working_path . 'rollback',$rollback_path,$create,\&fileerror,getlogger(__PACKAGE__));
-    #$result &= $path_result;
+
+
 
     return $result;
 

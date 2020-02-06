@@ -4,7 +4,7 @@ use strict;
 ## no critic
 no strict 'refs';
 
-#use threads::shared qw();
+
 use Spreadsheet::WriteExcel qw();
 use Excel::Writer::XLSX qw();
 use Encode qw();
@@ -68,8 +68,8 @@ sub _create_workbook {
     my $header_format = $workbook->add_format();
     $header_format->set_bold();
 
-    my $cell_format = undef; #$workbook->add_format(); #output file size!
-    #$cell_format->set_bg_color('gray');
+    my $cell_format = undef;
+
     processing_info(undef,"workbook '$filename' created",getlogger(__PACKAGE__));
 
     return ($workbook,$header_format,$cell_format);
@@ -90,7 +90,7 @@ sub _write_output_table {
     $$row_ref = $$row_ref + 1;
 
     return &{$module . '::process_records'}(
-        #static_context => $static_context,
+
         process_code => sub {
             my ($context,$records,$row_offset) = @_;
             my $rownum = $row_offset;
@@ -104,7 +104,7 @@ sub _write_output_table {
                 }
                 $$row_ref = $$row_ref + 1;
             }
-            #return 0;
+
             return 1;
         },
         init_process_context_code => sub {
@@ -124,16 +124,16 @@ sub _write_output_table {
 
 sub _mark_utf8 {
     return Encode::decode("UTF-8", shift);
-    #my $string = shift;
-    ##return Encode::decode_utf8($string);
-    #my $result = eval {
-    #    Encode::decode("UTF-8", $string);
-    #};
-    #if ($@) {
-    #    return $string;
-    #} else {
-    #    return $result;
-    #}
+
+
+
+
+
+
+
+
+
+
 }
 
 1;

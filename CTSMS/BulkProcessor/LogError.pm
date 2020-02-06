@@ -30,8 +30,8 @@ use CTSMS::BulkProcessor::Utils qw(
     secs_to_years
 );
 
-use POSIX qw(ceil); # locale_h);
-#setlocale(LC_NUMERIC, 'C'); ->utils
+use POSIX qw(ceil); ExcelExport
+ExcelExport
 
 use File::Basename qw(basename);
 
@@ -117,7 +117,7 @@ sub done {
 
     if ($cli) {
         my $appexitsecs = Time::HiRes::time();
-        #$message .= "\n\n" . sprintf("%.2f",$appexitsecs - $appstartsecs) . ' seconds';
+
         $message .= "\n\n" . 'time elapsed: ' . secs_to_years(ceil($appexitsecs - $appstartsecs));
 
         if (defined $logger) {
@@ -128,12 +128,12 @@ sub done {
             if (length($doneemailrecipient) > 0 and defined $logger) {
                 my $email = {
                     to          => $doneemailrecipient,
-                    #cc          => 'rkrenn@phoenixctms.org',
-                    #bcc         => '',
-                    #return_path => undef,
+
+
+
                     priority    => $lowpriority,
-                    #sender_name => 'Rene K.',
-                    #from        => 'rkrenn@phoenixctms.org',
+
+
                     subject     => $donemailsubject . $logger->{category},
                     body        => getscriptpath() . ":\n\n" . wrap_mailbody($message) . "\n\n" . $signature,
                     guid        => create_guid()
@@ -161,7 +161,7 @@ sub completion {
 
     if ($cli) {
         my $appexitsecs = Time::HiRes::time();
-        #$message .= "\n\n" . sprintf("%.2f",$appexitsecs - $appstartsecs) . ' seconds';
+
         $message .= "\n\n" . 'time elapsed: ' . secs_to_years(ceil($appexitsecs - $appstartsecs));
 
         if (defined $logger) {
@@ -172,12 +172,12 @@ sub completion {
             if (length($completionemailrecipient) > 0 and defined $logger) {
                 my $email = {
                     to          => $completionemailrecipient,
-                    #cc          => 'rkrenn@phoenixctms.org',
-                    #bcc         => '',
-                    #return_path => undef,
+
+
+
                     priority    => $normalpriority,
-                    #sender_name => 'Rene K.',
-                    #from        => 'rkrenn@phoenixctms.org',
+
+
                     subject     => $completionmailsubject . $logger->{category},
                     body        => getscriptpath() . ":\n\n" . wrap_mailbody($message) . "\n\n" . $signature,
                     guid        => create_guid()
@@ -186,7 +186,7 @@ sub completion {
                 my ($mailresult,$mailresultmessage) = send_email($email,$attachments,\&fileerror,\&emailwarn);
             }
 
-            #exit(0);
+
         }
     } else {
         if (defined $logger) {
@@ -205,7 +205,7 @@ sub warning {
             my ($mailresult,$mailresultmessage) = send_message($warnemailrecipient,$warnemailsubject . $logger->{category},getscriptpath() . ":\n\n" . wrap_mailbody($message) . "\n\n" . $signature,\&fileerror,\&emailwarn);
         }
         carp($message);
-        #warn($message);
+
     } else {
 
         if ($cli) {
@@ -225,14 +225,14 @@ sub terminate {
     if (threadid() == $root_threadid and $cli) {
 
         my $appexitsecs = Time::HiRes::time();
-        #$message .= "\n\n" . sprintf("%.2f",$appexitsecs - $appstartsecs) . ' seconds';
+
         $message .= "\n\n" . 'time elapsed: ' . secs_to_years(ceil($appexitsecs - $appstartsecs));
 
         if (length($erroremailrecipient) > 0 and defined $logger) {
             my ($mailresult,$mailresultmessage) = send_message($erroremailrecipient,$erroremailsubject . $logger->{category},getscriptpath() . ":\n\n" . wrap_mailbody($message) . "\n\n" . $signature,\&fileerror,\&emailwarn);
         }
-        croak($message); # confess...
-        #die($message);
+        croak($message);
+
     } else {
 
         if ($cli) {
@@ -245,47 +245,6 @@ sub terminate {
 
 }
 
-#sub registerthread {
-#
-#    my $thrlogger = shift;
-#    $registered_tids{threads->tid()} = 1;
-#    $SIG{'DIE'} = sub {
-#
-#                            print "signal\n";
-#                            my $tid = threads->tid();
-#                            my $message = '[' . $tid . '] aborting';
-#                            if (defined $thrlogger) {
-#                                $thrlogger->error('[' . $tid . '] aborting');
-#                            }
-#                            unregisterthread($tid);
-#                            #threads->exit();
-#                            croak($message);
-#                        };
-#
-#}
-#
-#sub unregisterthread {
-#
-#    my $tid = shift;
-#    if (!defined $tid) {
-#        $tid = threads->tid();
-#    }
-#    delete $registered_tids{$tid};
-#
-#}
-
-#sub terminatethreads {
-#
-#    # Loop through all the threads
-#    foreach my $thr (threads->list()) {
-#        # Don't join the main thread or ourselves
-#        if ($thr->tid != 0 && !threads::equal($thr,threads->self)) {
-#            $thr->kill('DIE'); #->detach();
-#        }
-#    }
-#
-#}
-
 sub notimplementederror {
 
     my ($message, $logger) = @_;
@@ -294,8 +253,8 @@ sub notimplementederror {
     }
 
     terminate($message, $logger);
-    #terminatethreads();
-    #die();
+
+
 
 }
 
@@ -330,8 +289,8 @@ sub dberror {
     }
 
     terminate($message, $logger);
-    #terminatethreads();
-    #die();
+
+
 
 }
 
@@ -343,7 +302,7 @@ sub dbwarn {
         $logger->warn($message);
     }
 
-    #die();
+
     warning($message, $logger);
 
 }
@@ -358,8 +317,8 @@ sub resterror {
     }
 
     terminate($message, $logger);
-    #terminatethreads();
-    #die();
+
+
 
 }
 
@@ -371,7 +330,7 @@ sub restwarn {
         $logger->warn($message);
     }
 
-    #die();
+
     warning($message, $logger);
 
 }
@@ -385,8 +344,8 @@ sub restrequesterror {
     }
 
     terminate($message, $logger);
-    #terminatethreads();
-    #die();
+
+
 
 }
 
@@ -399,8 +358,8 @@ sub restresponseerror {
     }
 
     terminate($message, $logger);
-    #terminatethreads();
-    #die();
+
+
 
 }
 
@@ -413,8 +372,8 @@ sub fieldnamesdiffer {
     }
 
     terminate($message, $logger);
-    #terminatethreads();
-    #die();
+
+
 
 }
 
@@ -438,7 +397,7 @@ sub dbclusterwarn {
         $logger->warn($message);
     }
 
-    #die();
+
     warning($message, $logger);
 
 }
@@ -452,8 +411,8 @@ sub transferzerorowcount {
     }
 
     terminate($message, $logger);
-    #terminatethreads();
-    #die();
+
+
 
 }
 
@@ -466,8 +425,8 @@ sub processzerorowcount {
     }
 
     terminate($message, $logger);
-    #terminatethreads();
-    #die();
+
+
 
 }
 
@@ -522,8 +481,8 @@ sub deleterowserror {
     }
 
     terminate($message, $logger);
-    #terminatethreads();
-    #die();
+
+
 
 }
 
@@ -536,23 +495,23 @@ sub fileerror {
     }
 
     terminate($message, $logger);
-    #terminatethreads();
-    #die();
+
+
 
 }
 
-#sub yamlerror {
-#
-#    my ($message, $logger) = @_;
-#    if (defined $logger) {
-#        $logger->error($message);
-#    }
-#
-#    terminate($message, $logger);
-#    #terminatethreads();
-#    #die();
-#
-#}
+
+
+
+
+
+
+
+
+
+
+
+
 
 sub processzerofilesize {
 
@@ -563,8 +522,8 @@ sub processzerofilesize {
     }
 
     terminate($message, $logger);
-    #terminatethreads();
-    #die();
+
+
 
 }
 
@@ -620,8 +579,8 @@ sub xls2csverror {
     }
 
     terminate($message, $logger);
-    #terminatethreads();
-    #die();
+
+
 
 }
 
@@ -633,8 +592,8 @@ sub webarchivexls2csverror {
     }
 
     terminate($message, $logger);
-    #terminatethreads();
-    #die();
+
+
 
 }
 
@@ -645,7 +604,7 @@ sub filewarn {
         $logger->warn($message);
     }
 
-    #die();
+
     warning($message, $logger);
 }
 
@@ -670,14 +629,14 @@ sub webarchivexls2csvwarn {
     warning($message, $logger);
 }
 
-#sub parameterdefinedtwice {
-#
-#    my ($message,$logger) = @_;
-#    if (defined $logger) {
-#        $logger->warn($message);
-#    }
-#    warning($message, $logger);
-#}
+
+
+
+
+
+
+
+
 
 sub emailwarn {
 
@@ -754,7 +713,7 @@ sub servicewarn {
         $logger->warn($message);
     }
 
-    #die();
+
     warning($message, $logger);
 
 }
@@ -782,8 +741,8 @@ sub scripterror {
     }
 
     terminate($message, $logger);
-    #terminatethreads();
-    #die();
+
+
 
 }
 

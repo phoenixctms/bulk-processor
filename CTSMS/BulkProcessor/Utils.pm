@@ -5,43 +5,43 @@ use strict;
 
 use threads;
 
-#use POSIX qw(strtod);
+
 use POSIX qw(strtod locale_h floor fmod);
 setlocale(LC_NUMERIC, 'C');
 
 use Fcntl qw(LOCK_EX LOCK_NB);
 
 use Data::UUID qw();
-#use UUID qw();
 
-#use Data::Validate::IP qw(is_ipv4 is_ipv6);
+
+
 
 use Net::Address::IP::Local qw();
-#use FindBin qw($Bin);
-#use File::Spec::Functions qw(splitdir catdir);
+
+
 use Net::Domain qw(hostname hostfqdn hostdomain);
 
 use Cwd qw(abs_path);
-#use File::Basename qw(fileparse);
+
 
 use Date::Manip qw(Date_Init ParseDate UnixDate);
-#Date_Init('Language=English','DateFormat=non-US');
+
 Date_Init('DateFormat=US');
-#use Net::Address::IP::Local;
+
 
 use Date::Calc qw(Normalize_DHMS Add_Delta_DHMS);
 
 use DateTime::Format::Excel qw();
 
 use Text::Wrap qw();
-#use FindBin qw($Bin);
-use Digest::MD5 qw(); #qw(md5 md5_hex md5_base64);
+
+use Digest::MD5 qw();
 use File::Temp 0.2304 qw(tempfile tempdir) ;
 use File::Path 2.07 qw(remove_tree make_path);
 
 use Encode qw(encode_utf8 encode_utf8);
-#use Sys::Info;
-#use Sys::Info::Constants qw( :device_cpu );
+
+
 
 # after all, the only reliable way to get the true vCPU count:
 my $can_cpu_affinity = 1;
@@ -125,8 +125,8 @@ our @EXPORT_OK = qw(
 
     checkrunning
 );
-#create_uuid
-#check_ipnet
+
+
 
 our $chmod_umask = 0777; #0644;
 #"You need the group "x" bit set in the directory to allow group searches. The "rw-" permissions allow opening a file given its name (r) or creating a file (w), but not listing or searching the files (x)."
@@ -396,12 +396,12 @@ sub create_guid {
 
 }
 
-#sub create_uuid {
-#    my ($bin, $str);
-#    UUID::generate($bin);
-#    UUID::unparse($bin, $str);
-#    return $str;
-#}
+
+
+
+
+
+
 
 sub urlencode {
   my ($urltoencode) = @_;
@@ -575,7 +575,7 @@ sub kbytes2gigs {
    if ($TotalkByteskBytes >= $kbytebase) {
      $TotalkBytesMBytes = int($TotalkByteskBytes / $kbytebase);
      $rounded = int(($TotalkByteskBytes * 100) / $kbytebase) / 100;
-     if ($round) { # == 1) {
+     if ($round) {
        $rounded = int($rounded);
      }
      $rounded .= " MBytes";
@@ -583,7 +583,7 @@ sub kbytes2gigs {
      if ($TotalkBytesMBytes >= $kbytebase) {
        $TotalkBytesGBytes = int($TotalkBytesMBytes / $kbytebase);
        $rounded = int(($TotalkBytesMBytes * 100) / $kbytebase) / 100;
-       if ($round) { # == 1) {
+       if ($round) {
          $rounded = int($rounded);
        }
        $rounded .= " GBytes";
@@ -595,13 +595,13 @@ sub kbytes2gigs {
    if ($TotalkBytesGBytes == 0 && $TotalkBytesMBytes == 0) {
      $TotalkBytes .= " kBytes";
    } elsif ($TotalkBytesGBytes == 0) {
-     $TotalkBytes = $rounded; # . " (" . $TotalkBytesMBytes . " MBytes " . $TotalkByteskBytes . " kBytes)";
-     if ($round) { # == 1) {
+     $TotalkBytes = $rounded;
+     if ($round) {
        $TotalkBytes = $rounded;
      }
    } else {
-     $TotalkBytes = $rounded; # . " (" . $TotalkBytesGBytes . " GBytes " . $TotalkBytesMBytes . " MBytes " . $TotalkByteskBytes . " kBytes)";
-     if ($round) { # == 1) {
+     $TotalkBytes = $rounded;
+     if ($round) {
        $TotalkBytes = $rounded;
      }
    }
@@ -628,14 +628,14 @@ sub cleanupdir {
                 }
             }
         }
-        #else {
-        #    if (!$keeproot and defined $scriptinfocode and ref $scriptinfocode eq 'CODE') {
-        #        &$scriptinfocode($dirpath . ' removed',$logger);
-        #    }
-        #}
-        #if ($restoredir) {
-        #      makedir($dirpath);
-        #}
+
+
+
+
+
+
+
+
     }
 
 }
@@ -648,8 +648,8 @@ sub fixdirpath {
 
 sub makepath {
     my ($dirpath,$fileerrorcode,$logger) = @_;
-    #print $chmod_umask ."\n";
-    #changemod($dirpath);
+
+
     make_path($dirpath,{
         'chmod' => $chmod_umask,
         'verbose' => 1,
@@ -670,18 +670,18 @@ sub makepath {
     return 1;
 }
 
-#sub makedir {
-#    my ($dirpath,$fileerrorcode,$logger) = @_;
-#    eval {
-#        mkdir $dirpath;
-#        chmod oct($chmod_umask),$dirpath;
-#    };
-#    if ($@) {
-#        if (not -d $f_dir) {
-#        fileerror('cannot opendir ' . $f_dir . ': ' . $!,getlogger(__PACKAGE__));
-#        return;
-#    }
-#}
+
+
+
+
+
+
+
+
+
+
+
+
 
 sub changemod {
     my ($filepath) = @_;
@@ -691,16 +691,16 @@ sub changemod {
 sub threadid {
 
     return threads->tid();
-    #return threads->_handle();
+
 
 }
 
 sub format_number {
   my ($value,$decimals) = @_;
   my $output = $value;
-  #if (index($output,',') > -1) {
-  #  $output =~ s/,/\./g;
-  #}
+
+
+
   if (defined $decimals and $decimals >= 0) {
     $output = round(($output * (10 ** ($decimals + 1))) / 10) / (10 ** $decimals);
     $output = sprintf("%." . $decimals . "f",$output);
@@ -709,9 +709,9 @@ sub format_number {
     }
   } else {
     $output = sprintf("%f",$output);
-    #if (index($output,',') > -1) {
-    #  $output =~ s/,/\./g;
-    #}
+
+
+
     if (index($output,'.') > -1) {
       $output =~ s/0+$//g;
       $output =~ s/\.$//g;
@@ -886,7 +886,7 @@ sub to_duration_string {
     my ($duration_secs,$most_significant,$least_significant,$least_significant_decimals,$loc_code) = @_;
     $most_significant //= 'years';
     $least_significant //= 'seconds';
-    #$loc_code //= sub { return shift; };
+
     my $abs = abs($duration_secs);
     my ($years,$months,$days,$hours,$minutes,$seconds);
     my $result = '';
@@ -1170,20 +1170,20 @@ sub get_cpucount {
         $cpucount = eval { Sys::CpuAffinity::getNumCpus() + 0; };
     }
     return ($cpucount > 0) ? $cpucount : 1;
-    #my $info = Sys::Info->new();
-    #my $cpu  = $info->device('CPU'); # => %options );
-    #print "cpuidentify:" . scalar($cpu->identify()) . "\n";
-    #print "cpuidentify:" . scalar($cpu->identify()) . "\n";
-    #my $cpucount = $cpu->count() + 0;
-    #print "ht:" . $cpu->ht() . "\n";
-    #if ($cpu->ht()) {
-    #    $cpucount *= 2;
-    #}
 
-   #printf "CPU: %s\n", scalar($cpu->identify)  || 'N/A';
-   #printf "CPU speed is %s MHz\n", $cpu->speed || 'N/A';
-   #printf "There are %d CPUs\n"  , $cpu->count || 1;
-   #printf "CPU load: %s\n"       , $cpu->load  || 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 sub prompt {
@@ -1194,24 +1194,24 @@ sub prompt {
   return $answer;
 }
 
-#sub check_ipnet {
-#    my ($ipnet) = @_;
-#    my ($ip, $net) = split(/\//,$ipnet);
-#    if (is_ipv4($ip)) {
-#        if (defined $net) {
-#            return check_int($net) && $net >= 0 && $net <= 32;
-#        } else {
-#            return 1;
-#        }
-#    } elsif (is_ipv6($ip)) {
-#        if (defined $net) {
-#            return check_int($net) && $net >= 0 && $net <= 128;
-#        } else {
-#            return 1;
-#        }
-#    }
-#    return 0;
-#}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 sub check_int {
     my $val = shift;
@@ -1225,10 +1225,10 @@ sub shell_args {
     my @commandandargs = @_;
     if ($^O eq 'MSWin32') {
         unshift(@commandandargs,'cmd /C');
-        push(@commandandargs,'>nul'); # 2>&1');
-    #} else {
-        #unshift(@commandandargs,'/bin/bash -c');
-        #push(@commandandargs,'>/dev/null'); # 2>&1');
+        push(@commandandargs,'>nul');
+
+
+
     }
     return @commandandargs;
 }
@@ -1260,7 +1260,7 @@ sub checkrunning {
 
     my ($lockfile,$errorcode,$logger) = @_;
 
-    #local *LOCKFILE;
+
 
     if (not open (LOCKFILE, '>' . $lockfile)) {
       if (defined $errorcode and ref $errorcode eq 'CODE') {

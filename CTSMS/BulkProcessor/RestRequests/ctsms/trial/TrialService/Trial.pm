@@ -17,7 +17,7 @@ use CTSMS::BulkProcessor::RestProcessor qw(
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
 use CTSMS::BulkProcessor::RestItem qw();
 
-#use CTSMS::BulkProcessor::Utils qw(booltostring);
+
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Inquiry qw();
 
@@ -34,8 +34,8 @@ our @EXPORT_OK = qw(
     get_inquiry_proband_list
     search
 );
-#    add_item
-#    update_item
+
+
 
 my $default_restapi = \&get_ctsms_restapi;
 my $get_item_path_query = sub {
@@ -46,7 +46,7 @@ my $get_signuplist_path_query = sub {
     my ($department_id) = @_;
     my %params = ();
     $params{department_id} = $department_id if defined $department_id;
-    #return 'trial/signup/' . get_query_string(\%params);
+
     return 'trial/signup' . get_query_string(\%params);
 };
 my $get_inquiryproband_path_query = sub {
@@ -67,12 +67,12 @@ my $get_inquirymaxselectionsetvaluecount_path_query = sub {
     my ($id) = @_;
     return 'trial/' . $id . '/inquirymaxselectionsetvaluecount';
 };
-#my $get_add_path_query = sub {
-#    return 'proband/';
-#};
-#my $get_update_path_query = sub {
-#    return 'proband/';
-#};
+
+
+
+
+
+
 
 my $fieldnames = [
     "blockingPeriod",
@@ -223,9 +223,9 @@ sub TO_JSON {
 
     my $self = shift;
     return { %{$self} };
-    #    value => $self->{zipcode},
-    #    label => $self->{zipcode},
-    #};
+
+
+
 
 }
 

@@ -27,7 +27,7 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
 );
 
 my $default_restapi = \&get_ctsms_restapi;
@@ -115,7 +115,7 @@ sub transformitem {
             $item->{$field} = _get_item_value($item);
         }
     }
-    
+
 }
 
 sub _get_item_value {
@@ -128,7 +128,7 @@ sub _get_item_value {
     } elsif ('TIME' eq $fieldtype) {
         return $item->{timeValue};
     } elsif ('TIMESTAMP' eq $fieldtype) {
-        return $item->{timestampValue};        
+        return $item->{timestampValue};
     } elsif ('FLOAT' eq $fieldtype) {
         return $item->{floatValue};
     } elsif ('INTEGER' eq $fieldtype) {
@@ -138,7 +138,7 @@ sub _get_item_value {
     } elsif ($item->{inquiry}->{field}->is_select()) {
         return join(',', map { local $_ = $_; $_->{value}; } @{$item->{selectionValues}}) if defined $item->{selectionValues};
     }
-    return undef;    
+    return undef;
 }
 
 
@@ -150,12 +150,12 @@ sub get_item_path {
 }
 
 sub TO_JSON {
-    
+
     my $self = shift;
     return { %{$self} };
-    #    value => $self->{zipcode},
-    #    label => $self->{zipcode},
-    #};
+
+
+
 
 }
 

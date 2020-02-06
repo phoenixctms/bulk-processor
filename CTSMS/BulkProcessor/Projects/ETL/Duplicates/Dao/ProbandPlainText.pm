@@ -20,7 +20,7 @@ use CTSMS::BulkProcessor::SqlProcessor qw(
 );
 use CTSMS::BulkProcessor::SqlRecord qw();
 
-#use CTSMS::BulkProcessor::Array qw(contains);
+
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::SqlRecord);
@@ -34,14 +34,14 @@ our @EXPORT_OK = qw(
 
     countby_lastnamefirstnamedateofbirth
     findby_lastnamefirstnamedateofbirthprobandid
-    
+
 );
-#get_serialized_ref
-#getupsertstatement
+
+
 
 my $tablename = 'proband_plain_text';
 my $get_db = \&get_sqlite_db;
-#my $get_tablename = \&sqlite_db_tableidentifier;
+
 
 
 my $expected_fieldnames = [
@@ -52,13 +52,13 @@ my $expected_fieldnames = [
     'version',
     'category',
     'comment',
-    #'serialized',
+
 ];
 
 # table creation:
-my $primarykey_fieldnames = [ 'first_name', 'last_name', 'date_of_birth', 'proband_id' ]; #'filename'
+my $primarykey_fieldnames = [ 'first_name', 'last_name', 'date_of_birth', 'proband_id' ];
 my $indexes = { $tablename . '_proband_id' => [ 'proband_id' ]};
-#my $fixtable_statements = [];
+
 
 
 sub new {
@@ -84,22 +84,22 @@ sub create_table {
 
 }
 
-#sub get_serialized_ref {
-#
-#    my ($proband_id) = @_;
-#
-#    check_table();
-#    my $db = &$get_db();
-#    #$xa_db //= $db;
-#    my $table = $db->tableidentifier($tablename);
-#
-#    my $stmt = 'SELECT ' . $db->columnidentifier('serialized') . ' FROM ' . $table . ' WHERE ' . $db->columnidentifier('proband_id') . ' = ? LIMIT 1';
-#    my @params = ($proband_id);
-#
-#    my $serialized = $db->db_get_value($stmt,@params);
-#    return \$serialized;
-#
-#}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 sub findby_lastnamefirstnamedateofbirthprobandid {
 
@@ -107,7 +107,7 @@ sub findby_lastnamefirstnamedateofbirthprobandid {
 
     check_table();
     my $db = &$get_db();
-    #$xa_db //= $db;
+
     my $table = $db->tableidentifier($tablename);
 
     my $stmt = 'SELECT * FROM ' . $table . ' WHERE 1=1';
@@ -127,7 +127,7 @@ sub findby_lastnamefirstnamedateofbirthprobandid {
     if (defined $proband_id) {
         $stmt .= ' AND ' . $db->columnidentifier('proband_id') . ' = ?';
         push(@params,$proband_id);
-    }     
+    }
 
     my $rows = $db->db_get_all_arrayref($stmt,@params);
     return buildrecords_fromrows($rows,$load_recursive);
@@ -155,7 +155,7 @@ sub countby_lastnamefirstnamedateofbirth {
     if (defined $date_of_birth) {
         $stmt .= ' AND ' . $db->columnidentifier('date_of_birth') . ' = ?';
         push(@params,$date_of_birth);
-    }        
+    }
 
     return $db->db_get_value($stmt,@params);
 
@@ -232,7 +232,7 @@ sub process_records {
                                             column => 'proband_id',
                                             numeric => 1,
                                             dir => 1,
-                                        }]),        
+                                        }]),
     );
 }
 

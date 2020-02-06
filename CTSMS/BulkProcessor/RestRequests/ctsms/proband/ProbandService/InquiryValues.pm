@@ -43,8 +43,8 @@ my $get_getinquiryvalues_path_query = sub {
     my %params = ();
     $params{active} = booltostring($active) if defined $active;
     $params{active_signup} = booltostring($active_signup) if defined $active_signup;
-    $params{sort} = booltostring($sort); # if defined $sort;
-    $params{load_all_js_values} = booltostring($load_all_js_values); # if defined $load_all_js_values;
+    $params{sort} = booltostring($sort);
+    $params{load_all_js_values} = booltostring($load_all_js_values);
     return 'proband/' . $proband_id . '/inquiryvalues/' . $trial_id . get_query_string(\%params);
 };
 my $get_setinquiryvalues_path_query = sub {
@@ -56,7 +56,7 @@ my $get_setinquiryvalues_path_query = sub {
 my $get_renderinquiries_path_query = sub {
     my ($proband_id, $trial_id, $active, $active_signup, $blank) = @_;
     my %params = ();
-    $params{blank} = booltostring($blank); # if defined $blank;
+    $params{blank} = booltostring($blank);
     $params{active} = booltostring($active) if defined $active;
     $params{active_signup} = booltostring($active_signup) if defined $active_signup;
     return 'proband/' . $proband_id . '/inquiryvalues/' . $trial_id . '/pdf' . get_query_string(\%params);
@@ -164,14 +164,14 @@ sub get_item_path {
 
 }
 
-#sub TO_JSON {
-#
-#    my $self = shift;
-#    return { %{$self} };
-#    #    value => $self->{zipcode},
-#    #    label => $self->{zipcode},
-#    #};
-#
-#}
+
+
+
+
+
+
+
+
+
 
 1;

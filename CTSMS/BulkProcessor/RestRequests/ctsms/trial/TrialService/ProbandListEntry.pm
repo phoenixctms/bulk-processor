@@ -40,7 +40,7 @@ my $get_trial_path_query = sub {
     my %params = ();
     $params{probandGroupId} = $probandgroup_id if defined $probandgroup_id;
     $params{probandId} = $proband_id if defined $proband_id;
-    $params{total} = booltostring($total); # if defined $proband_id;
+    $params{total} = booltostring($total);
     return 'trial/' . $trial_id . '/list/probandlistentry' . get_query_string(\%params);
 };
 my $get_addsignup_path_query = sub {
@@ -57,9 +57,9 @@ my $get_add_path_query = sub {
     $params{createProband} = booltostring($create_proband) if defined $create_proband;
     return 'probandlistentry/' . get_query_string(\%params);
 };
-#my $get_update_path_query = sub {
-#    return 'probandlistentry/';
-#};
+
+
+
 
 my $fieldnames = [
     "exportResponseMsg",
@@ -154,9 +154,9 @@ sub TO_JSON {
 
     my $self = shift;
     return { %{$self} };
-    #    value => $self->{zipcode},
-    #    label => $self->{zipcode},
-    #};
+
+
+
 
 }
 

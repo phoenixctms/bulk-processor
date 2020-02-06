@@ -2,11 +2,11 @@ package CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils;
 use strict;
 
 ## no critic
-#use JSON -support_by_pp, -no_export;
+
 use DateTime qw();
 use DateTime::Format::Strptime qw();
 
-use MIME::Base64 qw(encode_base64); # decode_base64);
+use MIME::Base64 qw(encode_base64);
 use utf8;
 use Encode qw(encode_utf8);
 
@@ -90,24 +90,24 @@ our @EXPORT_OK = qw(
     sanitize_integer
     get_lang
 );
-#check_date_ui
-#check_time_ui
-#save_site
-#    get_site_name
-#    dancerdebug
-#    dancerinfo
-#    dancerwarning
-#    dancererror
-#api_to_date
+
+
+
+
+
+
+
+
+
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 
 our $restapi = \&get_restapi;
 
-#my $datepicker_dateformat = 'dd.mm.yy'; #jquery datepicker proprietary format; yy = four digit
-#my $datepicker_altformat = 'yy-mm-dd';
-#my $datetimeseparator = ' ';
-#my $timepicker_timeseparator = ':';
+
+
+
+
 
 our $id_separator_string = ',';
 
@@ -304,12 +304,12 @@ sub datetime_iso_to_ui {
     return ($dt->strftime(_get_dt_dateformat($site)), zerofill($dt->hour,2) . ':' . zerofill($dt->minute,2));
 }
 
-#sub api_to_date {
-#    my $api_date = shift;
-#    return undef if (not defined $api_date or length($api_date) == 0);
-#    my ($date,$time) = split_datetime($api_date);
-#    return $date;
-#}
+
+
+
+
+
+
 
 sub json_response {
     my $data = shift;
@@ -328,16 +328,16 @@ sub json_error {
         clear_error();
     }
     return json_response($respose_data);
-    #my $status_code = shift;
-    #my $response = Dancer::SharedData->response; #->current();
-    #$response->status($status_code // HTTP::Status::HTTP_NOT_FOUND);
-    #$response->content((json_response(set_error(@_))));
-    #return $response;
+
+
+
+
+
 }
 
 sub to_json_safe {
     my $data = shift;
-    #return encode_utf8(Dancer::to_json($data,{ allow_blessed => 1, convert_blessed => 1, pretty => 0 }));
+
     return Dancer::to_json($data,{ allow_blessed => 1, convert_blessed => 1, pretty => 0 });
 }
 
@@ -347,18 +347,18 @@ sub to_json_base64 {
     return encode_base64(utf8::is_utf8($json) ? encode_utf8($json) : $json,'');
 }
 
-#sub dancerdebug {
-#    return Dancer::debug(@_);
-#}
-#sub dancerinfo {
-#    return Dancer::info(@_);
-#}
-#sub dancerwarning {
-#    return Dancer::warning(@_);
-#}
-#sub dancererror {
-#    return Dancer::error(@_);
-#}
+
+
+
+
+
+
+
+
+
+
+
+
 
 sub _save_param {
     my ($result,$params,$param_name) = @_;
@@ -382,7 +382,7 @@ sub save_params {
                 $name_regexp = $param->{regexp};
                 $regexp_match_cb = $param->{match_cb};
             }
-            foreach my $param_name (sort keys %$params) { #timesamp*d*ate before timestamp*t*ime
+            foreach my $param_name (sort keys %$params) {
                 if (my @captures = $param_name =~ $name_regexp) {
                     if ('CODE' eq ref $regexp_match_cb) {
                         if (&$regexp_match_cb($param_name,$params->{$param_name},@captures)) {
@@ -397,60 +397,60 @@ sub save_params {
             _save_param($result,$params,$param);
         }
     }
-    #my $params = Dancer::params();
-    #my $result = {};
-    #foreach my $param (keys %$params) {
-    #    if ($param ne 'site' and $param ne 'lang') {
-    #        Dancer::session($param,$params->{$param});
-    #        $result->{$param} = $params->{$param};
-    #    }
-    #}
-    #Dancer::debug('params saved to session: ', $result);
+
+
+
+
+
+
+
+
+
     return $result;
 }
 
 sub get_restapi {
     return get_ctsms_site_lang_restapi(_get_site_name(), get_lang());
-    #my $site = _get_site_name();
-    #my $lang = _get_lang();
-    #if (defined $site and length($site) > 0
-    #    and defined $lang and length($lang) > 0) {
-    #    return get_ctsms_site_lang_restapi($site, $lang);
-    #} else {
-    #    die('no site or no lang');
-    #    return get_ctsms_restapi();
-    #}
+
+
+
+
+
+
+
+
+
 }
 
 sub _get_site_name {
     my $site_name = Dancer::session('site');
     if ($site_name) {
         if (exists $ctsms_sites->{$site_name}) {
-            #Dancer::debug('site: ', $site_name);
+
             return $site_name;
-        #} else {
-        #    Dancer::warning('unknown site: ', $site_name);
+
+
         }
-    #} else {
-    #    Dancer::debug('no site selected');
+
+
     }
     return $default_site;
 }
 
-#sub save_site {
-#    my $params = Dancer::params();
-#    if (exists $params->{'site'}) {
-#        Dancer::session('site',$params->{'site'});
-#    }
-#}
+
+
+
+
+
+
 
 sub get_lang {
     my $lang = Dancer::Plugin::I18N::localize('lang');
     if ($lang) {
-        #Dancer::debug('selected lang: ', $lang);
+
         return $lang;
     } else {
-        #Dancer::error('no selected lang');
+
         die('no or empty lang in .po');
     }
 }
@@ -482,7 +482,7 @@ sub get_site_option {
     $site_name //= $selected_site_name;
     my $site = $ctsms_sites->{$site_name};
 
-    #my $site_label = $site->{label}->{$lang} || $site_name;
+
     my $site_label = Dancer::Plugin::I18N::localize($site->{label}) || $site_name;
     my $description;
     $description = Dancer::Plugin::I18N::localize($site->{description}) if $site->{description};
@@ -500,8 +500,8 @@ sub get_site_option {
     };
     return {
         site => $site_name,
-        default => ($site->{default} ? \1 : \0), #JSON::true : JSON::false),
-        selected => ($selected_site_name eq $site_name ? \1 : \0), #JSON::true : JSON::false),
+        default => ($site->{default} ? \1 : \0),
+        selected => ($selected_site_name eq $site_name ? \1 : \0),
         label => $site_label,
         description => $description,
         departmentLabel => $department_label,
@@ -511,8 +511,8 @@ sub get_site_option {
         latitude => $site->{default_geolocation_latitude},
         longitude => $site->{default_geolocation_longitude},
         showMap => ($site->{show_map} ? \1 : \0),
-        trialSignup => ($site->{trial_signup} ? \1 : \0), #JSON::true : JSON::false),
-        register => ($site->{register} ? \1 : \0), #JSON::true : JSON::false),
+        trialSignup => ($site->{trial_signup} ? \1 : \0),
+        register => ($site->{register} ? \1 : \0),
     };
 
 }
@@ -554,8 +554,8 @@ sub apply_lwp_file_response {
     $response->status($lwp_response->code);
     $response->content($lwp_response->content);
     $response->content_type($lwp_response->content_type);
-    #my $filename = $lwp_response->header('Content-Disposition');
-    #$filename =~ m/filename\s*=\s*"?([^"]*)"?/i;
+
+
     my $content_disposition = ($for_download ? 'attachment' : 'inline');
     if (defined $filename and length($filename) > 0) {
         $content_disposition .= '; filename="' . $filename . '"';
@@ -580,19 +580,19 @@ sub get_template {
     $js_vars->{dateFormat} = ($site ? $site->{date_format} : $default_date_format);
     $js_vars->{decimalSeparator} = ($site ? $site->{decimal_separator} : $default_decimal_separator);
     $js_vars->{idSeparatorString} = $id_separator_string;
-    $js_vars->{enableGeolocationServices} = $js_vars->{enableGeolocationServices} // \0; #JSON::false;
+    $js_vars->{enableGeolocationServices} = $js_vars->{enableGeolocationServices} // \0;
     $js_vars->{sessionTimeout} = Dancer::config->{session_expires};
     $js_vars->{sessionTimerPattern} = Dancer::Plugin::I18N::localize('session_timer_pattern');
-    $js_vars->{enableSessionTimer} = (contains($view_name,[ 'start', '404', 'runtime_error' ]) ? \0 : \1); #JSON::false : JSON::true);
-    #$js_vars->{datePickerDateFormat} = $datepicker_dateformat;
-    #$js_vars->{datePickerAltFormat} = $datepicker_altformat;
-    #$js_vars->{timePickerTimeSeparator} = $timepicker_timeseparator;
-    #$js_vars->{timePickerHourText} = Dancer::Plugin::I18N::localize('hour_text');
-    #$js_vars->{timePickerMinuteText} = Dancer::Plugin::I18N::localize('minute_text');
-    #$js_vars->{session} = keys %Dancer::session;
-    #$js_vars->{apiError} = "test'test'\"test\" / \\ ";
+    $js_vars->{enableSessionTimer} = (contains($view_name,[ 'start', '404', 'runtime_error' ]) ? \0 : \1);
+
+
+
+
+
+
+
     my $js_context_json = _quote_js(to_json_safe($js_vars));
-    #my $js_context_json = _quote_js(Dancer::to_json($js_vars,{ allow_blessed => 1, convert_blessed => 1, pretty => 0, }));
+
 
     my $script_names = delete $params{script_names};
     my $scripts;
@@ -634,16 +634,16 @@ sub get_template {
         language_menu => $language_menu,
         navigation_options => $navigation_options,
         google_site_verification => $google_site_verification,
-        #datepicker_dateformat => $datepicker_dateformat,
-        #datepicker_altformat => $datepicker_altformat,
+
+
         %params,
     });
 }
 
 sub _get_minified {
     my ($res,$ext) = @_;
-    #return $res . $ext if $res eq 'fieldcalculation/fieldCalculation';
-    #return $res . $ext if $res eq 'inquiry';
+
+
     unless ($res =~ /\.min$/) {
         $res .= '.min';
     }
@@ -665,9 +665,9 @@ sub get_ctsms_baseuri {
         my $api = get_restapi();
         my $path = $api->path // '';
         $path =~ s!/*$ctsmsrestapi_path/*$!!;
-        #if (length($path) > 0) {
+
             $path .= '/' if $path !~ m!/$!;
-        #}
+
         my $uri = $api->baseuri;
         $uri->path_query($path);
         return $uri->as_string();
@@ -687,7 +687,7 @@ sub add_error_data {
     $error //= {};
     $error->{data} //= {};
     $error->{data}->{$inquiry_id} = $msg if defined $inquiry_id;
-    $error->{message} = $msg unless exists $error->{message}; #"firstException"
+    $error->{message} = $msg unless exists $error->{message};
     return $error;
 }
 
@@ -720,11 +720,11 @@ sub get_error {
     my $error = Dancer::session('api_error');
     clear_error() if $clear;
     return $error;
-    #if ($clear) {
-    #    #return delete Dancer::session->{'api_error'};#code
-    #} else {
-    #    return Dancer::session('api_error');
-    #}
+
+
+
+
+
 }
 
 sub _quote_js {
@@ -734,10 +734,10 @@ sub _quote_js {
    return qq{'$s'};
 }
 
-#sub get_p {
-#    my $params = shift;
-#    return { page_size => $params->{s} , page_num => $params->{p}, total_count => undef };
-#}
+
+
+
+
 
 sub get_page_index {
     my $params = shift;
@@ -765,16 +765,16 @@ sub check_done {
     my $forward = shift;
     my $params = Dancer::params();
     if ($params->{done}) {
-        #Dancer::session->destroy();
+
         Dancer::forward('/end', undef, { method => 'GET' });
-        #return get_template('finish',
-        #    script_names => 'finish',
-        #    style_names => 'finish',
-        #    js_model => {
-        #        apiError => get_error(1),
-        #        siteOptions => get_site_options(),
-        #    },
-        #);
+
+
+
+
+
+
+
+
     } else {
         &$forward() if 'CODE' eq ref $forward;
     }
@@ -784,16 +784,16 @@ sub check_prev {
     my ($forward,$backward) = @_;
     my $params = Dancer::params();
     if ($params->{prev}) {
-        #Dancer::session->destroy();
+
         &$backward() if 'CODE' eq ref $backward;
-        #return get_template('finish',
-        #    script_names => 'finish',
-        #    style_names => 'finish',
-        #    js_model => {
-        #        apiError => get_error(1),
-        #        siteOptions => get_site_options(),
-        #    },
-        #);
+
+
+
+
+
+
+
+
     } else {
         &$forward() if 'CODE' eq ref $forward;
     }
@@ -804,7 +804,7 @@ sub sanitize_decimal {
     my ($decimal) = @_;
     return undef if (not defined $decimal or length($decimal) == 0);
     $decimal =~ s/\s+//g;
-    $decimal =~ s/[,.]/$decimal_point/; #g;
+    $decimal =~ s/[,.]/$decimal_point/;
     return $decimal;
 
 }
@@ -813,8 +813,8 @@ sub sanitize_integer {
 
     my ($integer) = @_;
     return undef if (not defined $integer or length($integer) == 0);
-    #$decimal =~ s/\s+//g;
-    #$decimal =~ s/[,.]/$decimal_point/g;
+
+
     return $integer;
 
 }

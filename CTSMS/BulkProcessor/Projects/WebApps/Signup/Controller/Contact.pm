@@ -6,8 +6,8 @@ use strict;
 
 use Dancer qw();
 
-#use JSON -support_by_pp, -no_export;
-#no use Dancer::Plugin::I18N !!;
+
+
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     save_params
     $restapi
@@ -18,7 +18,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     set_error
     check_done
 );
-#    get_site_name
+
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $phone_number_prefix_preset
     $email_notify_preset
@@ -39,10 +39,10 @@ our $navigation_options = sub {
 Dancer::get('/contact',sub {
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
     Dancer::session('proband_address_country_name',Dancer::session('proband_address_country_name') || Dancer::session('proband_citizenship'));
-    #Dancer::session('proband_phone_value',Dancer::session('proband_phone_value')); # || $phone_number_prefix_preset);
-    #warn "session:".Dancer::session(_type_to_param_prefix('email_contact_detail_type') . 'notify');
+
+
     unless (defined Dancer::session(_type_to_param_prefix('email_contact_detail_type') . 'notify')) {
-        Dancer::session(_type_to_param_prefix('email_contact_detail_type') . 'notify',($email_notify_preset ? 'true' : '')); # || $phone_number_prefix_preset);
+        Dancer::session(_type_to_param_prefix('email_contact_detail_type') . 'notify',($email_notify_preset ? 'true' : ''));
     }
     return get_template('contact',
         script_names => 'contact',
@@ -153,12 +153,12 @@ sub _get_address_in {
             "id" => Dancer::session('proband_address_id'),
             "version" => Dancer::session('proband_address_version'),
         ) : ()),
-        "afnus" => \0, #JSON::false,
-        #"careOf" "String",
+        "afnus" => \0,
+
         "careOf" => "",
         "cityName" => trim($params->{proband_address_city_name}),
         "countryName" => trim($params->{proband_address_country_name}),
-        "deliver" => \1, #JSON::true,
+        "deliver" => \1,
         "doorNumber" => trim($params->{proband_address_door_number}),
         "entrance" => trim($params->{proband_address_entrance}),
         "houseNumber" => trim($params->{proband_address_house_number}),
@@ -228,9 +228,9 @@ sub _get_contactdetailvalue_in {
             "id" => Dancer::session($prefix . 'id'),
             "version" => Dancer::session($prefix . 'version'),
         ) : ()),
-        #"comment": "String",
-        "na" => (length($value) > 0 ? \0 : \1), #JSON::false : JSON::true),
-        "notify" => ((length($value) > 0 and $notify) ? \1 : \0), #JSON::true : JSON::false),
+
+        "na" => (length($value) > 0 ? \0 : \1),
+        "notify" => ((length($value) > 0 and $notify) ? \1 : \0),
         "probandId" => Dancer::session('proband_id'),
         "typeId" => $site->{$type}->{id},
         "value" => (length($value) > 0 ? $value : undef),

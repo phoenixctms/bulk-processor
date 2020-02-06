@@ -5,9 +5,9 @@ use strict;
 ## no critic
 
 use Dancer qw();
-#use JSON -support_by_pp, -no_export;
+
 use HTTP::Status qw();
-#no use Dancer::Plugin::I18N !!;
+
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     save_params
     $restapi
@@ -22,14 +22,14 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     get_site_option
     check_done
 );
-#    get_site_name
-#use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
-#    $phone_number_prefix_preset
-#);
+
+
+
+
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry qw();
-#use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues qw();
+
 
 our $navigation_options = sub {
     my $trials_open = (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::created()
@@ -39,31 +39,31 @@ our $navigation_options = sub {
         $trials_open ? '/trial' : undef, #id exist...
         undef,
         $CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::navigation_options);
-        #$CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Address::navigation_options);
+
 };
 
 Dancer::get('/trial',sub {
-    #my $params = save_params(
-    #    'trial_id',
-    #);
 
-    #Dancer::session('proband_id', 5849789); #5843441);
-    #Dancer::session('proband_phone_id', 5849793);
-    #Dancer::session('proband_email_id', 5849795);
-    #Dancer::session('proband_address_id',5849791);
+
+
+
+
+
+
+
 
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created();
     return unless check_trials_na();
-    #Dancer::session('proband_address_country_name',Dancer::session('proband_address_country_name') || Dancer::session('proband_citizenship'));
-    #Dancer::session('proband_phone_value',Dancer::session('proband_phone_value') || $phone_number_prefix_preset);
+
+
 
     my $site = get_site();
 
     my $inquiry_trial;
     if ($site->{inquiry_trial}) {
         $inquiry_trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($site->{inquiry_trial}->{id},
-            { _activeInquiryCount => 1, _overrides => { signupInquiries => \1, }, }, #JSON::true, }, },
+            { _activeInquiryCount => 1, _overrides => { signupInquiries => \1, }, },
             $restapi);
         my $trial_inquiries_saved_map = Dancer::session('trial_inquiries_saved_map') // {};
         my $inquiries_saved_map = $trial_inquiries_saved_map->{$inquiry_trial->{id}} // {};
@@ -85,7 +85,7 @@ Dancer::get('/trial',sub {
             signupBtnLabel => Dancer::Plugin::I18N::localize('signup_btn_label'),
             inquiriesPbarTemplate => Dancer::Plugin::I18N::localize('inquiries_pbar_template'),
             inquiryTrial => $inquiry_trial,
-            #enabledTrialId => Dancer::session('enabled_trial_id'),
+
 
         },
     );
@@ -94,9 +94,9 @@ Dancer::get('/trial',sub {
 Dancer::post('/trials',sub {
     my $params = Dancer::params();
     my $site = get_site();
-    #$department_id,$load_recursive,$restapi,$headers
+
     return get_paginated_response($params,sub { my $p = shift;
-        #$p->{page_size} = 1;
+
         my $enabled_trial = Dancer::session('enabled_trial');
         my $trials = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_signup_list(
             $site->{trial_department} ? $site->{trial_department}->{id} : undef,
@@ -106,32 +106,32 @@ Dancer::post('/trials',sub {
         my $proband_list_entry_id_map = Dancer::session('proband_list_entry_id_map') // {};
         my $trial_inquiries_saved_map = Dancer::session('trial_inquiries_saved_map') // {};
         foreach my $trial (@$trials) {
-            $trial->{_signedUp} = (exists $proband_list_entry_id_map->{$trial->{id}} ? \1 : \0); #JSON::true : JSON::false);
-            #my $trial_id = $trial->{id};
-            #if ($site->{inquiry_trial}) {
-            #    $trial_id = $site->{inquiry_trial}->{id};
-            #}
+            $trial->{_signedUp} = (exists $proband_list_entry_id_map->{$trial->{id}} ? \1 : \0);
+
+
+
+
             my $inquiries_saved_map = $trial_inquiries_saved_map->{$trial->{id}} // {};
             my $posted_inquiries_map = Dancer::session('posted_inquiries_map_' . $trial->{id}) // {};
             set_inquiry_counts($trial,$inquiries_saved_map,$posted_inquiries_map);
         }
 
-        #$values->{probandListEntryIdMap} = $proband_list_entry_id_map;
+
         Dancer::session('trial_page',get_page_index($params));
         return $trials;
     });
 });
 
 Dancer::post('/trial',sub {
-    #my $params = save_params(
-    #    'trial_id',
-    #);
+
+
+
     my $params = Dancer::params();
-    #Dancer::session('trial_id',undef);
+
     Dancer::session('trial',undef);
     Dancer::session('inquiry_page',undef);
-    #my $inquiries_na = 1;
-    #Dancer::session('inquiries_na',$inquiries_na);
+
+
 
     return check_done(sub {
         return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
@@ -140,15 +140,15 @@ Dancer::post('/trial',sub {
         my $site = get_site();
 
         eval {
-            #if (defined $params->{trial} and length($params->{trial}) > 0) {
+
                 my $trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($params->{trial},{ _activeInquiryCount => 1 },$restapi);
 
                 Dancer::debug('trial id ' . $trial->{id} . ' selected');
-                #my $trial_id = $trial->{id};
-                #Dancer::session('trial_id',$trial_id);
-                #######Dancer::session('trial',$trial);
-                #$inquiries_na = not($trial->{status}->{inquiryValueInputEnabled} and $trial->{signupInquiries} and $trial->{_activeInquiryCount} > 0);
-                #Dancer::session('inquiries_na',$inquiries_na);
+
+
+
+
+
                 if ($trial->{signupProbandList} and not signedup($trial)) {
                     my $proband_list_entry_id_map = Dancer::session('proband_list_entry_id_map') // {};
                     my $proband_list_entry = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::addsignup_item(
@@ -157,11 +157,11 @@ Dancer::post('/trial',sub {
                     Dancer::debug('proband list entry id ' . $proband_list_entry->{id} . ' created');
                     $proband_list_entry_id_map->{$trial->{id}} = $proband_list_entry;
                     Dancer::session('proband_list_entry_id_map',$proband_list_entry_id_map);
-                    #Dancer::session("proband_list_entry_" . $trial->{id},$proband_list_entry);
+
                 }
                 if ($trial->{signupInquiries} and $trial->{_activeInquiryCount} == 0 and $site->{inquiry_trial}) {
                     $trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($site->{inquiry_trial}->{id},
-                        { _activeInquiryCount => 1, _overrides => { signupInquiries => \1, }, }, #JSON::true, }, },
+                        { _activeInquiryCount => 1, _overrides => { signupInquiries => \1, }, },
                         $restapi);
                 }
                 my $trial_inquiries_saved_map = Dancer::session('trial_inquiries_saved_map') // {};
@@ -170,16 +170,16 @@ Dancer::post('/trial',sub {
                 set_inquiry_counts($trial,$inquiries_saved_map,$posted_inquiries_map);
                 Dancer::session('trial',$trial);
 
-            #}
+
         };
         if ($@) {
             set_error($@);
             return Dancer::forward('/trial', undef, { method => 'GET' });
         } else {
             return Dancer::forward(inquiries_na() ? '/trial' : '/inquiry', undef, { method => 'GET' });
-            #return check_done(sub {
-            #    return Dancer::forward(inquiries_na() ? '/trial' : '/inquiry', undef, { method => 'GET' });
-            #});
+
+
+
         }
     });
 
@@ -252,7 +252,7 @@ sub check_trials_na {
 }
 
 sub signedup {
-    #my $trial = Dancer::session('trial');
+
     my $trial = shift;
     if (defined $trial) {
         my $proband_list_entry_id_map = Dancer::session('proband_list_entry_id_map') // {};
@@ -266,15 +266,15 @@ sub signedup {
 
 sub _get_probandlistentry_in {
     my ($proband_list_entry_id_map,$trial) = @_;
-    #my $trial = Dancer::session('trial');
-    #my $proband_list_entry_id_map = Dancer::session('proband_list_entry_id_map') // {};
+
+
     return {
         (signedup($trial) ? (
             "id" => $proband_list_entry_id_map->{$trial->{id}}->{id},
             "version" => $proband_list_entry_id_map->{$trial->{id}}->{version},
         ) : ()),
-        #"groupId" => undef,
-        #"position" => undef,
+
+
         "probandId" => Dancer::session('proband_id'),
         "trialId" => $trial->{id},
     };
@@ -291,7 +291,7 @@ sub set_inquiry_counts {
         $trial->{_savedInquiryCount} = $inquiry_value_count;
     }
     if (defined $posted_inquiries_map) {
-        #my $posted_inquiries_map = Dancer::session('posted_inquiries_map_' . $trial->{id}) // {};
+
         $trial->{_postedInquiryCount} = scalar keys %$posted_inquiries_map;
     }
 }

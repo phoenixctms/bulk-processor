@@ -117,8 +117,8 @@ our $local_ip = get_ipaddress();
 our $local_fqdn = get_hostfqdn();
 our $application_path = get_applicationpath();
 our $executable_path = $FindBin::Bin . '/';
-#my $remotefilesystem = "MSWin32";
-#our $system_username = 'system';
+
+
 
 our $is_perl_debug = defined &DB::DB;
 
@@ -137,7 +137,7 @@ if ($is_perl_debug) {
 
 our $cpucount = get_cpucount();
 
-our $root_threadid = 0; #threadid() . ''; #0
+our $root_threadid = 0;
 our $cells_transfer_memory_limit = 10000000; #db fields
 our $transfer_defer_indexes = 1;
 #http://docstore.mik.ua/orelly/linux/dbi/ch06_01.htm
@@ -165,22 +165,22 @@ our $ctsmsrestapi_path = 'rest';
 
 our $working_path = tempdir(CLEANUP => 0) . '/'; #'/var/xy/';
 
-#our $input_path = $working_path . 'input/';
+
 
 
 
 # csv
 our $csv_path = $working_path . 'csv/';
-#mkdir $csv_path;
+
 
 # logging
 our $logfile_path = $working_path . 'log/';
-#mkdir $logfile_path;
 
-our $fileloglevel = 'OFF'; #'DEBUG';
-our $screenloglevel = 'INFO'; #'DEBUG';
+
+our $fileloglevel = 'OFF';
+our $screenloglevel = 'INFO';
 our $screenlogstderr = 0;
-our $emailloglevel = 'OFF'; #'INFO';
+our $emailloglevel = 'OFF';
 
 
 
@@ -189,10 +189,10 @@ our $emailloglevel = 'OFF'; #'INFO';
 
 # local db setup
 our $local_db_path = $working_path . 'db/';
-#mkdir $local_db_path;
 
 
-#our $rollback_path = $working_path . 'rollback/';
+
+
 
 
 # email setup
@@ -200,11 +200,11 @@ our $local_db_path = $working_path . 'db/';
 #on-the-fly compilation during typing
 our $emailenable = 0;                                # globally enable email sending
 our $mailfile_path = $working_path . 'mails/';   # emails can be saved (logged) as message files to this folder
-#mkdir $mailfilepath;
+
 our $writefiles = 0;                                 # save emails
 
-our $erroremailrecipient = ''; #'rkrenn@phoenixctms.org';
-our $warnemailrecipient = ''; #'rkrenn@phoenixctms.org';
+our $erroremailrecipient = '';
+our $warnemailrecipient = '';
 our $completionemailrecipient = '';
 our $doneemailrecipient = '';
 
@@ -222,14 +222,14 @@ our $sender_address = 'donotreply@phoenixctms.at';
 
 #service layer:
 our @jobservers = ('127.0.0.1:4730');
-#our $jobnamespace = $system_abbreviation . '-' . $system_version . '-' . $local_fqdn . '-' . $system_instance;
+
 our $jobnamespace = $system_abbreviation . '-' . $system_version . '-' . $system_instance;
 
 
 
-# test directory
-#our $tpath = $application_path . 't/';
-#mkdir $tpath;
+
+
+
 
 
 
@@ -325,16 +325,16 @@ sub update_masterconfig {
 
         my @loadconfig_args = ();
 
-        #$xy_conf = $data->{xyconf} if exists $data->{xy_conf};
-        #
-        #if (defined $xy_conf and length($xy_conf) > 0) {
-        #    push(@loadconfig_args,[
-        #        $xy_conf,
-        #        \&_update_xy_conf,
-        #        $anyconfigtype,
-        #        { force_plugins => [ 'Config::Any::XML' ] }
-        #    ]);
-        #}
+
+
+
+
+
+
+
+
+
+
 
         return ($result,\@loadconfig_args,\&_postprocess_masterconfig);
 
@@ -343,22 +343,22 @@ sub update_masterconfig {
 
 }
 
-#sub _update_xy_conf {
-#
-#    my ($data,$configfile) = @_;
-#
-#    if (defined $data) {
-#
-#        my $result = 1;
-#
-#
-#
-#        return $result;
-#
- #   }
-#    return 0;
-#
-#}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 sub _postprocess_masterconfig {
 
@@ -366,7 +366,7 @@ sub _postprocess_masterconfig {
     my ($data) = @params{qw/data/};
 
     if (defined $data) {
-            # databases - dsp
+
         $ctsms_host = $data->{ctsms_host} if exists $data->{ctsms_host};
         $ctsms_port = $data->{ctsms_port} if exists $data->{ctsms_port};
         $ctsms_databasename = $data->{ctsms_databasename} if exists $data->{ctsms_databasename};
@@ -391,16 +391,16 @@ sub _prepare_working_paths {
     $result &= $path_result;
     ($path_result,$csv_path) = create_path($working_path . 'csv',$csv_path,$create,$fileerrorcode,$logger);
     $result &= $path_result;
-    #($path_result,$input_path) = create_path($working_path . 'input',$input_path,$create,$fileerrorcode,$logger);
-    #$result &= $path_result;
+
+
     ($path_result,$logfile_path) = create_path($working_path . 'log',$logfile_path,$create,$fileerrorcode,$logger);
     $result &= $path_result;
     ($path_result,$local_db_path) = create_path($working_path . 'db',$local_db_path,$create,$fileerrorcode,$logger);
     $result &= $path_result;
     ($path_result,$mailfile_path) = create_path($working_path . 'mails',$local_db_path,$create,$fileerrorcode,$logger);
     $result &= $path_result;
-    #($path_result,$rollback_path) = create_path($working_path . 'rollback',$rollback_path,$create,$fileerrorcode,$logger);
-    #$result &= $path_result;
+
+
 
     return $result;
 

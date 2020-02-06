@@ -13,8 +13,8 @@ use HTTP::Status qw(:constants :is status_message);
 use HTTP::Request::Common qw();
 
 use JSON -support_by_pp, -no_export;
-#*JSON::true = \1;
-#*JSON::false = \0;
+
+
 
 use CTSMS::BulkProcessor::Globals qw($LongReadLen_limit);
 use CTSMS::BulkProcessor::Logging qw(
@@ -119,13 +119,13 @@ sub _setup_ua {
     if ($self->{username}) {
         $ua->credentials($netloc, $self->{realm}, $self->{username}, $self->{password});
     }
-    #print $netloc . "\n";
-    #print $self->{path} . "\n";
-    #print $self->{realm} . "\n";
-    #print $self->{username} . "\n";
-    #print $self->{password} . "\n";
-    #$ua->add_handler("request_send",  sub { shift->dump; return });
-    #$ua->add_handler("response_done", sub { shift->dump; return });
+
+
+
+
+
+
+
     restdebug($self,"ua configured",getlogger(__PACKAGE__));
 
 }
@@ -134,16 +134,16 @@ sub _encode_request_content {
     my $self = shift;
     my ($data) = @_;
     return Encode::encode($request_charset,JSON::to_json($data,{ allow_nonref => 1, allow_blessed => 1, convert_blessed => 1, pretty => 0, }));
-    #
-                                                         #{ allow_nonref => 1 }));
+
+
 }
 
 sub _decode_response_content {
     my $self = shift;
     my ($data) = @_;
-    my $decoded = #eval {
+    my $decoded =
         ($data ? JSON::from_json(Encode::decode($response_charset,$data),{ allow_nonref => 1, }) : undef);
-    #};
+
     convert_bools($decoded);
     return $decoded // $data;
 }
@@ -162,18 +162,18 @@ sub _add_post_headers {
 sub _add_get_headers {
     my $self = shift;
     my ($req,$headers) = @_;
-    #_add_headers($req,{
-    #   ($self->{faketime} ? ($faketime_header => get_fake_now_string()) : ()),
-    #});
+
+
+
     $self->SUPER::_add_get_headers($req,$headers);
 }
 
 sub _add_head_headers {
     my $self = shift;
     my ($req,$headers) = @_;
-    #_add_headers($req,{
-    #   ($self->{faketime} ? ($faketime_header => get_fake_now_string()) : ()),
-    #});
+
+
+
     $self->SUPER::_add_head_headers($req,$headers);
 }
 
@@ -181,9 +181,9 @@ sub _add_put_headers {
     my $self = shift;
     my ($req,$headers) = @_;
     _add_headers($req,{
-       #'Prefer' => 'return=representation',
+
        'Content-Type' => $contenttype,
-       #($self->{faketime} ? ($faketime_header => get_fake_now_string()) : ()),
+
     });
 	$self->SUPER::_add_put_headers($req,$headers);
 }
@@ -191,9 +191,9 @@ sub _add_put_headers {
 sub _add_delete_headers {
     my $self = shift;
     my ($req,$headers) = @_;
-    #_add_headers($req,{
-    #   ($self->{faketime} ? ($faketime_header => get_fake_now_string()) : ()),
-    #});
+
+
+
     $self->SUPER::_add_delete_headers($req,$headers);
 }
 
@@ -204,12 +204,12 @@ sub _get_page_num_query_param {
         return 'p=' . $page_num;
     }
     return undef;
-    #if (defined $page_num) {
-    #    $page_num += $first_page_num;
-    #} else {
-    #    $page_num = $first_page_num;
-    #}
-    #return (defined $page_num ? 'p=' . $page_num : undef);
+
+
+
+
+
+
 }
 
 sub _get_page_size_query_param {
@@ -219,8 +219,8 @@ sub _get_page_size_query_param {
         return 's=' . $page_size;
     }
     return undef;
-    #$page_size //= $default_collection_page_size;
-    #return (defined $page_size ? 's=' . $page_size : undef);
+
+
 }
 
 sub _get_total_count_expected_query_param {
@@ -266,11 +266,11 @@ sub extract_collection_items {
     } else {
         ($page_size,$page_num,$params) = @_;
     }
-    #my ($data,$page_size,$page_num,$params) = @_;
+
     my $result = undef;
-    #if (defined $data and 'ARRAY' eq ref $data) {
-    #    $result = $data;
-    #}
+
+
+
     if (defined $data and 'HASH' eq ref $data) {
         if (defined $p and defined $data->{psf} and 'HASH' eq ref $data->{psf}) {
             $p->{total_count} = $data->{psf}->{totalCount};
@@ -362,7 +362,7 @@ sub post {
         return ();
     } else {
         return $self->responsedata();
-        #return $self->_extract_ids_from_response_location();
+
     }
 }
 
@@ -399,16 +399,16 @@ sub post_file {
     }
 }
 
-#sub post_get {
-#    my $self = shift;
-#    my ($path_query,$post_headers,$get_headers) = @_;
-#    if ($self->_post($path_query,$post_headers)->code() != HTTP_OK) {
-#        $self->_request_error();
-#        return undef;
-#    } else {
-#        return $self->get($self->response()->header('Location'),$get_headers);
-#    }
-#}
+
+
+
+
+
+
+
+
+
+
 
 sub put {
     my $self = shift;
@@ -455,11 +455,11 @@ sub put_file {
 
 sub delete {
     my $self = shift;
-    if ($self->_delete(@_)->code() != HTTP_OK) { #!= HTTP_NO_CONTENT) {
+    if ($self->_delete(@_)->code() != HTTP_OK) {
         $self->_request_error();
         return 0;
     } else {
-        #return 1;
+
         return $self->responsedata();
     }
 }

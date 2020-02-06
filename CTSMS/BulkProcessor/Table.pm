@@ -60,7 +60,7 @@ sub data_ref {
 sub addrow {
 
   my $self = shift;
-  #my @row = @_;
+
   return $self->addrow_ref(\@_);
 
 }
@@ -68,7 +68,7 @@ sub addrow {
 sub addrow_nodupe {
 
   my $self = shift;
-  #my @row = @_;
+
   return $self->addrow_ref_nodupe(\@_);
 
 }
@@ -113,7 +113,7 @@ sub addrow_ref_nodupe {
 sub rowexists {
 
   my $self = shift;
-  #my @row = @_;
+
   return $self->rowexists_ref(\@_);
 
 }
@@ -151,8 +151,8 @@ sub get_rowhash {
 sub rowcount {
 
   my $self = shift;
-  #my @rows = @{$self->{data}};
-  return scalar @{$self->{data}}; # + 1;
+
+  return scalar @{$self->{data}};
 
 }
 
@@ -211,7 +211,7 @@ sub sortrows {
   my $self = shift;
   my $sortfunction = shift;
   my @new_rows = sort $sortfunction @{$self->{data}};
-  #$self->_set_data(\@new_rows);
+
   # since sorting can not affect uniqueness of rows and rowhashes, we just set:
   $self->{data} = \@new_rows;
 

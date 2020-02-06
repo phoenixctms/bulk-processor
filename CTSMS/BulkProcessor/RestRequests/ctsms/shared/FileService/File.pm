@@ -47,12 +47,12 @@ my $upload_path_query = sub {
 };
 my $get_trialfiles_path_query = sub {
     my ($trial_id) = @_;
-    #my %params = ();
-    #$params{active} = booltostring($active) if defined $active;
-    #$params{active_signup} = booltostring($active_signup) if defined $active_signup;
-    #$params{sort} = booltostring($sort); # if defined $sort;
-    #$params{load_all_js_values} = booltostring($load_all_js_values); # if defined $load_all_js_values;
-    return 'trial/' . $trial_id . '/files'; # . get_query_string(\%params);
+
+
+
+
+
+    return 'trial/' . $trial_id . '/files';
 };
 
 my $fieldnames = [
@@ -152,8 +152,8 @@ sub builditems_fromrows {
 
 sub transformitem {
     my ($item,$load_recursive,$restapi) = @_;
-    #$item->{rows} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValue::builditems_fromrows($item->{rows},$load_recursive,$restapi);
-    #$item->{js_rows} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryJsonValue::builditems_fromrows($item->{js_rows},$load_recursive,$restapi);
+
+
 }
 
 sub get_item_path {
@@ -163,14 +163,14 @@ sub get_item_path {
 
 }
 
-#sub TO_JSON {
-#
-#    my $self = shift;
-#    return { %{$self} };
-#    #    value => $self->{zipcode},
-#    #    label => $self->{zipcode},
-#    #};
-#
-#}
+
+
+
+
+
+
+
+
+
 
 1;

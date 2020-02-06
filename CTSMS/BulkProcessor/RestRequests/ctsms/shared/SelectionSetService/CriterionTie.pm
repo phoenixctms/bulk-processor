@@ -16,13 +16,13 @@ use CTSMS::BulkProcessor::RestProcessor qw(
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
 use CTSMS::BulkProcessor::RestItem qw();
 
-#use CTSMS::BulkProcessor::Utils qw(booltostring);
+
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_items
-    
+
     $AND
     $OR
     $LEFT_PARENTHESIS
@@ -36,7 +36,7 @@ my $default_restapi = \&get_ctsms_restapi;
 my $get_items_path_query = sub {
     return 'selectionset/allcriterionties';
 };
-#my $collection_path_query = 'api/' . $resource . '/';
+
 
 my $fieldnames = [
     "id",

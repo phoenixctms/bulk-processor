@@ -11,7 +11,7 @@ use Getopt::Long qw(GetOptions);
 use CTSMS::BulkProcessor::Globals qw();
 
 use File::Find qw();
-#use File::Spec qw();
+
 use CTSMS::BulkProcessor::Utils qw(fixdirpath run);
 
 my $yuicompressor_jar = fixdirpath(Cwd::abs_path(File::Basename::dirname(__FILE__))) . 'yuicompressor-2.4.7.jar';
@@ -43,16 +43,16 @@ sub init {
     $root = fixdirpath($root);
     @dirstoskip = map { $root . fixdirpath($_); } @dirstoskip;
 
-    #my @args = (
-    #    'java',
-    #    '-jar',
-    #    $yuicompressor_jar,
-    #    '-V',
-    #);
-    #my ($result,$msg) = run(@args);
-    ##die ($msg) unless $result;
 
-    return 1; #$result;
+
+
+
+
+
+
+
+
+    return 1;
 
 }
 
@@ -65,9 +65,9 @@ sub main() {
                 my ($filename,$filedir,$suffix) = @_;
                 unless ($filename =~ /$minified_pattern/) {
                     my $input_file = $filedir.$filename . $suffix;
-                    #$input_file =~ s/\\/\//g;
+
                     my $output_file = $filedir. $filename . $minified_suffix . $suffix;
-                    #$output_file =~ s/\\/\//g;
+
                     if (-e $output_file) {
                         unlink $output_file;
                         if ($cleanup) {
@@ -79,14 +79,14 @@ sub main() {
                             'java',
                             '-jar',
                             $yuicompressor_jar,
-                            #'--nomunge', #                 Minify only, do not obfuscate
-                            #'--preserve-semi', #           Preserve all semicolons
-                            #'--disable-optimizations', #   Disable all micro optimizations
+
+
+
                             $input_file,
                             '-o',
                             $output_file,
                         );
-                        my ($result,$msg) = run(@args); #shell_args(@args)); #suppress output, to hide password
+                        my ($result,$msg) = run(@args);
                         if ($result) {
                             print $filename . $suffix . ' -> ' . $filename . $minified_suffix . $suffix . "\n";
                         } else {

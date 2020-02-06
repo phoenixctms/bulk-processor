@@ -60,13 +60,13 @@ our @EXPORT_OK = qw(
     get_tableidentifier
     $csvextension
     $mimetype);
-#excel_to_timestamp
-#excel_to_date
+
+
 
 our $csvextension = '.csv';
 our $mimetype = 'text/csv';
 
-#my $encoding = 'utf8'; #for opening files?
+
 
 my $default_csv_config = { eol         => "\r\n",
                             sep_char    => ';',
@@ -79,10 +79,10 @@ my @TABLE_TAGS = qw(table tr td);
 my $LongReadLen = $LongReadLen_limit; #bytes
 my $LongTruncOk = 0;
 
-#my $logger = getlogger(__PACKAGE__);
 
-#my $lock_do_chunk = 0;
-#my $lock_get_chunk = 0;
+
+
+
 my $rowblock_transactional = 0;
 
 my $invalid_excel_spreadsheet_chars_pattern = '[' . quotemeta('[]:*?/\\') . ']';
@@ -99,23 +99,23 @@ sub sanitize_column_name {
     return $column_name;
 }
 
-#sub excel_to_date {
-#    my $excel_date_value = shift;
-#    if ($excel_date_value > 0) {
-#        my $datetime = DateTime::Format::Excel->parse_datetime($excel_date_value);
-#        return $datetime->ymd('-'); # prints 1992-02-28
-#    }
-#    return undef;
-#}
 
-#sub excel_to_timestamp {
-#    my $excel_datetime_value = shift;
-#    if ($excel_datetime_value > 0) {
-#        my $datetime = DateTime::Format::Excel->parse_datetime($excel_datetime_value);
-#        return $datetime->ymd('-') . ' ' . $datetime->hms(':');
-#    }
-#    return undef;
-#}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 sub new {
 
@@ -205,7 +205,7 @@ sub _createdatabase {
     my $self = shift;
     my ($db_dir) = @_;
 
-    my $f_dir; # = _get_f_dir($db_dir);
+    my $f_dir;
     if (length($db_dir) > 0) {
         $f_dir = $csv_path . $db_dir . '/';
     } else {
@@ -214,22 +214,22 @@ sub _createdatabase {
 
     dbinfo($self,'opening csv folder',getlogger(__PACKAGE__));
 
-    #mkdir $f_dir;
+
     makepath($f_dir,\&fileerror,getlogger(__PACKAGE__));
 
-    #if (not -d $f_dir) {
-    #    fileerror('cannot opendir ' . $f_dir . ': ' . $!,getlogger(__PACKAGE__));
-    #    return;
-    #}
 
-    #local *DBDIR;
-    #if (not opendir(DBDIR, $f_dir)) {
-    #    fileerror('cannot opendir ' . $f_dir . ': ' . $!,getlogger(__PACKAGE__));
-    #    return;
-    #}
-    #closedir DBDIR;
 
-    #changemod($f_dir);
+
+
+
+
+
+
+
+
+
+
+
 
     return $f_dir;
 }
@@ -248,7 +248,7 @@ sub db_connect {
 
     my $dbh_config = {
             f_schema        => undef,
-            #f_lock           => 0, n/a in 0.26 yet?
+
             cvs_eol         => $default_csv_config->{eol},
             cvs_sep_char    => $default_csv_config->{sep_char},
             cvs_quote_char  => $default_csv_config->{quote_char},
@@ -262,7 +262,7 @@ sub db_connect {
     } else {
         $dbh_config->{f_dir} = $self->{f_dir};
         $dbh_config->{f_ext} = $csvextension . '/r';
-        #$dbh_config->{f_encoding} => $encoding; #,'UTF8',
+
     }
 
     my $dbh = DBI->connect ('dbi:CSV:','','',$dbh_config) or
@@ -318,15 +318,15 @@ sub _list_tables {
                 if (defined $ref) {
                     if (ref $ref eq 'ARRAY') {
                         push @table_list, $ref->[2];
-                    #} else {
-                    #    push @table_list, $ref;
+
+
                     }
                 }
             }
         }
     }
 
-    return @table_list; #removeduplicates(\@table_list);
+    return @table_list;
 }
 
 sub _db_disconnect {
@@ -359,12 +359,12 @@ sub cleanupcvsdirs {
         push @remainingdbdirectories,$csv_path . $dirname . '/';
     }
     foreach my $dir (@dirs) {
-        #print $file;
+
         my $dirpath = $csv_path . $dir . '/';
         if (not contains($dirpath,\@remainingdbdirectories)) {
-            #if (remove_tree($dirpath) == 0) {
-            #    filewarn('cannot remove ' . $dirpath . ': ' . $!,getlogger(__PACKAGE__));
-            #}
+
+
+
             remove_tree($dirpath, {
                 'keep_root' => 0,
                 'verbose' => 1,
@@ -568,7 +568,7 @@ sub db_do_begin {
 
     my $self = shift;
     my $query = shift;
-    #my $tablename = shift;
+
 
     $self->SUPER::db_do_begin($query,$rowblock_transactional,@_);
 
@@ -578,7 +578,7 @@ sub db_get_begin {
 
     my $self = shift;
     my $query = shift;
-    #my $tablename = shift;
+
 
     $self->SUPER::db_get_begin($query,$rowblock_transactional,@_);
 
@@ -631,36 +631,36 @@ sub _convert_xlsbin2csv {
     my $Formatter = Spreadsheet::ParseExcel::FmtUnicode->new(Unicode_Map => $SourceCharset);
 
     my $parser   = Spreadsheet::ParseExcel->new();
-    my $Book = $parser->parse($XLS,$Formatter); #$SourceFilename
+    my $Book = $parser->parse($XLS,$Formatter);
 
     if ( !defined $Book ) {
         xls2csverror($parser->error(),getlogger(__PACKAGE__));
-        #die $parser->error(), ".\n";
+
         $XLS->close();
         return 0;
     }
 
-    #my $Book = Spreadsheet::ParseExcel::Workbook->Parse($XLS, $Formatter) or xls2csverror('can\'t read spreadsheet',getlogger(__PACKAGE__));
+
 
     my $Sheet;
     if ($worksheet) {
 
-        #my $test = $Book->GetContent();
+
 
     $Sheet = $Book->Worksheet($worksheet);
     if (!defined $Sheet) {
             xls2csverror('invalid spreadsheet',getlogger(__PACKAGE__));
             return 0;
         }
-    #unless ($O{'q'})
-    #{
-    #   print qq|Converting the "$Sheet->{Name}" worksheet.\n|;
-    #}
+
+
+
+
         xls2csvinfo('converting the ' . $Sheet->{Name} . ' worksheet',getlogger(__PACKAGE__));
     } else {
     ($Sheet) = @{$Book->{Worksheet}};
     if ($Book->{SheetCount}>1) {
-        #print qq|Multiple worksheets found. Will convert the "$Sheet->{Name}" worksheet.\n|;
+
             xls2csvinfo('multiple worksheets found, converting ' . $Sheet->{Name},getlogger(__PACKAGE__));
     }
     }
@@ -767,10 +767,10 @@ sub _convert_xlsxbin2csv {
         $XLS->close();
     }
 
-    #my $Formatter = Spreadsheet::ParseExcel::FmtUnicode->new(Unicode_Map => $SourceCharset);
+
 
     my $reader   = Excel::Reader::XLSX->new();
-    my $workbook = $reader->read_file($SourceFilename); #->parse($XLS,$Formatter); #$SourceFilename
+    my $workbook = $reader->read_file($SourceFilename);
 
     my $SourceCharset = $workbook->{_reader}->encoding();
     $DestCharset = $SourceCharset unless $DestCharset;
@@ -779,32 +779,32 @@ sub _convert_xlsxbin2csv {
 
     if ( !defined $workbook ) {
         xls2csverror($reader->error(),getlogger(__PACKAGE__));
-        #die $parser->error(), ".\n";
-        #$XLS->close();
+
+
         return 0;
     }
 
-    #my $Book = Spreadsheet::ParseExcel::Workbook->Parse($XLS, $Formatter) or xls2csverror('can\'t read spreadsheet',getlogger(__PACKAGE__));
+
 
     my $sheet;
     if ($worksheet) {
 
-        #my $test = $Book->GetContent();
+
 
     $sheet = $workbook->worksheet($worksheet);
     if (!defined $sheet) {
             xls2csverror('invalid spreadsheet',getlogger(__PACKAGE__));
             return 0;
         }
-    #unless ($O{'q'})
-    #{
-    #   print qq|Converting the "$Sheet->{Name}" worksheet.\n|;
-    #}
+
+
+
+
         xls2csvinfo('converting the ' . $sheet->name() . ' worksheet',getlogger(__PACKAGE__));
     } else {
         $sheet = $workbook->worksheet(0);
         if (@{$workbook->worksheets()} > 1) {
-        #print qq|Multiple worksheets found. Will convert the "$Sheet->{Name}" worksheet.\n|;
+
             xls2csvinfo('multiple worksheets found, converting ' . $sheet->name(),getlogger(__PACKAGE__));
     }
     }
@@ -813,7 +813,7 @@ sub _convert_xlsxbin2csv {
     local *CSV;
     if (not open(CSV,'>' . $DestFilename)) {
         fileerror('cannot open file ' . $DestFilename . ': ' . $!,getlogger(__PACKAGE__));
-        #$XLS->close();
+
         return 0;
     }
     binmode CSV;
@@ -852,7 +852,7 @@ sub _convert_xlsxbin2csv {
     }
 
     close CSV;
-    #$XLS->close;
+
 
     xls2csvinfo($csvlinecount . ' line(s) converted',getlogger(__PACKAGE__));
 

@@ -140,27 +140,27 @@ sub TO_JSON {
 
     my $self = shift;
     return { %{$self} };
-#    #    value => $self->{zipcode},
-#    #    label => $self->{zipcode},
-#    #};
-#
+
+
+
+
 }
 
 sub get_export_colnames {
     my %params = @_;
     my ($inquiry,
-        #$index,
+
         $get_colname_parts_code,
         $ignore_external_ids,
-        #$abbreviate_ecrf_name_code,
-        #$abbreviate_visit_code,
-        #$abbreviate_group_code,
+
+
+
         $abbreviate_category_code,
         $abbreviate_inputfield_name_code,
         $abbreviate_selectionvalue_code,
-        #$ecrf_position_digits,
+
         $inquiry_position_digits,
-        #$index_digits,
+
         $col_per_selection_set_value,
         $selectionValues,
         $sanitize_colname_symbols_code) = @params{qw/
@@ -179,12 +179,12 @@ sub get_export_colnames {
             selectionValues
             sanitize_colname_symbols_code
         /};
-    #index
-    #abbreviate_ecrf_name_code
-    #abbreviate_visit_code
-    #abbreviate_group_code
-    #ecrf_position_digits
-    #index_digits
+
+
+
+
+
+
     $get_colname_parts_code = sub { return (); } unless 'CODE' eq ref $get_colname_parts_code;
     $abbreviate_selectionvalue_code = sub { my ($value,$id) = @_; return $value; } unless 'CODE' eq ref $abbreviate_selectionvalue_code;
     my $selectionSetValues = $inquiry->{field}->{selectionSetValues};
@@ -192,18 +192,18 @@ sub get_export_colnames {
     $selectionSetValues //= [];
     my @export_colnames = ();
     my $prefix;
-    my @parts = &$get_colname_parts_code($inquiry); #,$index);
+    my @parts = &$get_colname_parts_code($inquiry);
     unless ((scalar @parts) > 0) {
         my $external_id_used = 0;
         if (not $ignore_external_ids and defined $inquiry->{externalId} and length($inquiry->{externalId}) > 0) {
             push(@parts,$inquiry->{externalId});
-            #push(@parts,zerofill($index,$index_digits)) if $ecrffield->{series};
+
             $abbreviate_selectionvalue_code = sub { my ($value,$id) = @_; return $value; };
             $external_id_used = 1;
         # relying on collisison detection
         } elsif (not $ignore_external_ids and defined $inquiry->{field}->{externalId} and length($inquiry->{field}->{externalId}) > 0) {
             push(@parts,$inquiry->{field}->{externalId});
-            #push(@parts,zerofill($index,$index_digits)) if $ecrffield->{series};
+
             $abbreviate_selectionvalue_code = sub { my ($value,$id) = @_; return $value; };
             $external_id_used = 1;
         } else {
@@ -213,8 +213,8 @@ sub get_export_colnames {
             push(@parts,&$abbreviate_category_code($inquiry->{category})) if length($inquiry->{category}) > 0;
             push(@parts,zerofill($inquiry->{position},$inquiry_position_digits));
             push(@parts,&$abbreviate_inputfield_name_code($inquiry->{field}->{nameL10nKey},$inquiry->{field}->{id}));
-            #push(@parts,'i' . zerofill($index,$index_digits)) if $ecrffield->{series};
-            ##my $fieldtype = $ecrffield->{field}->{fieldType}->{nameL10nKey};
+
+
         }
         $prefix = 'p' unless $external_id_used;
     }

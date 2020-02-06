@@ -52,7 +52,7 @@ sub new {
     $self->{buffersize} = undef;
     $self->{threadqueuelength} = undef;
     $self->{numofthreads} = undef;
-    #$self->{multithreading} = undef;
+
     $self->{blocksize} = undef;
 
     $self->{line_separator} = undef;
@@ -79,7 +79,7 @@ sub _extractlines {
         $last_line = $line;
         push(@$lines,$line);
     }
-    #$count--;
+
     $$buffer_ref = $last_line;
     pop @$lines;
 
@@ -104,7 +104,7 @@ sub process {
             uninit_process_context_code
             multithreading
         /};
-    #my ($file,$process_code,$init_process_context_code,$uninit_process_context_code,$multithreading) = @_;
+
 
     if (ref $process_code eq 'CODE') {
 
@@ -212,7 +212,7 @@ sub process {
 
                 my $i = 0;
                 while (1) {
-                    #fetching_lines($file,$i,$self->{blocksize},undef,getlogger(__PACKAGE__));
+
                     my $block_n = 0;
                     my @lines = ();
                     while ((scalar @lines) < $self->{blocksize} and defined ($n = read(INPUTFILE,$chunk,$self->{buffersize})) and $n != 0) {
@@ -244,7 +244,7 @@ sub process {
                         my $realblocksize = scalar @rowblock;
                         if ($realblocksize > 0) {
                             processing_lines($tid,$i,$realblocksize,undef,getlogger(__PACKAGE__));
-                            #processing_rows($tid,$i,$realblocksize,$rowcount,getlogger(__PACKAGE__));
+
 
                             $rowblock_result = &$process_code($context,\@rowblock,$i);
 
@@ -264,7 +264,7 @@ sub process {
             if ($@) {
                 $errorstate = $ERROR;
             } else {
-                $errorstate = $COMPLETED; #(not $rowblock_result) ? $ERROR : $COMPLETED;
+                $errorstate = $COMPLETED;
             }
 
             eval {
@@ -330,7 +330,7 @@ sub _reader {
 
         filethreadingdebug('[' . $tid . '] reader thread waiting for consumer threads',getlogger(__PACKAGE__));
         while ((_get_other_threads_state($context->{errorstates},$tid) & $RUNNING) == 0) { #wait on cosumers to come up
-            #yield();
+
             sleep($thread_sleep_secs);
         }
 
@@ -343,7 +343,7 @@ sub _reader {
         my $i = 0;
         my $state = $RUNNING; #start at first
         while (($state & $RUNNING) == $RUNNING and ($state & $ERROR) == 0) { #as long there is one running consumer and no defunct consumer
-            #fetching_lines($context->{filename},$i,$context->{instance}->{blocksize},undef,getlogger(__PACKAGE__));
+
             my $block_n = 0;
             my @lines = ();
             while ((scalar @lines) < $context->{instance}->{blocksize} and defined ($n = read(INPUTFILE_READER,$chunk,$context->{instance}->{buffersize})) and $n != 0) {
@@ -380,11 +380,11 @@ sub _reader {
                 $packet{row_offset} = $i;
                 $packet{block_n} = $block_n;
                 if ($realblocksize > 0) {
-                    $context->{queue}->enqueue(\%packet); #$packet);
+                    $context->{queue}->enqueue(\%packet);
                     $blockcount++;
                     #wait if thequeue is full and there there is one running consumer
                     while (((($state = _get_other_threads_state($context->{errorstates},$tid)) & $RUNNING) == $RUNNING) and $context->{queue}->pending() >= $context->{instance}->{threadqueuelength}) {
-                        #yield();
+
                         sleep($thread_sleep_secs);
                     }
                     $i += $realblocksize;
@@ -393,7 +393,7 @@ sub _reader {
                         last;
                     }
                 } else {
-                    $context->{queue}->enqueue(\%packet); #$packet);
+                    $context->{queue}->enqueue(\%packet);
                     filethreadingdebug('[' . $tid . '] reader thread is shutting down (end of data - empty block) ...',getlogger(__PACKAGE__));
                     last;
                 }
@@ -458,8 +458,8 @@ sub _process {
                     last;
                 }
             } else {
-                #yield();
-                sleep($thread_sleep_secs); #2015-01
+
+                sleep($thread_sleep_secs);
             }
         }
     };
@@ -474,7 +474,7 @@ sub _process {
     if ($err) {
         $context->{errorstates}->{$tid} = $ERROR;
     } else {
-        $context->{errorstates}->{$tid} = $COMPLETED; #(not $rowblock_result) ? $ERROR : $COMPLETED;
+        $context->{errorstates}->{$tid} = $COMPLETED;
     }
     return $context->{errorstates}->{$tid};
 }
@@ -533,7 +533,7 @@ sub create_process_context {
         if (defined $ctx and 'HASH' eq ref $ctx) {
             foreach my $key (keys %$ctx) {
                 $context->{$key} = $ctx->{$key};
-                #delete $ctx->{$key};
+
             }
         }
     }

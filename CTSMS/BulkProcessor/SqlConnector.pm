@@ -31,7 +31,7 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_tableidentifier);
 
-#my $logger = getlogger(__PACKAGE__);
+
 
 my $log_db_operations = 0;
 
@@ -77,7 +77,7 @@ sub _gettemptablename {
     if (length($self->{instanceid}) > 0) {
         $temp_tablename .= $self->{instanceid} . '_';
     }
-    $temp_tablename .= createtmpstring($temptable_randomstringlength); #$self->{temp_table_count};
+    $temp_tablename .= createtmpstring($temptable_randomstringlength);
     return $temp_tablename;
 }
 
@@ -160,7 +160,7 @@ sub getsafetablename {
     # make a table name (identifier) string save for use within create table statements
     # of this rdbms connector.
     my $self = shift;
-    my ($tableidentifier) = @_; #shift;
+    my ($tableidentifier) = @_;
     $tableidentifier =~ s/[^0-9a-z_]/_/gi;
     return $tableidentifier;
 
@@ -293,7 +293,7 @@ sub db_connect {
 
 sub db_disconnect {
     my $self = shift;
-    #my $tid = threadid();
+
     my $cluster = $self->{cluster};
     if (defined $cluster) {
         dbdebug($self,'disconnecting database cluster ' . $cluster->{name},getlogger(__PACKAGE__));
@@ -303,7 +303,7 @@ sub db_disconnect {
                 $node_db->_db_disconnect();
             }
         }
-        #$cluster->{scheduling_vars} = {};
+
     } else {
         $self->_db_disconnect();
     }
@@ -319,14 +319,14 @@ sub _db_disconnect {
 
     if (defined $self->{dbh}) {
 
-        #cleartableinfo($self);
-        #dbdebug($self,'disconnecting' . ((defined $self->{cluster}) ? ' ' . $self->_connectidentifier() : ''),getlogger(__PACKAGE__));
+
+
         dbdebug($self,'disconnecting',getlogger(__PACKAGE__));
 
             foreach my $temp_tablename (@{$self->{temp_tables}}) {
-                #if ($self->table_exists($temp_tablename)) {
+
                     $self->drop_table($temp_tablename);
-                #}
+
             }
             $self->{temp_tables} = [];
 
@@ -334,7 +334,7 @@ sub _db_disconnect {
         $self->{dbh} = undef;
 
         dbinfo($self,'disconnected',getlogger(__PACKAGE__));
-        #dbinfo($self,((defined $self->{cluster}) ? $self->_connectidentifier() . ' ' : '') . 'disconnected',getlogger(__PACKAGE__));
+
 
     }
 
@@ -497,21 +497,21 @@ sub _bind_params {
 
 }
 
-#sub db_autocommit {
-#
-#    my $self = shift;
-#    if (defined $self->{dbh}) {
-#        if (@_) {
-#            my ($autocommit) = @_;
-#            $autocommit = ($autocommit ? 1 : 0);
-#            dbdebug($self,'set AutoCommit ' . $self->{dbh}->{AutoCommit} . ' -> ' . $autocommit,getlogger(__PACKAGE__));
-#            $self->{dbh}->{AutoCommit} = $autocommit;
-#        }
-#        return $self->{dbh}->{AutoCommit};
-#    }
-#    return undef;
-#
-#}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # This method executes a SQL query that doesn't return any data. The
 # query may contain placeholders, that will be replaced by the elements
@@ -610,7 +610,7 @@ sub db_get_col {
         dbdebug($self,'db_get_col: ' . $query . "\nparameters:\n" . join(', ', @params),getlogger(__PACKAGE__)) if $log_db_operations;
 
         $col = $self->{dbh}->selectcol_arrayref($sth, undef, @params);
-        #die "Failed to selectcol_arrayref:\n$query\nDBI error:". $sth->errstr() if !defined $col and $sth->err();
+
         $self->_fetch_error($query,$sth,'selectcol_arrayref',undef,@params) if !defined $col and $sth->err();
         $sth->finish();
 
@@ -694,7 +694,7 @@ sub db_get_mapref {
         $sth->execute(@_) or $self->_execute_error($query,$sth,@params);
 
         my $rows = $sth->fetchall_hashref($index);
-        #die "Failed to fetchall_hashref:\n$query\nDBI error:". $sth->errstr() if $sth->err();
+
         $self->_fetch_error($query,$sth,'fetchall_hashref',$index,@params) if $sth->err();
 
         foreach my $key (keys %$rows) {
@@ -737,7 +737,7 @@ sub db_commit {
                 dberror($self, "failed to commit changes\nDBI error:\n" . $self->{dbh}->errstr(),getlogger(__PACKAGE__));
             }
         } else {
-            #my @wa =
+
             $self->{dbh}->commit() or dberror($self, "failed to commit changes\nDBI error:\n" . $self->{dbh}->errstr(),getlogger(__PACKAGE__));
         }
     }
@@ -804,8 +804,8 @@ sub DESTROY {
         eval {
             dbdebug($self,(ref $self) . ' connector destroyed',getlogger(__PACKAGE__));
         };
-    #} else {
-    #    print "NOT destroyed\n";
+
+
     }
 
 }
@@ -815,7 +815,7 @@ sub lock_tables {
     my $self = shift;
     my $tablestolock = shift;
 
-    #$self->db_begin();
+
     notimplementederror((ref $self) . ': ' . (caller(0))[3] . ' not implemented',getlogger(__PACKAGE__));
 
 }
@@ -824,7 +824,7 @@ sub unlock_tables {
 
     my $self = shift;
 
-    #$self->db_commit();
+
     notimplementederror((ref $self) . ': ' . (caller(0))[3] . ' not implemented',getlogger(__PACKAGE__));
 
 }
@@ -833,16 +833,16 @@ sub db_do_begin {
 
     my $self = shift;
     my $query = shift;
-    #my $tablename = shift;
+
     my $transactional = shift;
 
-    #notimplementederror('db_do_begin',getlogger(__PACKAGE__));
 
-    if (defined $self->{dbh} and !defined $self->{sth}) { # and length($tablename) > 0) {
+
+    if (defined $self->{dbh} and !defined $self->{sth}) {
 
         dbdebug($self,'db_do_begin: ' . $query,getlogger(__PACKAGE__));
         if ($transactional) {
-            #$self->lock_tables({ $tablename => 'WRITE' });
+
             $self->db_begin();
         }
 
@@ -860,13 +860,13 @@ sub db_do_rowblock {
     my $self = shift;
     my $rows = shift;
 
-    #notimplementederror('db_do_rowblock',getlogger(__PACKAGE__));
+
 
     if (defined $self->{dbh} and defined $self->{sth} and defined $rows and ref $rows eq 'ARRAY') {
 
-        #dberror($self,'test error',getlogger(__PACKAGE__));
-        #mysqldbdebug($self,"db_do_rowblock\nrows:\n" . (scalar @$rows),getlogger(__PACKAGE__));
-        #mysqldbdebug($self,'db_do_rowblock: ' . $self->{query} . "\nparameters:\n" . join(', ', @_),getlogger(__PACKAGE__));
+
+
+
         foreach my $row (@$rows) {
             my @params = $self->_bind_params($self->{sth},@$row);
             dbdebug($self,'db_do_rowblock: ' . $self->{query} . "\nparameters:\n" . join(', ', @params),getlogger(__PACKAGE__)) if $log_db_operations;
@@ -882,14 +882,14 @@ sub db_get_begin {
 
     my $self = shift;
     my $query = shift;
-    #my $tablename = shift;
+
     my $transactional = shift;
 
-    if (defined $self->{dbh} and !defined $self->{sth}) { # and length($tablename) > 0) {
+    if (defined $self->{dbh} and !defined $self->{sth}) {
 
-        #eval { $self->lock_tables({ $tablename => 'WRITE' }); };
+
         if ($transactional) {
-            #$self->lock_tables({ $tablename => 'WRITE' });
+
             $self->db_begin();
         } else {
             my $offset = shift;
@@ -929,10 +929,10 @@ sub db_get_rowblock {
 
     if ($enablemultithreading) {
 
-        #my $rows : shared = [];
+
         my @rows :shared = ();
-        #my $rows = &share([]); # beware of '&' here!!!!
-        #my $rows = shared_clone({});
+
+
 
         if (defined $self->{dbh} and defined $self->{sth}) {
 
@@ -948,10 +948,10 @@ sub db_get_rowblock {
 
         }
 
-        #share(@rows);
+
         return \@rows;
-        #return $rows;
-        #return \@rows;
+
+
 
     } else {
 
@@ -987,7 +987,7 @@ sub db_finish {
         $self->{sth} = undef;
 
         if ($transactional) {
-            #$self->unlock_tables();
+
             if ($rollback) {
                 $self->db_rollback(1);
             } else {

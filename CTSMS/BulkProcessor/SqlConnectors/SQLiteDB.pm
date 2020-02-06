@@ -72,18 +72,18 @@ $DBD::SQLite::COLLATION{no_accents} = sub {
 my $LongReadLen = $LongReadLen_limit; #bytes
 my $LongTruncOk = 0;
 
-#my $logger = getlogger(__PACKAGE__);
 
-#my $lock_do_chunk = 0; #1;
-#my $lock_get_chunk = 0; #1;
+
+
+
 
 our $mimetype = 'application/x-sqlite3';
 
-my $rowblock_transactional = 0; #1;
+my $rowblock_transactional = 0;
 
 #SQLite transactions are always serializable.
 
-#my $read_uncommitted_isolation_level = 1;
+
 
 sub new {
 
@@ -161,7 +161,7 @@ sub getdatabases {
 
     my $rdbextension = quotemeta($dbextension);
     my $ucrdbextension = quotemeta(uc($dbextension));
-    #my $rjournalpostfix = quotemeta($journalpostfix);
+
     local *DBDIR;
     if (not opendir(DBDIR, $local_db_path)) {
         fileerror('cannot opendir ' . $local_db_path . ': ' . $!,getlogger(__PACKAGE__));
@@ -171,7 +171,7 @@ sub getdatabases {
     closedir DBDIR;
     my @databases = ();
     foreach my $file (@files) {
-        #print $file;
+
         my $databasename = $file;
         $databasename =~ s/($rdbextension|$ucrdbextension)$//g;
         push @databases,$databasename;
@@ -192,8 +192,8 @@ sub _createdatabase {
             {
                 PrintError      => 0,
                 RaiseError      => 0,
-                #sqlite_unicode  => 1, latin 1 chars
-                #AutoCommit      => 0,
+
+
             }
         ) or dberror($self,'error connecting: ' . $self->{drh}->errstr(),getlogger(__PACKAGE__));
         $dbh->disconnect() or dbwarn($self,'error disconnecting: ' . $dbh->errstr(),getlogger(__PACKAGE__));
@@ -211,9 +211,9 @@ sub db_connect {
 
     $self->SUPER::db_connect($filemode, $filename);
 
-    #if (defined $self->{dbh}) {
-    #    $self->db_disconnect();
-    #}
+
+
+
 
     $self->{filemode} = $filemode;
     $self->{dbfilename} = $self->_createdatabase($filename);
@@ -224,11 +224,11 @@ sub db_connect {
         {
             PrintError      => 0,
             RaiseError      => 0,
-            #sqlite_unicode  => 1, latin 1 chars
-            #AutoCommit      => 0,
+
+
         }
     ) or dberror($self,'error connecting: ' . $self->{drh}->errstr(),getlogger(__PACKAGE__));
-    #or sqlitedberror($dbfilename,'error connecting to sqlite db',getlogger(__PACKAGE__));
+
 
     $dbh->{InactiveDestroy} = 1;
 
@@ -236,28 +236,28 @@ sub db_connect {
     $dbh->{LongTruncOk} = $LongTruncOk;
 
     $dbh->{AutoCommit} = 1;
-    # we use a mysql style
+
     $dbh->sqlite_create_function('now', 0, \&timestamp );
     $dbh->sqlite_create_function('concat', 2, \&_concat );
-    #$dbh->sqlite_create_function(float_equal ??
+
     $dbh->sqlite_create_aggregate( 'variance', 1, 'SQLiteVarianceAggregate' );
 
     $dbh->sqlite_busy_timeout($busytimeout);
 
     $self->{dbh} = $dbh;
 
-    #SQLite transactions are always serializable.
+
 
     $self->db_do('PRAGMA foreign_keys = OFF');
-    #$self->db_do('PRAGMA default_synchronous = OFF');
+
     $self->db_do('PRAGMA synchronous = OFF');
     $self->db_do('PRAGMA page_size = ' . $pagesize);
     $self->db_do('PRAGMA cache_size = ' . $cachesize);
-    #$self->db_do('PRAGMA encoding = "UTF-8"'); # only new databases!
+
     $self->db_do('PRAGMA encoding = "' . $texttable_encoding . '"'); # only new databases!
     #PRAGMA locking_mode = NORMAL ... by default
-    #$self->db_do('PRAGMA auto_vacuum = INCREMENTAL');
-    #$self->db_do('PRAGMA read_uncommitted = ' . $read_uncommitted_isolation_level);
+
+
 
     dbinfo($self,'connected',getlogger(__PACKAGE__));
 
@@ -278,7 +278,7 @@ sub vacuum {
 
     if (defined $self->{dbh}) {
         if ($self->{filemode} == $staticdbfilemode or $self->{filemode} == $timestampdbfilemode) {
-            $self->db_do('VACUUM'); # or sqlitedberror($self,"failed to VACUUM\nDBI error:\n" . $self->{dbh}->errstr(),getlogger(__PACKAGE__));
+            $self->db_do('VACUUM');
             dbinfo($self,'VACUUMed',getlogger(__PACKAGE__));
         }
     }
@@ -330,7 +330,7 @@ sub cleanupdbfiles {
         push @remainingdbfiles,$local_db_path . uc($filename . $dbextension) . $journalpostfix;
     }
     foreach my $file (@files) {
-        #print $file;
+
         my $filepath = $local_db_path . $file;
         if (not contains($filepath,\@remainingdbfiles)) {
             if ((unlink $filepath) == 0) {
@@ -345,7 +345,7 @@ sub getfieldnames {
 
     my $self = shift;
     my $tablename = shift;
-    #my @fieldnames = keys %{$self->db_get_all_hashref('PRAGMA table_info(' . $tablename . ')','name')};
+
     my @fieldnames = ();
     foreach my $field (@{$self->db_get_all_arrayref('PRAGMA table_info(' . $tablename . ')')}) {
         push(@fieldnames,$field->{name});
@@ -358,14 +358,14 @@ sub getprimarykeycols {
 
     my $self = shift;
     my $tablename = shift;
-    #return $self->db_get_col('SHOW FIELDS FROM ' . $tablename);
-    #my $fieldinfo = $self->db_get_all_hashref('PRAGMA table_info(' . $tablename . ')','name');
-    #my @keycols = ();
-    #foreach my $fieldname (keys %$fieldinfo) {
-    #    if ($fieldinfo->{$fieldname}->{'pk'}) {
-    #        push @keycols,$fieldname;
-    #    }
-    #}
+
+
+
+
+
+
+
+
 
     my @keycols = ();
     foreach my $field (@{$self->db_get_all_arrayref('PRAGMA table_info(' . $tablename . ')')}) {
@@ -399,7 +399,7 @@ sub create_indexes {
             foreach my $indexname (keys %$indexes) {
                 my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
                 if (not arrayeq($indexcols,$keycols,1)) {
-                    #$statement .= ', INDEX ' . $indexname . ' (' . join(', ',@{$indexes->{$indexname}}) . ')';
+
                     $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $self->tableidentifier($tablename) . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
                     indexcreated($self,$tablename,$indexname,getlogger(__PACKAGE__));
                 }
@@ -421,20 +421,20 @@ sub create_temptable {
     my $temp_tablename = $self->tableidentifier($index_tablename);
 
     $self->db_do('CREATE TEMPORARY TABLE ' . $temp_tablename . ' AS ' . $select_stmt);
-    #push(@{$self->{temp_tables}},$temp_tablename);
+
     temptablecreated($self,$index_tablename,getlogger(__PACKAGE__));
 
-    #$self->{temp_table_count} += 1;
+
 
     if (defined $indexes and ref $indexes eq 'HASH' and scalar keys %$indexes > 0) {
         foreach my $indexname (keys %$indexes) {
             my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
-            #if (not arrayeq($indexcols,$keycols,1)) {
-                #$statement .= ', INDEX ' . $indexname . ' (' . join(', ',@{$indexes->{$indexname}}) . ')';
+
+
                 $indexname = lc($index_tablename) . '_' . $indexname;
                 $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $temp_tablename . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
                 indexcreated($self,$index_tablename,$indexname,getlogger(__PACKAGE__));
-            #}
+
         }
     }
 
@@ -446,9 +446,9 @@ sub create_texttable {
 
     my $self = shift;
     my ($tablename,$fieldnames,$keycols,$indexes,$truncate,$defer_indexes) = @_;
-    #my ($tableidentifier,$fieldnames,$keycols,$indexes,$truncate) = @_;
 
-    #my $tablename = $self->getsafetablename($tableidentifier);
+
+
 
     if (length($tablename) > 0 and defined $fieldnames and ref $fieldnames eq 'ARRAY') {
 
@@ -456,8 +456,8 @@ sub create_texttable {
         if ($self->table_exists($tablename) == 0) {
             my $statement = 'CREATE TABLE ' . $self->tableidentifier($tablename) . ' (';
             $statement .= join(' TEXT, ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$fieldnames) . ' TEXT'; # sqlite_unicode off... outcoming strings not marked utf8
-            #$statement .= join(' BLOB, ',@$fieldnames) . ' BLOB'; #to maintain source char encoding when inserting?
-            #if (not $defer_indexes and defined $keycols and ref $keycols eq 'ARRAY' and scalar @$keycols > 0 and setcontains($keycols,$fieldnames,1)) {
+
+
             if (defined $keycols and ref $keycols eq 'ARRAY' and scalar @$keycols > 0 and setcontains($keycols,$fieldnames,1)) {
                 $statement .= ', PRIMARY KEY (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$keycols) . ')';
             }
@@ -470,7 +470,7 @@ sub create_texttable {
                 foreach my $indexname (keys %$indexes) {
                     my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
                     if (not arrayeq($indexcols,$keycols,1)) {
-                        #$statement .= ', INDEX ' . $indexname . ' (' . join(', ',@{$indexes->{$indexname}}) . ')';
+
                         $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $self->tableidentifier($tablename) . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
                         indexcreated($self,$tablename,$indexname,getlogger(__PACKAGE__));
                     }
@@ -493,7 +493,7 @@ sub create_texttable {
         return 0;
     }
 
-    #return $tablename;
+
 
 }
 
@@ -525,7 +525,7 @@ sub truncate_table {
     my $tablename = shift;
 
     $self->db_do('DELETE FROM ' . $self->tableidentifier($tablename));
-    #$self->db_do('VACUUM');
+
     tabletruncated($self,$tablename,getlogger(__PACKAGE__));
 
 }
@@ -547,13 +547,13 @@ sub drop_table {
     if ($self->table_exists($tablename) > 0) {
         $self->db_do('DROP TABLE ' . $self->tableidentifier($tablename));
 
-        #my $indexes = $self->db_get_col('SELECT name FROM sqlite_master WHERE type = \'index\' AND tbl_name = ?',$tablename);
-        #foreach my $indexname (@$indexes) {
-        #    $self->db_do('DROP INDEX IF EXISTS ' . $indexname);
-        #}
 
 
-        #$self->db_do('VACUUM');
+
+
+
+
+
         tabledropped($self,$tablename,getlogger(__PACKAGE__));
         return 1;
     }
@@ -612,7 +612,7 @@ sub db_do_begin {
 
     my $self = shift;
     my $query = shift;
-    #my $tablename = shift;
+
 
     $self->SUPER::db_do_begin($query,$rowblock_transactional,@_);
 
@@ -622,8 +622,8 @@ sub db_get_begin {
 
     my $self = shift;
     my $query = shift;
-    #my $tablename = shift;
-    #my $lock = shift;
+
+
 
     $self->SUPER::db_get_begin($query,$rowblock_transactional,@_);
 
@@ -632,7 +632,7 @@ sub db_get_begin {
 sub db_finish {
 
     my $self = shift;
-    #my $unlock = shift;
+
     my $rollback = shift;
 
     $self->SUPER::db_finish($rowblock_transactional,$rollback);

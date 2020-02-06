@@ -14,8 +14,4 @@ sub stringtobool {
     return CTSMS::BulkProcessor::Utils::stringtobool($string);
 }
 
-#sub test {
-#    return "test";
-#}
-
 1;

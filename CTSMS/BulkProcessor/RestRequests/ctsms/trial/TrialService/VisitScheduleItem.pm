@@ -23,7 +23,7 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
     get_trial_list
     get_interval
 );
@@ -35,20 +35,20 @@ my $get_item_path_query = sub {
     return 'visitscheduleitem/' . $id;
 };
 my $get_trial_path_query = sub {
-    my ($trial_id,$sort) = @_; #$probandgroup_id,$visit_id) = @_;
+    my ($trial_id,$sort) = @_;
     my %params = ();
-    #$params{probandGroupId} = $probandgroup_id if defined $probandgroup_id;
-    #$params{visitId} = $visit_id if defined $visit_id; # if defined $section;
-    $params{sort} = booltostring($sort); # if defined $section;
+
+
+    $params{sort} = booltostring($sort);
     return 'trial/' . $trial_id . '/list/visitscheduleitem' . get_query_string(\%params);
 };
 my $get_interval_path_query = sub {
-    my ($trial_id,$from,$to,$sort) = @_; #$probandgroup_id,$visit_id) = @_;
+    my ($trial_id,$from,$to,$sort) = @_;
     my %params = ();
     $params{trial_id} = $trial_id if defined $trial_id;
     $params{from} = $from if defined $from;
-    $params{to} = $from if defined $to; 
-    $params{sort} = booltostring($sort); # if defined $section;
+    $params{to} = $from if defined $to;
+    $params{sort} = booltostring($sort);
     return 'visitscheduleitem/interval' . get_query_string(\%params);
 };
 

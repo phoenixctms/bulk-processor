@@ -41,19 +41,19 @@ my $lc_ctype = 'C';
 
 my $client_encoding = 'LATIN1';
 
-#my $LongReadLen = $LongReadLen_limit; #bytes
-#my $LongTruncOk = 0;
 
-#my $logger = getlogger(__PACKAGE__);
 
-#my $lock_do_chunk = 0;
-#my $lock_get_chunk = 0;
+
+
+
+
+
 
 my $rowblock_transactional = 1;
 
-#my $to_number_pattern = '9.9999999999999'; #EEEE';
 
-my $transaction_isolation_level = ''; #'SERIALIZABLE'
+
+my $transaction_isolation_level = '';
 
 my $enable_numeric_sorting = 0;
 
@@ -111,7 +111,7 @@ sub get_tableidentifier {
 
     my ($tablename,$schemaname) = @_;
 
-    #return SUPER::get_tableidentifier($tablename,$schemaname);
+
 
     if (defined $schemaname) {
         return $schemaname . '.' . $tablename;
@@ -130,8 +130,8 @@ sub getsafetablename {
 
     return lc($self->SUPER::getsafetablename($tableidentifier));
 
-    #$tableidentifier =~ s/[^0-9a-z_]/_/gi;
-    #return lc($tableidentifier); # ... windows!
+
+
 
 }
 
@@ -156,7 +156,7 @@ sub paginate_sort_query {
 sub _force_numeric_column {
     my $self = shift;
     my $column = shift;
-    return 'try_to_number(' . $column . '::text)'; # ,\'' . $to_number_pattern . '\')';
+    return 'try_to_number(' . $column . '::text)';
 }
 
 sub getdatabases {
@@ -194,7 +194,7 @@ sub _createdatabase {
                 PrintError      => 0,
                 RaiseError      => 0,
                 AutoCommit      => 1,
-                #AutoCommit      => 0,
+
             }
         ) or dberror($self,'error connecting: ' . $self->{drh}->errstr(),getlogger(__PACKAGE__));
         $self->{dbh} = $dbh;
@@ -236,14 +236,14 @@ sub db_connect {
             PrintError      => 0,
             RaiseError      => 0,
             AutoCommit      => 1,
-            #AutoCommit      => 0,
+
         }
     ) or dberror($self,'error connecting: ' . $self->{drh}->errstr(),getlogger(__PACKAGE__));
 
     $dbh->{InactiveDestroy} = 1;
 
-    #$dbh->{LongReadLen} = $LongReadLen;
-    #$dbh->{LongTruncOk} = $LongTruncOk;
+
+
 
     $self->{dbh} = $dbh;
 
@@ -253,11 +253,11 @@ sub db_connect {
         $self->db_do('SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL ' . $transaction_isolation_level);
     }
 
-    #SHOW search_path;
-    #$self->db_do('SET search_path TO ' . $schemaname);
-    #print $self->db_get_value('SHOW search_path');
-    #print $self->db_get_value('select count(*) from address_type');
-    #GRANT usage on schema public to ctsms;
+
+
+
+
+
 
     #http://stackoverflow.com/questions/2082686/how-do-i-cast-a-string-to-integer-and-have-0-in-case-of-error-in-the-cast-with-p
 
@@ -301,18 +301,18 @@ sub vacuum {
 sub _db_disconnect {
 
     my $self = shift;
-    ##$self->db_finish();
-    #$self->SUPER::db_finish();
-    #
-    #if (defined $self->{dbh}) {
-    #    cleartableinfo($self);
-    #    mysqldbinfo($self,'mysql db disconnecting',getlogger(__PACKAGE__));
-    #    $self->{dbh}->disconnect() or mysqldberror($self,'error disconnecting from mysql db',getlogger(__PACKAGE__));
-    #    $self->{dbh} = undef;
-    #
-    #    mysqldbinfo($self,'mysql db disconnected',getlogger(__PACKAGE__));
-    #
-    #}
+
+
+
+
+
+
+
+
+
+
+
+
 
     $self->SUPER::_db_disconnect();
 
@@ -351,12 +351,12 @@ sub create_temptable {
     if (defined $indexes and ref $indexes eq 'HASH' and scalar keys %$indexes > 0) {
         foreach my $indexname (keys %$indexes) {
             my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
-            #if (not arrayeq($indexcols,$keycols,1)) {
-                #$statement .= ', INDEX ' . $indexname . ' (' . join(', ',@{$indexes->{$indexname}}) . ')';
+
+
                 $indexname = lc($index_tablename) . '_' . $indexname;
                 $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $temp_tablename . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
                 indexcreated($self,$index_tablename,$indexname,getlogger(__PACKAGE__));
-            #}
+
         }
     }
 
@@ -395,7 +395,7 @@ sub create_indexes {
                 foreach my $indexname (keys %$indexes) {
                     my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
                     if (not arrayeq($indexcols,$keycols,1)) {
-                        #$statement .= ', INDEX ' . $indexname . ' (' . join(', ',@{$indexes->{$indexname}}) . ')';
+
                         $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $self->tableidentifier($tablename) . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
                         indexcreated($self,$tablename,$indexname,getlogger(__PACKAGE__));
                     }
@@ -412,17 +412,17 @@ sub create_texttable {
     my $self = shift;
     my ($tablename,$fieldnames,$keycols,$indexes,$truncate,$defer_indexes) = @_;
 
-    #my $tablename = $self->getsafetablename($tableidentifier);
-    #my ($tableidentifier,$fieldnames,$keycols,$indexes,$truncate) = @_;
 
-    #my $tablename = $self->getsafetablename($tableidentifier);
+
+
+
 
     if (length($tablename) > 0 and defined $fieldnames and ref $fieldnames eq 'ARRAY') {
 
         my $created = 0;
         if ($self->table_exists($tablename) == 0) {
             my $statement = 'CREATE TABLE ' . $self->tableidentifier($tablename) . ' (';
-            #$statement .= join(' TEXT, ',@$fieldnames) . ' TEXT';
+
 
             my @fieldspecs = ();
             foreach my $fieldname (@$fieldnames) {
@@ -440,7 +440,7 @@ sub create_texttable {
                 foreach my $indexname (keys %$indexes) {
                     my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
                     if (not arrayeq($indexcols,$keycols,1)) {
-                        #$statement .= ', INDEX ' . $indexname . ' (' . join(', ',@{$indexes->{$indexname}}) . ')';
+
                         $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $self->tableidentifier($tablename) . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
                         indexcreated($self,$tablename,$indexname,getlogger(__PACKAGE__));
                     }
@@ -464,7 +464,7 @@ sub create_texttable {
         return 0;
     }
 
-    #return $tablename;
+
 
 }
 
@@ -518,7 +518,7 @@ sub db_do_begin {
 
     my $self = shift;
     my $query = shift;
-    #my $tablename = shift;
+
 
     $self->SUPER::db_do_begin($query,$rowblock_transactional,@_);
 
@@ -528,8 +528,8 @@ sub db_get_begin {
 
     my $self = shift;
     my $query = shift;
-    #my $tablename = shift;
-    #my $lock = shift;
+
+
 
     $self->SUPER::db_get_begin($query,$rowblock_transactional,@_);
 
@@ -538,7 +538,7 @@ sub db_get_begin {
 sub db_finish {
 
     my $self = shift;
-    #my $unlock = shift;
+
     my $rollback = shift;
 
     $self->SUPER::db_finish($rowblock_transactional,$rollback);

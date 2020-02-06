@@ -5,8 +5,8 @@ use strict;
 ## no critic
 
 use Dancer qw();
-#use JSON -support_by_pp, -no_export;
-#no use Dancer::Plugin::I18N !!;
+
+
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     get_site_options
     get_navigation_options
@@ -27,14 +27,14 @@ our $navigation_options = sub {
 };
 
 Dancer::get('/',sub {
-    #die();
+
     Dancer::session("referer",Dancer::request->referer);
     return get_template('start',
         script_names => 'start',
         style_names => 'start',
         js_model => {
             apiError => get_error(1),
-            probandCreated => (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::created() ? \1 : \0), #JSON::true : JSON::false),
+            probandCreated => (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::created() ? \1 : \0),
             probandDepartmentId => Dancer::session("proband_department_id"),
             start_js_model(),
         },
@@ -51,7 +51,7 @@ Dancer::post('/',sub {
 sub start_js_model {
     return (
         siteOptions => get_site_options(),
-        enableGeolocationServices => ($enable_geolocation_services ? \1 : \0), #JSON::true : JSON::false),
+        enableGeolocationServices => ($enable_geolocation_services ? \1 : \0),
         trialSitesHeader => Dancer::Plugin::I18N::localize('trial_sites_header'),
         selectSiteBtnLabel => Dancer::Plugin::I18N::localize('select_site_btn_label'),
     );
