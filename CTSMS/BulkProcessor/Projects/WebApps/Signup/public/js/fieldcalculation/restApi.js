@@ -4,7 +4,7 @@ var RestApi = RestApi || {};
 (function(RestApi) {
 
 	var url = REST_API_URL;
-	
+
 	var debug_level = 0;
 
 	function createRequest(method, path, username, password) {
@@ -27,18 +27,18 @@ var RestApi = RestApi || {};
 		}
 	}
 
-//	function get(path, successcb, data, username, password) {
-//		var request = createRequest('GET', path, username, password);
-//		request.success = successcb;
-//		if (data) {
-//			request.data = data;
-//		}
-//		executeRequest(request);
-//	}
+
+
+
+
+
+
+
+
 
 	RestApi.createRequest = createRequest;
 	RestApi.executeRequest = executeRequest;
-	//RestApi.get = get;
+
 
 	if (debug_level >= 1) {
 		console.log("rest api utilities loaded");

@@ -3,8 +3,8 @@
 //if (!window.console) console = {log: function() {}};
 
 var datePickerDefaults = $.extend( true, {}, $.datepicker.regional[context.lang] );
-datePickerDefaults.dateFormat = context.dateFormat.replace('yyyy','yy').replace('MM','mm'); // yyyy-MM-dd -> yy-mm-dd
-//datePickerDefaults.yearRange: "-120:+0",
+datePickerDefaults.dateFormat = context.dateFormat.replace('yyyy','yy').replace('MM','mm');
+
 datePickerDefaults.changeMonth = true;
 datePickerDefaults.changeYear = true;
 $.datepicker.setDefaults(datePickerDefaults);
@@ -38,17 +38,17 @@ var sessionMaxInactiveInterval = null;
 function createSessionTimer(duration) {
 	if (duration != null && duration > 0) {
 		sessionMaxInactiveInterval = +duration;
-		var sessionExpiry = (new Date()); //.addSeconds(sessionMaxInactiveInterval);
+		var sessionExpiry = (new Date());
         sessionExpiry.setSeconds(sessionExpiry.getSeconds() + sessionMaxInactiveInterval);
-		jQuery('#session_timer').countdown(sessionExpiry, { //.toString('yyyy/MM/dd HH:mm:ss'), {
+		jQuery('#session_timer').countdown(sessionExpiry, {
 		    elapse : false, // Allow to continue after finishes
 		    precision : 1000, // The update rate in milliseconds
 		}).on('update.countdown', function(event) {
 			jQuery(this).html(event.strftime(SESSION_TIMER_PATTERN));
 		}).on('finish.countdown', function(event) {
             self.location = context.uriBase;
-			//sessionMaxInactiveInterval = null;
-			//jQuery(this).html('XXXX'); //SESSION_EXPIRED_MESSAGE);
+
+
 		});
 	} else {
 		sessionMaxInactiveInterval = null;
@@ -57,20 +57,20 @@ function createSessionTimer(duration) {
 
 function resetSessionTimers() {
 	if (sessionMaxInactiveInterval != null) {
-		var sessionExpiry = (new Date()); //.addSeconds(sessionMaxInactiveInterval);
+		var sessionExpiry = (new Date());
         sessionExpiry.setSeconds(sessionExpiry.getSeconds() + sessionMaxInactiveInterval);
-		jQuery('#session_timer').countdown(sessionExpiry); //.toString('yyyy/MM/dd HH:mm:ss'));
+		jQuery('#session_timer').countdown(sessionExpiry);
 	}
 }
 
-//$.support.cors = true;
+
 
 $.ajaxSettings = $.extend( true, {}, $.ajaxSettings );
 $.ajaxSettings.crossDomain = false;
 $.ajaxSettings.type = "POST";
 $.ajaxSettings.async = true;
 $.ajaxSettings.dataType = 'json';
-$.ajaxSettings.timeout = 60000; //15000; //60000;
+$.ajaxSettings.timeout = 60000;
 $.ajaxSettings.global = false;
 $.ajaxSettings.cache = false;
 $.ajaxSettings.error = function(jqXHR, textStatus, errorThrown) {
@@ -86,12 +86,12 @@ $.ajaxSettings.error = function(jqXHR, textStatus, errorThrown) {
             hideWaitDlg();
         }
     } else {
-        setMessages('error', { summary: textStatus, detail: errorThrown }); //{summary: 'Message Title', detail: context.apiError});
+        setMessages('error', { summary: textStatus, detail: errorThrown });
         hideWaitDlg();
     }
 };
 $.ajaxSettings.beforeSend = function(jqXHR, settings) {
-    //jqXHR.setRequestHeader('Connection', 'close');
+
     showWaitDlg();
 };
 $.ajaxSettings.complete = function(jqXHR, textStatus) {
@@ -100,7 +100,7 @@ $.ajaxSettings.complete = function(jqXHR, textStatus) {
 
 var autoCompleteAjaxSettings = $.extend( true, {}, $.ajaxSettings );
 autoCompleteAjaxSettings.crossDomain = false;
-autoCompleteAjaxSettings.timeout = 15000; //5000;
+autoCompleteAjaxSettings.timeout = 15000;
 autoCompleteAjaxSettings.type = "POST";
 autoCompleteAjaxSettings.async = true;
 autoCompleteAjaxSettings.dataType = 'json';
@@ -108,7 +108,7 @@ autoCompleteAjaxSettings.cache = true;
 autoCompleteAjaxSettings.global = false;
 autoCompleteAjaxSettings.error = null;
 autoCompleteAjaxSettings.beforeSend = function(jqXHR, settings) {
-    //jqXHR.setRequestHeader('Connection', 'close');
+
 };
 autoCompleteAjaxSettings.complete = function(jqXHR, textStatus) {
     resetSessionTimers();
@@ -116,7 +116,7 @@ autoCompleteAjaxSettings.complete = function(jqXHR, textStatus) {
 
 var restApiAjaxSettings = $.extend( true, {}, $.ajaxSettings );
 restApiAjaxSettings.crossDomain = true;
-restApiAjaxSettings.timeout = 15000; //15000;
+restApiAjaxSettings.timeout = 15000;
 restApiAjaxSettings.type = "GET";
 restApiAjaxSettings.async = true;
 restApiAjaxSettings.dataType = 'json';
@@ -124,21 +124,21 @@ restApiAjaxSettings.cache = false;
 restApiAjaxSettings.global = false;
 restApiAjaxSettings.error = null;
 restApiAjaxSettings.beforeSend = function(jqXHR, settings) {
-    //jqXHR.setRequestHeader('Connection', 'close');
+
 };
 restApiAjaxSettings.complete = null;
 
 function getTitleAutoCompleteConfig() {
     return {
-        //styleClass: 'ctsms-control-smaller',
+
         effect: 'fade',
         effectSpeed: 'fast',
         completeSource: function(request, response) {
             $.ajax($.extend( true, autoCompleteAjaxSettings, {
-                // "GET",
+
                 url: context.uriBase + '/autocomplete/title',
                 data: { title: request.query },
-                //dataType: "json",
+
                 context: this,
                 success: function(data) {
                     response.call(this, data);
@@ -150,15 +150,15 @@ function getTitleAutoCompleteConfig() {
 
 function getCountryNameAutoCompleteConfig() {
     return {
-        //styleClass: 'ctsms-control',
+
         effect: 'fade',
         effectSpeed: 'fast',
         completeSource: function(request, response) {
             $.ajax($.extend( true, autoCompleteAjaxSettings, {
-                //type: "GET",
+
                 url: context.uriBase + '/autocomplete/country',
                 data: { country_name: request.query },
-                //dataType: "json",
+
                 context: this,
                 success: function(data) {
                     response.call(this, data);
@@ -170,15 +170,15 @@ function getCountryNameAutoCompleteConfig() {
 
 function getCityNameAutoCompleteConfig(countryNameId,zipCodeId) {
     return {
-        //styleClass: 'ctsms-control',
+
         effect: 'fade',
         effectSpeed: 'fast',
         completeSource: function(request, response) {
             $.ajax($.extend( true, autoCompleteAjaxSettings, {
-                //type: "GET",
+
                 url: context.uriBase + '/autocomplete/city',
                 data: { city_name: request.query, country_name: $('#' + countryNameId).val(), zip_code: $('#' + zipCodeId).val() },
-                //dataType: "json",
+
                 context: this,
                 success: function(data) {
                     response.call(this, data);
@@ -190,15 +190,15 @@ function getCityNameAutoCompleteConfig(countryNameId,zipCodeId) {
 
 function getZipCodeAutoCompleteConfig(countryNameId,cityNameId) {
     return {
-        //styleClass: 'ctsms-control-smaller',
+
         effect: 'fade',
         effectSpeed: 'fast',
         completeSource: function(request, response) {
             $.ajax($.extend( true, autoCompleteAjaxSettings, {
-                //type: "GET",
+
                 url: context.uriBase + '/autocomplete/zip',
                 data: { zip_code: request.query, country_name: $('#' + countryNameId).val(), city_name: $('#' + cityNameId).val() },
-                //dataType: "json",
+
                 context: this,
                 success: function(data) {
                     response.call(this, data);
@@ -210,15 +210,15 @@ function getZipCodeAutoCompleteConfig(countryNameId,cityNameId) {
 
 function getStreetNameAutoCompleteConfig(countryNameId,cityNameId) {
     return {
-        //styleClass: 'ctsms-control',
+
         effect: 'fade',
         effectSpeed: 'fast',
         completeSource: function(request, response) {
             $.ajax($.extend( true, autoCompleteAjaxSettings, {
-                //type: "GET",
+
                 url: context.uriBase + '/autocomplete/street',
                 data: { street_name: request.query, country_name: $('#' + countryNameId).val(), city_name: $('#' + cityNameId).val() },
-                //dataType: "json",
+
                 context: this,
                 success: function(data) {
                     response.call(this, data);
@@ -231,17 +231,17 @@ function getStreetNameAutoCompleteConfig(countryNameId,cityNameId) {
 
 function getFieldValueAutoCompleteConfig(inputField) {
     return {
-        //styleClass: 'ctsms-control',
+
         effect: 'fade',
         effectSpeed: 'fast',
         forceSelection: inputField.strict,
         dropdown: inputField.strict,
         completeSource: function(request, response) {
             $.ajax($.extend( true, autoCompleteAjaxSettings, {
-                //type: "GET",
+
                 url: context.uriBase + '/autocomplete/fieldvalue',
                 data: { value: request.query, id: inputField.id },
-                //dataType: "json",
+
                 context: this,
                 success: function(data) {
                     response.call(this, data);
@@ -326,21 +326,21 @@ function zeroFill(integer,digits) {
     return result;
 }
 
-//function parseDate(input) {
-//    if (input == null || input.length == 0) {
-//        return null;
-//    }
-//    Datepicker.parseDate()
-//	//return Date.parseExact(input, context.datePickerAltFormat);
-//};
+
+
+
+
+
+
+
 
 function initMainPrimeUI(context) {
-    //$('#lang').puidropdown({
-    //        styleClass: 'ctsms-control',
-    //        change: function() {
-    //            self.location = getUrlPath() + '?lang='+this.options[this.selectedIndex].value;
-    //        }
-    //});
+
+
+
+
+
+
     if (context.enableSessionTimer) {
         $('#session_timer_icon').show();
         createSessionTimer(context.sessionTimeout);
@@ -355,33 +355,33 @@ function initMainPrimeUI(context) {
     $('#wait_dlg').puidialog({
         draggable: false,
         resizable: false,
-        width: 'auto', //'200',
+        width: 'auto',
         modal: true,
         closeOnEscape: false,
         closable: false,
         minimizable: false,
         maximizable: false
-        //appendTo: $(document.body)document.body
+
     });
 }
 
-//function enableTooltips() {
-//    $(document).puitooltip();
-//}
 
-//function _sanitizeDatePicker(pickerId,altFieldId,required) {
-//    var val = $('#' + pickerId).val();
-//    if (val == null || val.length == 0) {
-//        $('#' + altFieldId).val(null);
-//        $('#' + pickerId).puidatepicker('setDate', null);
-//        if (required) {
-//            //alert();
-//            return false;
-//        }
-//    }
-//    //$.datepicker._updateAlternate(inst);
-//    return true; // return false to cancel form action
-//}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function setMessages(severity, msgs) {
     $('div[id$="message"]').puimessages('clear');
@@ -414,7 +414,7 @@ function createIframe(id,htmlString) {
     var html = $('<html/>').appendTo(iframe);
     var head = $('<head/>').appendTo(html);
     var body = $('<body />').appendTo(html);
-    //body.html(htmlString);
+
 
     iframe.load(function(e){
         var body = $('#' + id).contents().find('body');
@@ -431,13 +431,13 @@ function createIframe(id,htmlString) {
 }
 
 function initIframe(id,htmlString) {
-    //$('#' + id).load(function(e){
-    //    var body = $('#' + id).contents().find('body');
-    //    body.css({
-    //        "margin": "4px",
-    //        "font": "10pt Arial,sans-serif",
-    //        "cursor": "text"
-    //    });
-    //    body.html(htmlString);
-    //});
+
+
+
+
+
+
+
+
+
 }

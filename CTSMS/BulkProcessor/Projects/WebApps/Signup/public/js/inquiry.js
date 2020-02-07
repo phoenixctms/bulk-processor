@@ -1,17 +1,17 @@
 
 var idRegexp = /^(\d+)_(\d+_)?([a-z_]+)$/;
 
-//function _setInit(context,init) {
-//    context.init = init;
-//    $('#init').val(init ? 'true' : 'false');
-//}
+
+
+
+
 
 function initPrimeUI(context) {
 
     context.fieldsPerPage = 5;
-    context.fieldsPerRow = 1; //3;
+    context.fieldsPerRow = 1;
 
-    //_setInit(context,true);
+
     context.init = true;
     context.checkForm = null;
 
@@ -29,7 +29,7 @@ function initPrimeUI(context) {
         columns: 1,
         datasource: function(callback, ui, updateUi) {
             _saveEnteredData(context,this,callback,ui,updateUi);
-            //_saveEnteredData(context,,this);
+
         },
         content: function(value) {
             context.inquiryStatusVar.i += 1;
@@ -40,10 +40,10 @@ function initPrimeUI(context) {
             }
             context.inquiryStatusVar.toPost = context.inquiryStatusVar.i - context.inquiryStatusVar.posted;
             var jsValueExpression = context.cs.strip(value.inquiry.jsValueExpression);
-            //var jsOutputExpression = context.cs.strip(value.inquiry.jsOutputExpression);
+
             value.hasJsVar = value.inquiry.jsVariableName != null && value.inquiry.jsVariableName.length > 0;
             value.hasJsValueExpression = jsValueExpression != null && jsValueExpression.length > 0;
-            //value.hasJsOutputExpression = jsOutputExpression != null && jsOutputExpression.length > 0;
+
             if (context.inquiryStatusVar.first) {
                 context.inquiryStatusVar.category = value.inquiry.category;
             }
@@ -58,46 +58,46 @@ function initPrimeUI(context) {
             return content.length > 0 ? content : null;
         },
         initContent: function(content) {
-            //var categoryPanel = content[0];
-            //categoryPanel.find('[id$="checkbox"]').puicheckbox();
-            //categoryPanel.find('[id$="select_one_dropdown"]').puidropdown({
-            //    styleClass: 'ctsms-control'
-            //});
+
+
+
+
+
             while(context.inquiryStatusVar.fieldsToInit.length > 0) {
                 var inquiryField = context.inquiryStatusVar.fieldsToInit.shift();
                 _initInquiryField(context,inquiryField.value,inquiryField.content);
             }
 
-            //for (var i = 0; i < context.inquiryStatusVar.categoryFields.length; i++) {
-            //    var inquiryField = context.inquiryStatusVar.categoryFields[i];
-            //    _initInquiryField(context,inquiryField.value,inquiryField.content);
-            //}
 
-            //console.log(context.inquiryStatusVar.category);
-            //for (var i = 0; i < context.inquiryStatusVar.categoryFields.lengh; i++) {
-            //
-            //}
-    //            var selectOneDropdown = $('<input type="select" name="' + selectOneDropdownName + '" id="' + selectOneDropdownId + '"/>').puidropdown({
-    //    styleClass: 'ctsms-control'
-    //});
-            //content.each(function(index,element){
-            //    var inquiryId = _getInquiryId(element);
-            //    //setCheckboxVal(inquiryId,getCheckboxVal(inquiryId));
-            //});
-            //$('#form :input[id*="checkbox_"]').puicheckbox();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         }
     });
 
     $('#incomplete_dlg').puidialog({
         draggable: false,
         resizable: false,
-        width: 'auto', //'200',
+        width: 'auto',
         modal: true,
         closeOnEscape: false,
         closable: false,
         minimizable: false,
         maximizable: false,
-        //appendTo: $(document.body)document.body
+
         buttons: [{
                 text: context.yesBtnLabel,
                 icon: 'fa-check',
@@ -131,7 +131,7 @@ function initPrimeUI(context) {
     });
     $('#prev_btn').puibutton({
         icon: 'fa-angle-left'
-        //iconPos: 'right'
+
     });
     $('#done_btn').puibutton({
         icon: 'fa-angle-double-right',
@@ -145,9 +145,9 @@ function initPrimeUI(context) {
         }
     });
 
-    //var cb = $('<input type="checkbox" name="x" id="x" value="true"/>');
-    //$('#form').append(cb);
-    //cb.puicheckbox();
+
+
+
 }
 
 function _addInquiryField(context,value) {
@@ -167,12 +167,12 @@ function _createInquiryCategory(context) {
     var content = $('<div></div>').puipanel({
         title: context.inquiryStatusVar.category
     });
-    var grid = $('<div class="ui-datagrid-content ui-datagrid-col-' + context.fieldsPerRow + '"></div>'); //ui-datagrid-content ui-widget-content
+    var grid = $('<div class="ui-datagrid-content ui-datagrid-col-' + context.fieldsPerRow + '"></div>');
     content.append(grid);
     for (var i = 0; i < context.inquiryStatusVar.categoryFields.length; i++) {
         grid.append(context.inquiryStatusVar.categoryFields[i].content);
         context.inquiryStatusVar.fieldsToInit.push(context.inquiryStatusVar.categoryFields[i]);
-        //grid.append($('<hr/>'));
+
     }
     return content;
 }
@@ -180,7 +180,7 @@ function _createInquiryCategory(context) {
 function _createInquiryField(context,value) {
     var content = $('<div class="ctsms-form-entry"/>');
 
-    var grid = $('<div class="ui-grid"/>'); //ui-grid-responsive
+    var grid = $('<div class="ui-grid"/>');
     var fieldSet = $('<fieldset/>').append($('<legend/>').append(document.createTextNode(value.inquiry.position + '. ' + value.inquiry.field.name))).append(grid).puifieldset({
         toggleable: true
     });
@@ -193,35 +193,35 @@ function _createInquiryField(context,value) {
 
     switch (value.inquiry.field.fieldType.type) {
         case 'SINGLE_LINE_TEXT':
-            //value.textValue = '""äöüÄÖÜß\'\\n\nx';
+
             inputContent.append(_createSingleLineText(context,value));
             break;
         case 'MULTI_LINE_TEXT':
-            //value.textValue = '""äöüÄÖÜß\'\\n\nxxxx';
+
             inputContent.append(_createMultiLineText(context,value));
             break;
         case 'AUTOCOMPLETE':
             inputContent.append(_createAutocomplete(context,value));
             break;
         case 'DATE':
-            //value.dateValue = '19.11.2016';
+
             inputContent.append(_createDatePicker(context,value));
             break;
         case 'TIME':
-            //value.timeValue = '12:45';
+
             inputContent.append(_createTimePicker(context,value));
             break;
         case 'TIMESTAMP':
-            //value.timestampdateValue = '19.11.2016';
-            //value.timestamptimeValue = '12:45';
+
+
             inputContent.append(_createDateTimePicker(context,value));
             break;
         case 'CHECKBOX':
-            //value.booleanValue = true;
+
             inputContent.append(_createCheckbox(context,value));
             break;
         case 'SELECT_ONE_DROPDOWN':
-            //value.someValue = true;
+
             inputContent.append(_createSelectOneDropdown(context,value));
             break;
         case 'SELECT_ONE_RADIO_H':
@@ -281,9 +281,9 @@ function _createInquiryField(context,value) {
 
 }
 
-//function _getOutputId(value) {
-//    return INPUT_FIELD_OUTPUT_ID_PREFIX + value.inquiry.id; // + (value.inquiry.series ? INPUT_FIELD_OUTPUT_ID_INDEX_SEPARATOR + value.index : '');
-//}
+
+
+
 
 function _initInquiryField(context,value,content) {
 
@@ -291,7 +291,7 @@ function _initInquiryField(context,value,content) {
 
     switch (value.inquiry.field.fieldType.type) {
         case 'SINGLE_LINE_TEXT':
-            //value.textValue = '""äöüÄÖÜß\'\\n\nx';
+
             _initSingleLineText(context,value,content);
             $('#' + applyBtnId).on('click', function(event) {
                 FieldCalculation.singleLineTextApplyCalculatedValue(value);
@@ -387,16 +387,16 @@ function _createDatePicker(context,value) {
     var datePickerHiddenId = value.inquiry.id + '_date_picker_hidden';
     var datePickerHidden = $('<input type="hidden" name="' + datePickerName + '" id="' + datePickerHiddenId + '" value="' + (value.dateValue != null ? value.dateValue : '') + '"' + (!value.inquiry.disabled ? ' disabled' : '') + '/>');
     var datePicker = $('<input type="text" class="ctsms-control-date" name="' + datePickerName + '" id="' + datePickerId + '" value="' + (value.dateValue != null ? value.dateValue : '') + '"/>').puidatepicker({
-        //disabled: value.inquiry.disabled
+
     });
-    //if (value.inquiry.disabled) {
-    //    datePicker.puidatepicker('disable');
-    //}
-    //datePicker.puitooltip({
-    //    my: 'left bottom',
-    //    at: 'left top',
-    //    content: _getTooltipText(context,value) //context.probandDobTooltip
-    //});
+
+
+
+
+
+
+
+
     return [ datePickerHidden, datePicker ];
 }
 function _initDatePicker(context,value, content) {
@@ -413,28 +413,28 @@ function _initDatePicker(context,value, content) {
     $('#' + datePickerId).puitooltip({
         my: 'left bottom',
         at: 'left top',
-        content: _getTooltipText(context,value) //context.probandDobTooltip
+        content: _getTooltipText(context,value)
     });
 }
 
 function setDatePickerVal(inquiryId,date) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_date_picker');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_date_picker');
     _setPickerDate(elem,date);
 }
 
 function getDatePickerVal(inquiryId) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_date_picker');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_date_picker');
     return elem.puidatepicker('getDate');
 }
@@ -456,16 +456,16 @@ function _createTimePicker(context,value) {
     var timePickerHiddenId = value.inquiry.id + '_time_picker_hidden';
     var timePickerHidden = $('<input type="hidden" name="' + timePickerName + '" id="' + timePickerHiddenId + '" value="' + (value.timeValue != null ? value.timeValue : '') + '"' + (!value.inquiry.disabled ? ' disabled' : '') + '/>');
     var timePicker = $('<input type="text" class="ctsms-control-time" name="' + timePickerName + '" id="' + timePickerId + '" value="' + (value.timeValue != null ? value.timeValue : '') + '"/>').puitimepicker({
-        //disabled: value.inquiry.disabled
+
     });
-    //if (value.inquiry.disabled) {
-    //    timePicker.puitimepicker('disable');
-    //}
-    //timePicker.puitooltip({
-    //    my: 'left bottom',
-    //    at: 'left top',
-    //    content: _getTooltipText(context,value) //context.probandDobTooltip
-    //});
+
+
+
+
+
+
+
+
     return [ timePickerHidden, timePicker ];
 }
 function _initTimePicker(context,value,content) {
@@ -482,28 +482,28 @@ function _initTimePicker(context,value,content) {
     $('#' + timePickerId).puitooltip({
         my: 'left bottom',
         at: 'left top',
-        content: _getTooltipText(context,value) //context.probandDobTooltip
+        content: _getTooltipText(context,value)
     });
 }
 
 function setTimePickerVal(inquiryId,time) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_time_picker');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_time_picker');
     _setPickerTime(elem,time);
 }
 
 function getTimePickerVal(inquiryId) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_time_picker');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_time_picker');
     return elem.puitimepicker('getTime');
 }
@@ -525,30 +525,30 @@ function _createDateTimePicker(context,value) {
     var datePickerHiddenId = value.inquiry.id + '_timestampdate_picker_hidden';
     var datePickerHidden = $('<input type="hidden" name="' + datePickerName + '" id="' + datePickerHiddenId + '" value="' + (value.timestampdateValue != null ? value.timestampdateValue : '') + '"' + (!value.inquiry.disabled ? ' disabled' : '') + '/>');
     var datePicker = $('<input type="text" class="ctsms-control-date" name="' + datePickerName + '" id="' + datePickerId + '" value="' + (value.timestampdateValue != null ? value.timestampdateValue : '') + '"/>').puidatepicker({
-        //disabled: value.inquiry.disabled
+
     });
-    //if (value.inquiry.disabled) {
-    //    datePicker.puidatepicker('disable');
-    //}
-    //datePicker.puitooltip({
-    //    my: 'left bottom',
-    //    at: 'left top',
-    //    content: _getTooltipText(context,value) //context.probandDobTooltip
-    //});
+
+
+
+
+
+
+
+
 
     var timePickerName = 'timestamptime_' + value.inquiry.id;
     var timePickerId = value.inquiry.id + '_timestamptime_picker';
     var timePickerHiddenId = value.inquiry.id + '_timestamptime_picker_hidden';
     var timePickerHidden = $('<input type="hidden" name="' + timePickerName + '" id="' + timePickerHiddenId + '" value="' + (value.timestamptimeValue != null ? value.timestamptimeValue : '') + '"' + (!value.inquiry.disabled ? ' disabled' : '') + '/>');
     var timePicker = $('<input type="text" class="ctsms-control-time" name="' + timePickerName + '" id="' + timePickerId + '" value="' + (value.timestamptimeValue != null ? value.timestamptimeValue : '') + '"/>').puitimepicker({
-        //disabled: value.inquiry.disabled
+
     });
-    //if (value.inquiry.disabled) {
-    //    timePicker.puitimepicker('disable');
-    //}
-    //timePicker.puitooltip({
-    //    content: _getTooltipText(context,value) //context.probandDobTooltip
-    //});
+
+
+
+
+
+
     return [ datePickerHidden, datePicker, timePickerHidden, timePicker ];
 }
 function _initDateTimePicker(context,value,content) {
@@ -565,7 +565,7 @@ function _initDateTimePicker(context,value,content) {
     $('#' + datePickerId).puitooltip({
         my: 'left bottom',
         at: 'left top',
-        content: _getTooltipText(context,value) //context.probandDobTooltip
+        content: _getTooltipText(context,value)
     });
     var timePickerId = value.inquiry.id + '_timestamptime_picker';
     if (value.inquiry.disabled) {
@@ -577,44 +577,44 @@ function _initDateTimePicker(context,value,content) {
             FieldCalculation.timestampOnChange(value);
         });
     }
-    //timePicker.puitooltip({
-    //    content: _getTooltipText(context,value) //context.probandDobTooltip
-    //});
+
+
+
 }
 
 function setDateTimePickerVal(inquiryId,datetime) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_timestampdate_picker');
-    //} else {
-    //    elem = inquiryId[0];
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_timestampdate_picker');
     _setPickerDate(elem,datetime);
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_timestamptime_picker');
-    //} else {
-    //    elem = inquiryId[1];
-    //}
+
+
+
+
+
     elem = $('#' + inquiryId + '_timestamptime_picker');
     _setPickerTime(elem,datetime);
 }
 
 function getDateTimePickerVal(inquiryId) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_timestampdate_picker');
-    //} else {
-    //    elem = inquiryId[0];
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_timestampdate_picker');
     var date = elem.puidatepicker('getDate');
     if (date != null) {
-        //if($.type(inquiryId) === "string") {
-        //    elem = $('#' + inquiryId + '_timestamptime_picker');
-        //} else {
-        //    elem = inquiryId[1];
-        //}
+
+
+
+
+
         elem = $('#' + inquiryId + '_timestamptime_picker');
         var time = elem.puitimepicker('getTime');
         if (time != null) {
@@ -634,8 +634,8 @@ function _createSingleLineText(context,value) {
         "id": singleLineTextHiddenId,
         "disabled": !value.inquiry.disabled,
         "value": (value.textValue != null ? value.textValue : '')
-    }); //$('<input type="hidden" name="' + singleLineTextName + '" id="' + singleLineTextHiddenId + '" value=""/>');
-    //var singleLineText = $('<input type="text" class="ctsms-control" name="' + singleLineTextName + '" id="' + singleLineTextId + '"/>', { "value": value.textValue }).puiinputtext();
+    });
+
     var singleLineText = $('<input>', {
         "type": "text",
         "class": "ctsms-control-larger",
@@ -643,14 +643,14 @@ function _createSingleLineText(context,value) {
         "id": singleLineTextId,
         "value": (value.textValue != null ? value.textValue : '')
     }).puiinputtext();
-    //if (value.inquiry.disabled) {
-    //    singleLineText.puiinputtext('disable');
-    //}
-    //singleLineText.puitooltip({
-    //    my: 'left bottom',
-    //    at: 'left top',
-    //    content: _getTooltipText(context,value) //context.probandDobTooltip
-    //});
+
+
+
+
+
+
+
+
     return [ singleLineTextHidden, singleLineText ];
 }
 function _initSingleLineText(context,value,content) {
@@ -667,28 +667,28 @@ function _initSingleLineText(context,value,content) {
     $('#' + singleLineTextId).puitooltip({
         my: 'left bottom',
         at: 'left top',
-        content: _getTooltipText(context,value) //context.probandDobTooltip
+        content: _getTooltipText(context,value)
     });
 }
 
 function setSingleLineTextVal(inquiryId,text) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_single_line_text');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_single_line_text');
     elem.val(text);
 }
 
 function getSingleLineTextVal(inquiryId) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_single_line_text');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_single_line_text');
     return elem.val();
 }
@@ -703,7 +703,7 @@ function _createMultiLineText(context,value) {
         "id": multiLineTextHiddenId,
         "disabled": !value.inquiry.disabled,
         "value": (value.textValue != null ? value.textValue : '')
-    }); //$('<input type="hidden" name="' + multiLineTextName + '" id="' + multiLineTextHiddenId + '" value=""/>');
+    });
     var multiLineText = $('<textarea class="ctsms-textarea" name="' + multiLineTextName + '" id="' + multiLineTextId + '"/>');
     multiLineText.append(document.createTextNode((value.textValue != null ? value.textValue : '')));
 
@@ -712,7 +712,7 @@ function _createMultiLineText(context,value) {
 function _initMultiLineText(context,value,content) {
     var multiLineTextId = value.inquiry.id + '_multi_line_text';
     $('#' + multiLineTextId).puiinputtextarea({
-        //autoResize: true
+
     });
     if (value.inquiry.disabled) {
         $('#' + multiLineTextId).puiinputtextarea('disable');
@@ -726,28 +726,28 @@ function _initMultiLineText(context,value,content) {
     $('#' + multiLineTextId).puitooltip({
         my: 'left bottom',
         at: 'left top',
-        content: _getTooltipText(context,value) //context.probandDobTooltip
+        content: _getTooltipText(context,value)
     });
 }
 
 function setMultiLineTextVal(inquiryId,text) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_multi_line_text');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_multi_line_text');
     elem.val(text);
 }
 
 function getMultiLineTextVal(inquiryId) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_multi_line_text');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_multi_line_text');
     return elem.val();
 }
@@ -760,13 +760,13 @@ function _createCheckbox(context,value) {
     var checkboxHidden = $('<input type="hidden" name="' + checkboxName + '" id="' + checkboxHiddenId + '" value="' + (value.booleanValue ? 'true' : 'false') + '"' + (!value.inquiry.disabled ? ' disabled' : '') + '/>');
     var checkboxDefaultHiddenId = value.inquiry.id + '_checkbox_default_hidden';
     var checkboxDefaultHidden = $('<input type="hidden" name="' + checkboxName + '" id="' + checkboxDefaultHiddenId + '" value="false"' + (value.inquiry.disabled ? ' disabled' : '') + '/>');
-    //$('#form').append(checkboxHidden);
+
     var checkbox = $('<input type="checkbox" name="' + checkboxName + '" id="' + checkboxId + '" value="true"' + (value.booleanValue ? ' checked="checked"' : '') + '/>');
-    //$('#form').append(checkbox);
-    //checkbox.puicheckbox();
-    //checkbox.puitooltip({
-    //    content: context.probandDobTooltip
-    //});
+
+
+
+
+
     return [ checkboxHidden, checkboxDefaultHidden, checkbox ];
 }
 function _initCheckbox(context,value,content) {
@@ -779,41 +779,41 @@ function _initCheckbox(context,value,content) {
             FieldCalculation.checkBoxOnChange(value);
         });
     }
-    //works like this, but not senseful for the checkbox type:
-    //$('#' + checkboxId).parent().parent().puitooltip({
-    //    content: _getTooltipText(context,value) //context.probandDobTooltip
-    //});
+
+
+
+
 }
 
 function setCheckboxVal(inquiryId,checked) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_checkbox');
-    //} else {
-    //    //elem = inquiryId[0];
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_checkbox');
     if (checked) {
         elem.puicheckbox('check');
     } else {
         elem.puicheckbox('uncheck');
     }
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_checkbox_hidden');
-    //} else {
-    //    elem = inquiryId[1];
-    //}
-    //elem.attr('disabled', checked);
+
+
+
+
+
+
 }
 
 function getCheckboxVal(inquiryId) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_checkbox');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_checkbox');
     return elem.puicheckbox('isChecked');
 }
@@ -842,12 +842,12 @@ function _createSelectOneDropdown(context,value) {
             selectOneDropdown.append(option);
         }
     }
-    //$('#gender').parent().parent().find('.ui-inputtext').puitooltip({
-    //    content: context.probandGenderTooltip
-    //});
-    //selectOneDropdown.puitooltip({
-    //   content: context.probandDobTooltip
-    //});
+
+
+
+
+
+
     result.push(selectOneDropdown);
     return result;
 }
@@ -855,39 +855,39 @@ function _initSelectOneDropdown(context,value,content) {
     var selectOneDropdownId = value.inquiry.id + '_select_one_dropdown';
     $('#' + selectOneDropdownId).puidropdown({
         styleClass: 'ctsms-control',
-        //value: (value.selectionValues != null ? value.selectionValues[0].id : null)
+
         change: (!value.inquiry.disabled && value.hasJsVar ? function(event) {
             FieldCalculation.selectOneDropdownOnChange(value);
         } : null)
     });
     if (value.inquiry.disabled) {
         $('#' + selectOneDropdownId).puidropdown('disable');
-    } //else if (value.hasJsVar) {
-    //    $('#' + selectOneDropdownId).on('change', function(event) {
-    //        FieldCalculation.selectOneDropdownOnChange(value);
-    //    });
-    //}
+    }
+
+
+
+
     $('#' + selectOneDropdownId).parent().parent().find('.ui-inputtext').puitooltip({
         my: 'left bottom',
         at: 'left top',
-        content: _getTooltipText(context,value) //context.probandGenderTooltip
+        content: _getTooltipText(context,value)
     });
 }
 
 function setSelectOneDropdownVal(inquiryId,selectionValueIds) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_select_one_dropdown');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_select_one_dropdown');
     if (selectionValueIds != null && selectionValueIds.length > 0) {
         for (var i = 0; i < selectionValueIds.length; i++) {
-            //$('#' + inquiryId + '_' + selectionValueIds[i] + '_select_one_radio').puiradiobutton('check');
-            //return;
+
+
             elem.puidropdown('selectValue',selectionValueIds[i]);
-            //return
+
         }
     } else {
         elem.puidropdown('selectValue','');
@@ -895,12 +895,12 @@ function setSelectOneDropdownVal(inquiryId,selectionValueIds) {
 }
 
 function getSelectOneDropdownVal(inquiryId) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_select_one_dropdown');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_select_one_dropdown');
     var val = elem.puidropdown('getSelectedValue');
     if (val != null && val.length > 0) {
@@ -927,7 +927,7 @@ function _createSelectOneRadio(context,value,vertical) {
     var selectOneRadioHidden = $('<input type="hidden" name="' + selectOneRadioName + '" id="' + selectOneRadioHiddenId + '" value=""/>');
     var result = [ selectOneRadioHidden ];
     var selectOneRadioGridId = value.inquiry.id + '_select_one_radio';
-    var grid = $('<div id="' + selectOneRadioGridId + '" class="ui-grid"/>'); //ui-grid-responsive //style="width:250px"
+    var grid = $('<div id="' + selectOneRadioGridId + '" class="ui-grid"/>');
     var row = null;
     if (value.inquiry.field.selectionSetValues != null) {
         for (var i = 0; i < value.inquiry.field.selectionSetValues.length; i++) {
@@ -949,23 +949,23 @@ function _createSelectOneRadio(context,value,vertical) {
             }
             $('<div class="ui-grid-col-1"/>').append(radio).appendTo(row);
             if (vertical) {
-                //$('<div class="ui-grid-col-1"/>').append(selectOneRadio).appendTo(row);
+
                 $('<div class="ui-grid-col-11" style="display:table;text-align:left;padding-top: 2px;"/>').append(label).appendTo(row);
             } else {
                 $('<div class="ui-grid-col-2" style="display:table;text-align:left;padding-top: 2px;"/>').append(label).appendTo(row);
-                //row.append(selectOneRadio);
-                //row.append(label);
+
+
             }
         }
     }
 
 
-    //$('#gender').parent().parent().find('.ui-inputtext').puitooltip({
-    //    content: context.probandGenderTooltip
-    //});
-    //selectOneDropdown.puitooltip({
-    //   content: context.probandDobTooltip
-    //});
+
+
+
+
+
+
     result.push(grid);
     return result;
 }
@@ -988,43 +988,43 @@ function _initSelectOneRadio(context,value,content) {
     $('#' + selectOneRadioGridId).puitooltip({
         my: 'left bottom',
         at: 'left top',
-        content: _getTooltipText(context,value) //context.probandGenderTooltip
+        content: _getTooltipText(context,value)
     });
     $('#' + selectOneRadioGridId).off().on('mouseenter', function(event) {
         $('#' + selectOneRadioGridId).puitooltip('show');
     }).on('mouseleave', function(event) {
         $('#' + selectOneRadioGridId).puitooltip('hide');
     });
-    //var selectOneDropdownId = value.inquiry.id + '_select_one_dropdown';
-    //$('#' + selectOneDropdownId).puidropdown({
-    //    styleClass: 'ctsms-control'
-    //});
-    //$('#' + selectOneDropdownId).parent().parent().find('.ui-inputtext').puitooltip({
-    //    content: context.probandGenderTooltip
-    //});
+
+
+
+
+
+
+
 }
 function setSelectOneRadioVal(inquiryId,selectionValueIds) {
     if (selectionValueIds != null) {
         for (var i = 0; i < selectionValueIds.length; i++) {
             $('#' + inquiryId + '_' + selectionValueIds[i] + '_select_one_radio').puiradiobutton('check');
-            //return;
+
         }
     }
 }
 
 function getSelectOneRadioVal(inquiryId) {
-    //var elems;
-    //if($.type(inquiryId) === "string") {
-    //    elems = $('[id^="' + inquiryId + '_"] input[type="radio"');
-    //} else {
-    //    elems = inquiryId;
-    //}
+
+
+
+
+
+
     var elems = $('[id^="' + inquiryId + '_"] input[type="radio"');
     var result = [];
     elems.each(function(index, elem) {
         if ($(this).puiradiobutton('isChecked')) {
-            //var id = elem.val();
-            //result.push(+id);
+
+
             result.push($(this).val());
         }
     });
@@ -1038,7 +1038,7 @@ function _createSelectMany(context,value,vertical) {
     var selectManyHidden = $('<input type="hidden" name="' + selectManyName + '" id="' + selectManyHiddenId + '" value=""/>');
     var result = [ selectManyHidden ];
     var selectManyGridId = value.inquiry.id + '_select_many';
-    var grid = $('<div id="' + selectManyGridId + '" class="ui-grid"/>'); //ui-grid-responsive //style="width:250px"
+    var grid = $('<div id="' + selectManyGridId + '" class="ui-grid"/>');
     var row = null;
     if (value.inquiry.field.selectionSetValues != null) {
         for (var i = 0; i < value.inquiry.field.selectionSetValues.length; i++) {
@@ -1060,21 +1060,21 @@ function _createSelectMany(context,value,vertical) {
             }
             $('<div class="ui-grid-col-1" />').append(checkbox).appendTo(row);
             if (vertical) {
-                //$('<div class="ui-grid-col-1"/>').append(selectOneRadio).appendTo(row);
+
                 $('<div class="ui-grid-col-11" style="display:table;text-align:left;padding-top: 2px;"/>').append(label).appendTo(row);
             } else {
                 $('<div class="ui-grid-col-2" style="display:table;text-align:left;padding-top: 2px;"/>').append(label).appendTo(row);
-                //row.append(selectOneRadio);
-                //row.append(label);
+
+
             }
         }
     }
-    //$('#gender').parent().parent().find('.ui-inputtext').puitooltip({
-    //    content: context.probandGenderTooltip
-    //});
-    //selectOneDropdown.puitooltip({
-    //   content: context.probandDobTooltip
-    //});
+
+
+
+
+
+
     result.push(grid);
     return result;
 }
@@ -1097,29 +1097,29 @@ function _initSelectMany(context,value,content) {
     $('#' + selectManyGridId).puitooltip({
         my: 'left bottom',
         at: 'left top',
-        content: _getTooltipText(context,value) //context.probandGenderTooltip
+        content: _getTooltipText(context,value)
     });
     $('#' + selectManyGridId).off().on('mouseenter', function(event) {
         $('#' + selectManyGridId).puitooltip('show');
     }).on('mouseleave', function(event) {
         $('#' + selectManyGridId).puitooltip('hide');
     });
-    //var selectOneDropdownId = value.inquiry.id + '_select_one_dropdown';
-    //$('#' + selectOneDropdownId).puidropdown({
-    //    styleClass: 'ctsms-control'
-    //});
-    //$('#' + selectOneDropdownId).parent().parent().find('.ui-inputtext').puitooltip({
-    //    content: context.probandGenderTooltip
-    //});
+
+
+
+
+
+
+
 }
 
 function setSelectManyVal(inquiryId,selectionValueIds) {
-    //var elems;
-    //if($.type(inquiryId) === "string") {
-    //    elems = $('[id^="' + inquiryId + '_"] input[type="checkbox"');
-    //} else {
-    //    elems = inquiryId;
-    //}
+
+
+
+
+
+
     var elems = $('[id^="' + inquiryId + '_"] input[type="checkbox"]');
     var ids = {};
     if (selectionValueIds != null) {
@@ -1137,18 +1137,18 @@ function setSelectManyVal(inquiryId,selectionValueIds) {
 }
 
 function getSelectManyVal(inquiryId) {
-    //var elems;
-    //if($.type(inquiryId) === "string") {
-    //    elems = $('[id^="' + inquiryId + '_"] input[type="checkbox"');
-    //} else {
-    //    elems = inquiryId;
-    //}
+
+
+
+
+
+
     var elems = $('[id^="' + inquiryId + '_"] input[type="checkbox"]');
     var result = [];
     elems.each(function(index, elem) {
         if ($(this).puicheckbox('isChecked')) {
-            //var id = elem.val();
-            //result.push(+id);
+
+
             result.push($(this).val());
         }
     });
@@ -1166,8 +1166,8 @@ function _createAutocomplete(context,value) {
         "id": autocompleteHiddenId,
         "disabled": !value.inquiry.disabled,
         "value": (value.textValue != null ? value.textValue : '')
-    }); //$('<input type="hidden" name="' + autocompleteName + '" id="' + autocompleteHiddenId + '" value=""/>');
-    //var singleLineText = $('<input type="text" class="ctsms-control" name="' + singleLineTextName + '" id="' + singleLineTextId + '"/>', { "value": value.textValue }).puiinputtext();
+    });
+
     var autocomplete = $('<input>', {
         "type": "text",
         "class": "ctsms-control-larger",
@@ -1198,28 +1198,28 @@ function _initAutocomplete(context,value,content) {
     $('#' + autocompleteId).puitooltip({
         my: 'left bottom',
         at: 'left top',
-        content: _getTooltipText(context,value) //context.probandDobTooltip
+        content: _getTooltipText(context,value)
     });
 }
 
 function setAutocompleteVal(inquiryId,text) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_autocomplete');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_autocomplete');
     elem.val(text);
 }
 
 function getAutocompleteVal(inquiryId) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_autocomplete');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_autocomplete');
     return elem.val();
 }
@@ -1293,8 +1293,8 @@ function _initSketchpad(context,value,content) {
         value.inquiry.field.width == null ? 0 : value.inquiry.field.width,
         value.inquiry.field.height == null ? 0 : value.inquiry.field.height,
         context.ctsmsBaseUri + 'inputfieldimage?inputfieldid=' + value.inquiry.field.id,
-        !value.inquiry.disabled, // enabled,
-        value.hasJsVar ? 'FieldCalculation.sketchOnChange("'+ value.inquiry.jsVariableName +'",' + value.index + ',this)' : null, //onChange,
+        !value.inquiry.disabled,
+        value.hasJsVar ? 'FieldCalculation.sketchOnChange("'+ value.inquiry.jsVariableName +'",' + value.index + ',this)' : null,
         null // strokesId -> region edit on if provided
     ];
     for (var i = 0; i < value.inquiry.field.selectionSetValues.length; i++) {
@@ -1310,7 +1310,7 @@ function _createSpinner(context,value) {
     var spinnerId = value.inquiry.id + '_spinner';
     var spinnerHiddenId = value.inquiry.id + '_spinner_hidden';
     var spinnerHidden = $('<input type="hidden" name="' + spinnerName + '" id="' + spinnerHiddenId + '" value="' + (value.longValue != null ? value.longValue : '') + '"' + (!value.inquiry.disabled ? ' disabled' : '') + '/>');
-    //var singleLineText = $('<input type="text" class="ctsms-control" name="' + singleLineTextName + '" id="' + singleLineTextId + '"/>', { "value": value.textValue }).puiinputtext();
+
     var spinner = $('<input type="text" class="ctsms-spinner" name="' + spinnerName + '" id="' + spinnerId + '" value="' + (value.longValue != null ? value.longValue : '') + '"/>');
 
     return [ spinnerHidden, spinner ];
@@ -1332,30 +1332,30 @@ function _initSpinner(context,value,content) {
     $('#' + spinnerId).puitooltip({
         my: 'left bottom',
         at: 'left top',
-        content: _getTooltipText(context,value) //context.probandDobTooltip
+        content: _getTooltipText(context,value)
     });
 }
 
 function setSpinnerVal(inquiryId,val) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_spinner');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_spinner');
     elem.val(val);
 }
 function getSpinnerVal(inquiryId) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_spinner');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_spinner');
-    //var val = elem.val();
-    //return (isNaN(parseInt(val)) ? val : parseInt(val));
+
+
     return elem.val();
 }
 
@@ -1364,18 +1364,18 @@ function _createDecimal(context,value) {
     var decimalId = value.inquiry.id + '_decimal';
     var decimalHiddenId = value.inquiry.id + '_decimal_hidden';
     var decimalHidden = $('<input type="hidden" name="' + decimalName + '" id="' + decimalHiddenId + '" value="' + (value.floatValue != null ? value.floatValue : '') + '"' + (!value.inquiry.disabled ? ' disabled' : '') + '/>');
-    //var singleLineText = $('<input type="text" class="ctsms-control" name="' + singleLineTextName + '" id="' + singleLineTextId + '"/>', { "value": value.textValue }).puiinputtext();
+
     var decimal = $('<input type="text" class="ctsms-control-float" name="' + decimalName + '" id="' + decimalId + '" value="' + (value.floatValue != null ? value.floatValue : '') + '"/>').puiinputtext({
 
     });
-    //if (value.inquiry.disabled) {
-    //    decimal.puiinputtext('disable');
-    //}
-    //decimal.puitooltip({
-    //    my: 'left bottom',
-    //    at: 'left top',
-    //    content: _getTooltipText(context,value) //context.probandDobTooltip
-    //});
+
+
+
+
+
+
+
+
     return [ decimalHidden, decimal ];
 }
 function _initDecimal(context,value,content) {
@@ -1392,30 +1392,30 @@ function _initDecimal(context,value,content) {
     $('#' + decimalId).puitooltip({
         my: 'left bottom',
         at: 'left top',
-        content: _getTooltipText(context,value) //context.probandDobTooltip
+        content: _getTooltipText(context,value)
     });
 }
 
 function setDecimalVal(inquiryId,val) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_decimal');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_decimal');
     elem.val(val);
 }
 function getDecimalVal(inquiryId) {
-    //var elem;
-    //if($.type(inquiryId) === "string") {
-    //    elem = $('#' + inquiryId + '_decimal');
-    //} else {
-    //    elem = inquiryId;
-    //}
+
+
+
+
+
+
     var elem = $('#' + inquiryId + '_decimal');
     return elem.val().replace(/,/,'.');
-    //return (isNaN(parseFloat(val)) ? val : parseFloat(val));
+
 }
 
 function _updateInquiryPbar(context) {
@@ -1427,7 +1427,7 @@ function _updateInquiryPbar(context) {
     $('#inquiry_pbar').puiprogressbar({
         labelTemplate: sprintf(context.inquiriesPbarTemplate, +context.trial._savedInquiryCount, +context.trial._activeInquiryCount),
         value: value
-        //_postedInquiryCount
+
     })
 
 }
@@ -1440,7 +1440,7 @@ function _saveEnteredData(context,ajaxContext,callback,ui,updateUi) {
                 type: "POST",
                 url: context.uriBase + '/inquiry/savepage',
                 data: $('#form').serialize(),
-                //dataType: "json",
+
                 context: ajaxContext,
                 error: function(jqXHR, textStatus, errorThrown) {
                     $.ajaxSettings.error(jqXHR, textStatus, errorThrown);
@@ -1457,16 +1457,16 @@ function _saveEnteredData(context,ajaxContext,callback,ui,updateUi) {
         }
     } else {
         _loadPage(context,ajaxContext,callback,ui,updateUi);
-        //callback(ajaxContext);
+
     }
 }
 
 function _loadPage(context,ajaxContext,callback,ui,updateUi) {
                 $.ajax({
-                    //type: "GET",
+
                     url: context.uriBase + '/inquiries',
                     data: { rows: ui.rows, first: ui.first, load_all_js_values: (context.init ? 1 : 0) },
-                    //dataType: "json",
+
                     context: ajaxContext,
                     success: function(data) {
                         context.trial = data.trial;
@@ -1475,7 +1475,7 @@ function _loadPage(context,ajaxContext,callback,ui,updateUi) {
                             first: true,
                             last:null,
                             rows: data.rows.length,
-                            //totalRecords: data.paginator.total_count,
+
                             category: null,
                             categoryFields: [],
                             fieldsToInit: [],
@@ -1485,11 +1485,11 @@ function _loadPage(context,ajaxContext,callback,ui,updateUi) {
                         if(this.options.paginator) {
                             this.options.paginator.totalRecords = data.paginator.total_count;
                         };
-                        //$('#form > :input[id*="checkbox_hidden_"]').remove();
-                        //_getFormFields('date').remove();
+
+
                         callback.call(this, data.rows);
                         if (context.apiError != null) {
-                            setMessages('warn', context.apiError ); //{summary: 'Message Title', detail: context.apiError});
+                            setMessages('warn', context.apiError );
                         }
                         var fieldCalculationArgs = {};
                         fieldCalculationArgs[AJAX_OPERATION_SUCCESS] = true;
@@ -1543,10 +1543,10 @@ function _getTooltipText(context, value) {
 
 function _sanitizeForm(context) {
 
-    //$('#form :input[id$="checkbox"]').each(function(index,element){
-    //    var inquiryId = _getInquiryId(element);
-    //    setCheckboxVal(inquiryId,getCheckboxVal(inquiryId));
-    //});
+
+
+
+
 
     if (context.checkForm) {
         if (context.trial._savedInquiryCount < context.trial._activeInquiryCount
@@ -1554,8 +1554,8 @@ function _sanitizeForm(context) {
             $('#incomplete_dlg').puidialog('show');
             return false;
         }
-    //} else {
-    //    context.checkForm = true;
+
+
     }
 
     showWaitDlg();
@@ -1563,12 +1563,12 @@ function _sanitizeForm(context) {
     return true; // return false to cancel form action
 }
 
-//function _isJsVar(value) {
-//    return value.inquiry.jsVariableName != null && value.inquiry.jsVariableName.length > 0;
-//}
 
-//function resetForm() {
-//
-//    $('#messages').puimessages('clear');
-//
-//}
+
+
+
+
+
+
+
+

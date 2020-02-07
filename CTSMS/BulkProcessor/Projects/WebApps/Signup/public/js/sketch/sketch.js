@@ -24,13 +24,13 @@ var Sketch = Sketch || {};
 	var inkPenOpacity2 = 0.3;
 
 	var sketchEpsilon = 0.01;
-	
+
 	var debug_level = 0;
 
 	function _escapeClientId(id) {
 		return '#' + id;
 	}
-	
+
 	function getSketchValue(sketchpad) {
 
 		var input = jQuery(_escapeClientId(sketchpad.inputId()));
@@ -84,7 +84,7 @@ var Sketch = Sketch || {};
 		sketchpad.freeze_history();
 
 	}
-	
+
 	function initSketch(value, inputId, divId, width, height, backgroundImage, enabled, onChange, strokesId) {
 
 		var input = jQuery(_escapeClientId(inputId));
@@ -270,10 +270,10 @@ var Sketch = Sketch || {};
 										var intersection = intersections[j];
 										var x = intersection[0];
 										var y = intersection[1];
-										if (Raphael.isPointInsideBBox(regionBB, x, y) && _isPointInsidePath(region.path, x, y)) { // Raphael.isPointInsidePath(regionSVG,
-																																	// x,
-																																	// y))
-																																	// {
+										if (Raphael.isPointInsideBBox(regionBB, x, y) && _isPointInsidePath(region.path, x, y)) {
+
+
+
 											ids.push(selectionSetValueStrokesId);
 											idMap[selectionSetValueStrokesId] = true;
 											if (debug_level >= 1) {
@@ -299,17 +299,17 @@ var Sketch = Sketch || {};
 
 						input.val(JSON.stringify(ink));
 
-						//if (onChange != null && onChange.length > 0) {
-						//	(new Function(onChange)).call({
-						//	    'sketchpad' : sketchpad,
-						//	    'ids' : ids,
-						//	    'ink' : input.val()
-						//	});
-						//}
-						
+
+
+
+
+
+
+
+
 						if (onChange != null && onChange.length > 0) {
 							(new Function(onChange)).call(sketchpad);
-						}						
+						}
 
 					}
 				});
@@ -336,7 +336,7 @@ var Sketch = Sketch || {};
 					regionToggler.mouseup(function() {
 						regionVisible = !regionVisible;
 						sketchpad.regionVisible(regionVisible);
-	
+
 						var ink = [];
 						if (regionVisible) {
 							jQuery.merge(ink, regions);
@@ -348,14 +348,14 @@ var Sketch = Sketch || {};
 								ink.push(stroke);
 							}
 						}
-	
+
 						sketchpad.strokes(ink);
-	
+
 					});
-	
+
 					regionVisible = _updateRegionToggler(sketchpad, regionToggler, regionVisible);
 					sketchpad.regionVisible(regionVisible);
-	
+
 					penWidth0.mousedown(function() {
 						penWidth0[0].className = "sketch-pen-width-pressed";
 					});
@@ -366,7 +366,7 @@ var Sketch = Sketch || {};
 						penWidth2[0].className = "sketch-pen-width-2-disabled";
 						penWidth3[0].className = "sketch-pen-width-3-disabled";
 					});
-	
+
 					penWidth1.mousedown(function() {
 						penWidth1[0].className = "sketch-pen-width-pressed";
 					});
@@ -377,7 +377,7 @@ var Sketch = Sketch || {};
 						penWidth2[0].className = "sketch-pen-width-2-disabled";
 						penWidth3[0].className = "sketch-pen-width-3-disabled";
 					});
-	
+
 					penWidth2.mousedown(function() {
 						penWidth2[0].className = "sketch-pen-width-pressed";
 					});
@@ -388,7 +388,7 @@ var Sketch = Sketch || {};
 						penWidth2[0].className = "sketch-pen-width-2";
 						penWidth3[0].className = "sketch-pen-width-3-disabled";
 					});
-	
+
 					penWidth3.mousedown(function() {
 						penWidth3[0].className = "sketch-pen-width-pressed";
 					});
@@ -399,7 +399,7 @@ var Sketch = Sketch || {};
 						penWidth2[0].className = "sketch-pen-width-2-disabled";
 						penWidth3[0].className = "sketch-pen-width-3";
 					});
-	
+
 					penOpacity0.mousedown(function() {
 						penOpacity0[0].className = "sketch-pen-opacity-pressed";
 					});
@@ -409,7 +409,7 @@ var Sketch = Sketch || {};
 						penOpacity1[0].className = "sketch-pen-opacity-1-disabled";
 						penOpacity2[0].className = "sketch-pen-opacity-2-disabled";
 					});
-	
+
 					penOpacity1.mousedown(function() {
 						penOpacity1[0].className = "sketch-pen-opacity-pressed";
 					});
@@ -419,7 +419,7 @@ var Sketch = Sketch || {};
 						penOpacity1[0].className = "sketch-pen-opacity-1";
 						penOpacity2[0].className = "sketch-pen-opacity-2-disabled";
 					});
-	
+
 					penOpacity2.mousedown(function() {
 						penOpacity2[0].className = "sketch-pen-opacity-pressed";
 					});
@@ -429,7 +429,7 @@ var Sketch = Sketch || {};
 						penOpacity1[0].className = "sketch-pen-opacity-1-disabled";
 						penOpacity2[0].className = "sketch-pen-opacity-2";
 					});
-	
+
 			}
 
 			var colorPicker = jQuery(_escapeClientId(divId + "_colorPicker"));
@@ -510,7 +510,7 @@ var Sketch = Sketch || {};
 		if (backgroundImage != null && backgroundImage.length > 0) {
 			div.css('background-image', 'url(' + backgroundImage + ')');
 		}
-		
+
 		return sketchpad;
 	}
 
@@ -541,7 +541,7 @@ var Sketch = Sketch || {};
 		    height : maxY - minY
 		};
 	}
-	
+
 	// from sketchpad.
 	function _stringToSvgPath(str) {
 		var path = [];
@@ -574,7 +574,7 @@ var Sketch = Sketch || {};
 		}
 
 		return path;
-	}	
+	}
 
 	function _isPointInsidePath(region, x, y) {
 		// Choose coordinates that are definitely outside the shape.
@@ -704,18 +704,18 @@ var Sketch = Sketch || {};
 		}
 	}
 
-	//function _pointsToSVG(path) {
-	//	var svgStr = "";
-	//	for ( var i = 0; i < path.length; i++) {
-	//		var point = path[i];
-	//		if (point.length == 3) {
-	//			svgStr += point[0] + point[1] + "," + point[2];
-	//		} else {
-	//			svgStr += point[0];
-	//		}
-	//	}
-	//	return svgStr;
-	//}
+
+
+
+
+
+
+
+
+
+
+
+
 
 	Sketch.initSketch = initSketch;
 	Sketch.setSketchValue = setSketchValue;

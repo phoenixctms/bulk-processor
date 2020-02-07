@@ -8,20 +8,20 @@ function decodeBase64(base64String) {
 	return jQuery.base64Decode(encoded);
 
 }
-//function encodeBase64(string, urlSafe) {
-//
-//	var encoded = jQuery.base64Encode(string);
-//	if (urlSafe) {
-//		return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-//	}
-//	return encoded;
-//
-//}
+
+
+
+
+
+
+
+
+
 
 function _getElement(pickTargetField) {
 
 	if (pickTargetField != null && pickTargetField.length > 0) {
-		//var targetField = jQuery(PrimeFaces.escapeClientId(_stripLeadingColons(pickTargetField)));
+
 		var targetField = jQuery('#' + pickTargetField);
 		if (typeof targetField !== 'undefined' && targetField != null && targetField.length) {
 			return targetField;
@@ -104,13 +104,13 @@ function setErrorMessageText(error_message_id,output) {
 	var errorMessageSpanElement = _getElement(error_message_id);
 	if (errorMessageSpanElement != null) {
 		errorMessageSpanElement.html(output);
-		//var textElement = errorMessageSpanElement.contents()[0];
 
-		//if (typeof textElement.textContent !== 'undefined') {
-		//	textElement.textContent = msg;
-		//} else {
-		//	textElement.innerText = msg;
-		//}
+
+
+
+
+
+
 	}
 }
 
@@ -153,7 +153,7 @@ function setErrorMessageTexts(error_message_id,msgs) {
 
 
 function _getOutputId(value) {
-    return INPUT_FIELD_OUTPUT_ID_PREFIX + value.inquiry.id; // + (value.inquiry.series ? INPUT_FIELD_OUTPUT_ID_INDEX_SEPARATOR + value.index : '');
+    return INPUT_FIELD_OUTPUT_ID_PREFIX + value.inquiry.id;
 }
 
 
@@ -165,7 +165,7 @@ var AJAX_INPUT_FIELD_PROBAND_BASE64 = 'inputFieldProbandBase64';
 var AJAX_INPUT_FIELD_TRIAL_BASE64 = 'inputFieldTrialBase64';
 
 var AJAX_INPUT_FIELD_PROBAND_ADDRESSES_BASE64 = 'inputFieldProbandAddressesBase64';
-//var AJAX_INPUT_FIELD_LAST_PROBAND_LIST_STATUS_ENTRY_BASE64 = 'inputFieldLastProbandListStatusEntryBase64';
+
 var AJAX_INPUT_FIELD_PROBAND_LIST_ENTRY_BASE64 = 'inputFieldProbandListEntryBase64';
 var AJAX_INPUT_FIELD_VISIT_SCHEDULE_ITEMS_BASE64 = 'inputFieldVisitScheduleItemsBase64';
 var AJAX_INPUT_FIELD_PROBAND_GROUPS_BASE64 = 'inputFieldProbandGroupsBase64';
@@ -493,10 +493,10 @@ var FieldCalculation = FieldCalculation || {};
 				msg.output = inputFieldVariable.outputErrorMessage;
 			} else if (inputFieldVariable.output != null && inputFieldVariable.output.length > 0) {
 				msg.output = inputFieldVariable.output;
-			//} else {
-			//	var value = inputFieldVariable.value;
-			//	var enteredValue = inputFieldVariable.enteredValue;
-			//	msg = _debugVarName(inputFieldVariable) + " entered: " + JSON.stringify(_getInputFieldVariableValue(enteredValue)) + " value: " + JSON.stringify(_getInputFieldVariableValue(value));
+
+
+
+
 			}
 			errorMsgs.push(msg);
 		}
@@ -516,9 +516,9 @@ var FieldCalculation = FieldCalculation || {};
 				outputElement.removeClass('ctsms-inputfield-output-valueerror ctsms-inputfield-output-outputerror ctsms-inputfield-output-delta ctsms-inputfield-output-nodelta ctsms-inputfield-output');
 				if (inputFieldVariable.valueErrorMessage != null && inputFieldVariable.valueErrorMessage.length > 0) {
 					outputElement.html(inputFieldVariable.valueErrorMessage);
-					//if (!outputElement.hasClass('ctsms-inputfield-output-disabled')) {
+
 						outputElement.addClass('ctsms-inputfield-output-valueerror');
-					//}
+
 				} else if (inputFieldVariable.outputErrorMessage != null && inputFieldVariable.outputErrorMessage.length > 0) {
 					outputElement.html(inputFieldVariable.outputErrorMessage);
 					if (!outputElement.hasClass('ctsms-inputfield-output-disabled')) {
@@ -561,8 +561,8 @@ var FieldCalculation = FieldCalculation || {};
 				_setInputFieldVariableValue(inputFieldVariable.value, evaluation.returnValue);
 			}
 
-			//inputFieldVariable.outputErrorMessage = null;
-			//inputFieldVariable.output = null;
+
+
 
 			inputFieldVariable.processed = true;
 			inputFieldVariable.delta = !_equalInputFieldVariable(inputFieldVariable);
@@ -613,11 +613,11 @@ var FieldCalculation = FieldCalculation || {};
 					var matches = expressionDeclarationRegExp.exec(definition);
 					var argNames = matches[1].split(",");
 
-					//var mask = {};
-					////mask global properties:
-					//for ( var p in this) {
-					//	mask[p] = undefined;
-					//}
+
+
+
+
+
 					var mask = inputFieldVariable.mask;
 
 					var index = inputFieldVariable.value.index;
@@ -742,13 +742,13 @@ var FieldCalculation = FieldCalculation || {};
 		mask["$disabled"] = inputFieldVariable.value.disabled;
 		if (inputFieldVariable.value.series) {
 			mask["$index"] = inputFieldVariable.value.index;
-//			if (index > 0 && inputFieldVariable.series[index - 1] != null) {
-//				mask["$prevEnteredValue"] = _getInputFieldVariableValue(inputFieldVariable.series[index - 1].enteredValue);
-//				mask["$prevValue"] = _getInputFieldVariableValue(inputFieldVariable.series[index - 1].value);
-//			} else {
-//				mask["$prevEnteredValue"] = null;
-//				mask["$prevValue"] = null;
-//			}
+
+
+
+
+
+
+
 		}
 
 		mask["$selectionSetValues"] = inputFieldVariable.value.selectionSetValues;
@@ -1009,8 +1009,8 @@ var FieldCalculation = FieldCalculation || {};
 		mask["quoteJs"] = _quoteJs;
 
 		mask["getInputFieldSelectionSetValue"] = _getInputFieldSelectionSetValue;
-		//mask["testSelectionSetValueName"] = _testSelectionSetValueName;
-		//mask["testSelectionSetValueValue"] = _testSelectionSetValueValue;
+
+
 		mask["containsName"] = _testSelectionSetValueName;
 		mask["containsValue"] = _testSelectionSetValueValue;
 		mask["getSeriesValues"] = _getSeriesValues;
@@ -1285,7 +1285,7 @@ var FieldCalculation = FieldCalculation || {};
 	}
 
 	function _parseDateCustom(input,error,nkDay,nkMonth,locale) {
-	    //var str = "NK/MAY/2017";
+
 	    if (input == null || input.length == 0) {
 		    if (_testFunction(error)) {
 			    error('date is empty');
@@ -1331,7 +1331,7 @@ var FieldCalculation = FieldCalculation || {};
 			m = customMonthNameToNumberMap[ary[1]];
 		} else {
 		    if (_testFunction(error)) {
-			    error('month not regognized'); // '" + ary[1] + "'");
+			    error('month not regognized');
 			}
 			return null;
 		}
@@ -1365,7 +1365,7 @@ var FieldCalculation = FieldCalculation || {};
 		    return date;
 		} else {
 		    if (_testFunction(error)) {
-			    error('invalid date'); // '" + d + '/' + m + '/' + y + "'");
+			    error('invalid date');
 			}
 			return null;
 		}
@@ -1409,7 +1409,7 @@ var FieldCalculation = FieldCalculation || {};
 		var m = ary[1].replace(regexp,nkMinute);
 		if (+h > 23 || +h < 0 || +m > 59 || +m < 0) {
 		    if (_testFunction(error)) {
-			    error('invalid time'); // '" + h + ':' + m + "'");
+			    error('invalid time');
 	        }
 			return null;
 	    } else {
@@ -1559,8 +1559,8 @@ var FieldCalculation = FieldCalculation || {};
 
 	function _debugVariableValue(prefix,inputFieldVariable) {
 		if (inputFieldVariable != null) {
-			// var value = inputFieldVariable.value;
-			//var enteredValue = inputFieldVariable.enteredValue;
+
+
 			if (FIELD_CALCULATION_DEBUG_LEVEL >= 3) {
 				console.log(prefix + _debugVarName(inputFieldVariable) + " = " + JSON.stringify(_getInputFieldVariableValue(inputFieldVariable.value)));
 			}
@@ -1748,9 +1748,9 @@ var FieldCalculation = FieldCalculation || {};
 		if (_testPropertyExists(args, AJAX_INPUT_FIELD_PROBAND_ADDRESSES_BASE64)) {
 			inputFieldVars.probandAddresses = _decode(args[AJAX_INPUT_FIELD_PROBAND_ADDRESSES_BASE64]);
 		}
-//		if (_testPropertyExists(args, AJAX_INPUT_FIELD_LAST_PROBAND_LIST_STATUS_ENTRY_BASE64)) {
-//			inputFieldVars.lastProbandListStatusEntry = _decode(args[AJAX_INPUT_FIELD_LAST_PROBAND_LIST_STATUS_ENTRY_BASE64]);
-//		}
+
+
+
 		if (_testPropertyExists(args, AJAX_INPUT_FIELD_PROBAND_LIST_ENTRY_TAG_VALUES_BASE64)) {
 			var probandListEntryTagValues = _decode(args[AJAX_INPUT_FIELD_PROBAND_LIST_ENTRY_TAG_VALUES_BASE64]);
 			inputFieldVars.tagValues = {};
@@ -1802,7 +1802,7 @@ var FieldCalculation = FieldCalculation || {};
 			}
 		}
 
-		if (typeof inputFieldVariableValue.dateValue === 'string') { //inputFieldVariableValue.dateValue != null && inputFieldVariableValue.dateValue.length > 0) {
+		if (typeof inputFieldVariableValue.dateValue === 'string') {
 			if (inputFieldVariableValue.dateValue == null || inputFieldVariableValue.dateValue.length == 0) {
 				inputFieldVariableValue.dateValue = null;
 			} else {
@@ -1818,7 +1818,7 @@ var FieldCalculation = FieldCalculation || {};
 			inputFieldVariableValue.dateValue = JSJoda.LocalDate.from(JSJoda.nativeJs(inputFieldVariableValue.dateValue));
 		}
 
-		if (typeof inputFieldVariableValue.timeValue === 'string') { //if (inputFieldVariableValue.timeValue != null && inputFieldVariableValue.timeValue.length > 0) {
+		if (typeof inputFieldVariableValue.timeValue === 'string') {
 			if (inputFieldVariableValue.timeValue == null || inputFieldVariableValue.timeValue.length == 0) {
 				inputFieldVariableValue.timeValue = null;
 			} else {
@@ -1834,7 +1834,7 @@ var FieldCalculation = FieldCalculation || {};
 			inputFieldVariableValue.timeValue = JSJoda.LocalTime.from(JSJoda.nativeJs(inputFieldVariableValue.timeValue));
 		}
 
-		if (typeof inputFieldVariableValue.timestampValue === 'string') { //if (inputFieldVariableValue.timestampValue != null && inputFieldVariableValue.timestampValue.length > 0) {
+		if (typeof inputFieldVariableValue.timestampValue === 'string') {
 			if (inputFieldVariableValue.timestampValue == null || inputFieldVariableValue.timestampValue.length == 0) {
 				inputFieldVariableValue.timestampValue = null;
 			} else {
@@ -1899,8 +1899,8 @@ var FieldCalculation = FieldCalculation || {};
 					var inputFieldVariable = {};
 					inputFieldVariableValue.jsValueExpression = cs.strip(inputFieldVariableValue.jsValueExpression);
 					inputFieldVariableValue.jsOutputExpression = cs.strip(inputFieldVariableValue.jsOutputExpression);
-					//if (inputFieldVariableValue.jsValueExpression != null && inputFieldVariableValue.jsValueExpression.length > 0
-					//	|| inputFieldVariableValue.jsOutputExpression != null && inputFieldVariableValue.jsOutputExpression.length > 0) {
+
+
 						if (_testPropertyExists(inputFieldVariableValue, "inquiryId")) {
 							inputFieldVariable.outputId = INPUT_FIELD_OUTPUT_ID_PREFIX + inputFieldVariableValue.inquiryId;
 						} else if (_testPropertyExists(inputFieldVariableValue, "tagId")) {
@@ -1911,9 +1911,9 @@ var FieldCalculation = FieldCalculation || {};
 								inputFieldVariable.outputId += INPUT_FIELD_OUTPUT_ID_INDEX_SEPARATOR + inputFieldVariableValue.index;
 							}
 						}
-					//} else {
-					//	inputFieldVariable.outputId = null;
-					//}
+
+
+
 
 					if (_testPropertyExists(inputFieldVariableValue, "inquiryId")) {
 						inputFieldVariable.widgetVarName = INPUT_FIELD_WIDGET_VAR_PREFIX + inputFieldVariableValue.inquiryId;
@@ -1958,8 +1958,8 @@ var FieldCalculation = FieldCalculation || {};
 							}
 						} else {
 							inputFieldVariableMap[inputFieldVariableValue.jsVariableName] = [];
-							//inputFieldVariableValue.list = inputFieldVariableMap[inputFieldVariableValue.jsVariableName];
-							//inputFieldVariable.series = inputFieldVariableMap[inputFieldVariableValue.jsVariableName];
+
+
 							if (FIELD_CALCULATION_DEBUG_LEVEL >= 2) {
 								console.log("variable " + _debugVarName(inputFieldVariable) + " added");
 							}
@@ -2240,18 +2240,18 @@ var FieldCalculation = FieldCalculation || {};
 		silent = false;
 	}
 
-//	function sketchApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
-//		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
-//		if (sourceId != null && sourceId.length > 0 && rowId != null && rowId.length > 0) {
-//			sourceId = sourceId + "_input";
-//			var input = _getElement(sourceId);
-//			if (input) {
-//				Sketch.setSketchValue(widget,sourceId,newValue.ink);
-//				//input.val(newValue.ink);
-//				ajaxRequest(sourceId, sourceId, null, null); //rowId, "_updateInputFieldVariableOutputs");
-//			}
-//		}
-//	}
+
+
+
+
+
+
+
+
+
+
+
+
 
 	function sketchApplyCalculatedValue(value, widget) {
 		silent = true;
@@ -2327,7 +2327,7 @@ var FieldCalculation = FieldCalculation || {};
 	FieldCalculation.handleInitInputFieldVariables = handleInitInputFieldVariables;
 	FieldCalculation.resetInputFieldVariables = resetInputFieldVariables;
 	FieldCalculation.handleUpdateInputFieldVariables = handleUpdateInputFieldVariables;
-	//FieldCalculation.displayDeltaErrors = displayDeltaErrors;
+
 
 	FieldCalculation.singleLineTextOnChange = singleLineTextOnChange;
 	FieldCalculation.multiLineTextOnChange = multiLineTextOnChange;

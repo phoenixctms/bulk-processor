@@ -7,7 +7,7 @@ function initPrimeUI(context) {
         showCaption: false,
         showFilmstrip: false,
         panelWidth: '100%',
-        panelHeight: 248, //313,
+        panelHeight: 248,
         transitionInterval: 10000
     });
 
@@ -83,71 +83,71 @@ function initPrimeUI(context) {
 
     $('#messages').puimessages();
     if (context.apiError != null) {
-        setMessages('warn', context.apiError ); //{summary: 'Message Title', detail: context.apiError});
+        setMessages('warn', context.apiError );
     }
 
     $('#form').submit(function() {
         return _sanitizeForm(context);
     });
-    //$('#reset_btn').puibutton({
-    //    icon: 'fa-close',
-    //    click: function(event) {
-    //        resetForm();
-    //    }
-    //});
+
+
+
+
+
+
     $('#save_next_btn').puibutton({
-        //icon: 'fa-save'
+
         icon: 'fa-angle-right',
         iconPos: 'right'
     });
     $('#save_done_btn').puibutton({
-        //icon: 'fa-save'
+
         icon: 'fa-angle-double-right',
         iconPos: 'right'
     });
 
     $('#address_panel').puipanel();
-    $('#contact_details_panel').puipanel(); //.puifieldset();
+    $('#contact_details_panel').puipanel();
 
 }
 
 function _sanitizeForm(context) {
-    //$.datepicker._updateAlternate(inst);
-    //console.log($('#email_notify').val());
-    //if ($('#email_notify').puicheckbox("isChecked")) {
-    //    console.log("checked");
-    //    $('#email_notify').val("true");
-    //} else {
-    //    console.log("NOT checked");
-    //    $('#email_notify').val("");
-    //}
-    //console.log($('#email_notify').val());
-    //alert();
+
+
+
+
+
+
+
+
+
+
+
     showWaitDlg();
-    return true; // return false to cancel form action
+    return true;
 }
 
-//function resetForm() {
-//
-//    $('#country_name').val(null);
-//    $('#zip_code').val(null);
-//    $('#city_name').val(null);
-//
-//    $('#street_name').val(null);
-//
-//    $('#house_number').val(null);
-//
-//    $('#entrance').val(null);
-//
-//    $('#door_number').val(null);
-//
-//    $('#phone').val(null);
-//
-//    $('#email').val(null);
-//
-//    $('#messages').puimessages('clear');
-//
-//    //$('#form')[0].each(function() { this.reset(); });
-//    //document.getElementById('form').reset();
-//    //document.getElementById('dob').value = null;
-//}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

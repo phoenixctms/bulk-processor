@@ -2,18 +2,18 @@
 
 
 function initPrimeUI(context) {
-    
+
     $('#images').puigalleria({
         showCaption: false,
         showFilmstrip: false,
         panelWidth: '100%',
-        panelHeight: 300, //313,
+        panelHeight: 300,
         transitionInterval: 10000
-    }); 
-    
+    });
+
     $('#messages').puimessages();
     if (context.apiError != null) {
-        setMessages('warn', context.apiError ); //{summary: 'Message Title', detail: context.apiError});
+        setMessages('warn', context.apiError );
     }
 
     $('#form').submit(function() {
@@ -34,25 +34,25 @@ function initPrimeUI(context) {
             window.open(context.uriBase + '/end/inquiryformspdf', '_blank');
             hideWaitDlg();
         }
-    });    
+    });
     $('#finish_btn').puibutton({
         icon: 'fa-sign-out',
         iconPos: 'right'
-    });    
-    //$('#save_done_btn').puibutton({
-    //    icon: 'fa-save'
-    //});   
-    
-    //$('#thank_you_panel').puipanel(); //.puifieldset();
-    
+    });
+
+
+
+
+
+
 }
 
 function _sanitizeForm(context) {
-    //var result = true;
-    //result = result && _sanitizeDatePicker('dob', 'dob_picker', true);
-    //return result;
+
+
+
     showWaitDlg();
-    
-    //_sanitizeDatePicker('dob_picker', 'dob');
+
+
     return true;
 }
