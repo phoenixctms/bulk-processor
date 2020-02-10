@@ -59,14 +59,11 @@ our @EXPORT_OK = qw(
     sanitize_spreadsheet_name
     get_tableidentifier
     $csvextension
-    $mimetype);
-
-
+    $mimetype
+);
 
 our $csvextension = '.csv';
 our $mimetype = 'text/csv';
-
-
 
 my $default_csv_config = { eol         => "\r\n",
                             sep_char    => ';',
@@ -78,10 +75,6 @@ my @TABLE_TAGS = qw(table tr td);
 
 my $LongReadLen = $LongReadLen_limit; #bytes
 my $LongTruncOk = 0;
-
-
-
-
 
 my $rowblock_transactional = 0;
 
@@ -98,24 +91,6 @@ sub sanitize_column_name {
     $column_name =~ s/\W/_/g;
     return $column_name;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 sub new {
 
@@ -214,22 +189,7 @@ sub _createdatabase {
 
     dbinfo($self,'opening csv folder',getlogger(__PACKAGE__));
 
-
     makepath($f_dir,\&fileerror,getlogger(__PACKAGE__));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     return $f_dir;
 }
@@ -362,9 +322,6 @@ sub cleanupcvsdirs {
 
         my $dirpath = $csv_path . $dir . '/';
         if (not contains($dirpath,\@remainingdbdirectories)) {
-
-
-
             remove_tree($dirpath, {
                 'keep_root' => 0,
                 'verbose' => 1,
@@ -635,27 +592,18 @@ sub _convert_xlsbin2csv {
 
     if ( !defined $Book ) {
         xls2csverror($parser->error(),getlogger(__PACKAGE__));
-
         $XLS->close();
         return 0;
     }
 
-
-
     my $Sheet;
     if ($worksheet) {
-
-
 
     $Sheet = $Book->Worksheet($worksheet);
     if (!defined $Sheet) {
             xls2csverror('invalid spreadsheet',getlogger(__PACKAGE__));
             return 0;
         }
-
-
-
-
         xls2csvinfo('converting the ' . $Sheet->{Name} . ' worksheet',getlogger(__PACKAGE__));
     } else {
     ($Sheet) = @{$Book->{Worksheet}};
@@ -758,7 +706,6 @@ sub _convert_xlsxbin2csv {
 
     xls2csvinfo('start converting ' . $SourceFilename . ' (worksheet ' . $worksheet . ') to ' . $DestFilename . ' ...',getlogger(__PACKAGE__));
 
-
     my $XLS = new IO::File;
     if (not $XLS->open('<' . $SourceFilename)) {
         fileerror('cannot open file ' . $SourceFilename . ': ' . $!,getlogger(__PACKAGE__));
@@ -766,8 +713,6 @@ sub _convert_xlsxbin2csv {
     } else {
         $XLS->close();
     }
-
-
 
     my $reader   = Excel::Reader::XLSX->new();
     my $workbook = $reader->read_file($SourceFilename);
@@ -784,29 +729,19 @@ sub _convert_xlsxbin2csv {
         return 0;
     }
 
-
-
     my $sheet;
     if ($worksheet) {
-
-
-
-    $sheet = $workbook->worksheet($worksheet);
-    if (!defined $sheet) {
+        $sheet = $workbook->worksheet($worksheet);
+        if (!defined $sheet) {
             xls2csverror('invalid spreadsheet',getlogger(__PACKAGE__));
             return 0;
         }
-
-
-
-
         xls2csvinfo('converting the ' . $sheet->name() . ' worksheet',getlogger(__PACKAGE__));
     } else {
         $sheet = $workbook->worksheet(0);
         if (@{$workbook->worksheets()} > 1) {
-
             xls2csvinfo('multiple worksheets found, converting ' . $sheet->name(),getlogger(__PACKAGE__));
-    }
+        }
     }
 
     unlink $DestFilename;
@@ -831,13 +766,11 @@ sub _convert_xlsxbin2csv {
     }
 
     while ( my $row = $sheet->next_row() ) {
-
         foreach my $value ($row->values()) {
             $Recoder->recode($value);
         }
 
         my $status = $csv->combine($row->values());
-
         if (!defined $status) {
             xls2csvwarn('csv error: ' . $csv->error_input(),getlogger(__PACKAGE__));
         }
@@ -852,7 +785,6 @@ sub _convert_xlsxbin2csv {
     }
 
     close CSV;
-
 
     xls2csvinfo($csvlinecount . ' line(s) converted',getlogger(__PACKAGE__));
 

@@ -3,16 +3,10 @@ use strict;
 
 ## no critic
 
-
-
-
-
-
 use CTSMS::BulkProcessor::RestProcessor qw(
     copy_row
     get_query_string
 );
-
 
 use CTSMS::BulkProcessor::RestItem qw();
 
@@ -25,15 +19,6 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
 
 );
-
-
-
-
-
-
-
-
-
 
 my $fieldnames = [
     "booleanValue",
@@ -100,7 +85,6 @@ sub builditems_fromrows {
 sub transformitem {
     my ($item,$load_recursive,$restapi) = @_;
 
-
     if ($load_recursive) {
         $load_recursive = {} unless ref $load_recursive;
         my $field = "_inputFieldSelectionSelectionSetValueMap";
@@ -115,9 +99,6 @@ sub TO_JSON {
 
     my $self = shift;
     return { %{$self} };
-
-
-
 
 }
 

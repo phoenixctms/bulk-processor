@@ -5,43 +5,26 @@ use strict;
 
 use threads;
 
-
 use POSIX qw(strtod locale_h floor fmod);
 setlocale(LC_NUMERIC, 'C');
 
 use Fcntl qw(LOCK_EX LOCK_NB);
-
 use Data::UUID qw();
-
-
-
-
 use Net::Address::IP::Local qw();
-
-
 use Net::Domain qw(hostname hostfqdn hostdomain);
-
 use Cwd qw(abs_path);
-
-
 use Date::Manip qw(Date_Init ParseDate UnixDate);
 
 Date_Init('DateFormat=US');
-
-
 use Date::Calc qw(Normalize_DHMS Add_Delta_DHMS);
-
 use DateTime::Format::Excel qw();
 
 use Text::Wrap qw();
-
 use Digest::MD5 qw();
 use File::Temp 0.2304 qw(tempfile tempdir) ;
 use File::Path 2.07 qw(remove_tree make_path);
 
 use Encode qw(encode_utf8 encode_utf8);
-
-
 
 # after all, the only reliable way to get the true vCPU count:
 my $can_cpu_affinity = 1;
@@ -125,8 +108,6 @@ our @EXPORT_OK = qw(
 
     checkrunning
 );
-
-
 
 our $chmod_umask = 0777; #0644;
 #"You need the group "x" bit set in the directory to allow group searches. The "rw-" permissions allow opening a file given its name (r) or creating a file (w), but not listing or searching the files (x)."
@@ -396,13 +377,6 @@ sub create_guid {
 
 }
 
-
-
-
-
-
-
-
 sub urlencode {
   my ($urltoencode) = @_;
   $urltoencode =~ s/([^a-zA-Z0-9\/_\-.])/uc sprintf("%%%02x",ord($1))/eg;
@@ -628,14 +602,6 @@ sub cleanupdir {
                 }
             }
         }
-
-
-
-
-
-
-
-
     }
 
 }
@@ -648,7 +614,6 @@ sub fixdirpath {
 
 sub makepath {
     my ($dirpath,$fileerrorcode,$logger) = @_;
-
 
     make_path($dirpath,{
         'chmod' => $chmod_umask,
@@ -670,19 +635,6 @@ sub makepath {
     return 1;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 sub changemod {
     my ($filepath) = @_;
     chmod $chmod_umask,$filepath;
@@ -692,14 +644,11 @@ sub threadid {
 
     return threads->tid();
 
-
 }
 
 sub format_number {
   my ($value,$decimals) = @_;
   my $output = $value;
-
-
 
   if (defined $decimals and $decimals >= 0) {
     $output = round(($output * (10 ** ($decimals + 1))) / 10) / (10 ** $decimals);
@@ -709,9 +658,6 @@ sub format_number {
     }
   } else {
     $output = sprintf("%f",$output);
-
-
-
     if (index($output,'.') > -1) {
       $output =~ s/0+$//g;
       $output =~ s/\.$//g;
@@ -1170,20 +1116,6 @@ sub get_cpucount {
         $cpucount = eval { Sys::CpuAffinity::getNumCpus() + 0; };
     }
     return ($cpucount > 0) ? $cpucount : 1;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
 
 sub prompt {
@@ -1193,25 +1125,6 @@ sub prompt {
   chomp(my $answer = <STDIN>);
   return $answer;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 sub check_int {
     my $val = shift;
@@ -1226,9 +1139,6 @@ sub shell_args {
     if ($^O eq 'MSWin32') {
         unshift(@commandandargs,'cmd /C');
         push(@commandandargs,'>nul');
-
-
-
     }
     return @commandandargs;
 }
@@ -1259,9 +1169,6 @@ sub run {
 sub checkrunning {
 
     my ($lockfile,$errorcode,$logger) = @_;
-
-
-
     if (not open (LOCKFILE, '>' . $lockfile)) {
       if (defined $errorcode and ref $errorcode eq 'CODE') {
         return &$errorcode('cannot open file ' . $lockfile . ': ' . $!,$logger);

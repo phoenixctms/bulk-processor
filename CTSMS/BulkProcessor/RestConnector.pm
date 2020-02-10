@@ -5,8 +5,6 @@ use strict;
 
 use Scalar::Util 'blessed';
 
-
-
 use URI;
 use LWP::UserAgent qw();
 
@@ -29,8 +27,6 @@ our @EXPORT_OK = qw(
     _add_headers
     convert_bools
 );
-
-
 
 sub new {
 
@@ -582,12 +578,6 @@ sub get_collection_page_query_uri {
         $total_count_expected = 0;
         $sf = undef;
     }
-
-
-
-
-
-
 
     my $page_uri = $self->_get_request_uri($collection_path_query);
     my $page_size_query_param = $self->_get_page_size_query_param($page_size);

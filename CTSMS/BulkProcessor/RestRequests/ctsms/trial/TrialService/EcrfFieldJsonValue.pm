@@ -3,16 +3,10 @@ use strict;
 
 ## no critic
 
-
-
-
-
-
 use CTSMS::BulkProcessor::RestProcessor qw(
     copy_row
     get_query_string
 );
-
 
 use CTSMS::BulkProcessor::RestItem qw();
 
@@ -25,15 +19,6 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
 
 );
-
-
-
-
-
-
-
-
-
 
 my $fieldnames = [
     "booleanValue",

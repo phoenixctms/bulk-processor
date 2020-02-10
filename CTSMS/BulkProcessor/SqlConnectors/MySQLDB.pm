@@ -46,11 +46,6 @@ my $LongTruncOk = 0;
 
 my $net_read_timeout = 300;
 
-
-
-
-
-
 my $rowblock_transactional = 1;
 
 my $serialization_level = ''; #'SERIALIZABLE'
@@ -221,29 +216,9 @@ sub db_connect {
 
     my $server_version = substr($self->db_get_all_hashref('SHOW VARIABLES LIKE \'version\'','Variable_name')->{version}->{Value},0,2);
     if ($server_version ge '4.1') {
-
-
-
         $self->db_do('SET CHARACTER SET ' . $session_charset . '');
         dbdebug($self,'session charset ' . $session_charset . ' applied',getlogger(__PACKAGE__));
-    } else {
-
-
-
-
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
     if (defined $net_read_timeout) {
         $self->db_do('SET SESSION net_read_timeout = ' . $net_read_timeout);
@@ -297,13 +272,6 @@ sub getprimarykeycols {
     my $self = shift;
     my $tablename = shift;
 
-
-
-
-
-
-
-
     my @keycols = ();
     foreach my $field (@{$self->db_get_all_arrayref('SHOW FIELDS FROM ' . $self->tableidentifier($tablename))}) {
         if (uc($field->{'Key'}) eq 'PRI') {
@@ -329,13 +297,9 @@ sub create_temptable {
 
     if (defined $indexes and ref $indexes eq 'HASH' and scalar keys %$indexes > 0) {
         foreach my $indexname (keys %$indexes) {
-
-
-
-                my $temptable_indexname = lc($index_tablename) . '_' . $indexname;
-                $self->db_do('CREATE INDEX ' . $temptable_indexname . ' ON ' . $temp_tablename . ' (' . join(', ', map { local $_ = $_; my @indexcol = _split_indexcol($_); $_ = $self->columnidentifier($indexcol[0]) . $indexcol[1]; $_; } @{$indexes->{$indexname}}) . ')');
-                indexcreated($self,$index_tablename,$indexname,getlogger(__PACKAGE__));
-
+            my $temptable_indexname = lc($index_tablename) . '_' . $indexname;
+            $self->db_do('CREATE INDEX ' . $temptable_indexname . ' ON ' . $temp_tablename . ' (' . join(', ', map { local $_ = $_; my @indexcol = _split_indexcol($_); $_ = $self->columnidentifier($indexcol[0]) . $indexcol[1]; $_; } @{$indexes->{$indexname}}) . ')');
+            indexcreated($self,$index_tablename,$indexname,getlogger(__PACKAGE__));
         }
     }
 
@@ -369,7 +333,6 @@ sub create_indexes {
 
     my $index_count = 0;
     if (length($tablename) > 0) {
-
         if (defined $indexes and ref $indexes eq 'HASH' and scalar keys %$indexes > 0) {
             foreach my $indexname (keys %$indexes) {
                 if (not arrayeq($self->_extract_indexcols($indexes->{$indexname}),$keycols,1)) {
@@ -380,7 +343,6 @@ sub create_indexes {
                 }
             }
         }
-
     }
 
     return $index_count;
@@ -391,18 +353,11 @@ sub create_texttable {
     my $self = shift;
     my ($tablename,$fieldnames,$keycols,$indexes,$truncate,$defer_indexes,$texttable_engine) = @_;
 
-
-
-
-
-
     if (length($tablename) > 0 and defined $fieldnames and ref $fieldnames eq 'ARRAY') {
 
         my $created = 0;
         if ($self->table_exists($tablename) == 0) {
             my $statement = 'CREATE TABLE ' . $self->tableidentifier($tablename) . ' (';
-
-
             my @fieldspecs = ();
             foreach my $fieldname (@$fieldnames) {
                 if (contains($fieldname,$keycols,1)) {
@@ -414,8 +369,6 @@ sub create_texttable {
                 }
             }
             $statement .= join(', ',@fieldspecs);
-
-
 
             if (not $defer_indexes and defined $keycols and ref $keycols eq 'ARRAY' and scalar @$keycols > 0 and setcontains($keycols,$fieldnames,1)) {
                 $statement .= ', PRIMARY KEY (' . join(', ',map { local $_ = $_; my @indexcol = _split_indexcol($_); $_ = $self->columnidentifier($indexcol[0]) . $indexcol[1]; $_; } @$keycols) . ')';
@@ -510,39 +463,10 @@ sub drop_table {
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 sub db_do_begin {
 
     my $self = shift;
     my $query = shift;
-
 
     $self->SUPER::db_do_begin($query,$rowblock_transactional,@_);
 
@@ -552,8 +476,6 @@ sub db_get_begin {
 
     my $self = shift;
     my $query = shift;
-
-
 
     $self->SUPER::db_get_begin($query,$rowblock_transactional,@_);
 

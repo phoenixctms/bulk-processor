@@ -16,9 +16,6 @@ use CTSMS::BulkProcessor::RestProcessor qw(
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
 use CTSMS::BulkProcessor::RestItem qw();
 
-
-
-
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
@@ -143,15 +140,5 @@ sub get_item_path {
     return &$get_item_path_query($id);
 
 }
-
-
-
-
-
-
-
-
-
-
 
 1;

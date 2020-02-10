@@ -3,11 +3,7 @@ use strict;
 
 ## no critic
 
-
-
 use Tie::IxHash;
-
-
 
 use CTSMS::BulkProcessor::Globals qw(
     $system_name
@@ -95,9 +91,6 @@ use CTSMS::BulkProcessor::Projects::ETL::ExcelExport qw();
 use CTSMS::BulkProcessor::Array qw(array_to_map);
 
 use CTSMS::BulkProcessor::Utils qw(booltostring timestampdigits run shell_args);
-
-
-
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -506,8 +499,6 @@ sub _ecrf_data_vertical_items_to_row {
         ecrffield => $item->{ecrfField}, index => $item->{index}, col_per_selection_set_value => $col_per_selection_set_value, %export_colname_abbreviation,
     )));
 
-
-
     push(@row,$item->{version});
     push(@row,$item->{modifiedUser}->{userName});
     push(@row,$item->{modifiedTimestamp});
@@ -521,14 +512,6 @@ sub _ecrf_data_vertical_items_to_row {
     push(@row,$item->{longValue});
     push(@row,$item->{floatValue});
     push(@row,$item->{dateValue} // $item->{timeValue} // $item->{timestampValue});
-
-
-
-
-
-
-
-
 
     my @selectionSetValues = @{$item->{ecrfField}->{field}->{selectionSetValues} // []};
     foreach my $selectionSetValue (@selectionSetValues) {
@@ -568,10 +551,6 @@ sub _insert_ecrf_data_vertical_rows {
     return $result;
 }
 
-
-
-
-
 sub export_ecrf_data_horizontal {
 
     my $context = {};
@@ -594,12 +573,8 @@ sub _init_ecrf_data_pdfs_context {
     my $result = 1;
     $context->{ecrf_data_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($ecrf_data_trial_id);
 
-
-
-
     $context->{error_count} = 0;
     $context->{warning_count} = 0;
-
 
     $context->{api_listentries_page} = [];
     $context->{api_listentries_page_num} = 0;

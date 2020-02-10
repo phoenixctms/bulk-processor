@@ -110,8 +110,8 @@ var hasTouchSupport = "ontouchstart" in document.documentElement || (/iphone|ipa
 
 		self.inputId = function() {
 			return _options._inputId;
-		};		
-		
+		};
+
 		self.paper = function() {
 			return _paper;
 		};
@@ -180,8 +180,6 @@ var hasTouchSupport = "ontouchstart" in document.documentElement || (/iphone|ipa
 
 			return path;
 		}
-
-
 
 		self.json = function(value) {
 			if (value === undefined) {
@@ -300,15 +298,6 @@ var hasTouchSupport = "ontouchstart" in document.documentElement || (/iphone|ipa
 
 		function _checkTouchSupport() {
 			return hasTouchSupport;
-
-
-
-
-
-
-
-
-
 		}
 
 		self.editing = function(mode) {

@@ -34,13 +34,6 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Inpu
     $SKETCH
 );
 
-
-
-
-
-
-
-
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
@@ -192,9 +185,6 @@ sub TO_JSON {
 
     my $self = shift;
     return { %{$self} };
-
-
-
 
 }
 

@@ -92,12 +92,6 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Prob
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::EcrfFieldStatusType qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::MassMailStatusType qw();
 
-
-
-
-
-
-
 use CTSMS::BulkProcessor::Utils qw(threadid wrap_text);
 
 require Exporter;
@@ -159,14 +153,6 @@ sub create_ecrffieldstatustype_diagram {
     _render_state_diagram(
         initial_items => CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::EcrfFieldStatusType::get_initial_items($queue),
         get_transition_items_code => \&CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::EcrfFieldStatusType::get_transition_items,
-
-
-
-
-
-
-
-
         wordwrapcolumns => $ecrffieldstatustype_wordwrapcolumns,
         fontsize => $ecrffieldstatustype_fontsize,
         noderadius => $ecrffieldstatustype_noderadius,

@@ -252,10 +252,7 @@ sub update_settings {
 
         my $result = 1;
 
-
-
         $result &= _prepare_working_paths(1);
-
 
         $sqlite_db_file = $data->{sqlite_db_file} if exists $data->{sqlite_db_file};
         $csv_dir = $data->{csv_dir} if exists $data->{csv_dir};
@@ -365,8 +362,6 @@ sub _prepare_working_paths {
     $result &= $path_result;
     ($path_result,$output_path) = create_path($working_path . 'output',$output_path,$create,\&fileerror,getlogger(__PACKAGE__));
     $result &= $path_result;
-
-
 
     return $result;
 

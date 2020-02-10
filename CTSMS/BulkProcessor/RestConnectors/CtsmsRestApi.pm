@@ -14,8 +14,6 @@ use HTTP::Request::Common qw();
 
 use JSON -support_by_pp, -no_export;
 
-
-
 use CTSMS::BulkProcessor::Globals qw($LongReadLen_limit);
 use CTSMS::BulkProcessor::Logging qw(
     getlogger
@@ -119,13 +117,6 @@ sub _setup_ua {
     if ($self->{username}) {
         $ua->credentials($netloc, $self->{realm}, $self->{username}, $self->{password});
     }
-
-
-
-
-
-
-
     restdebug($self,"ua configured",getlogger(__PACKAGE__));
 
 }
@@ -162,18 +153,12 @@ sub _add_post_headers {
 sub _add_get_headers {
     my $self = shift;
     my ($req,$headers) = @_;
-
-
-
     $self->SUPER::_add_get_headers($req,$headers);
 }
 
 sub _add_head_headers {
     my $self = shift;
     my ($req,$headers) = @_;
-
-
-
     $self->SUPER::_add_head_headers($req,$headers);
 }
 
@@ -181,9 +166,7 @@ sub _add_put_headers {
     my $self = shift;
     my ($req,$headers) = @_;
     _add_headers($req,{
-
        'Content-Type' => $contenttype,
-
     });
 	$self->SUPER::_add_put_headers($req,$headers);
 }
@@ -191,9 +174,6 @@ sub _add_put_headers {
 sub _add_delete_headers {
     my $self = shift;
     my ($req,$headers) = @_;
-
-
-
     $self->SUPER::_add_delete_headers($req,$headers);
 }
 
@@ -204,12 +184,6 @@ sub _get_page_num_query_param {
         return 'p=' . $page_num;
     }
     return undef;
-
-
-
-
-
-
 }
 
 sub _get_page_size_query_param {
@@ -219,8 +193,6 @@ sub _get_page_size_query_param {
         return 's=' . $page_size;
     }
     return undef;
-
-
 }
 
 sub _get_total_count_expected_query_param {
@@ -268,9 +240,6 @@ sub extract_collection_items {
     }
 
     my $result = undef;
-
-
-
     if (defined $data and 'HASH' eq ref $data) {
         if (defined $p and defined $data->{psf} and 'HASH' eq ref $data->{psf}) {
             $p->{total_count} = $data->{psf}->{totalCount};
@@ -398,17 +367,6 @@ sub post_file {
         return $self->responsedata();
     }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 sub put {
     my $self = shift;

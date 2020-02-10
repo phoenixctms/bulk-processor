@@ -237,8 +237,6 @@ sub update_settings {
 
         my $result = 1;
 
-
-
         $result &= _prepare_working_paths(1);
         $ecrfstatustype_filename = $output_path . $ecrfstatustype_filename;
         $courseparticipationstatustype_participant_filename = $output_path . $courseparticipationstatustype_participant_filename;
@@ -362,8 +360,6 @@ sub _prepare_working_paths {
     $result &= $path_result;
     ($path_result,$output_path) = create_path($working_path . 'output',$output_path,$create,\&fileerror,getlogger(__PACKAGE__));
     $result &= $path_result;
-
-
 
     return $result;
 

@@ -31,10 +31,7 @@ use CTSMS::BulkProcessor::LoadConfig qw(
     parse_regexp
 );
 
-
 use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring);
-
-
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -71,8 +68,6 @@ our @EXPORT_OK = qw(
     $proband_categories_not_to_update
 
 );
-
-
 
 our $defaultconfig = 'config.cfg';
 our $defaultsettings = 'settings.yml';
@@ -158,8 +153,6 @@ sub _prepare_working_paths {
     $result &= $path_result;
     ($path_result,$output_path) = create_path($working_path . 'output',$output_path,$create,\&fileerror,getlogger(__PACKAGE__));
     $result &= $path_result;
-
-
 
     return $result;
 

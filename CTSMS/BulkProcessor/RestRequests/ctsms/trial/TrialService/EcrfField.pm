@@ -139,16 +139,6 @@ sub get_item_path {
 
 }
 
-
-
-
-
-
-
-
-
-
-
 sub get_export_colnames {
     my %params = @_;
     my ($ecrffield,

@@ -9,15 +9,6 @@ function decodeBase64(base64String) {
 
 }
 
-
-
-
-
-
-
-
-
-
 function _getElement(pickTargetField) {
 
 	if (pickTargetField != null && pickTargetField.length > 0) {
@@ -104,13 +95,6 @@ function setErrorMessageText(error_message_id,output) {
 	var errorMessageSpanElement = _getElement(error_message_id);
 	if (errorMessageSpanElement != null) {
 		errorMessageSpanElement.html(output);
-
-
-
-
-
-
-
 	}
 }
 
@@ -493,10 +477,6 @@ var FieldCalculation = FieldCalculation || {};
 				msg.output = inputFieldVariable.outputErrorMessage;
 			} else if (inputFieldVariable.output != null && inputFieldVariable.output.length > 0) {
 				msg.output = inputFieldVariable.output;
-
-
-
-
 			}
 			errorMsgs.push(msg);
 		}
@@ -561,9 +541,6 @@ var FieldCalculation = FieldCalculation || {};
 				_setInputFieldVariableValue(inputFieldVariable.value, evaluation.returnValue);
 			}
 
-
-
-
 			inputFieldVariable.processed = true;
 			inputFieldVariable.delta = !_equalInputFieldVariable(inputFieldVariable);
 			_debugVariableValue("variable value updated ", inputFieldVariable);
@@ -612,11 +589,6 @@ var FieldCalculation = FieldCalculation || {};
 
 					var matches = expressionDeclarationRegExp.exec(definition);
 					var argNames = matches[1].split(",");
-
-
-
-
-
 
 					var mask = inputFieldVariable.mask;
 
@@ -742,13 +714,6 @@ var FieldCalculation = FieldCalculation || {};
 		mask["$disabled"] = inputFieldVariable.value.disabled;
 		if (inputFieldVariable.value.series) {
 			mask["$index"] = inputFieldVariable.value.index;
-
-
-
-
-
-
-
 		}
 
 		mask["$selectionSetValues"] = inputFieldVariable.value.selectionSetValues;
@@ -1749,8 +1714,6 @@ var FieldCalculation = FieldCalculation || {};
 			inputFieldVars.probandAddresses = _decode(args[AJAX_INPUT_FIELD_PROBAND_ADDRESSES_BASE64]);
 		}
 
-
-
 		if (_testPropertyExists(args, AJAX_INPUT_FIELD_PROBAND_LIST_ENTRY_TAG_VALUES_BASE64)) {
 			var probandListEntryTagValues = _decode(args[AJAX_INPUT_FIELD_PROBAND_LIST_ENTRY_TAG_VALUES_BASE64]);
 			inputFieldVars.tagValues = {};
@@ -1911,9 +1874,6 @@ var FieldCalculation = FieldCalculation || {};
 								inputFieldVariable.outputId += INPUT_FIELD_OUTPUT_ID_INDEX_SEPARATOR + inputFieldVariableValue.index;
 							}
 						}
-
-
-
 
 					if (_testPropertyExists(inputFieldVariableValue, "inquiryId")) {
 						inputFieldVariable.widgetVarName = INPUT_FIELD_WIDGET_VAR_PREFIX + inputFieldVariableValue.inquiryId;
@@ -2239,19 +2199,6 @@ var FieldCalculation = FieldCalculation || {};
 		setDateTimePickerVal(value.inquiry.id, timestamp);
 		silent = false;
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	function sketchApplyCalculatedValue(value, widget) {
 		silent = true;

@@ -29,23 +29,14 @@ our @EXPORT_OK = qw(get_tableidentifier);
 
 my $defaultport = '1521';
 
-
-
 my $connNLS_LANGUAGE = 'GERMAN';
 my $connNLS_TERRITORY = 'AUSTRIA';
-
-
 
 my $varcharsize = 4000;
 my $max_identifier_length = 30;
 
 my $LongReadLen = $LongReadLen_limit; #bytes
 my $LongTruncOk = 0;
-
-
-
-
-
 
 my $rowblock_transactional = 1;
 
@@ -91,7 +82,6 @@ sub _connectidentifier {
     } else {
         return undef;
     }
-
 
 }
 
@@ -139,11 +129,6 @@ sub getsafetablename {
     my $tableidentifier = shift;
     return uc($self->SUPER::getsafetablename($tableidentifier));
 
-
-
-
-
-
 }
 
 sub paginate_sort_query {
@@ -178,22 +163,6 @@ sub getdatabases {
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 sub db_connect {
 
     my $self = shift;
@@ -222,7 +191,6 @@ sub db_connect {
                 PrintError      => 0,
                 RaiseError      => 0,
                 AutoCommit      => 1,
-
             }
         ) or dberror($self,'error connecting - service name: ' . $self->{drh}->errstr(),getlogger(__PACKAGE__));
     } elsif ($sid) {
@@ -332,23 +300,18 @@ sub create_temptable {
     my $index_tablename = $self->_gettemptablename();
     my $temp_tablename = $self->tableidentifier($index_tablename);
 
-
     $self->db_do('CREATE TABLE ' . $temp_tablename . ' AS ' . $select_stmt);
     push(@{$self->{temp_tables}},$index_tablename);
 
     temptablecreated($self,$index_tablename,getlogger(__PACKAGE__));
 
-
-
     if (defined $indexes and ref $indexes eq 'HASH' and scalar keys %$indexes > 0) {
         foreach my $indexname (keys %$indexes) {
             my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
 
-
-                $indexname = _chopidentifier(lc($index_tablename) . '_' . $indexname);
-                $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $temp_tablename . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
-                indexcreated($self,$index_tablename,$indexname,getlogger(__PACKAGE__));
-
+            $indexname = _chopidentifier(lc($index_tablename) . '_' . $indexname);
+            $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $temp_tablename . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
+            indexcreated($self,$index_tablename,$indexname,getlogger(__PACKAGE__));
         }
     }
 
@@ -382,19 +345,16 @@ sub create_indexes {
 
     my $index_count = 0;
     if (length($tablename) > 0) {
-
-            if (defined $indexes and ref $indexes eq 'HASH' and scalar keys %$indexes > 0) {
-                foreach my $indexname (keys %$indexes) {
-                    my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
-                    if (not arrayeq($indexcols,$keycols,1)) {
-
-                        $indexname = _chopidentifier($indexname);
-                        $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $self->tableidentifier($tablename) . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
-                        indexcreated($self,$tablename,$indexname,getlogger(__PACKAGE__));
-                    }
+        if (defined $indexes and ref $indexes eq 'HASH' and scalar keys %$indexes > 0) {
+            foreach my $indexname (keys %$indexes) {
+                my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
+                if (not arrayeq($indexcols,$keycols,1)) {
+                    $indexname = _chopidentifier($indexname);
+                    $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $self->tableidentifier($tablename) . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
+                    indexcreated($self,$tablename,$indexname,getlogger(__PACKAGE__));
                 }
             }
-
+        }
     }
 
     return $index_count;
@@ -404,9 +364,6 @@ sub create_texttable {
 
     my $self = shift;
     my ($tablename,$fieldnames,$keycols,$indexes,$truncate,$defer_indexes) = @_;
-
-
-
 
     if (length($tablename) > 0 and defined $fieldnames and ref $fieldnames eq 'ARRAY') {
 
@@ -419,10 +376,6 @@ sub create_texttable {
                 $statement .= ', CONSTRAINT PRIMARY KEY (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$keycols) . ')';
             }
 
-
-
-
-
             $statement .= ')';
 
             $self->db_do($statement);
@@ -432,7 +385,6 @@ sub create_texttable {
                 foreach my $indexname (keys %$indexes) {
                     my $indexcols = $self->_extract_indexcols($indexes->{$indexname});
                     if (not arrayeq($indexcols,$keycols,1)) {
-
                         $indexname = _chopidentifier($indexname);
                         $self->db_do('CREATE INDEX ' . $indexname . ' ON ' . $self->tableidentifier($tablename) . ' (' . join(', ',map { local $_ = $_; $_ = $self->columnidentifier($_); $_; } @$indexcols) . ')');
                         indexcreated($self,$tablename,$indexname,getlogger(__PACKAGE__));
@@ -510,7 +462,6 @@ sub db_do_begin {
     my $self = shift;
     my $query = shift;
 
-
     $self->SUPER::db_do_begin($query,$rowblock_transactional,@_);
 
 }
@@ -519,7 +470,6 @@ sub db_get_begin {
 
     my $self = shift;
     my $query = shift;
-
 
     $self->SUPER::db_get_begin($query,$rowblock_transactional,@_);
 

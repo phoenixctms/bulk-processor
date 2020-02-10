@@ -41,18 +41,12 @@ our @EXPORT_OK = qw(
     $defaultconfig
 
     $force
-
-
-
 );
 
 our $defaultconfig = 'config.cfg';
 our $defaultsettings = 'settings.yml';
 
 our $force = 0;
-
-
-
 
 sub update_settings {
 
