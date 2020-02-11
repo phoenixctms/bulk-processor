@@ -82,8 +82,6 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Ecrf
     $QUERY_QUEUE
 );
 
-
-
 scripterror(getscriptpath() . ' already running',getlogger(getscriptpath())) unless flock DATA, LOCK_EX | LOCK_NB;
 
 my @TASK_OPTS = ();
@@ -229,9 +227,6 @@ sub main() {
 sub taskinfo {
     my ($task,$result) = @_;
     scriptinfo($result ? "starting task: '$task'" : "skipping task '$task' due to previous problems",getlogger(getscriptpath()));
-
-
-
     return $result;
 }
 
@@ -419,12 +414,6 @@ sub create_journal_histogram_task {
     }
 
 }
-
-
-
-
-
-
 
 __DATA__
 This exists to allow the locking code at the beginning of the file to work.

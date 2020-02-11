@@ -78,8 +78,6 @@ use CTSMS::BulkProcessor::Projects::ETL::InquiryExport qw(
     publish_inquiry_data_pdfs
 );
 
-
-
 my @TASK_OPTS = ();
 
 my $tasks = [];
@@ -104,9 +102,6 @@ push(@TASK_OPTS,$publish_inquiry_data_horizontal_csv_task_opt);
 
 my $publish_inquiry_data_xls_task_opt = 'publish_inquiry_data_xls';
 push(@TASK_OPTS,$publish_inquiry_data_xls_task_opt);
-
-
-
 
 my $publish_inquiry_data_pdfs_task_opt = 'publish_inquiry_data_pdfs';
 push(@TASK_OPTS,$publish_inquiry_data_pdfs_task_opt);
@@ -138,8 +133,6 @@ sub init {
         "upload" => \$upload_files,
 
     );
-
-
 
     my $result = load_config($configfile);
     #support credentials via args for jobs:
@@ -191,8 +184,6 @@ sub main() {
             } elsif (lc($publish_inquiry_data_xls_task_opt) eq lc($task)) {
                 $result &= publish_inquiry_data_xls_task(\@messages,\@attachmentfiles) if taskinfo($publish_inquiry_data_xls_task_opt,\$result,1);
                 $completion = $result;
-
-
 
             } elsif (lc($publish_inquiry_data_pdfs_task_opt) eq lc($task)) {
                 $result &= publish_inquiry_data_pdfs_task(\@messages,\@attachmentfiles) if taskinfo($publish_inquiry_data_pdfs_task_opt,\$result,1);
@@ -354,26 +345,6 @@ sub publish_inquiry_data_xls_task {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 sub publish_inquiry_data_pdfs_task {
     my ($messages,$attachmentfiles) = @_;
     my ($result, $warning_count, $uploads) = (0,0,undef);
@@ -394,9 +365,3 @@ sub publish_inquiry_data_pdfs_task {
         return 1;
     }
 }
-
-
-
-
-
-

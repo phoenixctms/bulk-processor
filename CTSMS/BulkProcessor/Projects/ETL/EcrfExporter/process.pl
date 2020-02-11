@@ -166,8 +166,6 @@ sub init {
 
     );
 
-
-
     my $result = load_config($configfile);
     #support credentials via args for jobs:
     if ($auth) {
@@ -527,9 +525,3 @@ sub publish_proband_list_task {
         return 1;
     }
 }
-
-
-
-
-
-

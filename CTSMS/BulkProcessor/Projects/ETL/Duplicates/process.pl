@@ -101,8 +101,6 @@ sub init {
         "dry" => \$dry,
     );
 
-
-
     my $result = load_config($configfile);
     init_log();
     $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::Duplicates::Settings::update_settings,$YAML_CONFIG_TYPE);
@@ -167,9 +165,6 @@ sub main() {
 sub taskinfo {
     my ($task,$result) = @_;
     scriptinfo($result ? "starting task: '$task'" : "skipping task '$task' due to previous problems",getlogger(getscriptpath()));
-
-
-
     return $result;
 }
 
@@ -250,12 +245,6 @@ sub update_proband_task {
         return 1;
     }
 }
-
-
-
-
-
-
 
 __DATA__
 This exists to allow the locking code at the beginning of the file to work.
