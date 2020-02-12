@@ -68,6 +68,8 @@ my $fieldnames = [
     "deferredDelete",
     "deferredDeleteReason",
     "externalId",
+    "title",
+    "titleL10nKey",
 ];
 
 sub new {
@@ -180,11 +182,6 @@ sub get_export_colnames {
             sanitize_colname_symbols_code
         /};
 
-
-
-
-
-
     $get_colname_parts_code = sub { return (); } unless 'CODE' eq ref $get_colname_parts_code;
     $abbreviate_selectionvalue_code = sub { my ($value,$id) = @_; return $value; } unless 'CODE' eq ref $abbreviate_selectionvalue_code;
     my $selectionSetValues = $inquiry->{field}->{selectionSetValues};
@@ -213,8 +210,6 @@ sub get_export_colnames {
             push(@parts,&$abbreviate_category_code($inquiry->{category})) if length($inquiry->{category}) > 0;
             push(@parts,zerofill($inquiry->{position},$inquiry_position_digits));
             push(@parts,&$abbreviate_inputfield_name_code($inquiry->{field}->{nameL10nKey},$inquiry->{field}->{id}));
-
-
         }
         $prefix = 'p' unless $external_id_used;
     }

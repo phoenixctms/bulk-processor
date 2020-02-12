@@ -1,11 +1,6 @@
 
 var idRegexp = /^(\d+)_(\d+_)?([a-z_]+)$/;
 
-
-
-
-
-
 function initPrimeUI(context) {
 
     context.fieldsPerPage = 5;
@@ -58,33 +53,10 @@ function initPrimeUI(context) {
             return content.length > 0 ? content : null;
         },
         initContent: function(content) {
-
-
-
-
-
             while(context.inquiryStatusVar.fieldsToInit.length > 0) {
                 var inquiryField = context.inquiryStatusVar.fieldsToInit.shift();
                 _initInquiryField(context,inquiryField.value,inquiryField.content);
             }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         }
     });
 
@@ -144,10 +116,6 @@ function initPrimeUI(context) {
             context.checkForm = true;
         }
     });
-
-
-
-
 }
 
 function _addInquiryField(context,value) {
@@ -187,7 +155,8 @@ function _createInquiryField(context,value) {
     content.append(fieldSet);
 
     var row = $('<div class="ui-grid-row"/>').appendTo(grid);
-    row.append($('<div class="ui-grid-col-4" style="margin-top:4px;"/>').append($('<label class="ctsms-align-top' + (value.inquiry.optional ? '' : ' ctsms-required') + '"/>').append(document.createTextNode(value.inquiry.field.title))));
+    row.append($('<div class="ui-grid-col-4" style="margin-top:4px;"/>').append($('<label class="ctsms-align-top' + (value.inquiry.optional ? '' : ' ctsms-required') + '"/>').append(
+        document.createTextNode((value.inquiry.title != null && value.inquiry.title.length > 0) ? value.inquiry.title : value.inquiry.field.title))));
     var inputContent = $('<div class="ui-grid-col-8"/>');
     row.append(inputContent);
 
@@ -280,10 +249,6 @@ function _createInquiryField(context,value) {
     return content;
 
 }
-
-
-
-
 
 function _initInquiryField(context,value,content) {
 
@@ -390,13 +355,6 @@ function _createDatePicker(context,value) {
 
     });
 
-
-
-
-
-
-
-
     return [ datePickerHidden, datePicker ];
 }
 function _initDatePicker(context,value, content) {
@@ -419,21 +377,11 @@ function _initDatePicker(context,value, content) {
 
 function setDatePickerVal(inquiryId,date) {
 
-
-
-
-
-
     var elem = $('#' + inquiryId + '_date_picker');
     _setPickerDate(elem,date);
 }
 
 function getDatePickerVal(inquiryId) {
-
-
-
-
-
 
     var elem = $('#' + inquiryId + '_date_picker');
     return elem.puidatepicker('getDate');
@@ -459,13 +407,6 @@ function _createTimePicker(context,value) {
 
     });
 
-
-
-
-
-
-
-
     return [ timePickerHidden, timePicker ];
 }
 function _initTimePicker(context,value,content) {
@@ -488,21 +429,11 @@ function _initTimePicker(context,value,content) {
 
 function setTimePickerVal(inquiryId,time) {
 
-
-
-
-
-
     var elem = $('#' + inquiryId + '_time_picker');
     _setPickerTime(elem,time);
 }
 
 function getTimePickerVal(inquiryId) {
-
-
-
-
-
 
     var elem = $('#' + inquiryId + '_time_picker');
     return elem.puitimepicker('getTime');
@@ -528,14 +459,6 @@ function _createDateTimePicker(context,value) {
 
     });
 
-
-
-
-
-
-
-
-
     var timePickerName = 'timestamptime_' + value.inquiry.id;
     var timePickerId = value.inquiry.id + '_timestamptime_picker';
     var timePickerHiddenId = value.inquiry.id + '_timestamptime_picker_hidden';
@@ -543,11 +466,6 @@ function _createDateTimePicker(context,value) {
     var timePicker = $('<input type="text" class="ctsms-control-time" name="' + timePickerName + '" id="' + timePickerId + '" value="' + (value.timestamptimeValue != null ? value.timestamptimeValue : '') + '"/>').puitimepicker({
 
     });
-
-
-
-
-
 
     return [ datePickerHidden, datePicker, timePickerHidden, timePicker ];
 }
@@ -577,24 +495,12 @@ function _initDateTimePicker(context,value,content) {
             FieldCalculation.timestampOnChange(value);
         });
     }
-
-
-
 }
 
 function setDateTimePickerVal(inquiryId,datetime) {
 
-
-
-
-
-
     var elem = $('#' + inquiryId + '_timestampdate_picker');
     _setPickerDate(elem,datetime);
-
-
-
-
 
     elem = $('#' + inquiryId + '_timestamptime_picker');
     _setPickerTime(elem,datetime);
@@ -602,19 +508,9 @@ function setDateTimePickerVal(inquiryId,datetime) {
 
 function getDateTimePickerVal(inquiryId) {
 
-
-
-
-
-
     var elem = $('#' + inquiryId + '_timestampdate_picker');
     var date = elem.puidatepicker('getDate');
     if (date != null) {
-
-
-
-
-
         elem = $('#' + inquiryId + '_timestamptime_picker');
         var time = elem.puitimepicker('getTime');
         if (time != null) {
@@ -644,13 +540,6 @@ function _createSingleLineText(context,value) {
         "value": (value.textValue != null ? value.textValue : '')
     }).puiinputtext();
 
-
-
-
-
-
-
-
     return [ singleLineTextHidden, singleLineText ];
 }
 function _initSingleLineText(context,value,content) {
@@ -673,21 +562,11 @@ function _initSingleLineText(context,value,content) {
 
 function setSingleLineTextVal(inquiryId,text) {
 
-
-
-
-
-
     var elem = $('#' + inquiryId + '_single_line_text');
     elem.val(text);
 }
 
 function getSingleLineTextVal(inquiryId) {
-
-
-
-
-
 
     var elem = $('#' + inquiryId + '_single_line_text');
     return elem.val();
@@ -732,21 +611,11 @@ function _initMultiLineText(context,value,content) {
 
 function setMultiLineTextVal(inquiryId,text) {
 
-
-
-
-
-
     var elem = $('#' + inquiryId + '_multi_line_text');
     elem.val(text);
 }
 
 function getMultiLineTextVal(inquiryId) {
-
-
-
-
-
 
     var elem = $('#' + inquiryId + '_multi_line_text');
     return elem.val();
@@ -763,10 +632,6 @@ function _createCheckbox(context,value) {
 
     var checkbox = $('<input type="checkbox" name="' + checkboxName + '" id="' + checkboxId + '" value="true"' + (value.booleanValue ? ' checked="checked"' : '') + '/>');
 
-
-
-
-
     return [ checkboxHidden, checkboxDefaultHidden, checkbox ];
 }
 function _initCheckbox(context,value,content) {
@@ -780,18 +645,9 @@ function _initCheckbox(context,value,content) {
         });
     }
 
-
-
-
 }
 
 function setCheckboxVal(inquiryId,checked) {
-
-
-
-
-
-
 
     var elem = $('#' + inquiryId + '_checkbox');
     if (checked) {
@@ -800,19 +656,9 @@ function setCheckboxVal(inquiryId,checked) {
         elem.puicheckbox('uncheck');
     }
 
-
-
-
-
-
 }
 
 function getCheckboxVal(inquiryId) {
-
-
-
-
-
 
     var elem = $('#' + inquiryId + '_checkbox');
     return elem.puicheckbox('isChecked');
@@ -843,11 +689,6 @@ function _createSelectOneDropdown(context,value) {
         }
     }
 
-
-
-
-
-
     result.push(selectOneDropdown);
     return result;
 }
@@ -864,9 +705,6 @@ function _initSelectOneDropdown(context,value,content) {
         $('#' + selectOneDropdownId).puidropdown('disable');
     }
 
-
-
-
     $('#' + selectOneDropdownId).parent().parent().find('.ui-inputtext').puitooltip({
         my: 'left bottom',
         at: 'left top',
@@ -876,18 +714,10 @@ function _initSelectOneDropdown(context,value,content) {
 
 function setSelectOneDropdownVal(inquiryId,selectionValueIds) {
 
-
-
-
-
-
     var elem = $('#' + inquiryId + '_select_one_dropdown');
     if (selectionValueIds != null && selectionValueIds.length > 0) {
         for (var i = 0; i < selectionValueIds.length; i++) {
-
-
             elem.puidropdown('selectValue',selectionValueIds[i]);
-
         }
     } else {
         elem.puidropdown('selectValue','');
@@ -895,11 +725,6 @@ function setSelectOneDropdownVal(inquiryId,selectionValueIds) {
 }
 
 function getSelectOneDropdownVal(inquiryId) {
-
-
-
-
-
 
     var elem = $('#' + inquiryId + '_select_one_dropdown');
     var val = elem.puidropdown('getSelectedValue');
@@ -959,13 +784,6 @@ function _createSelectOneRadio(context,value,vertical) {
         }
     }
 
-
-
-
-
-
-
-
     result.push(grid);
     return result;
 }
@@ -996,12 +814,6 @@ function _initSelectOneRadio(context,value,content) {
         $('#' + selectOneRadioGridId).puitooltip('hide');
     });
 
-
-
-
-
-
-
 }
 function setSelectOneRadioVal(inquiryId,selectionValueIds) {
     if (selectionValueIds != null) {
@@ -1013,18 +825,10 @@ function setSelectOneRadioVal(inquiryId,selectionValueIds) {
 }
 
 function getSelectOneRadioVal(inquiryId) {
-
-
-
-
-
-
     var elems = $('[id^="' + inquiryId + '_"] input[type="radio"');
     var result = [];
     elems.each(function(index, elem) {
         if ($(this).puiradiobutton('isChecked')) {
-
-
             result.push($(this).val());
         }
     });
@@ -1060,20 +864,12 @@ function _createSelectMany(context,value,vertical) {
             }
             $('<div class="ui-grid-col-1" />').append(checkbox).appendTo(row);
             if (vertical) {
-
                 $('<div class="ui-grid-col-11" style="display:table;text-align:left;padding-top: 2px;"/>').append(label).appendTo(row);
             } else {
                 $('<div class="ui-grid-col-2" style="display:table;text-align:left;padding-top: 2px;"/>').append(label).appendTo(row);
-
-
             }
         }
     }
-
-
-
-
-
 
     result.push(grid);
     return result;
@@ -1105,20 +901,9 @@ function _initSelectMany(context,value,content) {
         $('#' + selectManyGridId).puitooltip('hide');
     });
 
-
-
-
-
-
-
 }
 
 function setSelectManyVal(inquiryId,selectionValueIds) {
-
-
-
-
-
 
     var elems = $('[id^="' + inquiryId + '_"] input[type="checkbox"]');
     var ids = {};
@@ -1138,23 +923,15 @@ function setSelectManyVal(inquiryId,selectionValueIds) {
 
 function getSelectManyVal(inquiryId) {
 
-
-
-
-
-
     var elems = $('[id^="' + inquiryId + '_"] input[type="checkbox"]');
     var result = [];
     elems.each(function(index, elem) {
         if ($(this).puicheckbox('isChecked')) {
-
-
             result.push($(this).val());
         }
     });
     return result;
 }
-
 
 function _createAutocomplete(context,value) {
     var autocompleteName = 'text_' + value.inquiry.id;
@@ -1204,21 +981,11 @@ function _initAutocomplete(context,value,content) {
 
 function setAutocompleteVal(inquiryId,text) {
 
-
-
-
-
-
     var elem = $('#' + inquiryId + '_autocomplete');
     elem.val(text);
 }
 
 function getAutocompleteVal(inquiryId) {
-
-
-
-
-
 
     var elem = $('#' + inquiryId + '_autocomplete');
     return elem.val();
@@ -1338,24 +1105,13 @@ function _initSpinner(context,value,content) {
 
 function setSpinnerVal(inquiryId,val) {
 
-
-
-
-
-
     var elem = $('#' + inquiryId + '_spinner');
     elem.val(val);
 }
+
 function getSpinnerVal(inquiryId) {
 
-
-
-
-
-
     var elem = $('#' + inquiryId + '_spinner');
-
-
     return elem.val();
 }
 
@@ -1368,13 +1124,6 @@ function _createDecimal(context,value) {
     var decimal = $('<input type="text" class="ctsms-control-float" name="' + decimalName + '" id="' + decimalId + '" value="' + (value.floatValue != null ? value.floatValue : '') + '"/>').puiinputtext({
 
     });
-
-
-
-
-
-
-
 
     return [ decimalHidden, decimal ];
 }
@@ -1397,21 +1146,10 @@ function _initDecimal(context,value,content) {
 }
 
 function setDecimalVal(inquiryId,val) {
-
-
-
-
-
-
     var elem = $('#' + inquiryId + '_decimal');
     elem.val(val);
 }
 function getDecimalVal(inquiryId) {
-
-
-
-
-
 
     var elem = $('#' + inquiryId + '_decimal');
     return elem.val().replace(/,/,'.');
@@ -1543,32 +1281,15 @@ function _getTooltipText(context, value) {
 
 function _sanitizeForm(context) {
 
-
-
-
-
-
     if (context.checkForm) {
         if (context.trial._savedInquiryCount < context.trial._activeInquiryCount
             && (context.trial._postedInquiryCount + (context.saveAllPages ? 0 : context.trial._savedInquiryCount) + context.inquiryStatusVar.toPost) < context.trial._activeInquiryCount) {
             $('#incomplete_dlg').puidialog('show');
             return false;
         }
-
-
     }
 
     showWaitDlg();
 
     return true; // return false to cancel form action
 }
-
-
-
-
-
-
-
-
-
-

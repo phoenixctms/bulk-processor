@@ -62,6 +62,8 @@ my $fieldnames = [
     "version",
     "stratification",
     "randomize",
+    "title",
+    "titleL10nKey",
 ];
 
 sub new {
