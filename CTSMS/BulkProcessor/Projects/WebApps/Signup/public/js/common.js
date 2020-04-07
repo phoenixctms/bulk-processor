@@ -15,6 +15,7 @@ $.fgtimepicker.setDefaults(timePickerDefaults);
 
 var INPUT_DATE_PATTERN = context.dateFormat;
 var INPUT_TIME_PATTERN = 'HH' + timePickerDefaults.timeSeparator + 'mm';
+var VO_TIME_PATTERN = 'HH' + timePickerDefaults.timeSeparator + 'mm' + timePickerDefaults.timeSeparator + 'ss';
 var INPUT_DATETIME_PATTERN = INPUT_DATE_PATTERN + ' ' + INPUT_TIME_PATTERN;
 var INPUT_DECIMAL_SEPARATOR = context.decimalSeparator;
 var INPUT_TIMEZONE_ID = context.inputTimezone;
