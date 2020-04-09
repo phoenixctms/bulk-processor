@@ -81,7 +81,7 @@ sub init {
 
     $CTSMS::BulkProcessor::LogError::cli = 0;
 
-
+    #$CTSMS::BulkProcessor::Globals::is_perl_debug = 1;
 
     my $configfile = Cwd::abs_path(File::Basename::dirname(__FILE__) . '/' . $defaultconfig);
     my $settingsfile = Cwd::abs_path(File::Basename::dirname(__FILE__) . '/' . $defaultsettings);

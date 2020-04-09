@@ -620,6 +620,8 @@ sub get_template {
         $navigation_options = &$navigation_options();
     }
 
+    Dancer::header('X-Frame-Options','deny');
+
     return Dancer::template($view_name,{
         head =>
             join("\n", map { '<script type="text/javascript" src="'. Dancer::request->uri_base .'/js/'._get_minified($_,'.js').'"></script>'; } @$scripts) . "\n" .
