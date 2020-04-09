@@ -30,8 +30,7 @@ use CTSMS::BulkProcessor::Utils qw(
     secs_to_years
 );
 
-use POSIX qw(ceil); ExcelExport
-ExcelExport
+use POSIX qw(ceil);
 
 use File::Basename qw(basename);
 

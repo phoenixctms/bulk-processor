@@ -101,12 +101,11 @@ our @EXPORT_OK = qw(
     serviceinfo
 
 );
-ExcelExport
 
 my $logfileextension = '.log';
 
 our $currentlogfile;
-ExcelExport
+
 our $attachmentlogfile;
 
 my $loginitialized = 0;
@@ -129,11 +128,8 @@ sub createlogfile {
 
 sub init_log_default {
 
-    ExcelExport
     my $conf = "log4perl.logger                       = DEBUG, ScreenApp\n" .
-
                "log4perl.appender.ScreenApp           = Log::Log4perl::Appender::Screen\n" .
-               ExcelExport
                "log4perl.appender.ScreenApp.Threshold = INFO\n" .
                "log4perl.appender.ScreenApp.stderr    = 0\n" .
                "log4perl.appender.ScreenApp.layout    = Log::Log4perl::Layout::PatternLayout\n" .
@@ -151,8 +147,8 @@ sub init_log {
     createlogfile($currentlogfile);
     $attachmentlogfile = $logfile_path . 'email_' . timestampdigits() . $logfileextension;
     createlogfile($attachmentlogfile);
-    ExcelExport
-    ExcelExport
+
+
 
     # log configuration
     my $conf = "log4perl.logger                       = DEBUG, FileApp, ScreenApp, MailAttApp\n" .
@@ -178,7 +174,6 @@ sub init_log {
                'log4perl.appender.MailAttApp.layout.ConversionPattern = %d> %m%n' . "\n\n" .
 
                "log4perl.appender.ScreenApp           = Log::Log4perl::Appender::Screen\n" .
-               ExcelExport
                'log4perl.appender.ScreenApp.Threshold = ' . $screenloglevel . "\n" .
                "log4perl.appender.ScreenApp.stderr    = ' . $screenlogstderr . \n" .
                "log4perl.appender.ScreenApp.layout    = Log::Log4perl::Layout::SimpleLayout\n" .
