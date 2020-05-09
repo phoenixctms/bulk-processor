@@ -179,7 +179,7 @@ sub init {
 
 }
 
-sub main() {
+sub main {
 
     my @messages = ( 'Trial eCRF export/data aggregation:' );
     my @attachmentfiles = ();

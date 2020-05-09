@@ -104,7 +104,7 @@ sub init {
 
 }
 
-sub main() {
+sub main {
 
     my @messages = ( 'Export/import database query criteria:' );
     my @attachmentfiles = ();

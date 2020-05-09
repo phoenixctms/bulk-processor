@@ -109,7 +109,7 @@ sub init {
 
 }
 
-sub main() {
+sub main {
 
     my @messages = ( 'Detect and mark subject duplicates:' );
     my @attachmentfiles = ();

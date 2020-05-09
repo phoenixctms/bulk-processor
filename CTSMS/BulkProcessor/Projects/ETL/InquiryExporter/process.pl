@@ -147,7 +147,7 @@ sub init {
 
 }
 
-sub main() {
+sub main {
 
     my @messages = ( 'Trial inquiry export/data aggregation:' );
     my @attachmentfiles = ();

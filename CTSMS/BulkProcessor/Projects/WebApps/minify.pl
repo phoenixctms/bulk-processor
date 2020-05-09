@@ -40,23 +40,16 @@ sub init {
         "cleanup" => \$cleanup,
     );
 
+    die("no folder specified\n") unless $root;
+
     $root = fixdirpath($root);
     @dirstoskip = map { $root . fixdirpath($_); } @dirstoskip;
-
-
-
-
-
-
-
-
-
 
     return 1;
 
 }
 
-sub main() {
+sub main {
 
     File::Find::find({ wanted => sub {
         _scandirs(sub {

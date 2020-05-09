@@ -154,7 +154,7 @@ sub init {
 
 }
 
-sub main() {
+sub main {
 
     my @messages = ();
     my @attachmentfiles = ();
