@@ -115,6 +115,7 @@ sub builditems_fromrows {
             $item = __PACKAGE__->new($row);
 
             # transformations go here ...
+            $item->{proband} = $row->{proband} if exists $row->{proband};
 
             push @items,$item;
         }
