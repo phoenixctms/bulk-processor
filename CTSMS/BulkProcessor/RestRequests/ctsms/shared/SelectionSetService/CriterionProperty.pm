@@ -16,8 +16,6 @@ use CTSMS::BulkProcessor::RestProcessor qw(
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
 use CTSMS::BulkProcessor::RestItem qw();
 
-
-
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
@@ -67,6 +65,7 @@ my $fieldnames = [
     "completeMethodName",
     "converter",
     "entityName",
+    "filterItemsName",
     "getNameMethodName",
     "getValueMethodName",
     "id",
