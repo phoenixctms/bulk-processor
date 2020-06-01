@@ -65,6 +65,11 @@ my $fieldnames = [
     "trial",
     "version",
     "visit",
+    "mode",
+    "startTag",
+    "stopTag",
+    "offsetSeconds",
+    "duration",
 ];
 
 sub new {
