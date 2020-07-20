@@ -223,13 +223,16 @@ sub abbreviate {
         $word_count_limit, # abbreviate only if more than x words
         $word_abbreviation_length, #truncate words to 3 chars
         $word_limit, #if the word length > 5 chars
-        $word_blacklist) = @params{qw/
+        $word_blacklist, #slurp certain words
+        $word_separator) = #symbol to join abbreviated words again
+        @params{qw/
             string
             limit
             word_count_limit
             word_abbreviation_length
             word_limit
             word_blacklist
+            word_separator
     /};
 
     $limit //= 1;
@@ -237,6 +240,7 @@ sub abbreviate {
     $word_abbreviation_length //= 3;
     $word_limit //= $word_abbreviation_length + 2;
     $word_blacklist = {} unless 'HASH' eq ref $word_blacklist;
+    $word_separator //= '';
     return $string if length($string) <= $limit;
     $string =~ s/[^a-zA-Z0-9 <>=äöüÄÖÜß_-]//g;
     $string =~ s/[ _-]+/ /g;
@@ -246,7 +250,7 @@ sub abbreviate {
     foreach my $word (@words) {
         push(@abbreviated_words,(length($word) > $word_limit ? chopstring($word,$word_abbreviation_length,'') : $word));
     }
-    return join(' ',@abbreviated_words);
+    return join($word_separator,@abbreviated_words);
 }
 
 sub inquiry_data_include_inquiry {
