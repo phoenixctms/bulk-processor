@@ -20,8 +20,6 @@ use CTSMS::BulkProcessor::SqlProcessor qw(
 
 use CTSMS::BulkProcessor::SqlRecord qw();
 
-
-
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::SqlRecord);
 our @EXPORT_OK = qw(
@@ -33,13 +31,8 @@ our @EXPORT_OK = qw(
     process_records
 );
 
-
-
-
-
 my $tablename = 'ecrf_data_vertical';
 my $get_db = \&get_sqlite_db;
-
 
 my $expected_fieldnames;
 _set_expected_fieldnames();
@@ -49,18 +42,16 @@ sub _set_expected_fieldnames {
     $option_col_count //= 0;
     my @fieldnames = (
         'proband_id',
-
-
         (sort keys %$listentrytags),
         'subject_group',
         'enrollment_status',
         'ecrf_status',
         'ecrf_name',
+        'ecrf_revision',
         'ecrf_external_id',
         'ecrf_id',
         'ecrf_visit',
-        'ecrf_subject_group',
-        'ecrf_position',
+        'ecrf_subject_groups',
         'ecrf_section',
         'ecrf_field_id',
         'ecrf_field_position',
@@ -92,13 +83,11 @@ sub _set_expected_fieldnames {
 }
 
 # table creation:
-my $primarykey_fieldnames = [ 'proband_id','ecrf_subject_group','ecrf_position','ecrf_section','ecrf_field_position','series_index','value_version' ];
+my $primarykey_fieldnames = [ 'proband_id','ecrf_name','ecrf_revision','ecrf_section','ecrf_field_position','series_index','value_version' ];
 my $indexes = {
-    $tablename . '_ecrf_name_section_position' => [ 'ecrf_name(32)','ecrf_section(32)','ecrf_position(32)' ],
+    $tablename . '_ecrf_name_section_position' => [ 'ecrf_name(32)','ecrf_revision(32)','ecrf_section(32)','ecrf_field_position(32)' ],
 
 };
-
-
 
 sub new {
 
@@ -204,7 +193,6 @@ sub transformitem {
 
 }
 
-
 sub getinsertstatement {
 
     my ($insert_ignore) = @_;
@@ -212,8 +200,6 @@ sub getinsertstatement {
     return insert_stmt($get_db,__PACKAGE__,$insert_ignore);
 
 }
-
-
 
 sub gettablename {
 

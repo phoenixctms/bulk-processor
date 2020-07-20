@@ -137,8 +137,7 @@ our $ecrf_data_export_pdfs_filename = '%s_%s%s';
 our $proband_list_filename = '%s_%s%s';
 
 my $ecrfname_abbreviate_opts = {};
-my $visit_abbreviate_opts = {};
-my $group_abbreviate_opts = {};
+my $ecrfrevision_abbreviate_opts = {};
 my $section_abbreviate_opts = {};
 my $inputfieldname_abbreviate_opts = {};
 my $selectionvalue_abbreviate_opts = {};
@@ -153,24 +152,19 @@ my $ecrf_data_include_ecrffield_code = sub {
 
 our %export_colname_abbreviation = (
     ignore_external_ids => undef,
-    ecrf_position_digits => 2,
     ecrffield_position_digits => 2,
     index_digits => 2,
     abbreviate_ecrf_name_code => sub {
-        my ($ecrf_name,$ecrf_id) = @_;
+        my ($ecrf_name,$ecrf_revision,$ecrf_id) = @_;
         $ecrf_name = abbreviate(string => $ecrf_name, %$ecrfname_abbreviate_opts);
 
         return $ecrf_name;
     },
-    abbreviate_visit_code => sub {
-        my ($token,$title,$id) = @_;
-        $token = abbreviate(string => $token, %$visit_abbreviate_opts);
-        return $token;
-    },
-    abbreviate_group_code => sub {
-        my ($token,$title,$id) = @_;
-        $token = abbreviate(string => $token, %$group_abbreviate_opts);
-        return $token;
+    abbreviate_ecrf_revision_code => sub {
+        my ($ecrf_revision) = @_;
+        $ecrf_revision = abbreviate(string => $ecrf_revision, %$ecrfrevision_abbreviate_opts);
+
+        return $ecrf_revision;
     },
     abbreviate_section_code => sub {
         my $section = shift;
@@ -319,11 +313,10 @@ sub update_settings {
 
         $export_colname_abbreviation{ignore_external_ids} = $data->{ignore_external_ids} if exists $data->{ignore_external_ids};
         $ecrfname_abbreviate_opts = $data->{ecrfname_abbreviate_opts} if exists $data->{ecrfname_abbreviate_opts};
+        $ecrfrevision_abbreviate_opts = $data->{ecrfrevision_abbreviate_opts} if exists $data->{ecrfrevision_abbreviate_opts};
         $inputfieldname_abbreviate_opts = $data->{inputfieldname_abbreviate_opts} if exists $data->{inputfieldname_abbreviate_opts};
         $selectionvalue_abbreviate_opts = $data->{selectionvalue_abbreviate_opts} if exists $data->{selectionvalue_abbreviate_opts};
 
-        $visit_abbreviate_opts = $data->{visit_abbreviate_opts} if exists $data->{visit_abbreviate_opts};
-        $group_abbreviate_opts = $data->{group_abbreviate_opts} if exists $data->{group_abbreviate_opts};
         $section_abbreviate_opts = $data->{section_abbreviate_opts} if exists $data->{section_abbreviate_opts};
 
         return $result;

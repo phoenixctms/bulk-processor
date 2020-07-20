@@ -22,7 +22,6 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldVal
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldJsonValue qw();
 
-
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
@@ -34,9 +33,6 @@ our @EXPORT_OK = qw(
     get_getecrffieldvaluessectionmaxindex
 
 );
-
-
-
 
 my $default_restapi = \&get_ctsms_restapi;
 my $get_item_path_query = sub {
@@ -62,21 +58,6 @@ my $get_getecrffieldvaluessectionmaxindex_path_query = sub {
     $params{section} = $section;
     return 'ecrfstatusentry/' . $listentry_id . '/' . $ecrf_id . '/ecrffieldvalues/maxindex' . get_query_string(\%params);
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 my $fieldnames = [
     "rows",
@@ -126,23 +107,6 @@ sub get_getecrffieldvaluessectionmaxindex {
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 sub builditems_fromrows {
 
     my ($rows,$load_recursive,$restapi) = @_;
@@ -183,15 +147,5 @@ sub get_item_path {
     return &$get_item_path_query($id);
 
 }
-
-
-
-
-
-
-
-
-
-
 
 1;

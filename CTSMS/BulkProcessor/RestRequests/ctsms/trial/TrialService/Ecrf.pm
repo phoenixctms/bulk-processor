@@ -55,12 +55,12 @@ my $fieldnames = [
     "disabled",
     "enableBrowserFieldCalculation",
     "externalId",
-    "group",
+    "groups",
     "id",
     "modifiedTimestamp",
     "modifiedUser",
     "name",
-    "position",
+    "revision",
     "probandListStatus",
     "title",
     "trial",
@@ -135,7 +135,6 @@ sub builditems_fromrows {
 sub transformitem {
     my ($item,$load_recursive,$restapi) = @_;
 
-
 }
 
 sub get_item_path {
@@ -144,15 +143,5 @@ sub get_item_path {
     return &$get_item_path_query($id);
 
 }
-
-
-
-
-
-
-
-
-
-
 
 1;

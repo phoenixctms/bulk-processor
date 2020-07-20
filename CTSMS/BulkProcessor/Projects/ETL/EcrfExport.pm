@@ -117,6 +117,8 @@ my $max_colname_length_warn = 64;
 my $pdfextension = '.pdf';
 my $pdfmimetype = 'application/pdf';
 
+my $group_visit_token_separator = ';';
+
 sub publish_ecrf_data_pdf {
 
     my ($upload_files) = @_;
@@ -477,11 +479,15 @@ sub _ecrf_data_vertical_items_to_row {
     push(@row,$item->{listEntry}->{lastStatus} ? $item->{listEntry}->{lastStatus}->{status}->{nameL10nKey} : undef);
     push(@row,$context->{ecrf_status} ? $context->{ecrf_status}->{status}->{nameL10nKey} : undef);
     push(@row,$item->{ecrfField}->{ecrf}->{name});
+    push(@row,$item->{ecrfField}->{ecrf}->{revision});
     push(@row,$item->{ecrfField}->{ecrf}->{externalId});
     push(@row,$item->{ecrfField}->{ecrf}->{id});
     push(@row,$item->{ecrfField}->{ecrf}->{visit} ? $item->{ecrfField}->{ecrf}->{visit}->{token} : undef);
-    push(@row,$item->{ecrfField}->{ecrf}->{group} ? $item->{ecrfField}->{ecrf}->{group}->{token} : undef);
-    push(@row,$item->{ecrfField}->{ecrf}->{position});
+    if (defined $item->{ecrfField}->{ecrf}->{groups} and scalar @{$item->{ecrfField}->{ecrf}->{groups}} > 0) {
+        push(@row, join($group_visit_token_separator, map { $_->{token}; } @{$item->{ecrfField}->{ecrf}->{groups}}));
+    } else {
+        push(@row, undef);
+    }
     push(@row,$item->{ecrfField}->{section});
     push(@row,$item->{ecrfField}->{id});
     push(@row,$item->{ecrfField}->{position});
