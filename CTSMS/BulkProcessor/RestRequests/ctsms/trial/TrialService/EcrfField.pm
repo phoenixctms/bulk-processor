@@ -148,12 +148,10 @@ sub get_export_colnames {
         $get_colname_parts_code,
         $ignore_external_ids,
         $abbreviate_ecrf_name_code,
-        $abbreviate_visit_code,
-        $abbreviate_group_code,
+        $abbreviate_ecrf_revision_code,
         $abbreviate_section_code,
         $abbreviate_inputfield_name_code,
         $abbreviate_selectionvalue_code,
-        $ecrf_position_digits,
         $ecrffield_position_digits,
         $index_digits,
         $col_per_selection_set_value,
@@ -164,12 +162,10 @@ sub get_export_colnames {
             get_colname_parts_code
             ignore_external_ids
             abbreviate_ecrf_name_code
-            abbreviate_visit_code
-            abbreviate_group_code
+            abbreviate_ecrf_revision_code
             abbreviate_section_code
             abbreviate_inputfield_name_code
             abbreviate_selectionvalue_code
-            ecrf_position_digits
             ecrffield_position_digits
             index_digits
             col_per_selection_set_value
@@ -191,14 +187,11 @@ sub get_export_colnames {
             $external_id_used = 1;
         } else {
             $abbreviate_ecrf_name_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_ecrf_name_code;
-            $abbreviate_visit_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_visit_code;
-            $abbreviate_group_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_group_code;
-            $ecrf_position_digits //= 2;
-            push(@parts,&$abbreviate_group_code($ecrffield->{ecrf}->{group}->{token},$ecrffield->{ecrf}->{group}->{title},$ecrffield->{ecrf}->{group}->{id})) if $ecrffield->{ecrf}->{group};
-            push(@parts,zerofill($ecrffield->{ecrf}->{position},$ecrf_position_digits));
-            push(@parts,&$abbreviate_visit_code($ecrffield->{ecrf}->{visit}->{token},$ecrffield->{ecrf}->{visit}->{title},$ecrffield->{ecrf}->{visit}->{id})) if $ecrffield->{ecrf}->{visit};
-            my $ecrf_name = &$abbreviate_ecrf_name_code($ecrffield->{ecrf}->{name},$ecrffield->{ecrf}->{id});
+            $abbreviate_ecrf_revision_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_ecrf_revision_code;
+            my $ecrf_name = &$abbreviate_ecrf_name_code($ecrffield->{ecrf}->{name},$ecrffield->{ecrf}->{revision},$ecrffield->{ecrf}->{id});
             push(@parts,$ecrf_name) if defined $ecrf_name and length($ecrf_name) > 0;
+            my $ecrf_revision = &$abbreviate_ecrf_revision_code($ecrffield->{ecrf}->{revision});
+            push(@parts,$ecrf_revision) if defined $ecrf_revision and length($ecrf_revision) > 0;
         }
         $index_digits //= 2;
         if (not $ignore_external_ids and defined $ecrffield->{externalId} and length($ecrffield->{externalId}) > 0) {

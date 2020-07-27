@@ -325,7 +325,7 @@ NEXT_PROBAND:
 
 
 
-                
+
 
 
              } else {
@@ -361,16 +361,6 @@ sub _inquiry_data_vertical_items_to_row {
     my @row = ();
     push(@row,$item->{proband}->{id});
 
-
-
-
-
-
-
-
-
-
-
     push(@row,$item->{inquiry}->{category});
     push(@row,$item->{inquiry}->{id});
     push(@row,$item->{inquiry}->{position});
@@ -382,7 +372,6 @@ sub _inquiry_data_vertical_items_to_row {
     push(@row,$item->{inquiry}->{field}->{id});
     push(@row,$item->{inquiry}->{field}->{fieldType}->{nameL10nKey});
     push(@row,booltostring($item->{inquiry}->{optional}));
-
 
     push(@row,join(',',CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Inquiry::get_export_colnames(
         inquiry => $item->{inquiry},

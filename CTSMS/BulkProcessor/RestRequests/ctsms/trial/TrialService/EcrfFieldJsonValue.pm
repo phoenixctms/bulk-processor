@@ -45,6 +45,8 @@ my $fieldnames = [
     "timeValue",
     "timestampValue",
     "userTimeZone",
+    "probandGroupTokens",
+    "visitToken",
 ];
 
 sub new {
@@ -97,15 +99,5 @@ sub transformitem {
     }
 
 }
-
-
-
-
-
-
-
-
-
-
 
 1;
