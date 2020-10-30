@@ -50,8 +50,9 @@ sub _set_expected_fieldnames {
         'ecrf_revision',
         'ecrf_external_id',
         'ecrf_id',
-        'ecrf_visit',
+        'ecrf_visits',
         'ecrf_subject_groups',
+        'visit',
         'ecrf_section',
         'ecrf_field_id',
         'ecrf_field_position',
@@ -83,9 +84,9 @@ sub _set_expected_fieldnames {
 }
 
 # table creation:
-my $primarykey_fieldnames = [ 'proband_id','ecrf_name','ecrf_revision','ecrf_section','ecrf_field_position','series_index','value_version' ];
+my $primarykey_fieldnames = [ 'proband_id','ecrf_name','ecrf_revision','visit','ecrf_section','ecrf_field_position','series_index','value_version' ];
 my $indexes = {
-    $tablename . '_ecrf_name_section_position' => [ 'ecrf_name(32)','ecrf_revision(32)','ecrf_section(32)','ecrf_field_position(32)' ],
+    $tablename . '_ecrf_name_section_position' => [ 'ecrf_name(32)','ecrf_revision(32)','visit','ecrf_section(32)','ecrf_field_position(32)' ],
 
 };
 

@@ -319,7 +319,6 @@ sub export_ecrf_data_vertical_task {
     my $err = $@;
 
     if ($err) {
-
         push(@$messages,'export_ecrf_data_vertical error: ' . $err);
         return 0;
     } else {
