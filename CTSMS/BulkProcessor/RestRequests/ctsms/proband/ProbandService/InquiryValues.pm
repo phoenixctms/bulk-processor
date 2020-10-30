@@ -157,21 +157,11 @@ sub transformitem {
     $item->{js_rows} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryJsonValue::builditems_fromrows($item->{js_rows},$load_recursive,$restapi);
 }
 
-sub get_item_path {
-
-    my ($id) = @_;
-    return &$get_item_path_query($id);
-
-}
-
-
-
-
-
-
-
-
-
-
+#sub get_item_path {
+#
+#    my ($id) = @_;
+#    return &$get_item_path_query($id);
+#
+#}
 
 1;

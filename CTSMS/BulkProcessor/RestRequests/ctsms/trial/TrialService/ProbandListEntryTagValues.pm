@@ -162,21 +162,11 @@ sub transformitem {
 
 }
 
-sub get_item_path {
-
-    my ($id) = @_;
-    return &$get_item_path_query($id);
-
-}
-
-
-
-
-
-
-
-
-
-
+#sub get_item_path {
+#
+#   my ($id) = @_;
+#    return &$get_item_path_query($id);
+#
+#}
 
 1;
