@@ -46,7 +46,8 @@ my $fieldnames = [
     "timestampValue",
     "userTimeZone",
     "probandGroupTokens",
-    "visitToken",
+    "visitTokens",
+    "visitId",
 ];
 
 sub new {

@@ -42,9 +42,10 @@ my $get_trial_path_query = sub {
     return 'trial/' . $trial_id . '/list/ecrf' . get_query_string(\%params);
 };
 my $get_getecrffieldvaluessectionmaxindex_path_query = sub {
-    my ($ecrf_id, $section) = @_;
+    my ($ecrf_id, $visit_id, $section) = @_;
     my %params = ();
     $params{section} = $section;
+    $params{visit_id} = $visit_id if defined $visit_id;
     return 'ecrf/' . $ecrf_id . '/ecrffieldvalues/maxindex' . get_query_string(\%params);
 };
 
@@ -66,7 +67,7 @@ my $fieldnames = [
     "trial",
     "uniqueName",
     "version",
-    "visit",
+    "visits",
     "deferredDelete",
     "deferredDeleteReason",
 ];
@@ -100,9 +101,9 @@ sub get_trial_list {
 
 sub get_getecrffieldvaluessectionmaxindex {
 
-    my ($ecrf_id, $section, $restapi,$headers) = @_;
+    my ($ecrf_id, $visit_id, $section, $restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return $api->get(&$get_getecrffieldvaluessectionmaxindex_path_query($ecrf_id, $section),$headers);
+    return $api->get(&$get_getecrffieldvaluessectionmaxindex_path_query($ecrf_id, $visit_id, $section),$headers);
 
 }
 

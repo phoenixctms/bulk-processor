@@ -20,8 +20,6 @@ use CTSMS::BulkProcessor::SqlProcessor qw(
 
 use CTSMS::BulkProcessor::SqlRecord qw();
 
-
-
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::SqlRecord);
 our @EXPORT_OK = qw(
@@ -33,13 +31,8 @@ our @EXPORT_OK = qw(
     process_records
 );
 
-
-
-
-
 my $tablename = 'ecrf_data_horizontal';
 my $get_db = \&get_csv_db;
-
 
 my $expected_fieldnames;
 _set_expected_fieldnames();
@@ -50,7 +43,6 @@ sub _set_expected_fieldnames {
     my @fieldnames = (
         'proband_id',
 
-
         (sort keys %$listentrytags),
         'subject_group',
         'enrollment_status',
@@ -58,15 +50,6 @@ sub _set_expected_fieldnames {
     push(@fieldnames,@$ecrfvalue_cols);
     $expected_fieldnames = \@fieldnames;
 }
-
-
-
-
-
-
-
-
-
 
 sub new {
 
@@ -172,7 +155,6 @@ sub transformitem {
 
 }
 
-
 sub getinsertstatement {
 
     my ($insert_ignore) = @_;
@@ -180,8 +162,6 @@ sub getinsertstatement {
     return insert_stmt($get_db,__PACKAGE__,$insert_ignore);
 
 }
-
-
 
 sub gettablename {
 

@@ -30,13 +30,16 @@ our @EXPORT_OK = qw(
 
 my $default_restapi = \&get_ctsms_restapi;
 my $get_item_path_query = sub {
-    my ($listentry_id,$ecrf_id) = @_;
-    return 'ecrfstatusentry/' . $listentry_id . '/' . $ecrf_id;
+    my ($listentry_id,$ecrf_id,$visit_id) = @_;
+    my %params = ();
+    $params{visit_id} = $visit_id if defined $visit_id;
+    return 'ecrfstatusentry/' . $listentry_id . '/' . $ecrf_id . get_query_string(\%params);
 };
 my $get_renderecrf_path_query = sub {
-    my ($listentry_id,$ecrf_id,$blank) = @_;
+    my ($listentry_id,$ecrf_id,$visit_id,$blank) = @_;
     my %params = ();
     $params{blank} = booltostring($blank);
+    $params{visit_id} = $visit_id if defined $visit_id;
     return 'ecrfstatusentry/' . $listentry_id . '/ecrfpdf' . ((defined $ecrf_id) ? '/' . $ecrf_id : '') . get_query_string(\%params);;
 };
 
@@ -54,6 +57,7 @@ my $fieldnames = [
     "validationStatus",
     "validationTimestamp",
     "version",
+    "visit",
 ];
 
 sub new {
@@ -69,17 +73,17 @@ sub new {
 
 sub get_item {
 
-    my ($listentry_id,$ecrf_id,$load_recursive,$restapi,$headers) = @_;
+    my ($listentry_id,$ecrf_id,$visit_id,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->get(&$get_item_path_query($listentry_id,$ecrf_id),$headers),$load_recursive,$restapi);
+    return builditems_fromrows($api->get(&$get_item_path_query($listentry_id,$ecrf_id,$visit_id),$headers),$load_recursive,$restapi);
 
 }
 
 sub render_ecrf {
 
-    my ($listentry_id,$ecrf_id,$blank,$restapi,$headers) = @_;
+    my ($listentry_id,$ecrf_id,$visit_id,$blank,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return $api->get_file(&$get_renderecrf_path_query($listentry_id,$ecrf_id,$blank),$headers);
+    return $api->get_file(&$get_renderecrf_path_query($listentry_id,$ecrf_id,$visit_id,$blank),$headers);
 
 }
 
@@ -115,12 +119,11 @@ sub transformitem {
 
 }
 
-sub get_item_path {
-
-    my ($id) = @_;
-    return &$get_item_path_query($id);
-
-}
-
+#sub get_item_path {
+#
+#    my ($id) = @_;
+#    return &$get_item_path_query($id);
+#
+#}
 
 1;

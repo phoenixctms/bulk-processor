@@ -30,19 +30,24 @@ our @EXPORT_OK = qw(
 
     get_ecrffieldvalues
     set_ecrffieldvalues
-    get_getecrffieldvaluessectionmaxindex
+
 
 );
+#get_getecrffieldvaluessectionmaxindex
 
 my $default_restapi = \&get_ctsms_restapi;
 my $get_item_path_query = sub {
-    my ($listentry_id, $ecrffield_id, $index) = @_;
-    return 'ecrfstatusentry/' . $listentry_id . '/ecrffieldvalue/' . $ecrffield_id . (defined $index ? '/' . $index : '');
+    my ($listentry_id, $visit_id, $ecrffield_id, $index) = @_;
+    my %params = ();
+    $params{visit_id} = $visit_id if defined $visit_id;
+    $params{index} = $index if defined $index;
+    return 'ecrfstatusentry/' . $listentry_id . '/ecrffieldvalue/' . $ecrffield_id . get_query_string(\%params);
 };
 my $get_getecrffieldvalues_path_query = sub {
-    my ($listentry_id, $ecrf_id, $load_all_js_values) = @_;
+    my ($listentry_id, $ecrf_id, $visit_id, $load_all_js_values) = @_;
     my %params = ();
     $params{load_all_js_values} = booltostring($load_all_js_values);
+    $params{visit_id} = $visit_id if defined $visit_id;
     return 'ecrfstatusentry/' . $listentry_id . '/' . $ecrf_id . '/ecrffieldvalues' . get_query_string(\%params);
 };
 
@@ -52,12 +57,13 @@ my $get_setecrffieldvalues_path_query = sub {
     $params{force} = booltostring($force) if defined $force;
     return 'ecrffieldvalue/' . get_query_string(\%params);
 };
-my $get_getecrffieldvaluessectionmaxindex_path_query = sub {
-    my ($listentry_id, $ecrf_id, $section) = @_;
-    my %params = ();
-    $params{section} = $section;
-    return 'ecrfstatusentry/' . $listentry_id . '/' . $ecrf_id . '/ecrffieldvalues/maxindex' . get_query_string(\%params);
-};
+#my $get_getecrffieldvaluessectionmaxindex_path_query = sub {
+#    my ($listentry_id, $ecrf_id, $visit_id, $section) = @_;
+#    my %params = ();
+#    $params{section} = $section;
+#    $params{visit_id} = $visit_id if defined $visit_id;
+#    return 'ecrfstatusentry/' . $listentry_id . '/' . $ecrf_id . '/ecrffieldvalues/maxindex' . get_query_string(\%params);
+#};
 
 my $fieldnames = [
     "rows",
@@ -77,17 +83,17 @@ sub new {
 
 sub get_item {
 
-    my ($listentry_id, $ecrffield_id, $index,$load_recursive,$restapi,$headers) = @_;
+    my ($listentry_id, $visit_id, $ecrffield_id, $index,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->get(&$get_item_path_query($listentry_id, $ecrffield_id, $index),$headers),$load_recursive,$restapi);
+    return builditems_fromrows($api->get(&$get_item_path_query($listentry_id, $visit_id, $ecrffield_id, $index),$headers),$load_recursive,$restapi);
 
 }
 
 sub get_ecrffieldvalues {
 
-    my ($listentry_id, $ecrf_id, $load_all_js_values, $p,$sf,$load_recursive,$restapi,$headers) = @_;
+    my ($listentry_id, $ecrf_id, $visit_id, $load_all_js_values, $p,$sf,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_getecrffieldvalues_path_query($listentry_id, $ecrf_id, $load_all_js_values),$p,$sf),$headers),$p),$load_recursive,$restapi);
+    return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_getecrffieldvalues_path_query($listentry_id, $ecrf_id, $visit_id, $load_all_js_values),$p,$sf),$headers),$p),$load_recursive,$restapi);
 
 }
 
@@ -99,13 +105,13 @@ sub set_ecrffieldvalues {
 
 }
 
-sub get_getecrffieldvaluessectionmaxindex {
-
-    my ($listentry_id, $ecrf_id, $section, $restapi,$headers) = @_;
-    my $api = _get_api($restapi,$default_restapi);
-    return $api->get(&$get_getecrffieldvaluessectionmaxindex_path_query($listentry_id, $ecrf_id, $section),$headers);
-
-}
+#sub get_getecrffieldvaluessectionmaxindex {
+#
+#    my ($listentry_id, $ecrf_id, $visit_id, $section, $restapi,$headers) = @_;
+#    my $api = _get_api($restapi,$default_restapi);
+#    return $api->get(&$get_getecrffieldvaluessectionmaxindex_path_query($listentry_id, $ecrf_id, $visit_id, $section),$headers);
+#
+#}
 
 sub builditems_fromrows {
 
@@ -141,11 +147,11 @@ sub transformitem {
 
 }
 
-sub get_item_path {
-
-    my ($id) = @_;
-    return &$get_item_path_query($id);
-
-}
+#sub get_item_path {
+#
+#    my ($id) = @_;
+#    return &$get_item_path_query($id);
+#
+#}
 
 1;

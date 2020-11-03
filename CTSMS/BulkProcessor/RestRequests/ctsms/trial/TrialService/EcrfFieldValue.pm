@@ -37,8 +37,10 @@ my $get_item_path_query = sub {
     return 'ecrffieldvalue/' . $id;
 };
 my $get_clear_path_query = sub {
-    my ($listentry_id, $ecrf_id) = @_;
-    return 'ecrfstatusentry/' . $listentry_id . '/' . $ecrf_id . '/ecrffieldvalues';
+    my ($listentry_id, $ecrf_id, $visit_id) = @_;
+    my %params = ();
+    $params{visit_id} = $visit_id if defined $visit_id;
+    return 'ecrfstatusentry/' . $listentry_id . '/' . $ecrf_id . '/ecrffieldvalues' . get_query_string(\%params);
 };
 
 my $fieldnames = [
@@ -62,7 +64,7 @@ my $fieldnames = [
     "timeValue",
     "timestampValue",
     "version",
-
+    "visit",
 ];
 
 sub new {
@@ -86,9 +88,9 @@ sub get_item {
 
 sub clear {
 
-    my ($listentry_id, $ecrf_id, $restapi,$headers) = @_;
+    my ($listentry_id, $ecrf_id, $visit_id, $restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->delete(&$get_clear_path_query($listentry_id, $ecrf_id),$headers));
+    return builditems_fromrows($api->delete(&$get_clear_path_query($listentry_id, $ecrf_id, $visit_id),$headers));
 
 }
 
@@ -122,6 +124,7 @@ sub builditems_fromrows {
 sub transformitem {
     my ($item,$load_recursive,$restapi) = @_;
     $item->{ecrfField} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::builditems_fromrows($item->{ecrfField},$load_recursive,$restapi);
+    #$item->{visit} = ...
     $item->{inkValues} = utf8bytes_to_string($item->{inkValues});
     $item->{selectionValues} = CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputFieldSelectionSetValue::builditems_fromrows($item->{selectionValues},$load_recursive,$restapi);
     if ($load_recursive) {
