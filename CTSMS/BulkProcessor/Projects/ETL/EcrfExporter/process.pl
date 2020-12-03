@@ -264,7 +264,9 @@ sub main {
 
     push(@attachmentfiles,$attachmentlogfile);
     if ($result and $completion) {
-        push(@messages,"Visit $ctsms_base_url/trial/trial.jsf?trialid=$ecrf_data_trial_id to download files.");
+        if ($upload_files) {
+            push(@messages,"Visit $ctsms_base_url/trial/trial.jsf?trialid=$ecrf_data_trial_id to download files.");
+        }
         completion(join("\n\n",@messages),\@attachmentfiles,getlogger(getscriptpath()));
         update_job($OK_JOB_STATUS);
     } elsif ($result) {
@@ -317,7 +319,6 @@ sub export_ecrf_data_vertical_task {
         ($result, $warning_count) = export_ecrf_data_vertical();
     };
     my $err = $@;
-
     if ($err) {
         push(@$messages,'export_ecrf_data_vertical error: ' . $err);
         return 0;
@@ -334,9 +335,7 @@ sub export_ecrf_data_horizontal_task {
         ($result, $warning_count) = export_ecrf_data_horizontal();
     };
     my $err = $@;
-
     if ($err) {
-
         push(@$messages,'export_ecrf_data_horizontal error: ' . $err);
         return 0;
     } else {
@@ -350,12 +349,9 @@ sub publish_ecrf_data_sqlite_task {
     my $out = undef;
     eval {
         ($out,@job_file) = publish_ecrf_data_sqlite($upload_files);
-
     };
     my $err = $@;
-
     if ($err) {
-
         push(@$messages,'publish_ecrf_data_sqlite error: ' . $err);
         return 0;
     } else {
@@ -369,17 +365,14 @@ sub publish_ecrf_data_horizontal_csv_task {
     my $out = undef;
     eval {
         ($out,@job_file) = publish_ecrf_data_horizontal_csv($upload_files);
-
     };
     my $err = $@;
-
     if ($err) {
-
         push(@$messages,'publish_ecrf_data_horizontal_csv error: ' . $err);
         return 0;
     } else {
         push(@$messages,"- file '$out->{title}' added to the '$out->{trial}->{name}' trial") if $out;
-        push(@$messages,'publish_ecrf_data_horizontal_csv finished') unless $out;
+        push(@$messages,'- publish_ecrf_data_horizontal_csv finished (specify --upload to store the files)') unless $out;
         return 1;
     }
 }
@@ -389,17 +382,14 @@ sub publish_ecrf_data_xls_task {
     my $out = undef;
     eval {
         ($out,@job_file) = publish_ecrf_data_xls($upload_files);
-
     };
     my $err = $@;
-
     if ($err) {
-
         push(@$messages,'publish_ecrf_data_xls error: ' . $err);
         return 0;
     } else {
         push(@$messages,"- file '$out->{title}' added to the '$out->{trial}->{name}' trial") if $out;
-        push(@$messages,'publish_ecrf_data_xls finished') unless $out;
+        push(@$messages,'- publish_ecrf_data_xls finished (specify --upload to store the files)') unless $out;
         return 1;
     }
 }
@@ -409,17 +399,14 @@ sub publish_ecrf_data_pdf_task {
     my $out = undef;
     eval {
         ($out,@job_file) = publish_ecrf_data_pdf($upload_files);
-
     };
     my $err = $@;
-
     if ($err) {
-
         push(@$messages,'publish_ecrf_data_pdf error: ' . $err);
         return 0;
     } else {
         push(@$messages,"- file '$out->{title}' added to the '$out->{trial}->{name}' trial") if $out;
-        push(@$messages,'publish_ecrf_data_pdf finished') unless $out;
+        push(@$messages,'- publish_ecrf_data_pdf finished (specify --upload to store the files)') unless $out;
         return 1;
     }
 }
@@ -431,9 +418,7 @@ sub publish_ecrf_data_pdfs_task {
         ($result, $warning_count, $uploads) = publish_ecrf_data_pdfs($upload_files);
     };
     my $err = $@;
-    $err ||= 'no files downloaded' unless ('ARRAY' eq ref $uploads and (scalar @$uploads > 0));
     if ($err) {
-
         push(@$messages,'publish_ecrf_data_pdfs error: ' . $err);
         return 0;
     } else {
@@ -441,6 +426,7 @@ sub publish_ecrf_data_pdfs_task {
             my ($out,$filename) = @$upload;
             push(@$messages,"- file '$out->{title}' added to the '$out->{trial}->{name}' trial");
         }
+        push(@$messages,'- publish_ecrf_data_pdfs finished (specify --upload to store the files)') unless ('ARRAY' eq ref $uploads and (scalar @$uploads > 0));
         return 1;
     }
 }
@@ -450,17 +436,14 @@ sub publish_audit_trail_xls_task {
     my $out = undef;
     eval {
         ($out,@job_file) = publish_audit_trail_xls($upload_files);
-
     };
     my $err = $@;
-
     if ($err) {
-
         push(@$messages,'publish_audit_trail_xls error: ' . $err);
         return 0;
     } else {
         push(@$messages,"- file '$out->{title}' added to the '$out->{trial}->{name}' trial") if $out;
-        push(@$messages,'publish_audit_trail_xls finished') unless $out;
+        push(@$messages,'- publish_audit_trail_xls finished (specify --upload to store the files)') unless $out;
         return 1;
     }
 }
@@ -470,17 +453,14 @@ sub publish_ecrf_journal_xls_task {
     my $out = undef;
     eval {
         ($out,@job_file) = publish_ecrf_journal_xls($upload_files);
-
     };
     my $err = $@;
-
     if ($err) {
-
         push(@$messages,'publish_ecrf_journal_xls error: ' . $err);
         return 0;
     } else {
         push(@$messages,"- file '$out->{title}' added to the '$out->{trial}->{name}' trial") if $out;
-        push(@$messages,'publish_ecrf_journal_xls finished') unless $out;
+        push(@$messages,'- publish_ecrf_journal_xls finished (specify --upload to store the files)') unless $out;
         return 1;
     }
 }
@@ -490,17 +470,14 @@ sub publish_ecrfs_xls_task {
     my $out = undef;
     eval {
         ($out,@job_file) = publish_ecrfs_xls($upload_files);
-
     };
     my $err = $@;
-
     if ($err) {
-
         push(@$messages,'publish_ecrfs_xls error: ' . $err);
         return 0;
     } else {
         push(@$messages,"- file '$out->{title}' added to the '$out->{trial}->{name}' trial") if $out;
-        push(@$messages,'publish_ecrfs_xls finished') unless $out;
+        push(@$messages,'- publish_ecrfs_xls finished (specify --upload to store the files)') unless $out;
         return 1;
     }
 }
@@ -510,17 +487,14 @@ sub publish_proband_list_task {
     my $out = undef;
     eval {
         ($out,@job_file) = publish_proband_list($log_level,$upload_files);
-
     };
     my $err = $@;
-
     if ($err) {
-
         push(@$messages,'publish_proband_list error: ' . $err);
         return 0;
     } else {
         push(@$messages,"- file '$out->{title}' added to the '$out->{trial}->{name}' trial") if $out;
-        push(@$messages,'publish_proband_list finished') unless $out;
+        push(@$messages,'- publish_proband_list finished (specify --upload to store the files)') unless $out;
         return 1;
     }
 }
