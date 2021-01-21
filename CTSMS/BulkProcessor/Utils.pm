@@ -585,11 +585,27 @@ sub kbytes2gigs {
 sub cleanupdir {
 
     my ($dirpath,$keeproot,$filewarncode,$logger) = @_;
+    my $removed_count = 0;
     if (-d $dirpath) {
-        remove_tree($dirpath, {
-                'keep_root' => $keeproot,
-                'verbose' => 1,
-                'error' => \my $err });
+        my $err;
+        eval {
+            $removed_count = remove_tree($dirpath, {
+                    'keep_root' => $keeproot,
+                    'verbose' => 1,
+                    'error' => \$err });
+        };
+        if ($@) {
+            if ($@ =~ /cannot chdir to .+ from .+/) {
+                # https://perldoc.perl.org/File::Path
+                # "cannot chdir to [parent-dir] from [child-dir]: [errmsg], aborting. (FATAL)
+                # remove_tree, after having deleted everything and restored the permissions of
+                # a directory, was unable to chdir back to the parent. The program halts to
+                # avoid a race condition from occurring."
+                $err = [] unless $err;
+            } else {
+                die($@);
+            }
+        }
         if (@$err) {
             if (defined $filewarncode and ref $filewarncode eq 'CODE') {
                 for my $diag (@$err) {
@@ -603,7 +619,7 @@ sub cleanupdir {
             }
         }
     }
-
+    return $removed_count;
 }
 
 sub fixdirpath {
