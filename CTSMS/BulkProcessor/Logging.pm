@@ -34,6 +34,8 @@ our @EXPORT_OK = qw(
     dbinfo
     restdebug
     restinfo
+    nosqldebug
+    nosqlinfo
 
 	attachmentdownloaderdebug
     attachmentdownloaderinfo
@@ -269,6 +271,24 @@ sub dbinfo {
     }
 
 
+
+}
+
+sub nosqldebug {
+
+    my ($connector, $message, $logger) = @_;
+    if (defined $logger) {
+        $logger->debug(_getnosqlconnectorinstanceprefix($connector) . _getnosqlconnectidentifiermessage($connector,$message));
+    }
+
+}
+
+sub nosqlinfo {
+
+    my ($connector, $message, $logger) = @_;
+    if (defined $logger) {
+        $logger->info(_getnosqlconnectorinstanceprefix($connector) . _getnosqlconnectidentifiermessage($connector,$message));
+    }
 
 }
 
@@ -808,6 +828,30 @@ sub _getsqlconnectidentifiermessage {
     if (length($result) > 0 and defined $db->cluster and length($connectidentifier) > 0) {
     $result .= '->' . $connectidentifier;
     }
+    if (length($result) > 0) {
+    $result .= ' - ';
+    }
+    return $result . $message;
+}
+
+sub _getnosqlconnectorinstanceprefix {
+    my ($connector) = @_;
+    my $instancestring = $connector->instanceidentifier();
+    if (length($instancestring) > 0) {
+    if ($connector->{tid} != $root_threadid) {
+        return '[' . $connector->{tid} . '/' . $instancestring . '] ';
+    } else {
+        return '[' . $instancestring . '] ';
+    }
+    } elsif ($connector->{tid} != $root_threadid) {
+    return '[' . $connector->{tid} . '] ';
+    }
+    return '';
+}
+
+sub _getnosqlconnectidentifiermessage {
+    my ($connector,$message) = @_;
+    my $result = $connector->connectidentifier();
     if (length($result) > 0) {
     $result .= ' - ';
     }
