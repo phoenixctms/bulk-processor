@@ -107,6 +107,7 @@ our @EXPORT_OK = qw(
     excel_to_timestamp
 
     checkrunning
+    unshare
 );
 
 our $chmod_umask = 0777; #0644;
@@ -1195,6 +1196,39 @@ sub checkrunning {
         return &$errorcode('program already running',$logger);
       }
       return 1;
+    }
+
+}
+
+sub unshare {
+
+    # PP deep-copy without tie-ing, to un-share shared datastructures,
+    # so they can be manipulated without errors
+    my ($obj) = @_;
+    return undef if not defined $obj; # terminal for: undefined
+    my $ref = ref $obj;
+    if (not $ref) { # terminal for: scalar
+        return $obj;
+    } elsif ("SCALAR" eq $ref) { # terminal for: scalar ref
+        $obj = $$obj;
+        return \$obj;
+    } elsif ("ARRAY" eq $ref) { # terminal for: array
+        my @array = ();
+        foreach my $value (@$obj) {
+           push(@array, unshare($value));
+        }
+        return \@array;
+    } elsif ($ref eq "HASH") { # terminal for: hash
+        my %hash = ();
+        foreach my $key (keys %$obj) {
+            $hash{$key} = unshare($obj->{$key});
+        }
+        return \%hash;
+    } elsif ("REF" eq $ref) { # terminal for: ref of scalar ref, array, hash etc.
+        $obj = unshare($$obj);
+        return \$obj;
+    } else {
+        die("unsharing $ref not supported\n");
     }
 
 }
