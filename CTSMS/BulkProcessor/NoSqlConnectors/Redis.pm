@@ -15,6 +15,8 @@ use CTSMS::BulkProcessor::LogError qw(nosqlerror nosqlwarn);
 
 use Redis;
 
+#use CTSMS::BulkProcessor::Array qw(arrayeq itemcount contains setcontains);
+
 use CTSMS::BulkProcessor::NoSqlConnector qw(
     _share_scalar
     _share_list

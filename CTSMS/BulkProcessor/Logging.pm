@@ -749,7 +749,11 @@ sub processing_entries {
 
     my ($tid, $start, $blocksize, $logger) = @_;
     if (defined $logger) {
-        $logger->info(($enablemultithreading ? '[' . $tid . '] ' : '') . 'processing entries: ' . ($start + 1) . '-' . ($start + $blocksize));
+        if ($blocksize) {
+            $logger->info(($enablemultithreading ? '[' . $tid . '] ' : '') . 'processing entries: ' . ($start + 1) . '-' . ($start + $blocksize));
+        } else {
+            $logger->info(($enablemultithreading ? '[' . $tid . '] ' : '') . 'processing entries: (none)');
+        }
     }
 
 }
@@ -763,7 +767,7 @@ sub nosqlprocessingstarted {
 
 }
 
-sub restprocessingdone {
+sub nosqlprocessingdone {
 
     my ($store,$scan_pattern,$logger) = @_;
     if (defined $logger) {

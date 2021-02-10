@@ -49,6 +49,7 @@ our @EXPORT_OK = qw(
     dbwarn
     nosqlerror
     nosqlwarn
+    nosqlprocessingfailed
     fieldnamesdiffer
     transferzerorowcount
     processzerorowcount
@@ -255,8 +256,6 @@ sub notimplementederror {
 
     terminate($message, $logger);
 
-
-
 }
 
 sub faketimeerror {
@@ -290,8 +289,6 @@ sub dberror {
     }
 
     terminate($message, $logger);
-
-
 
 }
 
@@ -332,6 +329,16 @@ sub nosqlwarn {
 
 }
 
+sub nosqlprocessingfailed {
+
+    my ($store,$scan_pattern,$logger) = @_;
+    my $message = 'keystore processing failed: [' . $store->connectidentifier() . '] ' . $scan_pattern;
+    if (defined $logger) {
+        $logger->error($message);
+    }
+    terminate($message, $logger);
+
+}
 
 sub resterror {
 
@@ -526,18 +533,6 @@ sub fileerror {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 sub processzerofilesize {
 
     my ($file,$logger) = @_;
@@ -566,7 +561,7 @@ sub fileprocessingfailed {
 sub fileprocessingerror {
 
     my ($file,$message,$logger) = @_;
-    my $message = basename($file) . ': ' . $message;
+    $message = basename($file) . ': ' . $message;
     if (defined $logger) {
         $logger->error($message);
     }
@@ -577,7 +572,7 @@ sub fileprocessingerror {
 sub fileprocessingwarn {
 
     my ($file,$message,$logger) = @_;
-    my $message = basename($file) . ': ' . $message;
+    $message = basename($file) . ': ' . $message;
     if (defined $logger) {
         $logger->warn($message);
     }
@@ -653,14 +648,6 @@ sub webarchivexls2csvwarn {
 
     warning($message, $logger);
 }
-
-
-
-
-
-
-
-
 
 
 sub emailwarn {

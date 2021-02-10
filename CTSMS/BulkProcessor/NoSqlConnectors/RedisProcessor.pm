@@ -10,6 +10,7 @@ use threads::shared;
 use Thread::Queue;
 
 use Time::HiRes qw(sleep);
+#use URI::Escape qw();
 
 use CTSMS::BulkProcessor::Globals qw(
     $enablemultithreading
