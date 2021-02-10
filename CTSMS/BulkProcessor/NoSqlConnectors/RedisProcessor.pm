@@ -1,4 +1,4 @@
-package CTSMS::BulkProcessor::RedisProcessor;
+package CTSMS::BulkProcessor::NoSqlConnectors::RedisProcessor;
 use strict;
 
 ## no critic
@@ -31,16 +31,19 @@ use CTSMS::BulkProcessor::LogError qw(
 
 use CTSMS::BulkProcessor::Utils qw(threadid);
 
+use CTSMS::BulkProcessor::NoSqlConnectors::Redis qw(get_scan_args);
+
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
-    init_entry
-    copy_value
+
     process_entries
 
 );
 
 my $nosqlprocessing_threadqueuelength = 10;
+
+#my $reader_connection_name = 'reader';
 
 my $thread_sleep_secs = 0.1;
 
@@ -48,144 +51,36 @@ my $RUNNING = 1;
 my $COMPLETED = 2;
 my $ERROR = 4;
 
-
-sub init_entry {
-
-    my ($entry,$fieldnames) = @_;
-
-    if (defined $fieldnames) {
-        # if there are fieldnames defined, we make a member variable for each and set it to undef
-        foreach my $fieldname (@$fieldnames) {
-            $entry->{value}->{$fieldname} = undef;
-        }
-    }
-
-    return $entry;
-
-}
-
-sub copy_value {
-    my ($entry,$value,$fieldnames) = @_;
-    if (defined $entry) {
-        if (defined $value) {
-            if ($entry->{type} eq 'set') {
-                if (ref $value eq 'ARRAY') {
-                    %{$entry->{value}} = map { $_ => undef; } @$value;
-                } elsif (ref $value eq 'HASH') {
-                    %{$entry->{value}} = map { $_ => undef; } %$value;
-                } elsif (ref $value eq ref $entry) {
-                    die('redis type mismatch') if $entry->{type} ne $value->{type};
-                    %{$entry->{value}} = %{$value->{value}};
-                } else {
-                    $entry->{value} = { $value => undef, };
-                }
-            } elsif ($entry->{type} eq 'list') {
-                if (ref $value eq 'ARRAY') {
-                    @{$entry->{value}} = @$value;
-                } elsif (ref $value eq 'HASH') {
-                    @{$entry->{value}} = %$value;
-                } elsif (ref $value eq ref $entry) {
-                    die('redis type mismatch') if $entry->{type} ne $value->{type};
-                    @{$entry->{value}} = @{$value->{value}};
-                } else {
-                    $entry->{value} = [ $value, ];
-                }
-            } elsif ($entry->{type} eq 'zset') {
-                my %value = ();
-                tie(%value, 'Tie::IxHash');
-                $entry->{value} = \%value;
-                if (ref $value eq 'ARRAY') {
-                    map { $entry->{value}->Push($_ => undef); } @$value;
-                } elsif (ref $value eq 'HASH') {
-                    map { $entry->{value}->Push($_ => undef); } %$value;
-                } elsif (ref $value eq ref $entry) {
-                    die('redis type mismatch') if $entry->{type} ne $value->{type};
-                    map { $entry->{value}->Push($_ => undef); } keys %{$value->{value}};
-                } else {
-                    $entry->{value}->Push($value => undef);
-                }
-            } elsif ($entry->{type} eq 'hash') {
-                my $i;
-                if (ref $value eq 'ARRAY') {
-                    $i = 0;
-                } elsif (ref $value eq 'HASH') {
-                    $i = -1;
-                } elsif (ref $value eq ref $entry) {
-                    die('redis type mismatch') if $entry->{type} ne $value->{type};
-                    $i = -2;
-                } else {
-                    $i = -3;
-                }
-                foreach my $fieldname (@$fieldnames) {
-                    if ($i >= 0) {
-                        $entry->{value}->{$fieldname} = $value->[$i];
-                        $i++;
-                    } elsif ($i == -1) {
-                        if (exists $value->{$fieldname}) {
-                            $entry->{value}->{$fieldname} = $value->{$fieldname};
-                        } elsif (exists $value->{uc($fieldname)}) {
-                            $entry->{value}->{$fieldname} = $value->{uc($fieldname)};
-                        } else {
-                            $entry->{value}->{$fieldname} = undef;
-                        }
-                    } elsif ($i == -2) {
-                        if (exists $value->{value}->{$fieldname}) {
-                            $entry->{value}->{$fieldname} = $value->{value}->{$fieldname};
-                        } elsif (exists $entry->{value}->{uc($fieldname)}) {
-                            $entry->{value}->{$fieldname} = $value->{value}->{uc($fieldname)};
-                        } else {
-                            $entry->{value}->{$fieldname} = undef;
-                        }
-                    } else {
-                        $entry->{value}->{$fieldname} = $value; #scalar
-                        last;
-                    }
-                }
-            } else { #($type eq 'string') {
-                if (ref $value eq 'ARRAY') {
-                    $entry->{value} = $value->[0];
-                } elsif (ref $value eq 'HASH') {
-                    my @keys = keys %$value; #Experimental shift on scalar is now forbidden at..
-                    $entry->{value} = $value->{shift @keys};
-                } elsif (ref $value eq ref $entry) {
-                    die('redis type mismatch') if $entry->{type} ne $value->{type};
-                    $entry->{value} = $value->{value};
-                } else {
-                    $entry->{value} = $value;
-                }
-            }
-        }
-
-    }
-    return $entry;
-}
-
 sub process_entries {
 
     my %params = @_;
     my ($get_store,
         $scan_pattern,
+        $type,
         $process_code,
         $static_context,
         $blocksize,
         $init_process_context_code,
         $uninit_process_context_code,
+        $destroy_reader_stores_code,
         $multithreading,
         $nosqlprocessing_threads) = @params{qw/
             get_store
             scan_pattern
+            type
             process_code
             static_context
             blocksize
             init_process_context_code
             uninit_process_context_code
+            destroy_reader_stores_code
             multithreading
             nosqlprocessing_threads
         /};
 
     if (ref $get_store eq 'CODE') {
 
-        nosqlprocessingstarted(&$get_store(),$scan_pattern,getlogger(__PACKAGE__));
+        nosqlprocessingstarted(&$get_store(undef,0),$scan_pattern,getlogger(__PACKAGE__));
 
         my $errorstate = $RUNNING;
         my $tid = threadid();
@@ -199,6 +94,13 @@ sub process_entries {
             my %errorstates :shared = ();
             my $queue = Thread::Queue->new();
 
+            nosqlthreadingdebug('shutting down connections ...',getlogger(__PACKAGE__));
+
+            #$store->disconnect();
+            my $default_connection = &$get_store(undef,0);
+            my $default_connection_reconnect = $default_connection->is_connected();
+            $default_connection->disconnect();
+
             nosqlthreadingdebug('starting reader thread',getlogger(__PACKAGE__));
 
             $reader = threads->create(\&_reader,
@@ -207,7 +109,9 @@ sub process_entries {
                                             threadqueuelength    => $nosqlprocessing_threadqueuelength,
                                             get_store               => $get_store,
                                             scan_pattern            => $scan_pattern,
+                                            type                 => $type,
                                             blocksize            => $blocksize,
+                                            destroy_stores_code => $destroy_reader_stores_code,
                                           });
 
             for (my $i = 0; $i < $nosqlprocessing_threads; $i++) {
@@ -220,6 +124,7 @@ sub process_entries {
                                                 process_code         => $process_code,
                                                 init_process_context_code => $init_process_context_code,
                                                 uninit_process_context_code => $uninit_process_context_code,
+
                                               }));
                 if (!defined $processor) {
                     nosqlthreadingdebug('processor thread ' . ($i + 1) . ' of ' . $nosqlprocessing_threads . ' NOT started',getlogger(__PACKAGE__));
@@ -242,6 +147,12 @@ sub process_entries {
 
             $errorstate = (_get_other_threads_state(\%errorstates,$tid) & ~$RUNNING);
 
+            nosqlthreadingdebug('restoring connections ...',getlogger(__PACKAGE__));
+
+            if ($default_connection_reconnect) {
+                $default_connection = &$get_store(undef,1);
+            }
+
         } else {
 
             my $store = &$get_store(); #$reader_connection_name);
@@ -259,7 +170,7 @@ sub process_entries {
                 my $cursor = 0;
                 while (1) {
                     fetching_entries($store,$scan_pattern,$i,$blocksize,getlogger(__PACKAGE__));
-                    ($cursor, my $rowblock) = $store->scan($cursor,$scan_pattern,$blocksize);
+                    ($cursor, my $rowblock) = $store->scan($cursor,get_scan_args($scan_pattern,$blocksize,$type));
                     my $realblocksize = scalar @$rowblock;
                     processing_entries($tid,$i,$realblocksize,getlogger(__PACKAGE__));
                     $rowblock_result = &$process_code($context,$rowblock,$i);
@@ -284,14 +195,15 @@ sub process_entries {
                     &$uninit_process_context_code($context);
                 }
             };
+            $store->disconnect();
 
         }
 
         if ($errorstate == $COMPLETED) {
-            nosqlprocessingdone(&$get_store(),$scan_pattern,getlogger(__PACKAGE__));
+            nosqlprocessingdone(&$get_store(undef,0),$scan_pattern,getlogger(__PACKAGE__));
             return 1;
         } else {
-            nosqlprocessingfailed(&$get_store(),$scan_pattern,getlogger(__PACKAGE__));
+            nosqlprocessingfailed(&$get_store(undef,0),$scan_pattern,getlogger(__PACKAGE__));
         }
 
     }
@@ -299,7 +211,6 @@ sub process_entries {
     return 0;
 
 }
-
 
 sub _reader {
 
@@ -329,7 +240,7 @@ sub _reader {
         my $state = $RUNNING; #start at first
         while (($state & $RUNNING) == $RUNNING and ($state & $ERROR) == 0) { #as long there is one running consumer and no defunct consumer
             fetching_entries($store,$context->{scan_pattern},$i,$blocksize,getlogger(__PACKAGE__));
-            ($cursor, my $rowblock) = $store->scan($cursor,$context->{scan_pattern},$blocksize);
+            ($cursor, my $rowblock) = $store->scan_shared($cursor,get_scan_args($context->{scan_pattern},$blocksize,$context->{type}));
             my $realblocksize = scalar @$rowblock;
             my %packet :shared = ();
             $packet{rows} = $rowblock;
@@ -355,7 +266,24 @@ sub _reader {
             ,getlogger(__PACKAGE__));
         }
     };
+    #nosqlthreadingdebug($@ ? '[' . $tid . '] reader thread error: ' . $@ : '[' . $tid . '] reader thread finished (' . $blockcount . ' blocks)',getlogger(__PACKAGE__));
+    #lock $context->{errorstates};
+    #if ($@) {
+    #    $context->{errorstates}->{$tid} = $ERROR;
+    #} else {
+    #    $context->{errorstates}->{$tid} = $COMPLETED;
+    #}
+    #return $context->{errorstates}->{$tid};
     nosqlthreadingdebug($@ ? '[' . $tid . '] reader thread error: ' . $@ : '[' . $tid . '] reader thread finished (' . $blockcount . ' blocks)',getlogger(__PACKAGE__));
+    # stop the consumer:
+    # $context->{queue}->enqueue(undef);
+    if (defined $store) {
+        # if thread cleanup has a problem...
+        $store->disconnect();
+    }
+    if (defined $context->{destroy_stores_code} and 'CODE' eq ref $context->{destroy_stores_code}) {
+        &{$context->{destroy_stores_code}}();
+    }
     lock $context->{errorstates};
     if ($@) {
         $context->{errorstates}->{$tid} = $ERROR;
