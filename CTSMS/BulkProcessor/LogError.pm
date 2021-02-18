@@ -47,6 +47,9 @@ our @EXPORT_OK = qw(
     runerror
     dberror
     dbwarn
+    nosqlerror
+    nosqlwarn
+    nosqlprocessingfailed
     fieldnamesdiffer
     transferzerorowcount
     processzerorowcount
@@ -253,8 +256,6 @@ sub notimplementederror {
 
     terminate($message, $logger);
 
-
-
 }
 
 sub faketimeerror {
@@ -289,8 +290,6 @@ sub dberror {
 
     terminate($message, $logger);
 
-
-
 }
 
 sub dbwarn {
@@ -306,6 +305,45 @@ sub dbwarn {
 
 }
 
+sub nosqlerror {
+
+    my ($connector, $message, $logger) = @_;
+    $message = _getnosqlconnectorinstanceprefix($connector) . _getnosqlconnectidentifiermessage($connector,$message);
+    if (defined $logger) {
+        $logger->error($message);
+    }
+
+    terminate($message, $logger);
+
+}
+
+sub nosqlwarn {
+
+    my ($connector, $message, $logger) = @_;
+    $message = _getnosqlconnectorinstanceprefix($connector) . _getnosqlconnectidentifiermessage($connector,$message);
+    if (defined $logger) {
+        $logger->warn($message);
+    }
+
+    warning($message, $logger);
+
+}
+
+sub nosqlprocessingfailed {
+
+    my ($store,$scan_pattern,$logger) = @_;
+    my $msg = 'keystore processing failed: ';
+    my $connectidentifier = $store->connectidentifier();
+    if ($connectidentifier) {
+        $msg .= '[' . $connectidentifier . '] ';
+    }
+    $msg .= $scan_pattern;
+    if (defined $logger) {
+        $logger->error($msg);
+    }
+    terminate($msg, $logger);
+
+}
 
 sub resterror {
 
@@ -500,18 +538,6 @@ sub fileerror {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 sub processzerofilesize {
 
     my ($file,$logger) = @_;
@@ -540,7 +566,7 @@ sub fileprocessingfailed {
 sub fileprocessingerror {
 
     my ($file,$message,$logger) = @_;
-    my $message = basename($file) . ': ' . $message;
+    $message = basename($file) . ': ' . $message;
     if (defined $logger) {
         $logger->error($message);
     }
@@ -551,7 +577,7 @@ sub fileprocessingerror {
 sub fileprocessingwarn {
 
     my ($file,$message,$logger) = @_;
-    my $message = basename($file) . ': ' . $message;
+    $message = basename($file) . ': ' . $message;
     if (defined $logger) {
         $logger->warn($message);
     }
@@ -627,14 +653,6 @@ sub webarchivexls2csvwarn {
 
     warning($message, $logger);
 }
-
-
-
-
-
-
-
-
 
 
 sub emailwarn {
@@ -787,6 +805,30 @@ sub _getrestconnectorinstanceprefix {
 sub _getrestconnectidentifiermessage {
     my ($restapi,$message) = @_;
     my $result = $restapi->connectidentifier();
+    if (length($result) > 0) {
+    $result .= ' - ';
+    }
+    return $result . $message;
+}
+
+sub _getnosqlconnectorinstanceprefix {
+    my ($connector) = @_;
+    my $instancestring = $connector->instanceidentifier();
+    if (length($instancestring) > 0) {
+    if ($connector->{tid} != $root_threadid) {
+        return '[' . $connector->{tid} . '/' . $instancestring . '] ';
+    } else {
+        return '[' . $instancestring . '] ';
+    }
+    } elsif ($connector->{tid} != $root_threadid) {
+    return '[' . $connector->{tid} . '] ';
+    }
+    return '';
+}
+
+sub _getnosqlconnectidentifiermessage {
+    my ($connector,$message) = @_;
+    my $result = $connector->connectidentifier();
     if (length($result) > 0) {
     $result .= ' - ';
     }
