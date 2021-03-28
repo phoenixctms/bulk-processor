@@ -888,16 +888,21 @@ sub _get_ecrffieldvalues {
     my ($context) = @_;
     my @values;
     foreach my $ecrfid (keys %{$context->{ecrfmap}}) {
-        my $api_values_page = [];
-        my $api_values_page_num = 0;
-        my $api_values_page_total_count;
         $context->{ecrf} = $context->{ecrfmap}->{$ecrfid}->{ecrf};
         my @visits = @{$context->{ecrf}->{visits} // []};
         push(@visits,{ id => undef, }) unless scalar @visits;
         foreach my $visit (@visits) {
+            my $api_values_page = [];
+            my $api_values_page_num = 0;
+            my $api_values_page_total_count;
+            if ($visit->{id}) {
+                $context->{visit} = $visit;
+            } else {
+                $context->{visit} = undef;
+            }
             $context->{ecrf_status} = eval { CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::get_item($context->{listentry}->{id},$ecrfid,$visit->{id}) };
             _info($context,"proband ID $context->{listentry}->{proband}->{id}: eCRF '$context->{ecrf}->{name}" .
-                  (defined $context->{visit}->{id} ? '@' . $context->{visit}->{token} : '') . "': $context->{ecrf_status}->{status}->{name}");
+                  (defined $visit->{id} ? '@' . $visit->{token} : '') . "': $context->{ecrf_status}->{status}->{name}");
             while (1) {
                 if ((scalar @$api_values_page) == 0) {
                     my $p = { page_size => $ecrf_data_api_values_page_size , page_num => $api_values_page_num + 1, total_count => undef };
