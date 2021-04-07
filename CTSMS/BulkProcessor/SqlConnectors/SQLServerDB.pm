@@ -247,11 +247,11 @@ sub db_connect {
 
     $self->{dbh} = $dbh;
 
-
-
     if (length($transaction_isolation_level) > 0) {
         $self->db_do('SET TRANSACTION ISOLATION LEVEL ' . $transaction_isolation_level);
     }
+    $self->db_do('SET ANSI_WARNINGS ON');
+    $self->db_do('SET ANSI_NULLS ON');
 
     dbinfo($self,'connected',getlogger(__PACKAGE__));
 
