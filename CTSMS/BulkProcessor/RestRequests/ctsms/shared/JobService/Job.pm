@@ -40,6 +40,10 @@ my $download_job_file_path_query = sub {
     my ($job_id) = @_;
     return 'job/' . $job_id . '/file';
 };
+my $download_job_file_head_path_query = sub {
+    my ($job_id) = @_;
+    return 'job/' . $job_id . '/file/head';
+};
 my $get_update_path_query = sub {
     return 'job/';
 };
@@ -78,23 +82,23 @@ sub new {
 
 sub get_item {
 
-    my ($file_id,$load_recursive,$restapi,$headers) = @_;
+    my ($job_id,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->get(&$get_item_path_query($file_id),$headers),$load_recursive,$restapi);
+    return builditems_fromrows($api->get(&$get_item_path_query($job_id),$headers),$load_recursive,$restapi);
 
 }
 
 sub download_job_file {
 
-    my ($file_id,$restapi,$headers) = @_;
+    my ($job_id,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return $api->get_file(&$download_job_file_path_query($file_id),$headers);
+    return $api->get_file(&$download_job_file_path_query($job_id),$headers);
 
 }
 
 sub update_item {
 
-    my ($in,$file,$filename,$content_type,$content_encoding,$load_recursive,$restapi,$headers) = @_;
+    my ($in,$file,$filename,$content_type,$load_recursive,$restapi,$headers,$content_encoding) = @_;
     my $api = _get_api($restapi,$default_restapi);
     if (defined $file) {
         return builditems_fromrows($api->put_file(&$get_update_path_query(),$in,$file,$filename,$content_type,$content_encoding,$headers),$load_recursive,$restapi);
@@ -132,6 +136,16 @@ sub builditems_fromrows {
 
 sub transformitem {
     my ($item,$load_recursive,$restapi) = @_;
+
+    if ($load_recursive) {
+        my $api = _get_api($restapi,$default_restapi);
+        $load_recursive = {} unless ref $load_recursive;
+        my $field = "_file";
+        if ($load_recursive->{$field}) {
+            $item->{$field} = $api->get(&$download_job_file_head_path_query($item->{id}));
+        }
+    }
+
 }
 
 sub get_item_path {
