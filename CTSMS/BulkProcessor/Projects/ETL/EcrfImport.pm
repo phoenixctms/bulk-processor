@@ -433,6 +433,13 @@ sub _set_ecrf_values_horizontal {
     $context->{last_section} = undef;
     $context->{last_series} = undef;
     $context->{last_index} = undef;
+
+    $context->{ecrf_value_stats} = {
+        total => 0,
+        created => 0,
+        updated => 0,
+    };
+
     my $last_ecrf;
     my $last_visit;
     my $last_section;
@@ -440,9 +447,13 @@ sub _set_ecrf_values_horizontal {
     my $last_index;
 
     my $last_ecrf_label;
+    my $last_ecrf_section_label;
+
+    my $logged = 0;
 
     foreach my $colname (map { $_->{colname}; } @{$context->{columns}}) {
-        $last_ecrf_label = _get_last_ecrf_label($context);
+        $last_ecrf_label = _get_last_ecrf_label($context,0);
+        $last_ecrf_section_label = _get_last_ecrf_label($context,1);
         #todo: fix encoding OK
         #todo support csv with partial quoting
         #todo: skip saving unused series indexes
@@ -456,12 +467,16 @@ sub _set_ecrf_values_horizontal {
         if (defined $last_ecrf and (
                 $last_ecrf->{id} != $context->{last_ecrf}->{id}
                 or ($last_visit ? $last_visit->{id} : '') ne ($context->{last_visit} ? $context->{last_visit}->{id} : '')
+                or ($last_section // '') ne ($context->{last_section} // '')
                 or ($last_index // '') ne ($context->{last_index} // '')
             )) {
             my $last_in = pop(@{$context->{in}});
-            $result &= _save_ecrf_values($context,$last_ecrf_label);
+            $result &= _save_ecrf_values($context,$last_ecrf_section_label);
             push(@{$context->{in}},$last_in) if $last_in;
-            _log_ecrf_values_count($context,$last_ecrf_label) if $last_ecrf->{id} != $context->{last_ecrf}->{id};
+            if ($last_ecrf->{id} != $context->{last_ecrf}->{id}) {
+                _log_ecrf_values_count($context,$last_ecrf_label);
+                $logged = 1;
+            }
         }
         if ((scalar @{$context->{in}}) >= $ecrf_data_row_block and not $last_series) {
             $result &= _save_ecrf_values($context);
@@ -476,7 +491,10 @@ sub _set_ecrf_values_horizontal {
     if (scalar @{$context->{in}}) {
         $result &= _save_ecrf_values($context);
         _log_ecrf_values_count($context,$last_ecrf_label);
+        $logged = 1;
     }
+
+    _log_ecrf_values_count($context) unless $logged;
 
     return $result;
 
@@ -820,6 +838,7 @@ sub _get_probandlistentry_in {
     my ($context) = @_;
     lock $probandlistentrymaxposition;
     $probandlistentrymaxposition = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_probandlistentrymaxposition($ecrf_data_trial_id);
+    $probandlistentrymaxposition = 0 unless length($probandlistentrymaxposition);
     return {
         "position" => ($probandlistentrymaxposition + 1),
         "probandId" => $context->{proband}->{id},
@@ -1155,51 +1174,59 @@ sub _append_listentrytag_criterion {
 
 sub _get_last_ecrf_label {
 
-    my ($context) = @_;
+    my ($context,$append_section) = @_;
+    my $ecrf_label;
     if ($context->{last_ecrf}) {
-        return $context->{last_ecrf}->{name} . ($context->{last_visit} ? '@' . $context->{last_visit}->{token} : '');
+        $ecrf_label = "eCRF '$context->{last_ecrf}->{name}" . ($context->{last_visit} ? '@' . $context->{last_visit}->{token} : '') . "'";
+        $ecrf_label .= " section '" . ($context->{last_section} // '') . "'" if $append_section;
     }
-    return undef;
+    return $ecrf_label;
 
 }
 
 sub _log_ecrf_values_count {
-     my ($context,$ecrf_label) = @_;
-     $ecrf_label //= _get_last_ecrf_label($context);
-     _info($context,$ecrf_label . ' - ' . $context->{value_count} . " eCRF values processed");
-     lock $value_count;
-     $value_count += $context->{value_count};
-     $context->{value_count} = 0;
+
+    my ($context,$ecrf_label) = @_;
+    $ecrf_label //= _get_last_ecrf_label($context);
+    _info($context,(length($ecrf_label) ? "$ecrf_label - " : '') . $context->{ecrf_value_stats}->{total} . " eCRF values (" . $context->{ecrf_value_stats}->{created} . " created, " . $context->{ecrf_value_stats}->{updated} . " updated)");
+    lock $value_count;
+    $value_count += $context->{ecrf_value_stats}->{total};
+    $context->{ecrf_value_stats} = {
+        total => 0,
+        created => 0,
+        updated => 0,
+    };
+
 }
 
 sub _save_ecrf_values {
 
-    my ($context,$ecrf_label) = @_;
+    my ($context,$ecrf_section_label) = @_;
     my $result = 1;
     return $result unless scalar {$context->{in}};
     my $out;
     eval {
         $out = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues::set_ecrffieldvalues($context->{in});
     };
-    my $stats = _get_ecrf_values_stats($context,$out);
-    #my $xxx = $context->{in};
+    my $stats = _get_values_stats($context,$out);
     $context->{in} = [];
-    $ecrf_label //= _get_last_ecrf_label($context);
+    $ecrf_section_label //= _get_last_ecrf_label($context,1);
     if ($@) {
-        _warn_or_error($context,"'$ecrf_label' - error saving eCRF values: " . $@);
+        _warn_or_error($context,"$ecrf_section_label - error saving eCRF values: " . $@);
         $result = 0;
     } else {
         map { _info($context,$_->{ecrfField}->{uniqueName} . ' saved',1); } @{$out->{rows}};
-        _info($context,"'$ecrf_label' - " . (scalar @{$out->{rows}}) . " eCRF values (" . $stats->{created} . " created, " . $stats->{updated} . " updated)");
-        $context->{value_count} += scalar @{$out->{rows}};
+        _info($context,"$ecrf_section_label - " . (scalar @{$out->{rows}}) . " eCRF values (" . $stats->{created} . " created, " . $stats->{updated} . " updated)",1);
+        map { $context->{ecrf_value_stats}->{$_} += $stats->{$_}; } keys %$stats;
     }
     return $result;
 
 }
 
-sub _get_ecrf_values_stats {
+sub _get_values_stats {
     my ($context,$out) = @_;
     my %stats = (
+        total => 0,
         created => 0,
         updated => 0,
     );
@@ -1208,6 +1235,7 @@ sub _get_ecrf_values_stats {
             sub { my $item = shift; return $item->{id}; }, sub { my $item = shift; return $item->{version}; }, 'last');
         foreach my $out_row (@{$out->{rows}}) {
             my $id = $out_row->{id};
+            $stats{total} += 1;
             $stats{created} += 1 if not exists $in_version_map->{$id};
             $stats{updated} += 1 if (exists $in_version_map->{$id} and $out_row->{version} > $in_version_map->{$id});
         }
@@ -1224,12 +1252,14 @@ sub _save_listentrytag_values {
     eval {
         $out = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValues::set_probandlistentrytagvalues($context->{in});
     };
+    my $stats = _get_values_stats($context,$out);
     $context->{in} = [];
     if ($@) {
         die("error saving proband list attribute values: " . $@);
         #$result = 0;
     } else {
-        _info($context,(scalar @{$out->{rows}}) . " proband list attribute values saved");
+        _info($context,(scalar @{$out->{rows}}) . " proband list attribute values (" . $stats->{created} . " created, " . $stats->{updated} . " updated)");
+        #_info($context,(scalar @{$out->{rows}}) . " proband list attribute values (");
         #$context->{value_count} += scalar @{$out->{rows}};
     }
     #return $result;

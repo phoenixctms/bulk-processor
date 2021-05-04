@@ -66,7 +66,8 @@ sub get_horizontal_cols {
                     if ($import) {
                         $maxindex = $series_section_maxindex;
                     } else {
-                        $maxindex = (CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Ecrf::get_getecrffieldvaluessectionmaxindex($ecrfid, $visit->{id}, $section) // 0);
+                        $maxindex = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Ecrf::get_getecrffieldvaluessectionmaxindex($ecrfid, $visit->{id}, $section);
+                        $maxindex = 0 unless length($maxindex);
                     }
                 }
                 foreach my $index (0..$maxindex) {

@@ -98,13 +98,10 @@ our $csv_dir = 'ecrf';
 
 our $skip_errors = 0;
 
-
 our $ecrf_data_trial_id = undef;
 our $job_id = undef;
 my $job = undef;
 our @job_file = ();
-
-#our $ecrf_data_listentrytags = {};
 
 our $ecrf_data_api_listentries_page_size = 10;
 our $ecrf_data_api_ecrfs_page_size  = 10;
