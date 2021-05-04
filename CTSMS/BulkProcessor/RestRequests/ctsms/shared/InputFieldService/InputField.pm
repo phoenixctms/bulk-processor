@@ -32,6 +32,16 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Inpu
     $SELECT_MANY_V
 
     $SKETCH
+
+    $CHECKBOX
+
+    $DATE
+    $TIME
+    $TIMESTAMP
+
+    $INTEGER
+
+    $FLOAT
 );
 
 require Exporter;
@@ -165,6 +175,21 @@ sub is_select {
     return 0;
 }
 
+sub is_select_one {
+    my $self = shift;
+    my $fieldtype = $self->{fieldType}->{nameL10nKey};
+    if ($SELECT_ONE_RADIO_V eq $fieldtype or $SELECT_ONE_RADIO_H eq $fieldtype
+             or $SELECT_ONE_DROPDOWN eq $fieldtype) {
+        return 1;
+    }
+    return 0;
+}
+
+sub is_select_many {
+    my $self = shift;
+    return ($self->is_select() and not $self->is_select_one() ? 1 : 0);
+}
+
 sub is_text {
     my $self = shift;
     my $fieldtype = $self->{fieldType}->{nameL10nKey};
@@ -172,6 +197,34 @@ sub is_text {
         return 1;
     }
     return 0;
+}
+
+sub criterion_property {
+
+    my $self = shift;
+    my ($prefix,$select_suffix,$time_suffix) = @_;
+    $prefix //= '';
+    my $fieldtype = $self->{fieldType}->{nameL10nKey};
+    if ($self->is_text()) {
+        return $prefix . 'stringValue';
+    } elsif ($CHECKBOX eq $fieldtype) {
+        return $prefix . 'booleanValue';
+    } elsif ($FLOAT eq $fieldtype) {
+        return $prefix. 'floatValue';
+    } elsif ($INTEGER eq $fieldtype) {
+        return $prefix. 'longValue';
+    } elsif ($DATE eq $fieldtype) {
+        return $prefix . 'dateValue';
+    } elsif ($TIMESTAMP eq $fieldtype) {
+        return $prefix . 'timestampValue';
+    } elsif ($TIME eq $fieldtype) {
+        $time_suffix //= ''; # ByHourMinute
+        return $prefix . 'timeValue' . $time_suffix;
+    } elsif ($self->is_select()) {
+        $select_suffix //= '.value'; # .id
+        return $prefix . 'selectionValues' . $select_suffix;
+    }
+
 }
 
 sub get_item_path {
