@@ -56,7 +56,7 @@ use CTSMS::BulkProcessor::Utils qw(getscriptpath prompt cleanupdir);
 use CTSMS::BulkProcessor::Mail qw(
     cleanupmsgfiles
 );
-use CTSMS::BulkProcessor::SqlConnectors::CSVDB qw(cleanupcvsdirs);
+use CTSMS::BulkProcessor::SqlConnectors::CSVDB qw(cleanupcsvdirs);
 use CTSMS::BulkProcessor::SqlConnectors::SQLiteDB qw(cleanupdbfiles);
 
 use CTSMS::BulkProcessor::ConnectorPool qw(destroy_dbs);
@@ -235,7 +235,7 @@ sub cleanup_task {
     my $result = 0;
     if (!$clean_generated or $force or 'yes' eq lc(prompt("Type 'yes' to proceed: "))) {
         eval {
-            cleanupcvsdirs() if $clean_generated;
+            cleanupcsvdirs() if $clean_generated;
             cleanupdbfiles() if $clean_generated;
             cleanuplogfiles(\&fileerror,\&filewarn,($currentlogfile,$attachmentlogfile));
             cleanupmsgfiles(\&fileerror,\&filewarn);

@@ -62,7 +62,7 @@ use CTSMS::BulkProcessor::Array qw(array_to_map);
 
 use CTSMS::BulkProcessor::Utils qw(threadid timestampdigits booltostring stringtobool);
 
-use CTSMS::BulkProcessor::FileProcessors::XslxFileSimple qw();
+use CTSMS::BulkProcessor::FileProcessors::XlsxFileSimple qw();
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -302,7 +302,7 @@ sub import_criteria {
     my $static_context = { create_all => $create_all, };
     my $result = _init_import_criteria_context($static_context);
 
-    my $importer = CTSMS::BulkProcessor::FileProcessors::XslxFileSimple->new();
+    my $importer = CTSMS::BulkProcessor::FileProcessors::XlsxFileSimple->new();
 
     my $warning_count = 0;
     my $updated_count = 0;
@@ -454,7 +454,7 @@ sub _init_import_criteria_context {
         }
     };
     if ($@) {
-        rowprocessingerror(undef,'error loading criteria building blocks',getlogger(__PACKAGE__));
+        rowprocessingerror($context->{tid},'error loading criteria building blocks',getlogger(__PACKAGE__));
         $result = 0; #even in skip-error mode..
     }
 

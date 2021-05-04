@@ -57,9 +57,9 @@ sub main {
             _scandirfiles($dir,sub {
                 my ($filename,$filedir,$suffix) = @_;
                 unless ($filename =~ /$minified_pattern/) {
-                    my $input_file = $filedir.$filename . $suffix;
+                    my $input_file = $filedir . $filename . $suffix;
 
-                    my $output_file = $filedir. $filename . $minified_suffix . $suffix;
+                    my $output_file = $filedir . $filename . $minified_suffix . $suffix;
 
                     if (-e $output_file) {
                         unlink $output_file;
@@ -72,9 +72,6 @@ sub main {
                             'java',
                             '-jar',
                             $yuicompressor_jar,
-
-
-
                             $input_file,
                             '-o',
                             $output_file,
@@ -115,7 +112,7 @@ sub _scandirfiles {
     if (not opendir(DIR, $inputdir)) {
         die('cannot opendir ' . $inputdir . ': ' . $!);
     }
-    my @files = grep { /$rfileextensions$/ && -f $inputdir . $_} readdir(DIR);
+    my @files = grep { /$rfileextensions/ && -f $inputdir . $_ } readdir(DIR);
     closedir DIR;
     return unless (scalar @files) > 0;
     foreach my $file (@files) {
