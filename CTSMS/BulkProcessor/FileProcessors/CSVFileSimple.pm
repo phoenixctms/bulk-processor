@@ -17,26 +17,24 @@ my $default_lineseparator = '\\n\\r|\\r|\\n';
 my $default_fieldseparator = ",";
 my $default_encoding = 'UTF-8';
 
-my $buffersize = 100 * 1024;
-my $threadqueuelength = 10;
-my $default_numofthreads = 3;
-
-my $blocksize = 100;
-
 sub new {
 
     my $class = shift;
 
     my $self = CTSMS::BulkProcessor::FileProcessor->new(@_);
 
-    $self->{numofthreads} = shift // $default_numofthreads;
-    $self->{line_separator} = shift // $default_lineseparator;
-    $self->{field_separator} = shift // $default_fieldseparator;
-    $self->{encoding} = shift // $default_encoding;
-    $self->{buffersize} = $buffersize;
-    $self->{threadqueuelength} = $threadqueuelength;
+    my %params = @_;
+    ($self->{encoding},
+    $self->{line_separator},
+    $self->{field_separator}) = @params{qw(
+        encoding
+        line_separator
+        field_separator
+    )};
 
-    $self->{blocksize} = $blocksize;
+    $self->{encoding} //= $default_encoding;
+    $self->{line_separator} //= $default_lineseparator;
+    $self->{field_separator} //= $default_fieldseparator;
 
     bless($self,$class);
 

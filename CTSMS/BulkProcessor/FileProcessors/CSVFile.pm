@@ -18,15 +18,9 @@ require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::FileProcessor);
 our @EXPORT_OK = qw();
 
-my $default_lineseparator = "\n";
-my $default_fieldseparator = ",";
+my $default_lineseparator =  "\r\n"; #"\n";
+my $default_fieldseparator = ";"; #",";
 my $default_encoding = 'UTF-8';
-
-my $buffersize = 100 * 1024;
-my $threadqueuelength = 10;
-my $default_numofthreads = 3;
-
-my $blocksize = 100;
 
 my $default_quotechar = '"';
 my $default_escapequotesequence = '""';
@@ -44,18 +38,28 @@ sub new {
 
     my $self = CTSMS::BulkProcessor::FileProcessor->new(@_);
 
-    $self->{numofthreads} = shift // $default_numofthreads;
-    $self->{line_separator} = shift // $default_lineseparator;
-    $self->{field_separator} = shift // $default_fieldseparator;
-    $self->{encoding} = shift // $default_encoding;
-    $self->{buffersize} = $buffersize;
-    $self->{threadqueuelength} = $threadqueuelength;
+    my %params = @_;
+    ($self->{encoding},
+    $self->{line_separator},
+    $self->{field_separator},
+    $self->{quote_char},
+    $self->{escape_quote_sequence},
+    $self->{comment_char}) = @params{qw(
+        encoding
+        line_separator
+        field_separator
+        quote_char
+        escape_quote_sequence
+        comment_char
+    )};
 
-    $self->{blocksize} = $blocksize;
+    $self->{encoding} //= $default_encoding;
+    $self->{line_separator} //= $default_lineseparator;
+    $self->{field_separator} //= $default_fieldseparator;
+    $self->{quote_char} //= $default_quotechar;
+    $self->{escape_quote_sequence} //= $default_escapequotesequence;
+    $self->{comment_char} //= $default_commentchar;
 
-    $self->{quote_char} = shift // $default_quotechar;
-    $self->{escape_quote_sequence} = shift // $default_escapequotesequence;
-    $self->{comment_char} = shift // $default_commentchar;
     $self->{line_number} = 1;
 
     bless($self,$class);
@@ -199,7 +203,8 @@ sub extractfields {
 
 sub _encode {
     my $self = shift;
-    return Encode::encode($self->{encoding}, shift);
+    return shift;
+    #return Encode::encode($self->{encoding}, shift);
 }
 
 1;
