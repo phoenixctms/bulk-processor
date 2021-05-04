@@ -28,7 +28,7 @@ our @EXPORT_OK = qw(
 
     get_trial_list
 
-    get_export_colnames
+    get_colnames
 );
 
 my $default_restapi = \&get_ctsms_restapi;
@@ -148,7 +148,7 @@ sub TO_JSON {
 
 }
 
-sub get_export_colnames {
+sub get_colnames {
     my %params = @_;
     my ($inquiry,
 
@@ -187,7 +187,7 @@ sub get_export_colnames {
     my $selectionSetValues = $inquiry->{field}->{selectionSetValues};
     $selectionSetValues = $selectionValues if exists $params{selectionValues};
     $selectionSetValues //= [];
-    my @export_colnames = ();
+    my @colnames = ();
     my $prefix;
     my @parts = &$get_colname_parts_code($inquiry);
     unless ((scalar @parts) > 0) {
@@ -215,15 +215,15 @@ sub get_export_colnames {
     }
     if ($col_per_selection_set_value and $inquiry->{field}->is_select()) {
         foreach my $selectionsetvalue (@$selectionSetValues) {
-            push(@export_colnames,_sanitize_export_colname(join(' ',@parts,&$abbreviate_selectionvalue_code($selectionsetvalue->{value},$selectionsetvalue->{id})),$sanitize_colname_symbols_code,$prefix));
+            push(@colnames,_sanitize_colname(join(' ',@parts,&$abbreviate_selectionvalue_code($selectionsetvalue->{value},$selectionsetvalue->{id})),$sanitize_colname_symbols_code,$prefix));
         }
     } else {
-        push(@export_colnames,_sanitize_export_colname(join(' ',@parts),$sanitize_colname_symbols_code,$prefix));
+        push(@colnames,_sanitize_colname(join(' ',@parts),$sanitize_colname_symbols_code,$prefix));
     }
-    return @export_colnames;
+    return @colnames;
 }
 
-sub _sanitize_export_colname {
+sub _sanitize_colname {
     my ($colname,$sanitize_colname_symbols_code,$p_prefix) = @_;
 
     $colname = &$sanitize_colname_symbols_code($colname) if 'CODE' eq ref $sanitize_colname_symbols_code;

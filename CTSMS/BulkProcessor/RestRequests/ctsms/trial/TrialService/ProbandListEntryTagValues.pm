@@ -30,7 +30,7 @@ our @EXPORT_OK = qw(
     get_item_path
 
     get_probandlistentrytagvalues
-    get_probandlistentrytagvalues
+    set_probandlistentrytagvalues
 
 );
 
@@ -53,22 +53,6 @@ my $get_setprobandlistentrytagvalues_path_query = sub {
     $params{force} = booltostring($force) if defined $force;
     return 'probandlistentrytagvalue/' . get_query_string(\%params);
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 my $fieldnames = [
     "rows",
@@ -109,23 +93,6 @@ sub set_probandlistentrytagvalues {
     return builditems_fromrows($api->put(&$get_setprobandlistentrytagvalues_path_query($force),$in,$headers),$load_recursive,$restapi);
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 sub builditems_fromrows {
