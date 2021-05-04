@@ -52,7 +52,7 @@ use IO::Uncompress::Unzip qw(unzip $UnzipError);
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::SqlConnector);
 our @EXPORT_OK = qw(
-    cleanupcvsdirs
+    cleanupcsvdirs
     xlsbin2csv
     xlsxbin2csv
     sanitize_column_name
@@ -213,6 +213,9 @@ sub db_connect {
             cvs_sep_char    => $default_csv_config->{sep_char},
             cvs_quote_char  => $default_csv_config->{quote_char},
             cvs_escape_char => $default_csv_config->{escape_char},
+
+            csv_null        => 1, # compatibility with CSVFile.pm
+
             PrintError      => 0,
             RaiseError      => 0,
         };
@@ -304,7 +307,7 @@ sub vacuum {
 
 }
 
-sub cleanupcvsdirs {
+sub cleanupcsvdirs {
 
     my (@remainingdbdirs) = @_;
     local *DBDIR;
