@@ -519,10 +519,7 @@ sub deleterowserror {
 
     terminate($message, $logger);
 
-
-
 }
-
 
 sub fileerror {
 
@@ -758,8 +755,6 @@ sub scripterror {
     }
 
     terminate($message, $logger);
-
-
 
 }
 

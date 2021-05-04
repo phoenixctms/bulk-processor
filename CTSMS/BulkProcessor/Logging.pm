@@ -164,6 +164,7 @@ sub init_log {
                "log4perl.appender.FileApp             = Log::Log4perl::Appender::File\n" .
                "log4perl.appender.FileApp.umask       = 0\n" .
                "log4perl.appender.FileApp.syswite     = 1\n" .
+               "log4perl.appender.FileApp.utf8        = 1\n" .
                'log4perl.appender.FileApp.Threshold   = ' . $fileloglevel . "\n" .
                "log4perl.appender.FileApp.mode        = append\n" .
                'log4perl.appender.FileApp.filename    = ' . $currentlogfile . "\n" .
@@ -174,6 +175,7 @@ sub init_log {
                "log4perl.appender.MailAttApp             = Log::Log4perl::Appender::File\n" .
                "log4perl.appender.MailApp.umask          = 0\n" .
                "log4perl.appender.MailApp.syswite        = 1\n" .
+               "log4perl.appender.MailApp.utf8           = 1\n" .
                'log4perl.appender.MailAttApp.Threshold   = ' . $emailloglevel . "\n" .
                "log4perl.appender.MailAttApp.mode        = append\n" .
                'log4perl.appender.MailAttApp.filename    = ' . $attachmentlogfile . "\n" .
@@ -198,16 +200,7 @@ sub init_log {
 sub getlogger {
 
     my $package = shift;
-
-
-
-
-
-
-
     return get_logger($package);
-
-
 
 }
 
@@ -227,8 +220,6 @@ sub cleanuplogfiles {
     foreach my $file (@files) {
 
         my $filepath = $logfile_path . $file;
-
-
         if (not contains($filepath,\@remaininglogfiles)) {
             if ((unlink $filepath) == 0) {
                 if (defined $filewarncode and ref $filewarncode eq 'CODE') {
@@ -633,14 +624,14 @@ sub fileprocessingdone {
 
 sub lines_read {
 
-    my ($file,$start,$blocksize,$block_n,$logger) = @_;
+    my ($file,$start,$blocksize,$block_n,$exact,$logger) = @_;
     if (defined $logger) {
         if (defined $block_n) {
             if ($block_n > 0) {
                 $logger->info(basename($file) . ': ' . kbytes2gigs(int($block_n / 1024)) . ' read');
             }
         } else {
-            $logger->info(basename($file) . ': lines ' . ($start + 1) . '~' . ($start + $blocksize) . ' read');
+            $logger->info(basename($file) . ': lines ' . ($start + 1) . ($exact ? '-' : '~') . ($start + $blocksize) . ' read');
         }
     }
 
