@@ -5,7 +5,6 @@ use strict;
 
 use CTSMS::BulkProcessor::ConnectorPool qw(
     get_ctsms_restapi
-
 );
 
 use CTSMS::BulkProcessor::RestProcessor qw(
@@ -17,7 +16,7 @@ use CTSMS::BulkProcessor::RestProcessor qw(
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
 use CTSMS::BulkProcessor::RestItem qw();
 
-
+use CTSMS::BulkProcessor::Utils qw(booltostring);
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
@@ -27,11 +26,13 @@ our @EXPORT_OK = qw(
 
     add_item
     update_item
+    delete_item
     search
     get_list
     update_category
 
     process_search_items
+    get_inquiry_proband_list
 );
 
 my $default_restapi = \&get_ctsms_restapi;
@@ -52,6 +53,13 @@ my $get_search_path_query = sub {
     $params{a} = 'id' if $sort;
     return 'search/proband/search' . get_query_string(\%params);
 };
+my $get_inquiryproband_path_query = sub {
+    my ($trial_id, $active, $active_signup) = @_;
+    my %params = ();
+    $params{active} = booltostring($active) if defined $active;
+    $params{active_signup} = booltostring($active_signup) if defined $active_signup;
+    return 'trial/' . $trial_id . '/list/inquiryproband/' . get_query_string(\%params);
+};
 my $get_add_path_query = sub {
     return 'proband/';
 };
@@ -61,6 +69,13 @@ my $get_update_path_query = sub {
 my $get_update_category_path_query = sub {
     my ($id) = @_;
     return 'proband/' . $id . '/category/';
+};
+my $get_delete_path_query = sub {
+    my ($id,$force,$reason) = @_;
+    my %params = ();
+    $params{force} = booltostring($force) if defined $force;
+    $params{reason} = $reason if defined $reason;
+    return 'proband/' . $id . get_query_string(\%params);
 };
 
 my $fieldnames = [
@@ -139,6 +154,14 @@ sub update_item {
 
 }
 
+sub delete_item {
+
+    my ($id,$force,$reason,$load_recursive,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return builditems_fromrows($api->delete(&$get_delete_path_query($id,$force,$reason),$headers),$load_recursive,$restapi);
+
+}
+
 sub update_category {
 
     my ($id,$in,$load_recursive,$restapi,$headers) = @_;
@@ -160,6 +183,14 @@ sub search {
     my ($in,$p,$sf,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
     return builditems_fromrows($api->extract_collection_items($api->post($api->get_collection_page_query_uri(&$get_search_path_query(0),$p,$sf),$in,$headers),$p),$load_recursive,$restapi);
+
+}
+
+sub get_inquiry_proband_list {
+
+    my ($trial_id,$active,$active_signup,$p,$sf,$load_recursive,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_inquiryproband_path_query($trial_id,$active,$active_signup),$p,$sf),$headers),$p),$load_recursive,$restapi);
 
 }
 
@@ -185,6 +216,23 @@ sub builditems_fromrows {
     }
     return undef;
 
+}
+
+sub alias {
+    my $self = shift;
+    if (length($self->{alias})) {
+        return $self->{alias};
+    } else {
+        return $self->{id};
+    }
+}
+
+sub locked {
+    my $self = shift;
+    if ($self->{category}->{locked}) {
+        return 1;
+    }
+    return 0;
 }
 
 sub process_search_items {
