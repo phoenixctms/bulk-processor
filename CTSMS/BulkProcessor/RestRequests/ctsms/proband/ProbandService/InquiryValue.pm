@@ -19,6 +19,7 @@ use CTSMS::BulkProcessor::RestItem qw();
 use CTSMS::BulkProcessor::Utils qw(utf8bytes_to_string booltostring);
 use CTSMS::BulkProcessor::Array qw(array_to_map);
 
+use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Inquiry qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputFieldSelectionSetValue qw();
 
@@ -101,6 +102,7 @@ sub builditems_fromrows {
 
 sub transformitem {
     my ($item,$load_recursive,$restapi) = @_;
+    $item->{proband} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::builditems_fromrows($item->{proband},$load_recursive,$restapi);
     $item->{inquiry} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Inquiry::builditems_fromrows($item->{inquiry},$load_recursive,$restapi);
     $item->{inkValues} = utf8bytes_to_string($item->{inkValues});
     $item->{selectionValues} = CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputFieldSelectionSetValue::builditems_fromrows($item->{selectionValues},$load_recursive,$restapi);

@@ -18,6 +18,8 @@ use CTSMS::BulkProcessor::RestItem qw();
 
 use CTSMS::BulkProcessor::Utils qw(booltostring);
 
+use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband qw();
+
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
@@ -131,15 +133,23 @@ sub builditems_fromrows {
             $item = __PACKAGE__->new($row);
 
             # transformations go here ...
+            transformitem($item,$load_recursive,$restapi);
 
             push @items,$item;
         }
         return \@items;
     } elsif (defined $rows and ref $rows eq 'HASH') {
         $item = __PACKAGE__->new($rows);
+        transformitem($item,$load_recursive,$restapi);
         return $item;
     }
     return undef;
+
+}
+
+sub transformitem {
+    my ($item,$load_recursive,$restapi) = @_;
+    $item->{proband} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::builditems_fromrows($item->{proband},$load_recursive,$restapi);
 
 }
 
