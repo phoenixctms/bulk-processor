@@ -19,6 +19,7 @@ use CTSMS::BulkProcessor::RestItem qw();
 use CTSMS::BulkProcessor::Utils qw(utf8bytes_to_string booltostring);
 use CTSMS::BulkProcessor::Array qw(array_to_map);
 
+use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputFieldSelectionSetValue qw();
 
@@ -37,9 +38,10 @@ my $get_item_path_query = sub {
     return 'ecrffieldvalue/' . $id;
 };
 my $get_clear_path_query = sub {
-    my ($listentry_id, $ecrf_id, $visit_id) = @_;
+    my ($listentry_id, $ecrf_id, $visit_id, $section) = @_;
     my %params = ();
     $params{visit_id} = $visit_id if defined $visit_id;
+    $params{section} = $section if defined $section;
     return 'ecrfstatusentry/' . $listentry_id . '/' . $ecrf_id . '/ecrffieldvalues' . get_query_string(\%params);
 };
 
@@ -88,12 +90,11 @@ sub get_item {
 
 sub clear {
 
-    my ($listentry_id, $ecrf_id, $visit_id, $restapi,$headers) = @_;
+    my ($listentry_id, $ecrf_id, $visit_id, $section, $restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->delete(&$get_clear_path_query($listentry_id, $ecrf_id, $visit_id),$headers));
+    return builditems_fromrows($api->delete(&$get_clear_path_query($listentry_id, $ecrf_id, $visit_id, $section),$headers));
 
 }
-
 
 sub builditems_fromrows {
 
@@ -123,6 +124,7 @@ sub builditems_fromrows {
 
 sub transformitem {
     my ($item,$load_recursive,$restapi) = @_;
+    $item->{listEntry} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::builditems_fromrows($item->{listEntry},$load_recursive,$restapi);
     $item->{ecrfField} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::builditems_fromrows($item->{ecrfField},$load_recursive,$restapi);
     #$item->{visit} = ...
     $item->{inkValues} = utf8bytes_to_string($item->{inkValues});
