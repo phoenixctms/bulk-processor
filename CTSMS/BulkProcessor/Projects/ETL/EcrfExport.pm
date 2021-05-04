@@ -3,8 +3,6 @@ use strict;
 
 ## no critic
 
-use Tie::IxHash;
-
 use CTSMS::BulkProcessor::Globals qw(
     $system_name
     $system_version
@@ -18,24 +16,35 @@ use CTSMS::BulkProcessor::Globals qw(
 use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $output_path
 
-    $ecrf_data_truncate_table
-    $ecrf_data_ignore_duplicates
     $ecrf_data_trial_id
 
     $ecrf_data_api_listentries_page_size
     $ecrf_data_api_ecrfs_page_size
     $ecrf_data_api_values_page_size
     $ecrf_data_row_block
-    $ecrf_data_api_tagvalues_page_size
     $ecrf_data_api_ecrffields_page_size
-    $ecrf_data_listentrytags
+    $ecrf_data_api_probandlistentrytagvalues_page_size
 
-    %export_colname_abbreviation
+    %colname_abbreviation
     ecrf_data_include_ecrffield
     $col_per_selection_set_value
     $selection_set_value_separator
 
     $skip_errors
+
+    $dbtool
+
+    $show_page_progress
+    $listentrytag_map_mode
+
+    get_proband_columns
+
+);
+#$ecrf_data_listentrytags
+
+use CTSMS::BulkProcessor::Projects::ETL::EcrfExporter::Settings qw(
+    $ecrf_data_truncate_table
+    $ecrf_data_ignore_duplicates
 
     $ecrf_data_export_upload_folder
     $ecrf_data_export_sqlite_filename
@@ -47,13 +56,12 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $ecrf_journal_export_xls_filename
     $ecrfs_export_xls_filename
 
-    $dbtool
     $ecrf_data_export_pdf_filename
     $ecrf_data_export_pdfs_filename
 
     $proband_list_filename
-
 );
+
 use CTSMS::BulkProcessor::Logging qw (
     getlogger
     processing_info
@@ -71,11 +79,17 @@ use CTSMS::BulkProcessor::SqlConnectors::CSVDB qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Ecrf qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValues qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry qw();
-use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValues qw();
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File qw();
+
+use CTSMS::BulkProcessor::Projects::ETL::Ecrf qw(
+    get_ecrf_map
+    get_horizontal_cols
+    get_probandlistentrytag_map
+);
 
 use CTSMS::BulkProcessor::Projects::ETL::EcrfConnectorPool qw(
     get_sqlite_db
@@ -110,9 +124,6 @@ our @EXPORT_OK = qw(
 
     publish_proband_list
 );
-
-my $show_page_progress = 0;
-my $max_colname_length_warn = 64;
 
 my $pdfextension = '.pdf';
 my $pdfmimetype = 'application/pdf';
@@ -235,7 +246,7 @@ sub publish_proband_list {
 
     my ($log_level,$upload_files) = @_;
     $log_level //= '';
-    my $filename = sprintf($proband_list_filename,(length($log_level) > 0 ? lc($log_level) : 'full_subject_list'),timestampdigits(), $CTSMS::BulkProcessor::Projects::ETL::ExcelExport::xlsextension);
+    my $filename = sprintf($proband_list_filename,(length($log_level) ? lc($log_level) : 'full_subject_list'),timestampdigits(), $CTSMS::BulkProcessor::Projects::ETL::ExcelExport::xlsextension);
     my $outputfile = $output_path . $filename;
 
 
@@ -248,7 +259,7 @@ sub publish_proband_list {
                            $ctsmsrestapi_password,
                            '-id',
                            $ecrf_data_trial_id);
-    if (length($log_level) > 0) {
+    if (length($log_level)) {
         push(@dbtoolargs,'-ll',uc($log_level));
     }
     my ($result,$msg) = _run_dbtool(@dbtoolargs);
@@ -328,7 +339,7 @@ sub export_ecrf_data_vertical {
     my $result = _init_ecrf_data_vertical_context($context);
 
     # create tables:
-    $result = CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataVertical::create_table($ecrf_data_truncate_table,$context->{ecrffieldmaxselectionsetvaluecount},$ecrf_data_listentrytags) if $result;
+    $result = CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataVertical::create_table($ecrf_data_truncate_table,$context->{ecrffieldmaxselectionsetvaluecount},$context->{listentrytag_map}) if $result;
 
     $result = _export_items($context) if $result;
     undef $context->{db};
@@ -363,6 +374,7 @@ sub _init_ecrf_data_vertical_context {
 
     my $result = 1;
     $context->{ecrf_data_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($ecrf_data_trial_id);
+    $context->{listentrytag_map} = get_probandlistentrytag_map($context);
 
     $context->{ecrffieldmaxselectionsetvaluecount} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_ecrffieldmaxselectionsetvaluecount($context->{ecrf_data_trial}->{id});
     _info($context,"max number of selection set values: $context->{ecrffieldmaxselectionsetvaluecount}",0);
@@ -412,11 +424,7 @@ NEXT_LISTENTRY:
                 $context->{api_ecrfs_page_total_count} = undef;
                 $context->{api_ecrfs_page_num} = 0; #roll over
                 #tag values
-                if ((scalar keys %$ecrf_data_listentrytags) > 0) {
-                    ($context->{tagvalues}, my $nameL10nKeys, my $items) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return $item->{tag}->{field}->{nameL10nKey}; },undef,'last');
-                } else {
-                    $context->{tagvalues} = {};
-                }
+                ($context->{tagvalues}, my $external_ids, my $items) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return $item->{tag}->{field}->{nameL10nKey}; },undef,$listentrytag_map_mode);
              } else {
                 return undef;
             }
@@ -456,7 +464,7 @@ NEXT_VISIT:
                 $context->{api_values_page_total_count} = undef;
                 $context->{api_values_page_num} = 0; #roll over
                 $context->{ecrf_status} = eval { CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::get_item($context->{listentry}->{id},$context->{ecrf}->{id},$context->{visit}->{id}) };
-                _info($context,"proband ID $context->{listentry}->{proband}->{id}: eCRF '$context->{ecrf}->{name}" .
+                _info($context,'proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
                       (defined $context->{visit}->{id} ? '@' . $context->{visit}->{token} : '') . "': $context->{ecrf_status}->{status}->{name}");
             } else {
                 $context->{ecrf} = undef;
@@ -492,8 +500,10 @@ sub _ecrf_data_vertical_items_to_row {
     return undef unless ecrf_data_include_ecrffield($item->{ecrfField});
     my @row = ();
     push(@row,$item->{listEntry}->{proband}->{id});
-    foreach my $tag_col (sort keys %$ecrf_data_listentrytags) {
-        push(@row, $context->{tagvalues}->{$ecrf_data_listentrytags->{$tag_col}}->{_value});
+    push(@row,get_proband_columns($item->{listEntry}->{proband}));
+
+    foreach my $tag_col (keys %{$context->{listentrytag_map}}) {
+        push(@row, $context->{tagvalues}->{$tag_col}->{_value});
     }
     push(@row,$item->{listEntry}->{group} ? $item->{listEntry}->{group}->{token} : undef);
     push(@row,$item->{listEntry}->{lastStatus} ? $item->{listEntry}->{lastStatus}->{status}->{nameL10nKey} : undef);
@@ -526,9 +536,9 @@ sub _ecrf_data_vertical_items_to_row {
     push(@row,booltostring($item->{ecrfField}->{optional}));
     push(@row,booltostring($item->{ecrfField}->{series}));
     push(@row,$item->{index});
-    push(@row,join(',',CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_export_colnames(
+    push(@row,join(',',CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
         ecrffield => $item->{ecrfField}, visit => $item->{visit}, index => $item->{index},
-        col_per_selection_set_value => $col_per_selection_set_value, %export_colname_abbreviation,
+        col_per_selection_set_value => $col_per_selection_set_value, %colname_abbreviation,
     )));
 
     push(@row,$item->{version});
@@ -589,8 +599,8 @@ sub export_ecrf_data_horizontal {
     my $result = _init_ecrf_data_horizontal_context($context);
 
     # create tables:
-    $result = CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataHorizontal::create_table($ecrf_data_truncate_table,$context->{columns},$ecrf_data_listentrytags) if $result;
-
+    $result = CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataHorizontal::create_table($ecrf_data_truncate_table,
+        [ map { $_->{colname}; } @{$context->{columns}} ],$context->{listentrytag_map}) if $result;
 
     $result = _export_items($context) if $result;
     undef $context->{db};
@@ -604,6 +614,7 @@ sub _init_ecrf_data_pdfs_context {
 
     my $result = 1;
     $context->{ecrf_data_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($ecrf_data_trial_id);
+    $context->{listentrytag_map} = get_probandlistentrytag_map($context);
 
     $context->{error_count} = 0;
     $context->{warning_count} = 0;
@@ -618,7 +629,7 @@ sub _init_ecrf_data_pdfs_context {
     $context->{items_row_block} = 1;
     $context->{item_to_row_code} = sub {
         my ($context,$lwp_response) = @_;
-        _info($context,"proband ID $context->{listentry}->{proband}->{id} eCRF casebook pdf rendered");
+        _info($context,'proband ' . $context->{listentry}->{proband}->alias() . ' eCRF casebook pdf rendered');
         return $lwp_response;
     };
     $context->{export_code} = sub {
@@ -656,11 +667,7 @@ sub _init_ecrf_data_pdfs_context {
         $context->{listentry} = shift @{$context->{api_listentries_page}};
         if (defined $context->{listentry}) {
             #tag values
-            if ((scalar keys %$ecrf_data_listentrytags) > 0) {
-                ($context->{tagvalues}, my $nameL10nKeys, my $items) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return $item->{tag}->{field}->{nameL10nKey}; },undef,'last');
-            } else {
-                $context->{tagvalues} = {};
-            }
+            ($context->{tagvalues}, my $external_ids, my $items) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return $item->{tag}->{field}->{nameL10nKey}; },undef,$listentrytag_map_mode);
             return CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::render_ecrf($context->{listentry}->{id}, undef, undef);
         }
         return undef;
@@ -674,9 +681,10 @@ sub _init_ecrf_data_horizontal_context {
 
     my $result = 1;
     $context->{ecrf_data_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($ecrf_data_trial_id);
+    $context->{listentrytag_map} = get_probandlistentrytag_map($context);
 
-    $context->{ecrfmap} = _get_ecrfmap($context);
-    $context->{columns} = _get_horizontal_cols($context);
+    $context->{ecrf_map} = get_ecrf_map($context,0);
+    $context->{columns} = get_horizontal_cols($context, undef);
 
     $context->{error_count} = 0;
     $context->{warning_count} = 0;
@@ -705,11 +713,7 @@ sub _init_ecrf_data_horizontal_context {
         $context->{listentry} = shift @{$context->{api_listentries_page}};
         if (defined $context->{listentry}) {
             #tag values
-            if ((scalar keys %$ecrf_data_listentrytags) > 0) {
-                ($context->{tagvalues}, my $nameL10nKeys, my $items) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return $item->{tag}->{field}->{nameL10nKey}; },undef,'last');
-            } else {
-                $context->{tagvalues} = {};
-            }
+            ($context->{tagvalues}, my $external_ids, my $items) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return $item->{tag}->{field}->{nameL10nKey}; },undef,$listentrytag_map_mode);
             return _get_ecrffieldvalues($context);
         }
         return undef;
@@ -723,47 +727,48 @@ sub _ecrf_data_horizontal_items_to_row {
 
     my @row = ();
     push(@row,$context->{listentry}->{proband}->{id});
-    foreach my $tag_col (sort keys %$ecrf_data_listentrytags) {
-        push(@row, $context->{tagvalues}->{$ecrf_data_listentrytags->{$tag_col}}->{_value});
+    push(@row,get_proband_columns($context->{listentry}->{proband}));
+    foreach my $tag_col (keys %{$context->{listentrytag_map}}) {
+        push(@row, $context->{tagvalues}->{$tag_col}->{_value});
     }
     push(@row,$context->{listentry}->{group} ? $context->{listentry}->{group}->{token} : undef);
     push(@row,$context->{listentry}->{lastStatus} ? $context->{listentry}->{lastStatus}->{status}->{nameL10nKey} : undef);
 
-    my %valuemap = ();
+    my %value_map = ();
     foreach my $item (@$items) {
         if ($item->{ecrfField}->{field}->is_select()) {
             if ($col_per_selection_set_value) {
-                foreach my $colname (CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_export_colnames(
+                foreach my $colname (CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
                         ecrffield => $item->{ecrfField}, visit => $item->{visit}, index => $item->{index},
                         selectionValues => $item->{selectionValues},
                         col_per_selection_set_value => 1,
-                        %export_colname_abbreviation,)) {
-                    $valuemap{$colname} = booltostring(1);
+                        %colname_abbreviation,)) {
+                    $value_map{$colname} = booltostring(1);
                 }
-                foreach my $colname (CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_export_colnames(
+                foreach my $colname (CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
                         ecrffield => $item->{ecrfField}, visit => $item->{visit}, index => $item->{index},
                         col_per_selection_set_value => 1,
-                        %export_colname_abbreviation,)) {
-                    $valuemap{$colname} = booltostring(0) if not exists $valuemap{$colname};
+                        %colname_abbreviation,)) {
+                    $value_map{$colname} = booltostring(0) if not exists $value_map{$colname};
                 }
             } else {
-                my ($colname) = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_export_colnames(
+                my ($colname) = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
                     ecrffield => $item->{ecrfField}, visit => $item->{visit}, index => $item->{index},
                     selectionValues => $item->{selectionValues},
                     col_per_selection_set_value => 0,
-                    %export_colname_abbreviation,);
-                $valuemap{$colname} = join($selection_set_value_separator,map { local $_ = $_; $_->{value}; } @{$item->{selectionValues}});
+                    %colname_abbreviation,);
+                $value_map{$colname} = join($selection_set_value_separator,map { local $_ = $_; $_->{value}; } @{$item->{selectionValues}});
             }
         } else {
-            my ($colname) = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_export_colnames(
+            my ($colname) = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
                 ecrffield => $item->{ecrfField}, visit => $item->{visit}, index => $item->{index},
-                %export_colname_abbreviation,);
-            $valuemap{$colname} = $item->{_value};
+                %colname_abbreviation,);
+            $value_map{$colname} = $item->{_value};
         }
     }
 
-    foreach my $colname (@{$context->{columns}}) {
-        push(@row,(exists $valuemap{$colname} ? $valuemap{$colname} : undef));
+    foreach my $colname (map { $_->{colname}; } @{$context->{columns}}) {
+        push(@row,(exists $value_map{$colname} ? $value_map{$colname} : undef));
     }
 
     return \@row;
@@ -793,102 +798,35 @@ sub _insert_ecrf_data_horizontal_rows {
     return $result;
 }
 
-sub _get_horizontal_cols {
-    my ($context) = @_;
-    my @columns = ();
-    my $ecrfmap = $context->{ecrfmap};
-    foreach my $ecrfid (keys %$ecrfmap) {
-        my @visits = @{$ecrfmap->{$ecrfid}->{ecrf}->{visits} // []};
-        push(@visits,{ id => undef, }) unless scalar @visits;
-        foreach my $visit (@visits) {
-            foreach my $section (keys %{$ecrfmap->{$ecrfid}->{sections}}) {
-                my $section_info = $ecrfmap->{$ecrfid}->{sections}->{$section};
-                my $maxindex = ($section_info->{series} ?
-                    CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Ecrf::get_getecrffieldvaluessectionmaxindex($ecrfid, $visit->{id}, $section) // 0 : 0);
-                foreach my $index (0..$maxindex) {
-                    foreach my $ecrffield (@{$section_info->{fields}}) {
-                        push(@columns,CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_export_colnames(
-                            ecrffield => $ecrffield, visit => (defined $visit->{id} ? $visit : undef),
-                            index => $index, col_per_selection_set_value => $col_per_selection_set_value, %export_colname_abbreviation,
-                        ));
-                    }
-                }
-            }
-        }
-    }
-    my $max_colname_length = 0;
-    my %dupe_map = ();
-    foreach my $colname (@columns) {
-        my $length = length($colname);
-        _warn($context,"$colname length: $length") if $length > $max_colname_length_warn;
-        $max_colname_length = length($colname) if $length > $max_colname_length;
-        _warn($context,"duplicate column name: $colname") if exists $dupe_map{$colname};
-        $dupe_map{$colname} = 1;
-    }
-    _info($context,(scalar @columns) . " columns, max column name length: $max_colname_length",0);
-    return \@columns;
-}
-
-sub _get_ecrfmap {
-    my ($context) = @_;
-    my %ecrfmap = ();
-    tie(%ecrfmap, 'Tie::IxHash',
-    );
-    array_to_map(_get_ecrffields($context),sub {
-        my $item = shift;
-        return $item->{ecrf}->{id};
-    },undef,'group',\%ecrfmap);
-    foreach my $ecrfid (keys %ecrfmap) {
-        my %sectionmap = ();
-        tie(%sectionmap, 'Tie::IxHash',
-        );
-        array_to_map($ecrfmap{$ecrfid},sub {
-            my $item = shift;
-            return $item->{section};
-        },undef,'group',\%sectionmap);
-        my $ecrf = undef;
-        foreach my $section (keys %sectionmap) {
-            my $series = $sectionmap{$section}->[0]->{series};
-            $ecrf = $sectionmap{$section}->[0]->{ecrf} unless defined $ecrf;
-            $sectionmap{$section} = {
-                series => $series,
-                fields => $sectionmap{$section},
-            };
-        }
-        $ecrfmap{$ecrfid} = { ecrf => $ecrf, sections => \%sectionmap };
-    }
-    return \%ecrfmap;
-}
-
-sub _get_ecrffields {
-    my ($context) = @_;
-    my $api_ecrffields_page = [];
-    my $api_ecrffields_page_num = 0;
-    my $api_ecrffields_page_total_count;
-    my @ecrffields;
+sub _get_probandlistentrytagvalues {
+    my ($context,$all) = @_;
+    my $api_listentrytagvalues_page = [];
+    my $api_listentrytagvalues_page_num = 0;
+    my $api_listentrytagvalues_page_total_count;
+    my @listentrytagvalues;
     while (1) {
-        if ((scalar @$api_ecrffields_page) == 0) {
-            my $p = { page_size => $ecrf_data_api_ecrffields_page_size , page_num => $api_ecrffields_page_num + 1, total_count => undef };
-            my $sf = {};
+        if ((scalar @$api_listentrytagvalues_page) == 0) {
+            my $p = { page_size => $ecrf_data_api_probandlistentrytagvalues_page_size , page_num => $api_listentrytagvalues_page_num + 1, total_count => undef };
+            my $sf = {}; #sorted by default
 
-            my $first = $api_ecrffields_page_num * $ecrf_data_api_ecrffields_page_size;
-            _info($context,"fetch eCRF fields page: " . $first . '-' . ($first + $ecrf_data_api_ecrffields_page_size) . ' of ' . (defined $api_ecrffields_page_total_count ? $api_ecrffields_page_total_count : '?'),not $show_page_progress);
-            $api_ecrffields_page = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_trial_list($context->{ecrf_data_trial}->{id}, undef,1, $p, $sf, { _selectionSetValueMap => 1 });
-            $api_ecrffields_page_total_count = $p->{total_count};
-            $api_ecrffields_page_num += 1;
+            my $first = $api_listentrytagvalues_page_num * $ecrf_data_api_probandlistentrytagvalues_page_size;
+            _info($context,"fetch proband list attribute values page: " . $first . '-' . ($first + $ecrf_data_api_probandlistentrytagvalues_page_size) . ' of ' . (defined $api_listentrytagvalues_page_total_count ? $api_listentrytagvalues_page_total_count : '?'),not $show_page_progress);
+            $api_listentrytagvalues_page = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValues::get_probandlistentrytagvalues($context->{listentry}->{id}, 0, 0, $p, $sf, { _value => 1 })->{rows};
+            $api_listentrytagvalues_page_total_count = $p->{total_count};
+            $api_listentrytagvalues_page_num += 1;
         }
-        my $ecrffield = shift @$api_ecrffields_page;
-        last unless $ecrffield;
-        push(@ecrffields,$ecrffield) if ecrf_data_include_ecrffield($ecrffield);
+        my $listentrytagvalue = shift @$api_listentrytagvalues_page;
+        last unless $listentrytagvalue;
+        push(@listentrytagvalues,$listentrytagvalue) if ($all or length($listentrytagvalue->{tag}->{externalId}));
     }
-    return \@ecrffields;
+    return \@listentrytagvalues;
 }
 
 sub _get_ecrffieldvalues {
     my ($context) = @_;
     my @values;
-    foreach my $ecrfid (keys %{$context->{ecrfmap}}) {
-        $context->{ecrf} = $context->{ecrfmap}->{$ecrfid}->{ecrf};
+    foreach my $ecrfid (keys %{$context->{ecrf_map}}) {
+        $context->{ecrf} = $context->{ecrf_map}->{$ecrfid}->{ecrf};
         my @visits = @{$context->{ecrf}->{visits} // []};
         push(@visits,{ id => undef, }) unless scalar @visits;
         foreach my $visit (@visits) {
@@ -901,7 +839,7 @@ sub _get_ecrffieldvalues {
                 $context->{visit} = undef;
             }
             $context->{ecrf_status} = eval { CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::get_item($context->{listentry}->{id},$ecrfid,$visit->{id}) };
-            _info($context,"proband ID $context->{listentry}->{proband}->{id}: eCRF '$context->{ecrf}->{name}" .
+            _info($context,'proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
                   (defined $visit->{id} ? '@' . $visit->{token} : '') . "': $context->{ecrf_status}->{status}->{name}");
             while (1) {
                 if ((scalar @$api_values_page) == 0) {
@@ -921,30 +859,6 @@ sub _get_ecrffieldvalues {
         }
     }
     return \@values;
-}
-
-sub _get_probandlistentrytagvalues {
-    my ($context) = @_;
-    my $api_listentrytagvalues_page = [];
-    my $api_listentrytagvalues_page_num = 0;
-    my $api_listentrytagvalues_page_total_count;
-    my @listentrytagvalues;
-    while (1) {
-        if ((scalar @$api_listentrytagvalues_page) == 0) {
-            my $p = { page_size => $ecrf_data_api_tagvalues_page_size , page_num => $api_listentrytagvalues_page_num + 1, total_count => undef };
-            my $sf = {}; #sorted by default
-
-            my $first = $api_listentrytagvalues_page_num * $ecrf_data_api_tagvalues_page_size;
-            _info($context,"fetch proband list entry tag values page: " . $first . '-' . ($first + $ecrf_data_api_tagvalues_page_size) . ' of ' . (defined $api_listentrytagvalues_page_total_count ? $api_listentrytagvalues_page_total_count : '?'),not $show_page_progress);
-            $api_listentrytagvalues_page = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValues::get_probandlistentrytagvalues($context->{listentry}->{id}, 0, 0, $p, $sf, { _value => 1 })->{rows};
-            $api_listentrytagvalues_page_total_count = $p->{total_count};
-            $api_listentrytagvalues_page_num += 1;
-        }
-        my $listentrytagvalue = shift @$api_listentrytagvalues_page;
-        last unless $listentrytagvalue;
-        push(@listentrytagvalues,$listentrytagvalue);
-    }
-    return \@listentrytagvalues;
 }
 
 sub _run_dbtool {
