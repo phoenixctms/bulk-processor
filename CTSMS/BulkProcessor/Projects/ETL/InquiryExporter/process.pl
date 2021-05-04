@@ -55,7 +55,7 @@ use CTSMS::BulkProcessor::Utils qw(getscriptpath prompt cleanupdir checkrunning)
 use CTSMS::BulkProcessor::Mail qw(
     cleanupmsgfiles
 );
-use CTSMS::BulkProcessor::SqlConnectors::CSVDB qw(cleanupcvsdirs);
+use CTSMS::BulkProcessor::SqlConnectors::CSVDB qw(cleanupcsvdirs);
 use CTSMS::BulkProcessor::SqlConnectors::SQLiteDB qw(cleanupdbfiles);
 
 use CTSMS::BulkProcessor::Projects::ETL::InquiryConnectorPool qw(destroy_all_dbs);
@@ -140,8 +140,16 @@ sub init {
         ($ctsmsrestapi_username,$ctsmsrestapi_password) = split("\n",decode_base64($auth),2);
     }
     init_log();
-    $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::InquirySettings::update_settings,$YAML_CONFIG_TYPE);
-    $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::InquiryExporter::Settings::update_settings,$YAML_CONFIG_TYPE);
+    eval {
+        $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::InquirySettings::update_settings,$YAML_CONFIG_TYPE);
+        $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::InquiryExporter::Settings::update_settings,$YAML_CONFIG_TYPE);
+    };
+    if ($@) {
+        $result = 0;
+        eval {
+            update_job($FAILED_JOB_STATUS);
+        }
+    }
 
     return $result;
 
@@ -235,7 +243,7 @@ sub cleanup_task {
     my $result = 0;
     if (!$clean_generated or $force or 'yes' eq lc(prompt("Type 'yes' to proceed: "))) {
         eval {
-            cleanupcvsdirs() if $clean_generated;
+            cleanupcsvdirs() if $clean_generated;
             cleanupdbfiles() if $clean_generated;
             cleanuplogfiles(\&fileerror,\&filewarn,($currentlogfile,$attachmentlogfile));
             cleanupmsgfiles(\&fileerror,\&filewarn);
