@@ -49,6 +49,7 @@ our @EXPORT_OK = qw(
     ctsms_db_tableidentifier
 
     get_ctsms_restapi
+    get_ctsms_restapi_last_error
 
     destroy_dbs
     get_connectorinstancename
@@ -92,10 +93,6 @@ sub ctsms_db_tableidentifier {
 
 }
 
-
-
-
-
 sub get_ctsms_restapi {
 
     my ($instance_name,$uri,$username,$password,$realm) = @_;
@@ -108,6 +105,12 @@ sub get_ctsms_restapi {
 
 }
 
+sub get_ctsms_restapi_last_error {
+    my ($instance_name) = @_;
+    my $name = get_connectorinstancename($instance_name);
+    return $ctsms_restapis->{$name}->get_last_error() if $ctsms_restapis->{$name};
+    return undef;
+}
 
 sub get_connectorinstancename {
     my ($name) = @_;

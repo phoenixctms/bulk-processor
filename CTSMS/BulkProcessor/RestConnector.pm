@@ -674,4 +674,9 @@ sub convert_bools {
         for sort values(%unrecognized);
 }
 
+sub get_last_error {
+    my $self = shift;
+    notimplementederror((ref $self) . ': ' . (caller(0))[3] . ' not implemented',getlogger(__PACKAGE__));
+}
+
 1;

@@ -273,11 +273,18 @@ sub _request_error {
         $msg = $self->responsedata()->{'message'};
     }
     if ($cli) {
-        resterror($self,$self->response->code . ' ' . $self->response->message .
-              (defined $msg && length($msg) > 0 ? ': ' . $msg : ''),getlogger(__PACKAGE__));
+        $msg = $self->response->code . ' ' . $self->response->message . (defined $msg && length($msg) > 0 ? ': ' . $msg : '');
     } else {
-        resterror($self,defined $msg && length($msg) > 0 ? $msg : $self->response->code . ' ' . $self->response->message,getlogger(__PACKAGE__));
+        $msg = (defined $msg && length($msg) > 0 ? $msg : $self->response->code) . ' ' . $self->response->message;
     }
+
+    #if ($self->{_silent}) {
+        restdebug($self,$msg,getlogger(__PACKAGE__));
+        die($msg);
+    #} else {
+    #    resterror($self,$msg,getlogger(__PACKAGE__));
+    #}
+
 }
 
 sub _extract_ids_from_response_location {
@@ -422,5 +429,13 @@ sub delete {
     }
 }
 
+sub get_last_error {
+    my $self = shift;
+    if (defined $self->responsedata()
+        and 'HASH' eq ref $self->responsedata()) {
+        return $self->responsedata()->{'errorCode'};
+    }
+    return undef;
+}
 
 1;
