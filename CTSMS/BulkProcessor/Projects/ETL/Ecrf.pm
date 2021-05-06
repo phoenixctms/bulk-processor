@@ -109,16 +109,19 @@ sub get_horizontal_cols {
     }
     my $max_colname_length = 0;
     my %dupe_map = ();
-    foreach my $colname (map { $_->{colname}; } @columns) {
+    foreach my $column (@columns) {
+        my $colname = $column->{colname};
         my $length = length($colname);
         $max_colname_length = length($colname) if $length > $max_colname_length;
+        my $dupe_colname_label;
+        $dupe_colname_label = "duplicate column name: $colname ($dupe_map{$colname}->{ecrffield}->{uniqueName}, $column->{ecrffield}->{uniqueName})" if exists $dupe_map{$colname};
         if ($import) {
-            _error($context,"duplicate column name: $colname") if exists $dupe_map{$colname};
+            _error($context,$dupe_colname_label) if exists $dupe_map{$colname};
         } else {
             _warn($context,"$colname length: $length") if $length > $max_colname_length_warn;
-            _warn($context,"duplicate column name: $colname") if exists $dupe_map{$colname};
+            _warn($context,$dupe_colname_label) if exists $dupe_map{$colname};
         }
-        $dupe_map{$colname} = 1;
+        $dupe_map{$colname} = $column;
     }
     if ($import) {
         _info($context,'dictionary created for ' . (scalar @columns) . ' columns',0);
