@@ -103,6 +103,10 @@ use CTSMS::BulkProcessor::Projects::ETL::Ecrf qw(
 use CTSMS::BulkProcessor::Array qw(array_to_map contains);
 use CTSMS::BulkProcessor::Utils qw(threadid stringtobool trim excel_to_date chopstring zerofill);
 
+use CTSMS::BulkProcessor::ConnectorPool qw(
+    get_ctsms_restapi_last_error
+);
+
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
@@ -178,6 +182,7 @@ sub import_ecrf_data_horizontal {
             my $rownum = $row_offset;
             foreach my $row (@$rows) {
                 $rownum++;
+                #next unless $rownum == 1 or $rownum == 5;
                 next if (scalar @$row) <= 1;
                 next if substr(trim($row->[0]),0,length($comment_char)) eq $comment_char;
                 next unless _set_ecrf_data_horizontal_context($context,$row,$rownum);
@@ -209,6 +214,7 @@ sub import_ecrf_data_horizontal {
 }
 
 sub _init_context {
+
     my ($context) = @_;
 
     my $result = 1;
@@ -297,27 +303,26 @@ sub _init_context {
     return $result;
 }
 
-
-sub _set_ecrf_data_vertical_context {
-
-    my ($context,$row,$rownum) = @_;
-
-    $context->{rownum} = $rownum;
-
-    $context->{proband} = undef;
-    $context->{probandlistentry} = undef;
-
-    my $result = 1;
-
-    if (_init_vertical_record($context,$row)) {
-        $result = _register_proband($context);
-    } else {
-        $result = 0;
-    }
-
-    return $result;
-
-}
+#sub _set_ecrf_data_vertical_context {
+#
+#    my ($context,$row,$rownum) = @_;
+#
+#    $context->{rownum} = $rownum;
+#
+#    $context->{proband} = undef;
+#    $context->{probandlistentry} = undef;
+#
+#    my $result = 1;
+#
+#    if (_init_vertical_record($context,$row)) {
+#        $result = _register_proband($context);
+#    } else {
+#        $result = 0;
+#    }
+#
+#    return $result;
+#
+#}
 
 sub _set_ecrf_data_horizontal_context {
 
@@ -340,10 +345,9 @@ sub _set_ecrf_data_horizontal_context {
 
 }
 
-
-sub _init_vertical_record {
-
-}
+#sub _init_vertical_record {
+#
+#}
 
 sub _init_horizontal_record {
 
@@ -459,9 +463,12 @@ sub _set_ecrf_values_horizontal {
         #todo: skip saving unused series indexes
         #todo: visit transition
         #todo: log only updated values OK
+        #        if ($colname eq 'p01Scr_V1_15MedHisOther_01_REMOCdiaorpro_i01_o01_DIAGNOSIS') {
+        #    print "xxx";
+        #}
         $result &= _append_ecrffieldvalue_in($context,$colname,$context->{record}->{$colname});
         #if ($context->{all_column_map}->{$colname}->{ecrffield}->{id} == 6170776) {
-        #    print "error";
+        #    print "xxx";
         #}
 
         if (defined $last_ecrf and (
@@ -499,7 +506,6 @@ sub _set_ecrf_values_horizontal {
     return $result;
 
 }
-
 
 sub _clear_ecrf {
 
@@ -794,7 +800,7 @@ sub _get_proband_in {
             }
         }
     }
-    $category = shift @{[ grep { $_->{preset}; } values %{$context->{proband_category_map}} ]} unless $category;
+    $category = shift @{[ grep { $_->{preset} and not $_->{signup}; } values %{$context->{proband_category_map}} ]} unless $category;
 
     my $department;
     if (length($ecrf_proband_department_column_name)
@@ -916,11 +922,13 @@ sub _get_ecrffieldvalue_in {
                 $old_value = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues::get_item($listentry_id, $visit_id, $ecrffield_id, $index)->{rows}->[0];
             };
             if ($@) {
-                #unless ($@ =~ /xx/) {
-                    #_warn_or_error($context,"error loading old eCRF field value: " . $@);
+                my $error_code = get_ctsms_restapi_last_error();
+                if (contains($error_code, [ qw(ecrf_field_value_index_gap ecrf_field_value_index_not_zero) ])) {
+                    _info($context,"error loading old eCRF field value: " . $@,1);
+                } else {
                     _warn($context,"error loading old eCRF field value: " . $@);
                     return (undef,0);
-                #}
+                }
             } elsif (defined $old_value) {
                 $in{id} = $old_value->{id};
                 $in{version} = $old_value->{version};
@@ -1179,6 +1187,7 @@ sub _get_last_ecrf_label {
     if ($context->{last_ecrf}) {
         $ecrf_label = "eCRF '$context->{last_ecrf}->{name}" . ($context->{last_visit} ? '@' . $context->{last_visit}->{token} : '') . "'";
         $ecrf_label .= " section '" . ($context->{last_section} // '') . "'" if $append_section;
+        $ecrf_label .= (defined $context->{last_index} ? ' index ' . $context->{last_index} : '') if $append_section;
     }
     return $ecrf_label;
 
@@ -1216,7 +1225,7 @@ sub _save_ecrf_values {
         $result = 0;
     } else {
         map { _info($context,$_->{ecrfField}->{uniqueName} . ' saved',1); } @{$out->{rows}};
-        _info($context,"$ecrf_section_label - " . (scalar @{$out->{rows}}) . " eCRF values (" . $stats->{created} . " created, " . $stats->{updated} . " updated)",1);
+        _info($context,"$ecrf_section_label - " . (scalar @{$out->{rows}}) . " eCRF values (" . $stats->{created} . " created, " . $stats->{updated} . " updated)");
         map { $context->{ecrf_value_stats}->{$_} += $stats->{$_}; } keys %$stats;
     }
     return $result;
@@ -1318,7 +1327,7 @@ sub _error {
 
     my ($context,$message) = @_;
     $context->{error_count} = $context->{error_count} + 1;
-    rowprocessingerror($context->{tid},"(line " . zerofill($context->{rownum},$rownum_digits) . ") " . $message,getlogger(__PACKAGE__));
+    rowprocessingerror($context->{tid},_get_log_label($context) . $message,getlogger(__PACKAGE__));
 
 }
 
@@ -1326,7 +1335,7 @@ sub _warn {
 
     my ($context,$message) = @_;
     $context->{warning_count} = $context->{warning_count} + 1;
-    rowprocessingwarn($context->{tid},"(line " . zerofill($context->{rownum},$rownum_digits) . ") " . $message,getlogger(__PACKAGE__));
+    rowprocessingwarn($context->{tid},_get_log_label($context) . $message,getlogger(__PACKAGE__));
 
 }
 
@@ -1334,10 +1343,20 @@ sub _info {
 
     my ($context,$message,$debug) = @_;
     if ($debug) {
-        processing_debug($context->{tid},"(line " . zerofill($context->{rownum},$rownum_digits) . ") " . $message,getlogger(__PACKAGE__));
+        processing_debug($context->{tid},_get_log_label($context) . $message,getlogger(__PACKAGE__));
     } else {
-        processing_info($context->{tid},"(line " . zerofill($context->{rownum},$rownum_digits) . ") " . $message,getlogger(__PACKAGE__));
+        processing_info($context->{tid},_get_log_label($context) . $message,getlogger(__PACKAGE__));
     }
+}
+
+sub _get_log_label {
+
+    my ($context) = @_;
+    my $label = "(line " . zerofill($context->{rownum},$rownum_digits);
+    $label .= "/proband " . $context->{proband}->alias if $context->{proband};
+    $label .= ") ";
+    return $label;
+
 }
 
 1;

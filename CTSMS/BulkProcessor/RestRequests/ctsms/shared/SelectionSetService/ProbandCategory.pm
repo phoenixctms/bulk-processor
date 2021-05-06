@@ -57,6 +57,7 @@ my $fieldnames = [
     "nameL10nKey",
     "nodeStyleClass",
     "preset",
+    "signup",
     "privacyConsentControl",
     "person",
     "animal",
