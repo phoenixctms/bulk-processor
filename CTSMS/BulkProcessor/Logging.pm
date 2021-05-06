@@ -173,9 +173,9 @@ sub init_log {
                'log4perl.appender.FileApp.layout.ConversionPattern = %d> %m%n' . "\n\n" .
 
                "log4perl.appender.MailAttApp             = Log::Log4perl::Appender::File\n" .
-               "log4perl.appender.MailApp.umask          = 0\n" .
-               "log4perl.appender.MailApp.syswite        = 1\n" .
-               "log4perl.appender.MailApp.utf8           = 1\n" .
+               "log4perl.appender.MailAttApp.umask          = 0\n" .
+               "log4perl.appender.MailAttApp.syswite        = 1\n" .
+               "log4perl.appender.MailAttApp.utf8           = 1\n" .
                'log4perl.appender.MailAttApp.Threshold   = ' . $emailloglevel . "\n" .
                "log4perl.appender.MailAttApp.mode        = append\n" .
                'log4perl.appender.MailAttApp.filename    = ' . $attachmentlogfile . "\n" .
@@ -184,6 +184,7 @@ sub init_log {
                'log4perl.appender.MailAttApp.layout.ConversionPattern = %d> %m%n' . "\n\n" .
 
                "log4perl.appender.ScreenApp           = Log::Log4perl::Appender::Screen\n" .
+               "log4perl.appender.ScreenApp.utf8      = 1\n" .
                'log4perl.appender.ScreenApp.Threshold = ' . $screenloglevel . "\n" .
                "log4perl.appender.ScreenApp.stderr    = ' . $screenlogstderr . \n" .
                "log4perl.appender.ScreenApp.layout    = Log::Log4perl::Layout::SimpleLayout\n" .
