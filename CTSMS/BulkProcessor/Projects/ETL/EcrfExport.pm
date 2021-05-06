@@ -465,7 +465,7 @@ NEXT_VISIT:
                 $context->{api_values_page_num} = 0; #roll over
                 $context->{ecrf_status} = eval { CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::get_item($context->{listentry}->{id},$context->{ecrf}->{id},$context->{visit}->{id}) };
                 _info($context,'proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
-                      (defined $context->{visit}->{id} ? '@' . $context->{visit}->{token} : '') . "': $context->{ecrf_status}->{status}->{name}");
+                      (defined $context->{visit}->{id} ? '@' . $context->{visit}->{token} : '') . "': " . ($context->{ecrf_status} ? $context->{ecrf_status}->{status}->{name} : '<new>'));
             } else {
                 $context->{ecrf} = undef;
                 $context->{ecrf_status} = undef;
@@ -563,7 +563,7 @@ sub _ecrf_data_vertical_items_to_row {
             push(@row,undef);
         }
     }
-    for (my $i = scalar @selectionSetValues; $i < ($context->{ecrffieldmaxselectionsetvaluecount} // 0); $i++) {
+    for (my $i = scalar @selectionSetValues; $i < $context->{ecrffieldmaxselectionsetvaluecount}; $i++) {
         push(@row,undef);
     }
 
@@ -736,6 +736,8 @@ sub _ecrf_data_horizontal_items_to_row {
 
     my %value_map = ();
     foreach my $item (@$items) {
+
+
         if ($item->{ecrfField}->{field}->is_select()) {
             if ($col_per_selection_set_value) {
                 foreach my $colname (CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
@@ -840,7 +842,7 @@ sub _get_ecrffieldvalues {
             }
             $context->{ecrf_status} = eval { CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::get_item($context->{listentry}->{id},$ecrfid,$visit->{id}) };
             _info($context,'proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
-                  (defined $visit->{id} ? '@' . $visit->{token} : '') . "': $context->{ecrf_status}->{status}->{name}");
+                  (defined $visit->{id} ? '@' . $visit->{token} : '') . "': " . ($context->{ecrf_status} ? $context->{ecrf_status}->{status}->{name} : '<new>'));
             while (1) {
                 if ((scalar @$api_values_page) == 0) {
                     my $p = { page_size => $ecrf_data_api_values_page_size , page_num => $api_values_page_num + 1, total_count => undef };

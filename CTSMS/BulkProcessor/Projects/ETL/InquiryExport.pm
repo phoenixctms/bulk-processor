@@ -333,7 +333,7 @@ sub _inquiry_data_vertical_items_to_row {
             push(@row,undef);
         }
     }
-    for (my $i = scalar @selectionSetValues; $i < ($context->{inquirymaxselectionsetvaluecount} // 0); $i++) {
+    for (my $i = scalar @selectionSetValues; $i < $context->{inquirymaxselectionsetvaluecount}; $i++) {
         push(@row,undef);
     }
 
