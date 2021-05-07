@@ -23,7 +23,7 @@ use CTSMS::BulkProcessor::FileProcessors::XlsxFileSimple qw();
 use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $skip_errors
     $ecrf_data_trial_id
-    $ecrf_data_row_block
+
     %colname_abbreviation
     $selection_set_value_separator
     @job_file
@@ -32,6 +32,8 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $ecrf_proband_category_column_name
     $ecrf_proband_department_column_name
     $ecrf_proband_gender_column_name
+
+    get_proband_columns
 );
 use CTSMS::BulkProcessor::Projects::ETL::EcrfImporter::Settings qw(
     $update_listentrytag_values
@@ -389,29 +391,41 @@ sub _init_horizontal_record {
 
         my %disabled_ecrf_map = ();
         my %disabled_ecrffield_map = ();
+        my %sketch_inputfield_map = ();
         $context->{columns} = [];
         my $message;
         foreach my $column (@columns) {
             next if exists $disabled_ecrf_map{$column->{ecrffield}->{ecrf}->{id}};
             next if exists $disabled_ecrffield_map{$column->{ecrffield}->{id}};
+            next if exists $sketch_inputfield_map{$column->{ecrffield}->{field}->{id}};
             if ($column->{ecrffield}->{ecrf}->{disabled}) {
                 $message = "skipping disabled eCRF: $column->{ecrffield}->{ecrf}->{uniqueName}";
                 $disabled_ecrf_map{$column->{ecrffield}->{ecrf}->{id}} = $column->{ecrffield}->{ecrf};
             } elsif ($column->{ecrffield}->{disabled}) {
                 $message = "skipping disabled eCRF field: $column->{ecrffield}->{uniqueName}";
                 $disabled_ecrffield_map{$column->{ecrffield}->{id}} = $column->{ecrffield};
+            } elsif ($column->{ecrffield}->{field}->{fieldType}->{type} eq $SKETCH) {
+                $message = "skipping sketch input field: $column->{ecrffield}->{field}->{name}";
+                $sketch_inputfield_map{$column->{ecrffield}->{field}->{id}} = $column->{ecrffield}->{field};
             } else {
                 $message = "column '$column->{colname}' mapped to $column->{ecrffield}->{uniqueName}";
                 push(@{$context->{columns}},$column);
             }
-            processing_debug($context->{tid},$message,getlogger(__PACKAGE__)) if $initialized;
+            processing_debug($context->{tid},$message,getlogger(__PACKAGE__)) unless $initialized;
         }
 
         $message = (scalar @{$context->{columns}}) . ' columns mapped';
         processing_info($context->{tid},$message,getlogger(__PACKAGE__)) unless $initialized; # print in first thread only
-        processing_debug($context->{tid},$message,getlogger(__PACKAGE__)) if $initialized;
+        #processing_debug($context->{tid},$message,getlogger(__PACKAGE__)) if $initialized;
 
         rowprocessingerror($context->{tid},"no columns mapped",getlogger(__PACKAGE__)) unless scalar @{$context->{columns}};
+
+        if (not $initialized and my @unknown_colnames = grep { not exists $context->{all_column_map}->{$_}
+               and not exists $context->{listentrytag_map}->{$_}
+               and not contains($_,[ get_proband_columns() ]); } @header_row) {
+            map { processing_debug($context->{tid},"ignoring column '$_'",getlogger(__PACKAGE__)); } @unknown_colnames;
+            rowprocessingwarn($context->{tid},"ignoring " . (scalar @unknown_colnames) . " columns - " . chopstring(join(', ', @unknown_colnames)),getlogger(__PACKAGE__));
+        }
 
         ($context->{column_map}, my $colnames, my $columns) = array_to_map($context->{columns},
             sub { my $item = shift; return $item->{colname}; },undef,'first');
@@ -485,7 +499,7 @@ sub _set_ecrf_values_horizontal {
                 $logged = 1;
             }
         }
-        if ((scalar @{$context->{in}}) >= $ecrf_data_row_block and not $last_series) {
+        if ((scalar @{$context->{in}}) >= 1 and not $context->{last_series}) {
             $result &= _save_ecrf_values($context);
         }
         $last_ecrf = $context->{last_ecrf};
@@ -649,7 +663,7 @@ sub _register_proband {
     }
 
     if ($result) {
-        if (scalar @{$context->{criterions}}) {
+        if (scalar @{$context->{criterions}}) { # requires at least one proband list attribute of supported field type ...
             my $probands = undef;
             my $set_listentrytag_values = 0;
             my $proband_created = 0;
@@ -827,7 +841,6 @@ sub _get_proband_in {
         "categoryId" => $category->{id},
         "person" => ($context->{ecrf_data_trial}->{type}->{person} ? \1 : \0),
         "blinded" => \1,
-        #"comment" => $context->{record}->{Control_NAME}xxxx,
         "departmentId" => $department->{id},
         "gender" => $gender,
         "alias" => $alias,
@@ -930,8 +943,12 @@ sub _get_ecrffieldvalue_in {
                     return (undef,0);
                 }
             } elsif (defined $old_value) {
-                $in{id} = $old_value->{id};
-                $in{version} = $old_value->{version};
+                if ($old_value->{id}) {
+                    $in{id} = $old_value->{id};
+                    $in{version} = $old_value->{version};
+                } else {
+                    # just a preset value ...
+                }
             }
         }
         #return (undef, 1) unless _get_ecrffieldvalue_editable($context,$colname,$old_value);
@@ -972,7 +989,12 @@ sub _get_ecrffieldvalue_in {
         } elsif ($field_type eq $CHECKBOX) {
             $in{booleanValue} = (stringtobool($value) ? \1 : \0);
         } elsif ($field_type eq $DATE) {
+            #$in{dateValue} = _valid_excel_to_date($value);
             $in{dateValue} = $value;
+        } elsif ($field_type eq $TIME) {
+            $in{timeValue} = $value;
+        } elsif ($field_type eq $TIMESTAMP) {
+            $in{timestampValue} = $value;
         } elsif ($field_type eq $INTEGER) {
             $in{longValue} = ((length($value) and not _is_unknown_value($value)) ? $value : undef);
         } elsif ($field_type eq $FLOAT) {
@@ -1046,7 +1068,12 @@ sub _get_listentrytagvalue_in {
         } elsif ($field_type eq $CHECKBOX) {
             $in{booleanValue} = (stringtobool($value) ? \1 : \0);
         } elsif ($field_type eq $DATE) {
+            #$in{dateValue} = _valid_excel_to_date($value);
             $in{dateValue} = $value;
+        } elsif ($field_type eq $TIME) {
+            $in{timeValue} = $value;
+        } elsif ($field_type eq $TIMESTAMP) {
+            $in{timestampValue} = $value;
         } elsif ($field_type eq $INTEGER) {
             $in{longValue} = ((length($value) and not _is_unknown_value($value)) ? $value : undef);
         } elsif ($field_type eq $FLOAT) {
@@ -1068,11 +1095,12 @@ sub _set_listentrytag_values {
 
     foreach my $tag_col (keys %{$context->{listentrytag_map}}) {
         _append_listentrytagvalue_in($context,$tag_col,$context->{record}->{$tag_col});
-        if ((scalar @{$context->{in}}) >= $ecrf_data_row_block) {
-            _save_listentrytag_values($context);
-        }
+        #if ((scalar @{$context->{in}}) >= $ecrf_data_row_block) {
+        #    _save_listentrytag_values($context);
+        #}
     }
 
+    # save all or none:
     _save_listentrytag_values($context);
 
     #return $result;
@@ -1126,6 +1154,29 @@ sub _append_probandalias_criterion {
             propertyId => $context->{criterionproperty_map}->{'proband.personParticulars.alias'},
             stringValue => $alias,
         });
+        # if there is a department column, search for alias by department ...
+        if (length($ecrf_proband_department_column_name)
+            and exists $context->{record}->{$ecrf_proband_department_column_name}) {
+            my $value = $context->{record}->{$ecrf_proband_department_column_name};
+            if (length($value)) {
+                if (exists $context->{department_map}->{$value}) {
+                    my $department = $context->{department_map}->{$value};
+                    push(@{$context->{criterions}},{
+                        position => 2,
+                        tieId => $context->{criteriontie_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::AND},
+                        restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
+                        propertyId => $context->{criterionproperty_map}->{'proband.department.id'},
+                        longValue => $department->{id},
+                    });
+                } else {
+                    _warn_or_error($context,"unknown proband department '$value'");
+                    return 0;
+                }
+            } else {
+                _warn_or_error($context,"empty proband department");
+                return 0;
+            }
+        }
         return 1;
     } else {
         _warn_or_error($context,"empty proband alias");
@@ -1308,7 +1359,7 @@ sub _valid_excel_to_date {
     my $excel_date = trim(shift);
     my $date;
     eval {
-        $date = excel_to_date($excel_date) if ($excel_date =~ /\d+/ and $excel_date > 3);
+        $date = excel_to_date($excel_date) if ($excel_date =~ /^\d+$/ and $excel_date > 3);
         $date .= ' 00:00:00' if $date;
     };
     return $date;

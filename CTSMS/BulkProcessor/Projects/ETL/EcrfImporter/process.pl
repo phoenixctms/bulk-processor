@@ -213,7 +213,7 @@ sub taskinfo {
         } elsif ($clear_sections) {
             scriptinfo("update mode: only sections of imported eCRF fields will be cleared prior to importing values",getlogger(getscriptpath()));
         } else {
-            scriptinfo("update mode: eCRF sections will be not cleared, so existing values will be updated",getlogger(getscriptpath()));
+            scriptinfo("update mode: existing values will be updated (eCRF sections are not cleared)",getlogger(getscriptpath()));
         }
     }
     unless (!$check_force or $force or 'yes' eq lc(prompt("Type 'yes' to proceed: "))) {

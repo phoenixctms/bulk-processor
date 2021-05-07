@@ -124,6 +124,7 @@ sub _get_item_value {
     my $item = shift;
     my $fieldtype = $item->{inquiry}->{field}->{fieldType}->{nameL10nKey};
     my $created = ($item->{id} ? 1 : 0);
+    return undef unless $created;
     if ('CHECKBOX' eq $fieldtype) {
         return booltostring($item->{booleanValue});
     } elsif ('DATE' eq $fieldtype) {
