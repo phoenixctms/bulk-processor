@@ -209,9 +209,9 @@ sub taskinfo {
             scripterror("update mode: either 'clear sections' or 'clear all sections' can be enabled, but not both",getlogger(getscriptpath()));
             $$result_ref = 0;
         } elsif ($clear_all_sections) {
-            scriptinfo("update mode: all sections of all eCRFs will be cleared prior to importing values",getlogger(getscriptpath()));
+            scriptinfo("update mode: *all* sections of all eCRFs will be cleared prior to importing values",getlogger(getscriptpath()));
         } elsif ($clear_sections) {
-            scriptinfo("update mode: only sections of imported eCRF fields will be cleared prior to importing values",getlogger(getscriptpath()));
+            scriptinfo("update mode: sections of imported eCRF fields will be cleared prior to importing values",getlogger(getscriptpath()));
         } else {
             scriptinfo("update mode: existing values will be updated (eCRF sections are not cleared)",getlogger(getscriptpath()));
         }

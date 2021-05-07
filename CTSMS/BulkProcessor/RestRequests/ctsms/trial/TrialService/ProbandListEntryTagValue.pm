@@ -123,11 +123,15 @@ sub transformitem {
 
 }
 
+sub created {
+    my $item = shift;
+    return ($item->{id} ? 1 : 0);
+}
+
 sub _get_item_value {
     my $item = shift;
     my $fieldtype = $item->{tag}->{field}->{fieldType}->{nameL10nKey};
-    my $created = ($item->{id} ? 1 : 0);
-    return undef unless $created;
+    return undef unless $item->created;
     if ('CHECKBOX' eq $fieldtype) {
         return booltostring($item->{booleanValue});
     } elsif ('DATE' eq $fieldtype) {
@@ -141,8 +145,7 @@ sub _get_item_value {
     } elsif ('INTEGER' eq $fieldtype) {
         return $item->{longValue};
     } elsif ($item->{tag}->{field}->is_text()) {
-        return $item->{textValue} if defined $item->{textValue};
-        return '' if $created;
+        return ($item->{textValue} // '');
     } elsif ($item->{tag}->{field}->is_select()) {
         return join(',', map { local $_ = $_; $_->{value}; } @{$item->{selectionValues}}) if defined $item->{selectionValues};
     }

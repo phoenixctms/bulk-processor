@@ -28,7 +28,7 @@ use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
     $inquiry_data_api_probands_page_size
     $inquiry_data_api_inquiries_page_size
     $inquiry_data_api_values_page_size
-    $inquiry_data_row_block
+
 
     %colname_abbreviation
     inquiry_data_include_inquiry
@@ -47,6 +47,10 @@ use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
 
     get_proband_columns
 
+);
+
+use CTSMS::BulkProcessor::Projects::ETL::InquiryExporter::Settings qw(
+    $inquiry_data_row_block
 );
 
 use CTSMS::BulkProcessor::Logging qw (

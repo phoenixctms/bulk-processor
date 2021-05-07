@@ -55,7 +55,8 @@ our @EXPORT_OK = qw(
     $clear_sections
     $clear_all_sections
 
-
+    $ecrf_values_col_block
+    $listentrytag_values_col_block
 );
 #$ecrf_department_nameL10nKey
 #$ecrf_proband_alias_format
@@ -74,6 +75,8 @@ our $import_ecrf_data_horizontal_numofthreads = $cpucount;
 our $ecrf_proband_alias_column_index = 0;
 our $import_ecrf_data_horizontal_blocksize = 5;
 our $update_listentrytag_values = 0;
+our $ecrf_values_col_block = 1; # save one ecrf value after the other
+our $listentrytag_values_col_block = 0; # save all proband list attributes at once
 #our $ecrf_subject_gender = undef;
 #our $ecrf_department_nameL10nKey = undef;
 our $clear_sections;
@@ -110,6 +113,9 @@ sub update_settings {
         #});
         $append_selection_set_values = $data->{append_selection_set_values} if exists $data->{append_selection_set_values};
         $update_listentrytag_values = $data->{update_listentrytag_values} if exists $data->{update_listentrytag_values};
+
+        $ecrf_values_col_block = $data->{ecrf_values_col_block} if exists $data->{ecrf_values_col_block};
+        $listentrytag_values_col_block = $data->{listentrytag_values_col_block} if exists $data->{listentrytag_values_col_block};
 
         return $result;
 

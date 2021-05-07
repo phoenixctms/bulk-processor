@@ -73,7 +73,7 @@ our @EXPORT_OK = qw(
     $inquiry_data_api_probands_page_size
     $inquiry_data_api_inquiries_page_size
     $inquiry_data_api_values_page_size
-    $inquiry_data_row_block
+
 
     %colname_abbreviation
     inquiry_data_include_inquiry
@@ -117,7 +117,7 @@ our @job_file = ();
 our $inquiry_data_api_probands_page_size = 10;
 our $inquiry_data_api_inquiries_page_size = 10;
 our $inquiry_data_api_values_page_size = 10;
-our $inquiry_data_row_block = 100;
+
 
 our $inquiry_data_export_upload_folder = '';
 our $inquiry_data_export_sqlite_filename = '%s%s';
@@ -281,7 +281,7 @@ sub update_settings {
         $inquiry_data_api_probands_page_size = $data->{inquiry_data_api_probands_page_size} if exists $data->{inquiry_data_api_probands_page_size};
         $inquiry_data_api_inquiries_page_size = $data->{inquiry_data_api_inquiries_page_size} if exists $data->{inquiry_data_api_inquiries_page_size};
         $inquiry_data_api_values_page_size = $data->{inquiry_data_api_values_page_size} if exists $data->{inquiry_data_api_values_page_size};
-        $inquiry_data_row_block = $data->{inquiry_data_row_block} if exists $data->{inquiry_data_row_block};
+        
 
         $inquiry_data_export_upload_folder = $data->{inquiry_data_export_upload_folder} if exists $data->{inquiry_data_export_upload_folder};
 

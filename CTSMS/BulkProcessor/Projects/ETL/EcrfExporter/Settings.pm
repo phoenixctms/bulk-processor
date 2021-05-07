@@ -58,6 +58,7 @@ our @EXPORT_OK = qw(
     $ecrf_data_export_pdfs_filename
 
     $proband_list_filename
+    $ecrf_data_row_block
 );
 
 our $defaultconfig = 'config.cfg';
@@ -82,6 +83,8 @@ our $ecrf_data_export_pdf_filename = '%s%s';
 our $ecrf_data_export_pdfs_filename = '%s_%s%s';
 
 our $proband_list_filename = '%s_%s%s';
+
+our $ecrf_data_row_block = 100;
 
 sub update_settings {
 
@@ -109,6 +112,8 @@ sub update_settings {
         $audit_trail_export_xls_filename = $data->{audit_trail_export_xls_filename} if exists $data->{audit_trail_export_xls_filename};
         $ecrf_journal_export_xls_filename = $data->{ecrf_journal_export_xls_filename} if exists $data->{ecrf_journal_export_xls_filename};
         $ecrfs_export_xls_filename = $data->{ecrfs_export_xls_filename} if exists $data->{ecrfs_export_xls_filename};
+
+        $ecrf_data_row_block = $data->{ecrf_data_row_block} if exists $data->{ecrf_data_row_block};
 
         return $result;
 

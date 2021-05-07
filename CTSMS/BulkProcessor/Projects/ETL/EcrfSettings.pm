@@ -106,7 +106,7 @@ our @job_file = ();
 our $ecrf_data_api_listentries_page_size = 10;
 our $ecrf_data_api_ecrfs_page_size  = 10;
 our $ecrf_data_api_values_page_size = 10;
-our $ecrf_data_row_block = 100;
+
 our $ecrf_data_api_probandlistentrytagvalues_page_size = 10;
 our $ecrf_data_api_probandlistentrytags_page_size = 10;
 our $ecrf_data_api_ecrffields_page_size = 100;
@@ -282,7 +282,7 @@ sub update_settings {
         $ecrf_data_api_ecrfs_page_size = $data->{ecrf_data_api_ecrfs_page_size} if exists $data->{ecrf_data_api_ecrfs_page_size};
         $ecrf_data_api_values_page_size = $data->{ecrf_data_api_values_page_size} if exists $data->{ecrf_data_api_values_page_size};
 
-        $ecrf_data_row_block = $data->{ecrf_data_row_block} if exists $data->{ecrf_data_row_block};
+        
 
         $ecrf_data_api_probandlistentrytagvalues_page_size = $data->{ecrf_data_api_probandlistentrytagvalues_page_size} if exists $data->{ecrf_data_api_probandlistentrytagvalues_page_size};
         $ecrf_data_api_probandlistentrytags_page_size = $data->{ecrf_data_api_probandlistentrytags_page_size} if exists $data->{ecrf_data_api_probandlistentrytags_page_size};
