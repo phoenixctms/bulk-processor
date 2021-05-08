@@ -523,7 +523,8 @@ sub _clear_ecrf {
 
     $context->{clear_map} = {};
 
-    if (($clear_sections or $clear_all_sections)
+    if (not $context->{listentry_created}
+        and ($clear_sections or $clear_all_sections)
         and not exists $context->{clear_map}->{$listentry_id}) {
         my $columns = [];
         $columns = $context->{all_columns} if $clear_all_sections;
@@ -604,7 +605,11 @@ sub _load_ecrf_status {
             if (defined $visit_id) {
                 $context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id} //= {};
                 unless (exists $context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id}->{$visit_id}) {
-                    $status = eval { CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::get_item($listentry_id,$ecrf_id,$visit_id); };
+                    if ($context->{listentry_created}) {
+                        $status = undef;
+                    } else {
+                        $status = eval { CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::get_item($listentry_id,$ecrf_id,$visit_id); };
+                    }
                     $context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id}->{$visit_id} = $status;
                     $log = 1;
                     #$stats{$status ? $status->{status}->{name} : '<new>'} += 1;
@@ -613,7 +618,11 @@ sub _load_ecrf_status {
                 }
             } else {
                 unless (exists $context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id}) {
-                    $status = eval { CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::get_item($listentry_id,$ecrf_id,undef); };
+                    if ($context->{listentry_created}) {
+                        $status = undef;
+                    } else {
+                        $status = eval { CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::get_item($listentry_id,$ecrf_id,undef); };
+                    }
                     $context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id} = $status;
                     $log = 1;
                     #$stats{$status ? $status->{status}->{name} : '<new>'} += 1;
@@ -635,6 +644,7 @@ sub _register_proband {
 
     my $result = 1;
 
+    $context->{listentry_created} = 0;
     $context->{criterions} = [];
     my $alias;
     # use alias column if specified:
@@ -690,14 +700,15 @@ sub _register_proband {
                         #lock $probandlistentrymaxposition;
                         $context->{probandlistentry} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::add_item(
                             _get_probandlistentry_in($context),undef,1);
-                        $context->{proband} = $context->{probandlistentry}->{proband};
                     };
                     if ($@) {
                         _warn_or_error($context,"error creating proband with proband list entry: " . $@);
                         $result = 0;
                     } else {
+                        $context->{proband} = $context->{probandlistentry}->{proband};
                         _info($context,"proband " . $context->{proband}->alias . " with proband list entry position $context->{probandlistentry}->{position} created");
                         $proband_created = 1;
+                        $context->{listentry_created} = 1;
                     }
                 }
                 $set_listentrytag_values = 1;
@@ -738,6 +749,7 @@ sub _register_proband {
                         $result = 0;
                     } else {
                         _info($context,"proband list entry (position $context->{probandlistentry}->{position}) created");
+                        $context->{listentry_created} = 1;
                     }
                 } elsif ((scalar @$probandlistentries) > 1) {
                     _rollback_proband($context) if $proband_created;
