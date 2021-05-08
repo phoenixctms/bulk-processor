@@ -424,7 +424,9 @@ sub _init_horizontal_record {
 
         if (not $initialized and my @unknown_colnames = grep { not exists $context->{all_column_map}->{$_}
                and not exists $context->{listentrytag_map}->{$_}
-               and not contains($_,[ get_proband_columns() ]); } @header_row) {
+               and not contains($_,[ get_proband_columns() ])
+               #and not contains($_,[ get_probandlistentry_columns() ]) # updating these is not implemented (yet)
+               ; } @header_row) {
             map { processing_debug($context->{tid},"ignoring column '$_'",getlogger(__PACKAGE__)); } @unknown_colnames;
             rowprocessingwarn($context->{tid},"ignoring " . (scalar @unknown_colnames) . " columns - " . chopstring(join(', ', @unknown_colnames)),getlogger(__PACKAGE__));
         }

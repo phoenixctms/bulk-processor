@@ -50,6 +50,7 @@ our @EXPORT_OK = qw(
     update_settings
     update_job
     get_proband_columns
+    get_probandlistentry_columns
 
     $input_path
     $output_path
@@ -88,6 +89,9 @@ our @EXPORT_OK = qw(
     $ecrf_proband_department_column_name
     $ecrf_proband_gender_column_name
 
+    $ecrf_probandlistentry_group_column_name
+    $ecrf_probandlistentry_status_column_name
+
 );
 
 our $input_path = $working_path . 'input/';
@@ -119,6 +123,9 @@ our $ecrf_proband_alias_column_name = 'alias';
 our $ecrf_proband_category_column_name;
 our $ecrf_proband_department_column_name;
 our $ecrf_proband_gender_column_name;
+
+our $ecrf_probandlistentry_group_column_name; #subject_group
+our $ecrf_probandlistentry_status_column_name; #enrollment_status
 
 my $ecrfname_abbreviate_opts = {};
 my $ecrfrevision_abbreviate_opts = {};
@@ -279,11 +286,12 @@ sub update_settings {
         $ecrf_proband_department_column_name = $data->{ecrf_proband_department_column_name} if exists $data->{ecrf_proband_department_column_name};
         $ecrf_proband_gender_column_name = $data->{ecrf_proband_gender_column_name} if exists $data->{ecrf_proband_gender_column_name};
 
+        $ecrf_probandlistentry_group_column_name = $data->{ecrf_probandlistentry_group_column_name} if exists $data->{ecrf_probandlistentry_group_column_name};
+        $ecrf_probandlistentry_status_column_name = $data->{ecrf_probandlistentry_status_column_name} if exists $data->{ecrf_probandlistentry_status_column_name};
+
         $ecrf_data_api_listentries_page_size = $data->{ecrf_data_api_listentries_page_size} if exists $data->{ecrf_data_api_listentries_page_size};
         $ecrf_data_api_ecrfs_page_size = $data->{ecrf_data_api_ecrfs_page_size} if exists $data->{ecrf_data_api_ecrfs_page_size};
         $ecrf_data_api_values_page_size = $data->{ecrf_data_api_values_page_size} if exists $data->{ecrf_data_api_values_page_size};
-
-
 
         $ecrf_data_api_probandlistentrytagvalues_page_size = $data->{ecrf_data_api_probandlistentrytagvalues_page_size} if exists $data->{ecrf_data_api_probandlistentrytagvalues_page_size};
         $ecrf_data_api_probandlistentrytags_page_size = $data->{ecrf_data_api_probandlistentrytags_page_size} if exists $data->{ecrf_data_api_probandlistentrytags_page_size};
@@ -335,6 +343,19 @@ sub get_proband_columns {
         push(@columns,lc($ecrf_proband_category_column_name)) if length($ecrf_proband_category_column_name);
         push(@columns,lc($ecrf_proband_department_column_name)) if length($ecrf_proband_department_column_name);
         push(@columns,lc($ecrf_proband_gender_column_name)) if length($ecrf_proband_gender_column_name);
+    }
+    return @columns;
+}
+
+sub get_probandlistentry_columns {
+    my $listentry = shift;
+    my @columns = ();
+    if ($listentry) {
+        push(@columns,$listentry->{group} ? $listentry->{group}->{token} : undef) if length($ecrf_probandlistentry_group_column_name);
+        push(@columns,$listentry->{lastStatus} ? $listentry->{lastStatus}->{status}->{nameL10nKey} : undef) if length($ecrf_probandlistentry_status_column_name);
+    } else {
+        push(@columns,lc($ecrf_probandlistentry_group_column_name)) if length($ecrf_probandlistentry_group_column_name);
+        push(@columns,lc($ecrf_probandlistentry_status_column_name)) if length($ecrf_probandlistentry_status_column_name);
     }
     return @columns;
 }

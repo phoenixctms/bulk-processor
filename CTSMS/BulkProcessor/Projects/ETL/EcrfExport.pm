@@ -38,6 +38,7 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $listentrytag_map_mode
 
     get_proband_columns
+    get_probandlistentry_columns
 
 );
 #$ecrf_data_listentrytags
@@ -508,8 +509,9 @@ sub _ecrf_data_vertical_items_to_row {
     foreach my $tag_col (keys %{$context->{listentrytag_map}}) {
         push(@row, $context->{tagvalues}->{$tag_col}->{_value});
     }
-    push(@row,$item->{listEntry}->{group} ? $item->{listEntry}->{group}->{token} : undef);
-    push(@row,$item->{listEntry}->{lastStatus} ? $item->{listEntry}->{lastStatus}->{status}->{nameL10nKey} : undef);
+
+    push(@row,get_probandlistentry_columns($item->{listentry}));
+
     push(@row,$context->{ecrf_status} ? $context->{ecrf_status}->{status}->{nameL10nKey} : undef);
     push(@row,$item->{ecrfField}->{ecrf}->{name});
     push(@row,$item->{ecrfField}->{ecrf}->{revision});
@@ -734,8 +736,8 @@ sub _ecrf_data_horizontal_items_to_row {
     foreach my $tag_col (keys %{$context->{listentrytag_map}}) {
         push(@row, $context->{tagvalues}->{$tag_col}->{_value});
     }
-    push(@row,$context->{listentry}->{group} ? $context->{listentry}->{group}->{token} : undef);
-    push(@row,$context->{listentry}->{lastStatus} ? $context->{listentry}->{lastStatus}->{status}->{nameL10nKey} : undef);
+
+    push(@row,get_probandlistentry_columns($context->{listentry}));
 
     my %value_map = ();
     foreach my $item (@$items) {
