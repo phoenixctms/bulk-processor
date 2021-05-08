@@ -389,7 +389,7 @@ sub _init_horizontal_record {
 
     unless ($context->{columns}) {
         %header = map { $_ => 1; } @header_row if $initialized;
-        my @columns = grep { exists $header{$_->{colname}}; } @{$context->{all_columns}};
+        my @columns = grep { exists $header{$_->{colname}}; } @{$context->{all_columns}}; # do not clone columns
 
         my %disabled_ecrf_map = ();
         my %disabled_ecrffield_map = ();
@@ -453,6 +453,7 @@ sub _set_ecrf_values_horizontal {
     $context->{last_section} = undef;
     $context->{last_series} = undef;
     $context->{last_index} = undef;
+    $context->{last_maxindex} = undef;
 
     $context->{ecrf_value_stats} = {
         total => 0,
@@ -465,27 +466,16 @@ sub _set_ecrf_values_horizontal {
     my $last_section;
     my $last_series;
     my $last_index;
+    my $last_maxindex;
 
     my $last_ecrf_label;
     my $last_ecrf_section_label;
 
-    #my $logged = 0;
-
     foreach my $colname (map { $_->{colname}; } @{$context->{columns}}) {
 
-        #todo: fix encoding OK
-        #todo support csv with partial quoting
-        #todo: skip saving unused series indexes
-        #todo: visit transition
-        #todo: log only updated values OK
-        #        if ($colname eq 'p01Scr_V1_15MedHisOther_01_REMOCdiaorpro_i01_o01_DIAGNOSIS') {
-        #    print "xxx";
-        #}
         $result &= _append_ecrffieldvalue_in($context,$colname,$context->{record}->{$colname});
-        #if ($context->{all_column_map}->{$colname}->{ecrffield}->{id} == 6170776) {
-        #    print "xxx";
-        #}
 
+        # save on next eCRF or visit or section or section index:
         if (defined $last_ecrf and (
                 $last_ecrf->{id} != $context->{last_ecrf}->{id}
                 or ($last_visit ? $last_visit->{id} : '') ne ($context->{last_visit} ? $context->{last_visit}->{id} : '')
@@ -495,14 +485,13 @@ sub _set_ecrf_values_horizontal {
             my $last_in = pop(@{$context->{in}});
             $result &= _save_ecrf_values($context,$last_ecrf_section_label);
             push(@{$context->{in}},$last_in) if $last_in;
-            if ($last_ecrf->{id} != $context->{last_ecrf}->{id}) {
-                _log_ecrf_values_count($context,$last_ecrf_label);
-                #$logged = 1;
-            }
+            _log_ecrf_values_count($context,$last_ecrf_label) if ($last_ecrf->{id} != $context->{last_ecrf}->{id})
         }
+        # save next chunk if full unless it's a new index section:
         if ($ecrf_values_col_block > 0
             and (scalar @{$context->{in}}) >= $ecrf_values_col_block
-            and not $context->{last_series}) {
+            and (not $context->{last_series} or
+                 $context->{last_index} <= ($context->{last_maxindex} // -1))) {
             $result &= _save_ecrf_values($context);
         }
         $last_ecrf = $context->{last_ecrf};
@@ -510,17 +499,14 @@ sub _set_ecrf_values_horizontal {
         $last_section = $context->{last_section};
         $last_series = $context->{last_series};
         $last_index = $context->{last_index};
+        $last_maxindex = $context->{last_maxindex};
         $last_ecrf_label = _get_last_ecrf_label($context,0);
         $last_ecrf_section_label = _get_last_ecrf_label($context,1);
     }
 
-    if (scalar @{$context->{in}}) {
-        $result &= _save_ecrf_values($context);
-        #_log_ecrf_values_count($context,$last_ecrf_label);
-        #$logged = 1;
-    }
+    $result &= _save_ecrf_values($context);
 
-    _log_ecrf_values_count($context,$last_ecrf_label); #unless $logged;
+    _log_ecrf_values_count($context,$last_ecrf_label);
 
     return $result;
 
@@ -546,7 +532,9 @@ sub _clear_ecrf {
         foreach my $column (@$columns) {
             #$context->{clear_map}->{$listentry_id} //= {};
 
-            next unless _get_ecrffieldvalue_editable($context,$column);
+            next unless _get_ecrffieldvalue_editable($context,$column->{colname});
+
+            undef $column->{maxindex};
 
             my $ecrf_id = $column->{ecrffield}->{ecrf}->{id};
             $context->{clear_map}->{$listentry_id}->{$ecrf_id} //= {};
@@ -1031,6 +1019,7 @@ sub _append_ecrffieldvalue_in {
             $context->{last_section} = $column->{ecrffield}->{section};
             $context->{last_series} = $column->{ecrffield}->{series};
             $context->{last_index} = $column->{index};
+            $context->{last_maxindex} = $column->{maxindex};
         }
     }
     return $result;

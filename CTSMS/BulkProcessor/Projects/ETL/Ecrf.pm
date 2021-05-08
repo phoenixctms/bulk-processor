@@ -45,6 +45,7 @@ our @EXPORT_OK = qw(
     get_ecrf_map
     get_horizontal_cols
     get_probandlistentrytag_map
+    get_probandlistentrytag_colname
 );
 
 my $max_colname_length_warn = 64;
@@ -62,11 +63,13 @@ sub get_horizontal_cols {
             foreach my $section (keys %{$ecrf_map->{$ecrfid}->{sections}}) {
                 my $section_info = $ecrf_map->{$ecrfid}->{sections}->{$section};
                 my $maxindex = 0;
+                my $lastindex;
                 if ($section_info->{series}) {
+                    $lastindex = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Ecrf::get_getecrffieldvaluessectionmaxindex($ecrfid, $visit->{id}, $section);
                     if ($import) {
                         $maxindex = $series_section_maxindex;
                     } else {
-                        $maxindex = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Ecrf::get_getecrffieldvaluessectionmaxindex($ecrfid, $visit->{id}, $section);
+                        $maxindex = $lastindex;
                         $maxindex = 0 unless length($maxindex);
                     }
                 }
@@ -82,9 +85,16 @@ sub get_horizontal_cols {
                             my $column = {
                                 ecrffield => $ecrffield,
                                 visit => (defined $visit->{id} ? $visit : undef),
-                                index => ($ecrffield->{series} ? $index : undef),
                                 colname => $colnames[$i],
                             };
+                            if ($ecrffield->{series}) {
+                                $column->{index} = $index;
+                                $column->{maxindex} = $lastindex;
+                            } else {
+                                $column->{index} = undef;
+                                $column->{maxindex} = undef;
+                            }
+
                             if ($col_per_selection_set_value and $ecrffield->{field}->is_select()) {
                                 $column->{colnames} = \@colnames;
                                 $column->{selection_set_value} = $selectionSetValues[$i];
@@ -205,9 +215,17 @@ sub _get_probandlistentrytags {
         }
         my $listentrytag = shift @$api_listentrytags_page;
         last unless $listentrytag;
-        push(@listentrytags,$listentrytag) if ($all or length($listentrytag->{externalId}));
+        push(@listentrytags,$listentrytag) if ($all or $listentrytag->{ecrfValue});
     }
     return \@listentrytags;
+}
+
+sub get_probandlistentrytag_colname {
+    my $item = shift;
+    my ($colname) = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTag::get_colnames(
+        listentrytag => $item, col_per_selection_set_value => 0, %colname_abbreviation,
+    );
+    return $colname;
 }
 
 sub get_probandlistentrytag_map {
@@ -217,11 +235,14 @@ sub get_probandlistentrytag_map {
     tie(%listentrytag_map, 'Tie::IxHash',
     );
 
-    my $tags = _get_probandlistentrytags($context);
-    array_to_map($tags, sub { my $item = shift; return $item->{externalId}; },undef,$listentrytag_map_mode,\%listentrytag_map);
-    my @external_ids = map { $_->{externalId}; } @$tags;
+    my @tag_cols = ();
+    array_to_map(_get_probandlistentrytags($context), sub { my $item = shift;
+            my $colname = get_probandlistentrytag_colname($item);
+            push(@tag_cols,$colname);
+            return $colname;
+        },undef,$listentrytag_map_mode,\%listentrytag_map);
     foreach my $tag_col (keys %listentrytag_map) {
-        _warn($context,"multiple proband list attributes with external id '$tag_col', using $listentrytag_map_mode",getlogger(__PACKAGE__)) if itemcount($tag_col,\@external_ids) > 1;
+        _warn($context,"multiple proband list attributes '$tag_col', using $listentrytag_map_mode",getlogger(__PACKAGE__)) if itemcount($tag_col,\@tag_cols) > 1;
     }
 
     return \%listentrytag_map;

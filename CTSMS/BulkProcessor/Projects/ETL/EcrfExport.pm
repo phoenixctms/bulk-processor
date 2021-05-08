@@ -91,6 +91,7 @@ use CTSMS::BulkProcessor::Projects::ETL::Ecrf qw(
     get_ecrf_map
     get_horizontal_cols
     get_probandlistentrytag_map
+    get_probandlistentrytag_colname
 );
 
 use CTSMS::BulkProcessor::Projects::ETL::EcrfConnectorPool qw(
@@ -426,7 +427,7 @@ NEXT_LISTENTRY:
                 $context->{api_ecrfs_page_total_count} = undef;
                 $context->{api_ecrfs_page_num} = 0; #roll over
                 #tag values
-                ($context->{tagvalues}, my $external_ids, my $items) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return $item->{tag}->{field}->{nameL10nKey}; },undef,$listentrytag_map_mode);
+                ($context->{tagvalues}, my $tag_cols, my $tag_vals) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return get_probandlistentrytag_colname($item->{tag}); },undef,$listentrytag_map_mode);
              } else {
                 return undef;
             }
@@ -669,7 +670,7 @@ sub _init_ecrf_data_pdfs_context {
         $context->{listentry} = shift @{$context->{api_listentries_page}};
         if (defined $context->{listentry}) {
             #tag values
-            ($context->{tagvalues}, my $external_ids, my $items) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return $item->{tag}->{field}->{nameL10nKey}; },undef,$listentrytag_map_mode);
+            ($context->{tagvalues}, my $tag_cols, my $tag_vals) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return get_probandlistentrytag_colname($item->{tag}); },undef,$listentrytag_map_mode);
             return CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::render_ecrf($context->{listentry}->{id}, undef, undef);
         }
         return undef;
@@ -715,7 +716,7 @@ sub _init_ecrf_data_horizontal_context {
         $context->{listentry} = shift @{$context->{api_listentries_page}};
         if (defined $context->{listentry}) {
             #tag values
-            ($context->{tagvalues}, my $external_ids, my $items) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return $item->{tag}->{field}->{nameL10nKey}; },undef,$listentrytag_map_mode);
+            ($context->{tagvalues}, my $tag_cols, my $tag_vals) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return get_probandlistentrytag_colname($item->{tag}); },undef,$listentrytag_map_mode);
             return _get_ecrffieldvalues($context);
         }
         return undef;

@@ -124,16 +124,6 @@ sub _write_output_table {
 
 sub _mark_utf8 {
     return Encode::decode("UTF-8", shift);
-
-
-
-
-
-
-
-
-
-
 }
 
 1;

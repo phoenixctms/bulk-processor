@@ -155,7 +155,7 @@ our %colname_abbreviation = (
     ignore_external_ids => undef,
 
     inquiry_position_digits => 2,
-
+    #listentrytag_position_digits => 2,
 
     abbreviate_category_code => sub {
         my $category = shift;
@@ -281,7 +281,7 @@ sub update_settings {
         $inquiry_data_api_probands_page_size = $data->{inquiry_data_api_probands_page_size} if exists $data->{inquiry_data_api_probands_page_size};
         $inquiry_data_api_inquiries_page_size = $data->{inquiry_data_api_inquiries_page_size} if exists $data->{inquiry_data_api_inquiries_page_size};
         $inquiry_data_api_values_page_size = $data->{inquiry_data_api_values_page_size} if exists $data->{inquiry_data_api_values_page_size};
-        
+
 
         $inquiry_data_export_upload_folder = $data->{inquiry_data_export_upload_folder} if exists $data->{inquiry_data_export_upload_folder};
 
@@ -332,10 +332,10 @@ sub get_proband_columns {
         push(@columns,$proband->{department}->{nameL10nKey}) if length($inquiry_proband_department_column_name);
         push(@columns,$proband->{gender}->{sex}) if length($inquiry_proband_gender_column_name);
     } else {
-        push(@columns,$inquiry_proband_alias_column_name) if length($inquiry_proband_alias_column_name);
-        push(@columns,$inquiry_proband_category_column_name) if length($inquiry_proband_category_column_name);
-        push(@columns,$inquiry_proband_department_column_name) if length($inquiry_proband_department_column_name);
-        push(@columns,$inquiry_proband_gender_column_name) if length($inquiry_proband_gender_column_name);
+        push(@columns,lc($inquiry_proband_alias_column_name)) if length($inquiry_proband_alias_column_name);
+        push(@columns,lc($inquiry_proband_category_column_name)) if length($inquiry_proband_category_column_name);
+        push(@columns,lc($inquiry_proband_department_column_name)) if length($inquiry_proband_department_column_name);
+        push(@columns,lc($inquiry_proband_gender_column_name)) if length($inquiry_proband_gender_column_name);
     }
     return @columns;
 }

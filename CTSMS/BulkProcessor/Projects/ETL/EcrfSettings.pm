@@ -141,6 +141,7 @@ my $ecrf_data_include_ecrffield_code = sub {
 our %colname_abbreviation = (
     ignore_external_ids => undef,
     ecrffield_position_digits => 2,
+    listentrytag_position_digits => 2,
     index_digits => 2,
     abbreviate_ecrf_name_code => sub {
         my ($ecrf_name,$ecrf_revision,$ecrf_id) = @_;
@@ -282,7 +283,7 @@ sub update_settings {
         $ecrf_data_api_ecrfs_page_size = $data->{ecrf_data_api_ecrfs_page_size} if exists $data->{ecrf_data_api_ecrfs_page_size};
         $ecrf_data_api_values_page_size = $data->{ecrf_data_api_values_page_size} if exists $data->{ecrf_data_api_values_page_size};
 
-        
+
 
         $ecrf_data_api_probandlistentrytagvalues_page_size = $data->{ecrf_data_api_probandlistentrytagvalues_page_size} if exists $data->{ecrf_data_api_probandlistentrytagvalues_page_size};
         $ecrf_data_api_probandlistentrytags_page_size = $data->{ecrf_data_api_probandlistentrytags_page_size} if exists $data->{ecrf_data_api_probandlistentrytags_page_size};
@@ -330,10 +331,10 @@ sub get_proband_columns {
         push(@columns,$proband->{department}->{nameL10nKey}) if length($ecrf_proband_department_column_name);
         push(@columns,$proband->{gender}->{sex}) if length($ecrf_proband_gender_column_name);
     } else {
-        push(@columns,$ecrf_proband_alias_column_name) if length($ecrf_proband_alias_column_name);
-        push(@columns,$ecrf_proband_category_column_name) if length($ecrf_proband_category_column_name);
-        push(@columns,$ecrf_proband_department_column_name) if length($ecrf_proband_department_column_name);
-        push(@columns,$ecrf_proband_gender_column_name) if length($ecrf_proband_gender_column_name);
+        push(@columns,lc($ecrf_proband_alias_column_name)) if length($ecrf_proband_alias_column_name);
+        push(@columns,lc($ecrf_proband_category_column_name)) if length($ecrf_proband_category_column_name);
+        push(@columns,lc($ecrf_proband_department_column_name)) if length($ecrf_proband_department_column_name);
+        push(@columns,lc($ecrf_proband_gender_column_name)) if length($ecrf_proband_gender_column_name);
     }
     return @columns;
 }
