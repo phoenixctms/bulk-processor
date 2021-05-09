@@ -48,7 +48,7 @@ our @EXPORT_OK = qw(
     $import_ecrf_data_horizontal_blocksize
 
 
-    $ecrf_proband_alias_column_index
+
 
     $append_selection_set_values
     $update_listentrytag_values
@@ -60,6 +60,7 @@ our @EXPORT_OK = qw(
 );
 #$ecrf_department_nameL10nKey
 #$ecrf_proband_alias_format
+#$ecrf_proband_alias_column_index
 
 our $defaultconfig = 'config.cfg';
 our $defaultsettings = 'settings.yml';
@@ -72,7 +73,7 @@ our $ecrf_import_filename;
 our $import_ecrf_data_horizontal_multithreading = 1;
 our $import_ecrf_data_horizontal_numofthreads = $cpucount;
 
-our $ecrf_proband_alias_column_index = 0;
+#our $ecrf_proband_alias_column_index = 0;
 our $import_ecrf_data_horizontal_blocksize = 5;
 our $update_listentrytag_values = 0;
 our $ecrf_values_col_block = 1; # save one ecrf value after the other

@@ -10,7 +10,6 @@ use CTSMS::BulkProcessor::Globals qw(
     $cpucount
 );
 
-
 use CTSMS::BulkProcessor::Logging qw(
     getlogger
     scriptinfo

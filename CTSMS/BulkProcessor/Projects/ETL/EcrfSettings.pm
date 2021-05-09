@@ -11,7 +11,6 @@ use CTSMS::BulkProcessor::Globals qw(
     $cpucount
     create_path
     $ctsmsrestapi_path
-    $completionemailrecipient
 );
 
 use CTSMS::BulkProcessor::Logging qw(
@@ -39,10 +38,9 @@ use CTSMS::BulkProcessor::ConnectorPool qw(
 
 );
 
-use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring cat_file);
+use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring);
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
-use CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job qw();
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -60,8 +58,6 @@ our @EXPORT_OK = qw(
     $skip_errors
 
     $ecrf_data_trial_id
-    $job_id
-    @job_file
 
     $ecrf_data_api_listentries_page_size
     $ecrf_data_api_ecrfs_page_size
@@ -103,9 +99,6 @@ our $csv_dir = 'ecrf';
 our $skip_errors = 0;
 
 our $ecrf_data_trial_id = undef;
-our $job_id = undef;
-my $job = undef;
-our @job_file = ();
 
 our $ecrf_data_api_listentries_page_size = 10;
 our $ecrf_data_api_ecrfs_page_size  = 10;
@@ -268,17 +261,6 @@ sub update_settings {
                 scripterror("error loading trial id $ecrf_data_trial_id",getlogger(__PACKAGE__));
             }
         }
-        $job_id = $data->{job_id} if exists $data->{job_id};
-        if (defined $job_id and length($job_id) > 0) {
-            $job = CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job::get_item($job_id, { _file => 1, });
-            if (defined $job) {
-                scriptinfo("job '$job->{type}->{name}' id $job_id",getlogger(__PACKAGE__));
-                _download_job_file() if $job->{type}->{inputFile};
-            } else {
-                scripterror("error loading job id $job_id",getlogger(__PACKAGE__));
-            }
-            $completionemailrecipient = $job->{emailRecipients};
-        }
 
         #$ecrf_data_listentrytags = $data->{ecrf_data_listentrytags} if exists $data->{ecrf_data_listentrytags};
         $ecrf_proband_alias_column_name = $data->{ecrf_proband_alias_column_name} if exists $data->{ecrf_proband_alias_column_name};
@@ -358,64 +340,6 @@ sub get_probandlistentry_columns {
         push(@columns,lc($ecrf_probandlistentry_status_column_name)) if length($ecrf_probandlistentry_status_column_name);
     }
     return @columns;
-}
-
-sub update_job {
-
-    my ($status) = @_;
-    if (defined $job) {
-        my $in = {
-            id => $job->{id},
-            version => $job->{version},
-            status => $status,
-            jobOutput => cat_file($attachmentlogfile,\&fileerror,getlogger(__PACKAGE__)),
-        };
-
-        my @args = ($in);
-        if ($job->{type}->{outputFile}
-            or ($job->{hasFile} and $job->{type}->{inputFile})) {
-            push(@args,@job_file);
-        } else {
-            push(@args,undef,undef,undef);
-        }
-        push(@args, { _file => 1, });
-
-        $job = CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job::update_item(@args);
-    }
-
-}
-
-sub _download_job_file {
-
-    @job_file = ();
-    if (defined $job) {
-        unless ($job->{hasFile}) {
-            scripterror("job has no file",getlogger(__PACKAGE__));
-            return;
-        }
-        unless ($job->{_file}->{decrypted}) {
-            scripterror("job file is not decrypted",getlogger(__PACKAGE__));
-            return;
-        }
-        my ($file,$filename,$content_type) = ($input_path . $job->{_file}->{fileName}, $job->{_file}->{fileName}, $job->{_file}->{contentType}->{mimeType});
-        unlink $file;
-        scriptinfo("downloading job input file to $file",getlogger(__PACKAGE__));
-        my $lwp_response = CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job::download_job_file($job->{id});
-        my $out;
-        unless (open($out, '>', $file)) {
-            fileerror("Unable to open: $!",getlogger(__PACKAGE__));
-            return;
-        }
-        binmode($out);
-        print $out $lwp_response->content;
-        close($out);
-        @job_file = (
-            $file,
-            $filename,
-            $content_type,
-        );
-    }
-
 }
 
 sub _prepare_working_paths {

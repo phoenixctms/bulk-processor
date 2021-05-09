@@ -26,7 +26,7 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
 
     %colname_abbreviation
     $selection_set_value_separator
-    @job_file
+
 
     $ecrf_proband_alias_column_name
     $ecrf_proband_category_column_name
@@ -34,9 +34,8 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $ecrf_proband_gender_column_name
 
     get_proband_columns
-
-    update_job
 );
+
 use CTSMS::BulkProcessor::Projects::ETL::EcrfImporter::Settings qw(
     $update_listentrytag_values
     $append_selection_set_values
@@ -44,8 +43,6 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfImporter::Settings qw(
     $clear_all_sections
 
     $ecrf_import_filename
-
-
 
     $import_ecrf_data_horizontal_multithreading
     $import_ecrf_data_horizontal_numofthreads
@@ -57,6 +54,11 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfImporter::Settings qw(
 #$ecrf_department_nameL10nKey
 #$ecrf_proband_alias_format
 #$ecrf_proband_alias_column_index
+
+use CTSMS::BulkProcessor::Projects::ETL::Job qw(
+    update_job
+    @job_file
+);
 
 use CTSMS::BulkProcessor::Logging qw (
     getlogger

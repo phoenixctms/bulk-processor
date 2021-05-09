@@ -40,7 +40,6 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     get_proband_columns
     get_probandlistentry_columns
 
-    update_job
 );
 #$ecrf_data_listentrytags
 #$ecrf_data_row_block
@@ -64,6 +63,10 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfExporter::Settings qw(
 
     $proband_list_filename
     $ecrf_data_row_block
+);
+
+use CTSMS::BulkProcessor::Projects::ETL::Job qw(
+    update_job
 );
 
 use CTSMS::BulkProcessor::Logging qw (

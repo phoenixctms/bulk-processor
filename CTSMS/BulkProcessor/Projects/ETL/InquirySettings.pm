@@ -11,7 +11,6 @@ use CTSMS::BulkProcessor::Globals qw(
     $cpucount
     create_path
     $ctsmsrestapi_path
-    $completionemailrecipient
 );
 
 use CTSMS::BulkProcessor::Logging qw(
@@ -37,11 +36,9 @@ use CTSMS::BulkProcessor::ConnectorPool qw(
 
 );
 
-use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring cat_file);
-
+use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring);
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
-use CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job qw();
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -60,8 +57,6 @@ our @EXPORT_OK = qw(
     $inquiry_data_truncate_table
     $inquiry_data_ignore_duplicates
     $inquiry_data_trial_id
-    $job_id
-    @job_file
 
     $active
     $active_signup
@@ -110,14 +105,10 @@ our $skip_errors = 0;
 our $inquiry_data_truncate_table = 1;
 our $inquiry_data_ignore_duplicates = 0;
 our $inquiry_data_trial_id = undef;
-our $job_id = undef;
-my $job = undef;
-our @job_file = ();
 
 our $inquiry_data_api_probands_page_size = 10;
 our $inquiry_data_api_inquiries_page_size = 10;
 our $inquiry_data_api_values_page_size = 10;
-
 
 our $inquiry_data_export_upload_folder = '';
 our $inquiry_data_export_sqlite_filename = '%s%s';
@@ -136,8 +127,7 @@ our $lockfile = undef;
 
 our $inquiry_data_export_pdfs_filename = '%s_%s%s';
 
-my $ecrfname_abbreviate_opts = {};
-
+#my $ecrfname_abbreviate_opts = {};
 
 my $category_abbreviate_opts = {};
 my $inputfieldname_abbreviate_opts = {};
@@ -261,17 +251,6 @@ sub update_settings {
                 scripterror("error loading trial id $inquiry_data_trial_id",getlogger(__PACKAGE__));
             }
         }
-        $job_id = $data->{job_id} if exists $data->{job_id};
-        if (defined $job_id and length($job_id) > 0) {
-            $job = CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job::get_item($job_id, { _file => 1, });
-            if (defined $job) {
-                scriptinfo("job '$job->{type}->{name}' id $job_id",getlogger(__PACKAGE__));
-                #_download_job_file() if $job->{type}->{inputFile};
-            } else {
-                scripterror("error loading job id $job_id",getlogger(__PACKAGE__));
-            }
-            $completionemailrecipient = $job->{emailRecipients};
-        }
 
         $inquiry_proband_alias_column_name = $data->{inquiry_proband_alias_column_name} if exists $data->{inquiry_proband_alias_column_name};
         $inquiry_proband_category_column_name = $data->{inquiry_proband_category_column_name} if exists $data->{inquiry_proband_category_column_name};
@@ -281,7 +260,6 @@ sub update_settings {
         $inquiry_data_api_probands_page_size = $data->{inquiry_data_api_probands_page_size} if exists $data->{inquiry_data_api_probands_page_size};
         $inquiry_data_api_inquiries_page_size = $data->{inquiry_data_api_inquiries_page_size} if exists $data->{inquiry_data_api_inquiries_page_size};
         $inquiry_data_api_values_page_size = $data->{inquiry_data_api_values_page_size} if exists $data->{inquiry_data_api_values_page_size};
-
 
         $inquiry_data_export_upload_folder = $data->{inquiry_data_export_upload_folder} if exists $data->{inquiry_data_export_upload_folder};
 
@@ -310,7 +288,7 @@ sub update_settings {
         $inquiry_data_export_pdfs_filename = $data->{inquiry_data_export_pdfs_filename} if exists $data->{inquiry_data_export_pdfs_filename};
 
         $colname_abbreviation{ignore_external_ids} = $data->{ignore_external_ids} if exists $data->{ignore_external_ids};
-        $ecrfname_abbreviate_opts = $data->{ecrfname_abbreviate_opts} if exists $data->{ecrfname_abbreviate_opts};
+        #$ecrfname_abbreviate_opts = $data->{ecrfname_abbreviate_opts} if exists $data->{ecrfname_abbreviate_opts};
         $inputfieldname_abbreviate_opts = $data->{inputfieldname_abbreviate_opts} if exists $data->{inputfieldname_abbreviate_opts};
         $selectionvalue_abbreviate_opts = $data->{selectionvalue_abbreviate_opts} if exists $data->{selectionvalue_abbreviate_opts};
 
@@ -340,31 +318,6 @@ sub get_proband_columns {
     return @columns;
 }
 
-sub update_job {
-
-    my ($status) = @_;
-    if (defined $job) {
-        my $in = {
-            id => $job->{id},
-            version => $job->{version},
-            status => $status,
-            jobOutput => cat_file($attachmentlogfile,\&fileerror,getlogger(__PACKAGE__)),
-        };
-
-        my @args = ($in);
-        if ($job->{type}->{outputFile}
-            or ($job->{hasFile} and $job->{type}->{inputFile})) {
-            push(@args,@job_file);
-        } else {
-            push(@args,undef,undef,undef);
-        }
-        push(@args, { _file => 1, });
-
-        $job = CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job::update_item(@args);
-    }
-
-}
-
 sub _prepare_working_paths {
 
     my ($create) = @_;
@@ -375,8 +328,6 @@ sub _prepare_working_paths {
     $result &= $path_result;
     ($path_result,$output_path) = create_path($working_path . 'output',$output_path,$create,\&fileerror,getlogger(__PACKAGE__));
     $result &= $path_result;
-
-
 
     return $result;
 

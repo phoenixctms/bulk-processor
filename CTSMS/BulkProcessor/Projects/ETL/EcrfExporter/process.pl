@@ -18,11 +18,15 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $skip_errors
     $ctsms_base_url
     $ecrf_data_trial_id
+    $lockfile
+    $input_path
+);
+use CTSMS::BulkProcessor::Projects::ETL::Job qw(
     $job_id
     @job_file
     update_job
-    $lockfile
 );
+
 use CTSMS::BulkProcessor::Projects::ETL::EcrfExporter::Settings qw(
     $defaultsettings
     $defaultconfig
@@ -175,12 +179,15 @@ sub init {
     eval {
         $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::EcrfSettings::update_settings,$YAML_CONFIG_TYPE);
         $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::EcrfExporter::Settings::update_settings,$YAML_CONFIG_TYPE);
+        $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::Job::update_settings,$YAML_CONFIG_TYPE,undef,
+            input_path => $input_path,
+        );
     };
     if ($@) {
         $result = 0;
         eval {
             update_job($FAILED_JOB_STATUS);
-        }
+        };
     }
 
     return $result;

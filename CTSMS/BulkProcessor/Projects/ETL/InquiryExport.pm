@@ -29,7 +29,6 @@ use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
     $inquiry_data_api_inquiries_page_size
     $inquiry_data_api_values_page_size
 
-
     %colname_abbreviation
     inquiry_data_include_inquiry
     $col_per_selection_set_value
@@ -47,11 +46,14 @@ use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
 
     get_proband_columns
     update_job
-
 );
 
 use CTSMS::BulkProcessor::Projects::ETL::InquiryExporter::Settings qw(
     $inquiry_data_row_block
+);
+
+use CTSMS::BulkProcessor::Projects::ETL::Job qw(
+    update_job
 );
 
 use CTSMS::BulkProcessor::Logging qw (
@@ -62,7 +64,6 @@ use CTSMS::BulkProcessor::Logging qw (
 use CTSMS::BulkProcessor::LogError qw(
     rowprocessingwarn
     rowprocessingerror
-
 );
 
 use CTSMS::BulkProcessor::SqlConnectors::SQLiteDB qw();
