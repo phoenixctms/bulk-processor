@@ -91,7 +91,7 @@ sub _next_row {
         my @row = ();
         foreach my $c ($context->{col_min} .. $context->{col_max}) {
             my $cell = $context->{sheet}->get_cell($r,$c);
-            push(@row,$cell ? $cell->value() : '');
+            push(@row,$cell ? $cell->value() : undef); #'');
         }
         $r++;
         return(\@row,$r);
