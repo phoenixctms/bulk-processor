@@ -200,13 +200,12 @@ sub import_ecrf_data_horizontal {
                 #next unless $rownum == 1 or $rownum == 5;
                 next if (scalar @$row) <= 1;
                 next if substr(trim($row->[0]),0,length($comment_char)) eq $comment_char;
+                update_job($PROCESSING_JOB_STATUS);
                 next unless _set_ecrf_data_horizontal_context($context,$row,$rownum);
                 _load_ecrf_status($context);
                 next unless _clear_ecrf($context);
                 next unless _set_ecrf_values_horizontal($context);
             }
-
-            update_job($PROCESSING_JOB_STATUS);
 
             return 1;
         },
@@ -709,7 +708,7 @@ sub _register_proband {
                     }
                 } else {
                     eval {
-                        #lock $probandlistentrymaxposition;
+                        lock $probandlistentrymaxposition;
                         $context->{probandlistentry} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::add_item(
                             _get_probandlistentry_in($context),undef,1);
                     };
@@ -751,7 +750,7 @@ sub _register_proband {
                     $result = 0;
                 } elsif ((scalar @$probandlistentries) == 0) {
                     eval {
-                        #lock $probandlistentrymaxposition;
+                        lock $probandlistentrymaxposition;
                         $context->{probandlistentry} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::add_item(
                             _get_probandlistentry_in($context));
                     };
@@ -876,7 +875,7 @@ sub _get_proband_in {
 
 sub _get_probandlistentry_in {
     my ($context) = @_;
-    lock $probandlistentrymaxposition;
+    #lock $probandlistentrymaxposition;
     $probandlistentrymaxposition = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_probandlistentrymaxposition($ecrf_data_trial_id);
     $probandlistentrymaxposition = 0 unless length($probandlistentrymaxposition);
     return {

@@ -214,9 +214,9 @@ sub _export_items {
         my $row = &{$context->{item_to_row_code}}($context,$item);
         push(@rows,$row) if defined $row;
         if ((scalar @rows) >= $context->{items_row_block}) {
+            update_job($PROCESSING_JOB_STATUS);
             $result &= &{$context->{export_code}}($context,\@rows);
             @rows = ();
-            update_job($PROCESSING_JOB_STATUS);
         }
 
     }
