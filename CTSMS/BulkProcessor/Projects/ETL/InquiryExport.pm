@@ -46,6 +46,7 @@ use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
     $skip_errors
 
     get_proband_columns
+    update_job
 
 );
 
@@ -73,6 +74,12 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Inquiry qw()
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues qw();
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File qw();
+
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job qw(
+    $PROCESSING_JOB_STATUS
+    $FAILED_JOB_STATUS
+    $OK_JOB_STATUS
+);
 
 use CTSMS::BulkProcessor::Projects::ETL::InquiryConnectorPool qw(
     get_sqlite_db
@@ -208,6 +215,7 @@ sub _export_items {
         if ((scalar @rows) >= $context->{items_row_block}) {
             $result &= &{$context->{export_code}}($context,\@rows);
             @rows = ();
+            update_job($PROCESSING_JOB_STATUS);
         }
 
     }

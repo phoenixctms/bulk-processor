@@ -40,6 +40,7 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     get_proband_columns
     get_probandlistentry_columns
 
+    update_job
 );
 #$ecrf_data_listentrytags
 #$ecrf_data_row_block
@@ -87,6 +88,12 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldVal
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry qw();
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File qw();
+
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job qw(
+    $PROCESSING_JOB_STATUS
+    $FAILED_JOB_STATUS
+    $OK_JOB_STATUS
+);
 
 use CTSMS::BulkProcessor::Projects::ETL::Ecrf qw(
     get_ecrf_map
@@ -364,6 +371,7 @@ sub _export_items {
         if ((scalar @rows) >= $context->{items_row_block}) {
             $result &= &{$context->{export_code}}($context,\@rows);
             @rows = ();
+            update_job($PROCESSING_JOB_STATUS);
         }
 
     }
@@ -835,7 +843,7 @@ sub _get_probandlistentrytagvalues {
         }
         my $listentrytagvalue = shift @$api_listentrytagvalues_page;
         last unless $listentrytagvalue;
-        push(@listentrytagvalues,$listentrytagvalue) if ($all or length($listentrytagvalue->{tag}->{externalId}));
+        push(@listentrytagvalues,$listentrytagvalue) if ($all or $listentrytagvalue->{tag}->{ecrfValue});
     }
     return \@listentrytagvalues;
 }

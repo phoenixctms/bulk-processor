@@ -34,6 +34,8 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $ecrf_proband_gender_column_name
 
     get_proband_columns
+
+    update_job
 );
 use CTSMS::BulkProcessor::Projects::ETL::EcrfImporter::Settings qw(
     $update_listentrytag_values
@@ -97,6 +99,12 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Inpu
     $SKETCH
 );
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Sex qw();
+
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job qw(
+    $PROCESSING_JOB_STATUS
+    $FAILED_JOB_STATUS
+    $OK_JOB_STATUS
+);
 
 use CTSMS::BulkProcessor::Projects::ETL::Ecrf qw(
     get_ecrf_map
@@ -193,6 +201,7 @@ sub import_ecrf_data_horizontal {
                 _load_ecrf_status($context);
                 next unless _clear_ecrf($context);
                 next unless _set_ecrf_values_horizontal($context);
+                update_job($PROCESSING_JOB_STATUS);
             }
 
             return 1;
