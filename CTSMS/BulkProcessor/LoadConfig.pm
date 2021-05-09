@@ -31,7 +31,6 @@ use CTSMS::BulkProcessor::LogError qw(
     configurationerror
 );
 
-
 use YAML qw();
 $YAML::UseCode = 1;
 use Config::Any qw();
@@ -48,23 +47,18 @@ our @EXPORT_OK = qw(
     $ANY_CONFIG_TYPE
 );
 
-my $tuplesplitpattern = join('|',(quotemeta(','),
-                                  quotemeta(';'),
-
-                                  )
-                             );
+my $tuplesplitpattern = join('|',(quotemeta(','),quotemeta(';'),));
 
 our $SIMPLE_CONFIG_TYPE = 1;
 our $YAML_CONFIG_TYPE = 2;
 our $ANY_CONFIG_TYPE = 3;
-
 
 my $windows_config_ext_prefix = 'windows';
 my $debug_config_ext_prefix = 'debug';
 
 sub load_config {
 
-    my ($configfile,$process_code,$configtype,$configparser_args) = @_;
+    my ($configfile,$process_code,$configtype,$configparser_args,@process_code_args) = @_;
 
     my $is_master = 'CODE' ne ref $process_code;
     my $data;
@@ -99,10 +93,6 @@ sub load_config {
                     push(@search_paths,map { eval{ Cwd::abs_path($_  . '/') . '/'; }; } @INC);
                     ($variant,$data) = _search_path($variant,$configtype,$configparser_args,\@search_paths,\@paths,\%path_dupes);
                 }
-
-
-
-
             }
         }
         if (not defined $data) {
@@ -141,7 +131,7 @@ sub load_config {
         }
         return $result;
     } else {
-        my $result = &$process_code($data,$variant);
+        my $result = &$process_code($data,$variant,@process_code_args);
         configurationinfo('config file ' . $variant . ' loaded',getlogger(__PACKAGE__));
         return $result;
     }
@@ -172,8 +162,6 @@ sub _search_path {
         if (-e $relative_configfile) {
             $configfile = $relative_configfile;
             $data = _parse_config($configfile,$configtype,$configparser_args);
-
-
         }
     }
     return ($configfile,$data);
@@ -259,11 +247,6 @@ sub _parse_simple_config {
 
         next if($line =~ /^\s*#/);
         next if($line !~ /^\s*\S+\s*=.*$/);
-
-
-
-
-
 
         my ($key,$value) = split(/=/,$line,2);
 
