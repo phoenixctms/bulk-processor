@@ -31,9 +31,8 @@ our @EXPORT_OK = qw(
     get_ecrffieldvalues
     set_ecrffieldvalues
 
-
+    get_getecrffieldvaluessectionmaxindex
 );
-#get_getecrffieldvaluessectionmaxindex
 
 my $default_restapi = \&get_ctsms_restapi;
 my $get_item_path_query = sub {
@@ -57,13 +56,14 @@ my $get_setecrffieldvalues_path_query = sub {
     $params{force} = booltostring($force) if defined $force;
     return 'ecrffieldvalue/' . get_query_string(\%params);
 };
-#my $get_getecrffieldvaluessectionmaxindex_path_query = sub {
-#    my ($listentry_id, $ecrf_id, $visit_id, $section) = @_;
-#    my %params = ();
-#    $params{section} = $section;
-#    $params{visit_id} = $visit_id if defined $visit_id;
-#    return 'ecrfstatusentry/' . $listentry_id . '/' . $ecrf_id . '/ecrffieldvalues/maxindex' . get_query_string(\%params);
-#};
+
+my $get_getecrffieldvaluessectionmaxindex_path_query = sub {
+    my ($listentry_id, $ecrf_id, $visit_id, $section) = @_;
+    my %params = ();
+    $params{section} = $section;
+    $params{visit_id} = $visit_id if defined $visit_id;
+    return 'ecrfstatusentry/' . $listentry_id . '/' . $ecrf_id . '/ecrffieldvalues/maxindex' . get_query_string(\%params);
+};
 
 my $fieldnames = [
     "rows",
@@ -105,13 +105,13 @@ sub set_ecrffieldvalues {
 
 }
 
-#sub get_getecrffieldvaluessectionmaxindex {
-#
-#    my ($listentry_id, $ecrf_id, $visit_id, $section, $restapi,$headers) = @_;
-#    my $api = _get_api($restapi,$default_restapi);
-#    return $api->get(&$get_getecrffieldvaluessectionmaxindex_path_query($listentry_id, $ecrf_id, $visit_id, $section),$headers);
-#
-#}
+sub get_getecrffieldvaluessectionmaxindex {
+
+    my ($listentry_id, $ecrf_id, $visit_id, $section, $restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return $api->get(&$get_getecrffieldvaluessectionmaxindex_path_query($listentry_id, $ecrf_id, $visit_id, $section),$headers);
+
+}
 
 sub builditems_fromrows {
 

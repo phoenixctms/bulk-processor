@@ -63,13 +63,11 @@ sub get_horizontal_cols {
             foreach my $section (keys %{$ecrf_map->{$ecrfid}->{sections}}) {
                 my $section_info = $ecrf_map->{$ecrfid}->{sections}->{$section};
                 my $maxindex = 0;
-                my $lastindex;
                 if ($section_info->{series}) {
-                    $lastindex = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Ecrf::get_getecrffieldvaluessectionmaxindex($ecrfid, $visit->{id}, $section);
                     if ($import) {
                         $maxindex = $series_section_maxindex;
                     } else {
-                        $maxindex = $lastindex;
+                        $maxindex = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Ecrf::get_getecrffieldvaluessectionmaxindex($ecrfid, $visit->{id}, $section);
                         $maxindex = 0 unless length($maxindex);
                     }
                 }
@@ -86,15 +84,8 @@ sub get_horizontal_cols {
                                 ecrffield => $ecrffield,
                                 visit => (defined $visit->{id} ? $visit : undef),
                                 colname => $colnames[$i],
+                                index => ($ecrffield->{series} ? $index : undef),
                             };
-                            if ($ecrffield->{series}) {
-                                $column->{index} = $index;
-                                $column->{maxindex} = $lastindex;
-                            } else {
-                                $column->{index} = undef;
-                                $column->{maxindex} = undef;
-                            }
-
                             if ($col_per_selection_set_value and $ecrffield->{field}->is_select()) {
                                 $column->{colnames} = \@colnames;
                                 $column->{selection_set_value} = $selectionSetValues[$i];

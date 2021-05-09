@@ -448,6 +448,7 @@ sub _set_ecrf_values_horizontal {
 
     my $result = 1;
 
+    undef $context->{section_maxindex_map};
     undef $context->{in};
     $context->{skip_columns} = {};
     $context->{last_ecrf} = undef;
@@ -455,7 +456,6 @@ sub _set_ecrf_values_horizontal {
     $context->{last_section} = undef;
     $context->{last_series} = undef;
     $context->{last_index} = undef;
-    $context->{last_maxindex} = undef;
 
     $context->{ecrf_value_stats} = {
         total => 0,
@@ -468,7 +468,6 @@ sub _set_ecrf_values_horizontal {
     my $last_section;
     my $last_series;
     my $last_index;
-    my $last_maxindex;
 
     my $last_ecrf_label;
     my $last_ecrf_section_label;
@@ -493,7 +492,7 @@ sub _set_ecrf_values_horizontal {
         if ($ecrf_values_col_block > 0
             and (scalar @{$context->{in}}) >= $ecrf_values_col_block
             and (not $context->{last_series} or
-                 $context->{last_index} <= ($context->{last_maxindex} // -1))) {
+                 $context->{last_index} <= (_get_ecrf_section_maxindex($context) // -1))) {
             $result &= _save_ecrf_values($context);
         }
         $last_ecrf = $context->{last_ecrf};
@@ -501,7 +500,6 @@ sub _set_ecrf_values_horizontal {
         $last_section = $context->{last_section};
         $last_series = $context->{last_series};
         $last_index = $context->{last_index};
-        $last_maxindex = $context->{last_maxindex};
         $last_ecrf_label = _get_last_ecrf_label($context,0);
         $last_ecrf_section_label = _get_last_ecrf_label($context,1);
     }
@@ -536,8 +534,6 @@ sub _clear_ecrf {
             #$context->{clear_map}->{$listentry_id} //= {};
 
             next unless _get_ecrffieldvalue_editable($context,$column->{colname});
-
-            undef $column->{maxindex};
 
             my $ecrf_id = $column->{ecrffield}->{ecrf}->{id};
             $context->{clear_map}->{$listentry_id}->{$ecrf_id} //= {};
@@ -912,6 +908,46 @@ sub _get_ecrffieldvalue_editable {
 
 }
 
+sub _get_ecrf_section_maxindex {
+    my ($context) = @_;
+
+    $context->{section_maxindex_map} //= {};
+
+    return undef unless $context->{last_series};
+
+    my $listentry_id = $context->{probandlistentry}->{id};
+
+    my $ecrf_id = $context->{last_ecrf}->{id};
+    $context->{section_maxindex_map}->{$listentry_id}->{$ecrf_id} //= {};
+    my $section_map = $context->{section_maxindex_map}->{$listentry_id}->{$ecrf_id};
+
+    my $visit_id = undef;
+    $visit_id = $context->{last_visit}->{id} if $context->{last_visit};
+    if (defined $visit_id) {
+        $context->{section_maxindex_map}->{$listentry_id}->{$ecrf_id}->{$visit_id} //= {};
+        $section_map = $context->{section_maxindex_map}->{$listentry_id}->{$ecrf_id}->{$visit_id};
+    }
+
+    my $section = ($context->{last_section} // '');
+    unless (exists $section_map->{$section}) {
+        my $section_label = "eCRF '$context->{last_ecrf}->{name}" . (defined $context->{last_visit} ? '@' . $context->{last_visit}->{token} : '') . "' section '" . $section . "'";
+        my $maxindex;
+        eval {
+            $maxindex = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues::get_getecrffieldvaluessectionmaxindex($listentry_id, $ecrf_id, $visit_id, $section);
+        };
+        $maxindex = undef unless length($maxindex);
+        if ($@) {
+            _warn_or_error($context,"error loading $section_label max index: " . $@);
+        } else {
+            _info($context,"$section_label max index: " . (defined $maxindex ? $maxindex : '<new>'),1);
+        }
+        $section_map->{$section} = $maxindex;
+    }
+
+    return $section_map->{$section};
+}
+
+
 sub _get_ecrffieldvalue_in {
     my ($context,$colname,$value,$contains_code) = @_;
 
@@ -1033,7 +1069,6 @@ sub _append_ecrffieldvalue_in {
             $context->{last_section} = $column->{ecrffield}->{section};
             $context->{last_series} = $column->{ecrffield}->{series};
             $context->{last_index} = $column->{index};
-            $context->{last_maxindex} = $column->{maxindex};
         }
     }
     return $result;
@@ -1349,7 +1384,8 @@ sub _contains {
 
 sub _is_unknown_value {
     my $string = shift;
-    if ($string =~ /^[?x]+$/ or $string eq '#VALUE!') {
+    #if ($string =~ /^[?x]+$/ or
+    if ($string eq '#VALUE!') {
         return 1;
     }
     return 0;
