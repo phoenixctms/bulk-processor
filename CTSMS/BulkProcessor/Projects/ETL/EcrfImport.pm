@@ -45,7 +45,7 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfImporter::Settings qw(
 
     $ecrf_import_filename
 
-    $ecrf_proband_alias_column_index
+
 
     $import_ecrf_data_horizontal_multithreading
     $import_ecrf_data_horizontal_numofthreads
@@ -56,6 +56,7 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfImporter::Settings qw(
 );
 #$ecrf_department_nameL10nKey
 #$ecrf_proband_alias_format
+#$ecrf_proband_alias_column_index
 
 use CTSMS::BulkProcessor::Logging qw (
     getlogger
@@ -201,8 +202,9 @@ sub import_ecrf_data_horizontal {
                 _load_ecrf_status($context);
                 next unless _clear_ecrf($context);
                 next unless _set_ecrf_values_horizontal($context);
-                update_job($PROCESSING_JOB_STATUS);
             }
+
+            update_job($PROCESSING_JOB_STATUS);
 
             return 1;
         },
@@ -652,9 +654,10 @@ sub _register_proband {
     $context->{listentry_created} = 0;
     $context->{criterions} = [];
     my $alias;
-    # use alias column if specified:
+    # use alias column if specified and not empty:
     if (length($ecrf_proband_alias_column_name)
-        and exists $context->{record}->{$ecrf_proband_alias_column_name}) {
+        and exists $context->{record}->{$ecrf_proband_alias_column_name}
+        and length($context->{record}->{$ecrf_proband_alias_column_name})) {
         $alias = $context->{record}->{$ecrf_proband_alias_column_name};
         $result = _append_probandalias_criterion($context,$alias);
     } elsif (scalar keys %{$context->{listentrytag_map}}) {
@@ -668,10 +671,12 @@ sub _register_proband {
             }
         }
         pop(@{$context->{criterions}});
-    } else {
-        # otherwise use first column as alias:
-        $alias = $context->{record}->{$header_row[$ecrf_proband_alias_column_index]};
-        $result = _append_probandalias_criterion($context,$alias);
+    #} else {
+    #    ## otherwise use first column as alias:
+    #    ##$alias = $context->{record}->{$header_row[$ecrf_proband_alias_column_index]};
+    #    ##$result = _append_probandalias_criterion($context,$alias);
+    #    _warn_or_error($context,XX"error loading proband: " . $@);
+    #    $result = 0;
     }
 
     if ($result) {
@@ -1244,6 +1249,7 @@ sub _append_listentrytag_criterion {
     my $listentry_tag = $context->{listentrytag_map}->{$colname};
     my $field_type = $listentry_tag->{field}->{fieldType}->{type};
     my $value = $context->{record}->{$colname};
+    return 0 unless defined $value;
     my @criterions = ();
     push(@criterions,{
         position => ((scalar @{$context->{criterions}}) + 1),
