@@ -205,7 +205,7 @@ sub import_ecrf_data_horizontal {
                 next if substr(trim($row->[0]),0,length($comment_char)) eq $comment_char;
                 update_job($PROCESSING_JOB_STATUS);
                 next unless _set_ecrf_data_horizontal_context($context,$row,$rownum);
-                #next unless 6527964 == $context->{proband}->{id};
+                #next unless id == $context->{proband}->{id};
                 _load_ecrf_status($context);
                 next unless _clear_ecrf($context);
                 next unless _set_ecrf_values_horizontal($context);
@@ -490,9 +490,9 @@ sub _set_ecrf_values_horizontal {
 
     foreach my $colname (map { $_->{colname}; } @{$context->{columns}}) {
 
-        #unless ($context->{all_column_map}->{$colname}->{ecrffield}->{field}->{nameL10nKey} eq '[REMOC] abnormal vital signs comment'
-        #    and $context->{all_column_map}->{$colname}->{ecrffield}->{ecrf}->{name} eq '11. Visit 3c'
-        #    and $context->{all_column_map}->{$colname}->{ecrffield}->{section} eq '06 - Investigator’s Evaluation: Vital Signs') {
+        #unless ($context->{all_column_map}->{$colname}->{ecrffield}->{field}->{nameL10nKey} eq 'field name'
+        #    and $context->{all_column_map}->{$colname}->{ecrffield}->{ecrf}->{name} eq 'ecrf name'
+        #    and $context->{all_column_map}->{$colname}->{ecrffield}->{section} eq 'section') {
         #    next;
         #}
 
@@ -1229,7 +1229,7 @@ sub _append_probandalias_criterion {
             #tieId => undef,
             restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
             propertyId => $context->{criterionproperty_map}->{'proband.personParticulars.alias'},
-            stringValue => $alias,
+            stringValue => _mark_utf8($alias),
         });
         # if there is a department column, search for alias by department ...
         if (length($ecrf_proband_department_column_name)
@@ -1281,6 +1281,7 @@ sub _append_listentrytag_criterion {
         tieId => $context->{criteriontie_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::AND},
         propertyId => $context->{criterionproperty_map}->{$listentry_tag->{field}->criterion_property('proband.trialParticipations.tagValues.value.')},
     );
+    $value = _mark_utf8($value);
     if ($listentry_tag->{field}->is_select_one()) {
         $criterion{restrictionId} = $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ};
         $criterion{stringValue} = $value;
@@ -1346,7 +1347,13 @@ sub _save_ecrf_values {
     eval {
         $out = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues::set_ecrffieldvalues($context->{in});
     };
-    my $stats = _get_values_stats($context,$out);
+    my $stats = _get_values_stats($context,$out,sub {
+            my $in_row = shift;
+            return ($in_row->{listEntryId} . '-' . $in_row->{ecrfFieldId} . '-' . ($in_row->{visitId} // '') . '-' . ($in_row->{index} // ''));
+        },sub {
+            my $out_row = shift;
+            return ($out_row->{listEntry}->{id} . '-' . $out_row->{ecrfField}->{id} . '-' . ($out_row->{visit} ? $out_row->{visit}->{id} : '') . '-' . ($out_row->{index} // ''));
+        });
     $context->{in} = [];
     $ecrf_section_label //= _get_last_ecrf_label($context,1);
     if ($@) {
@@ -1362,7 +1369,7 @@ sub _save_ecrf_values {
 }
 
 sub _get_values_stats {
-    my ($context,$out) = @_;
+    my ($context,$out,$get_in_hash,$get_out_hash) = @_;
     my %stats = (
         total => 0,
         created => 0,
@@ -1370,12 +1377,12 @@ sub _get_values_stats {
     );
     if ($out) {
         my ($in_version_map, $keys, $values) = array_to_map([ grep { exists $_->{id} and defined $_->{id}; } @{$context->{in}} ],
-            sub { my $item = shift; return $item->{id}; }, sub { my $item = shift; return $item->{version}; }, 'last');
+            sub { my $item = shift; return $get_in_hash->($item); }, sub { my $item = shift; return $item->{version}; }, 'last');
         foreach my $out_row (@{$out->{rows}}) {
-            my $id = $out_row->{id};
+            my $hash = $get_out_hash->($out_row);
             $stats{total} += 1;
-            $stats{created} += 1 if not exists $in_version_map->{$id};
-            $stats{updated} += 1 if (exists $in_version_map->{$id} and $out_row->{version} > $in_version_map->{$id});
+            $stats{created} += 1 if not exists $in_version_map->{$hash};
+            $stats{updated} += 1 if (exists $in_version_map->{$hash} and $out_row->{version} > $in_version_map->{$hash});
         }
     }
     return \%stats;
@@ -1390,7 +1397,13 @@ sub _save_listentrytag_values {
     eval {
         $out = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValues::set_probandlistentrytagvalues($context->{in});
     };
-    my $stats = _get_values_stats($context,$out);
+    my $stats = _get_values_stats($context,$out,sub {
+            my $in_row = shift;
+            return ($in_row->{listEntryId} . '-' . $in_row->{tagId});
+        },sub {
+            my $out_row = shift;
+            return ($out_row->{listEntry}->{id} . '-' . $out_row->{tag}->{id});
+        });
     $context->{in} = [];
     if ($@) {
         die("error saving proband list attribute values: " . $@);
