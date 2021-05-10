@@ -7,6 +7,8 @@ use threads qw(yield);
 use threads::shared qw(shared_clone);
 use Thread::Queue;
 
+use utf8;
+
 use Time::HiRes qw(sleep);
 
 use CTSMS::BulkProcessor::Globals qw(

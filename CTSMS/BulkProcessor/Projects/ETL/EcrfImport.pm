@@ -205,7 +205,7 @@ sub import_ecrf_data_horizontal {
                 next if substr(trim($row->[0]),0,length($comment_char)) eq $comment_char;
                 update_job($PROCESSING_JOB_STATUS);
                 next unless _set_ecrf_data_horizontal_context($context,$row,$rownum);
-                #next unless 6295640 == $context->{proband}->{id};
+                #next unless 6527964 == $context->{proband}->{id};
                 _load_ecrf_status($context);
                 next unless _clear_ecrf($context);
                 next unless _set_ecrf_values_horizontal($context);
@@ -490,10 +490,13 @@ sub _set_ecrf_values_horizontal {
 
     foreach my $colname (map { $_->{colname}; } @{$context->{columns}}) {
 
-        $result &= _append_ecrffieldvalue_in($context,$colname,$context->{record}->{$colname});
-        #if ($context->{all_column_map}->{$colname}->{ecrffield}->{field}->{nameL10nKey} eq '[REMOC] abnormal blood lab results relevant comment') {
-        #    print "break";
+        #unless ($context->{all_column_map}->{$colname}->{ecrffield}->{field}->{nameL10nKey} eq '[REMOC] abnormal vital signs comment'
+        #    and $context->{all_column_map}->{$colname}->{ecrffield}->{ecrf}->{name} eq '11. Visit 3c'
+        #    and $context->{all_column_map}->{$colname}->{ecrffield}->{section} eq '06 - Investigator’s Evaluation: Vital Signs') {
+        #    next;
         #}
+
+        $result &= _append_ecrffieldvalue_in($context,$colname,$context->{record}->{$colname});
 
 
         # save on next eCRF or visit or section or section index:
@@ -1442,8 +1445,14 @@ sub _valid_excel_to_date {
 }
 
 sub _mark_utf8 {
-    #return shift;
-    return Encode::decode("UTF-8", shift);
+    my $byte_string = shift;
+    my $ustring = $byte_string;
+    eval {
+        $ustring = Encode::decode('UTF-8',$byte_string,Encode::FB_CROAK);
+    };
+    return $ustring;
+    #or die "Could not decode string: $@";
+    #return Encode::decode("UTF-8", shift);
 }
 
 sub _warn_or_error {

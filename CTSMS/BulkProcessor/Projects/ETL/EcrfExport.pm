@@ -729,6 +729,7 @@ sub _init_ecrf_data_horizontal_context {
         }
         $context->{listentry} = shift @{$context->{api_listentries_page}};
         if (defined $context->{listentry}) {
+            #return [] unless $context->{listentry}->{proband}->{id} == 6527964;
             #tag values
             ($context->{tagvalues}, my $tag_cols, my $tag_vals) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return get_probandlistentrytag_colname($item->{tag}); },undef,$listentrytag_map_mode);
             return _get_ecrffieldvalues($context);

@@ -2,6 +2,8 @@ package CTSMS::BulkProcessor::FileProcessors::CSVFile;
 use strict;
 
 ## no critic
+
+use utf8;
 #use Encode qw();
 
 use CTSMS::BulkProcessor::Logging qw(

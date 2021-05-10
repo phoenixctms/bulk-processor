@@ -4,7 +4,6 @@ use strict;
 ## no critic
 no strict 'refs';
 
-
 use Spreadsheet::WriteExcel qw();
 use Excel::Writer::XLSX qw();
 use Encode qw();
