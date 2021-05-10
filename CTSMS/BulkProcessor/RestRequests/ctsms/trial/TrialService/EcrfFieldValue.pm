@@ -23,6 +23,17 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListE
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputFieldSelectionSetValue qw();
 
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::InputFieldType qw(
+    $CHECKBOX
+    $DATE
+    $TIME
+    $TIMESTAMP
+
+    $INTEGER
+    $FLOAT
+
+);
+
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
@@ -152,18 +163,18 @@ sub _get_item_value {
     my $item = shift;
     my $fieldtype = $item->{ecrfField}->{field}->{fieldType}->{nameL10nKey};
     return undef unless $item->created;
-    if ('CHECKBOX' eq $fieldtype) {
+    if ($CHECKBOX eq $fieldtype) {
         return booltostring($item->{booleanValue});
-    } elsif ('DATE' eq $fieldtype) {
-        return $item->{dateValue};
-    } elsif ('TIME' eq $fieldtype) {
-        return $item->{timeValue};
-    } elsif ('TIMESTAMP' eq $fieldtype) {
-        return $item->{timestampValue};
-    } elsif ('FLOAT' eq $fieldtype) {
-        return $item->{floatValue};
-    } elsif ('INTEGER' eq $fieldtype) {
-        return $item->{longValue};
+    } elsif ($DATE eq $fieldtype) {
+        return ($item->{dateValue} // '');
+    } elsif ($TIME eq $fieldtype) {
+        return ($item->{timeValue} // '');
+    } elsif ($TIMESTAMP eq $fieldtype) {
+        return ($item->{timestampValue} // '');
+    } elsif ($FLOAT eq $fieldtype) {
+        return ($item->{floatValue} // '');
+    } elsif ($INTEGER eq $fieldtype) {
+        return ($item->{longValue} // '');
     } elsif ($item->{ecrfField}->{field}->is_text()) {
         return ($item->{textValue} // '');
     } elsif ($item->{ecrfField}->{field}->is_select()) {

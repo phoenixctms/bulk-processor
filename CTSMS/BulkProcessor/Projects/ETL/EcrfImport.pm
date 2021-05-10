@@ -100,7 +100,10 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Inpu
     $FLOAT
 
     $SKETCH
+
+    $AUTOCOMPLETE
 );
+
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Sex qw();
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job qw(
@@ -1044,17 +1047,19 @@ sub _get_ecrffieldvalue_in {
                     return (undef,0);
                 }
             }
+        } elsif ($field_type eq $AUTOCOMPLETE) {
+            $in{textValue} = (length($value) ? $value : undef);
         } elsif ($ecrffield->{field}->is_text()) {
-            $in{textValue} = $value;
+            $in{textValue} = (length($value) ? $value : '');
         } elsif ($field_type eq $CHECKBOX) {
             $in{booleanValue} = (stringtobool($value) ? \1 : \0);
         } elsif ($field_type eq $DATE) {
             #$in{dateValue} = _valid_excel_to_date($value);
-            $in{dateValue} = $value;
+            $in{dateValue} = (length($value) ? $value : undef);
         } elsif ($field_type eq $TIME) {
-            $in{timeValue} = $value;
+            $in{timeValue} = (length($value) ? $value : undef);
         } elsif ($field_type eq $TIMESTAMP) {
-            $in{timestampValue} = $value;
+            $in{timestampValue} = (length($value) ? $value : undef);
         } elsif ($field_type eq $INTEGER) {
             $in{longValue} = ((length($value) and not _is_unknown_value($value)) ? $value : undef);
         } elsif ($field_type eq $FLOAT) {
@@ -1123,17 +1128,19 @@ sub _get_listentrytagvalue_in {
         my $field_type = $listentrytag->{field}->{fieldType}->{type};
         if ($listentrytag->{field}->is_select() and $field_type ne $SKETCH) {
             $in{selectionValueIds} = _get_selection_set_value_ids($context,$listentrytag->{field},$value,$contains_code);
+        } elsif ($field_type eq $AUTOCOMPLETE) {
+            $in{textValue} = (length($value) ? $value : undef);
         } elsif ($listentrytag->{field}->is_text()) {
-            $in{textValue} = $value;
+            $in{textValue} = (length($value) ? $value : '');
         } elsif ($field_type eq $CHECKBOX) {
             $in{booleanValue} = (stringtobool($value) ? \1 : \0);
         } elsif ($field_type eq $DATE) {
             #$in{dateValue} = _valid_excel_to_date($value);
-            $in{dateValue} = $value;
+            $in{dateValue} = (length($value) ? $value : undef);
         } elsif ($field_type eq $TIME) {
-            $in{timeValue} = $value;
+            $in{timeValue} = (length($value) ? $value : undef);
         } elsif ($field_type eq $TIMESTAMP) {
-            $in{timestampValue} = $value;
+            $in{timestampValue} = (length($value) ? $value : undef);
         } elsif ($field_type eq $INTEGER) {
             $in{longValue} = ((length($value) and not _is_unknown_value($value)) ? $value : undef);
         } elsif ($field_type eq $FLOAT) {
