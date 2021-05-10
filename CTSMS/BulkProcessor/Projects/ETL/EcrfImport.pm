@@ -7,7 +7,7 @@ use threads qw(yield);
 use threads::shared qw();
 
 use utf8;
-#use Encode qw();
+use Encode qw();
 
 use Tie::IxHash;
 use File::Basename qw();
@@ -205,6 +205,7 @@ sub import_ecrf_data_horizontal {
                 next if substr(trim($row->[0]),0,length($comment_char)) eq $comment_char;
                 update_job($PROCESSING_JOB_STATUS);
                 next unless _set_ecrf_data_horizontal_context($context,$row,$rownum);
+                #next unless 6295640 == $context->{proband}->{id};
                 _load_ecrf_status($context);
                 next unless _clear_ecrf($context);
                 next unless _set_ecrf_values_horizontal($context);
@@ -490,6 +491,10 @@ sub _set_ecrf_values_horizontal {
     foreach my $colname (map { $_->{colname}; } @{$context->{columns}}) {
 
         $result &= _append_ecrffieldvalue_in($context,$colname,$context->{record}->{$colname});
+        #if ($context->{all_column_map}->{$colname}->{ecrffield}->{field}->{nameL10nKey} eq '[REMOC] abnormal blood lab results relevant comment') {
+        #    print "break";
+        #}
+
 
         # save on next eCRF or visit or section or section index:
         if (defined $last_ecrf and (
@@ -1015,6 +1020,7 @@ sub _get_ecrffieldvalue_in {
             }
         }
         #return (undef, 1) unless _get_ecrffieldvalue_editable($context,$colname,$old_value);
+        $value = _mark_utf8($value);
         my $field_type = $ecrffield->{field}->{fieldType}->{type};
         if ($ecrffield->{field}->is_select() and $field_type ne $SKETCH) {
             if (exists $column->{colnames}) {
@@ -1125,6 +1131,7 @@ sub _get_listentrytagvalue_in {
             $in{version} = $old_value->{version};
         }
 
+        $value = _mark_utf8($value);
         my $field_type = $listentrytag->{field}->{fieldType}->{type};
         if ($listentrytag->{field}->is_select() and $field_type ne $SKETCH) {
             $in{selectionValueIds} = _get_selection_set_value_ids($context,$listentrytag->{field},$value,$contains_code);
@@ -1432,6 +1439,11 @@ sub _valid_excel_to_date {
         $date .= ' 00:00:00' if $date;
     };
     return $date;
+}
+
+sub _mark_utf8 {
+    #return shift;
+    return Encode::decode("UTF-8", shift);
 }
 
 sub _warn_or_error {

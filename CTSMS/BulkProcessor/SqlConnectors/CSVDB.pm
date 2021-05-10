@@ -80,6 +80,8 @@ my $rowblock_transactional = 0;
 
 my $invalid_excel_spreadsheet_chars_pattern = '[' . quotemeta('[]:*?/\\') . ']';
 
+my $encoding = undef; #"utf8";
+
 sub sanitize_spreadsheet_name { #Invalid character []:*?/\ in worksheet name
     my $spreadsheet_name = shift;
     $spreadsheet_name =~ s/$invalid_excel_spreadsheet_chars_pattern//g;
@@ -215,6 +217,7 @@ sub db_connect {
             cvs_escape_char => $default_csv_config->{escape_char},
 
             csv_null        => 1, # compatibility with CSVFile.pm
+            f_encoding      => $encoding,
 
             PrintError      => 0,
             RaiseError      => 0,

@@ -2,6 +2,7 @@ package CTSMS::BulkProcessor::Projects::ETL::EcrfExport;
 use strict;
 
 ## no critic
+use utf8;
 
 use CTSMS::BulkProcessor::Globals qw(
     $system_name

@@ -3,6 +3,8 @@ use strict;
 
 ## no critic
 
+use utf8;
+
 use Tie::IxHash;
 
 use CTSMS::BulkProcessor::Globals qw(
