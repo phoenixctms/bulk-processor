@@ -3,6 +3,10 @@ use strict;
 
 ## no critic
 
+use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
+    get_proband_columns
+);
+
 use CTSMS::BulkProcessor::Projects::ETL::InquiryConnectorPool qw(
     get_sqlite_db
     destroy_all_dbs
@@ -20,8 +24,6 @@ use CTSMS::BulkProcessor::SqlProcessor qw(
 
 use CTSMS::BulkProcessor::SqlRecord qw();
 
-
-
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::SqlRecord);
 our @EXPORT_OK = qw(
@@ -33,13 +35,8 @@ our @EXPORT_OK = qw(
     process_records
 );
 
-
-
-
-
 my $tablename = 'inquiry_data_vertical';
 my $get_db = \&get_sqlite_db;
-
 
 my $expected_fieldnames;
 _set_expected_fieldnames();
@@ -49,16 +46,7 @@ sub _set_expected_fieldnames {
     $option_col_count //= 0;
     my @fieldnames = (
         'proband_id',
-
-
-
-
-
-
-
-
-
-
+        get_proband_columns(), #'alias',
 
         'inquiry_category',
         'inquiry_id',
@@ -96,8 +84,6 @@ my $indexes = {
     $tablename . '_inquiry_category_position' => [ 'inquiry_category(32)','inquiry_position(32)' ],
 
 };
-
-
 
 sub new {
 
@@ -211,8 +197,6 @@ sub getinsertstatement {
     return insert_stmt($get_db,__PACKAGE__,$insert_ignore);
 
 }
-
-
 
 sub gettablename {
 

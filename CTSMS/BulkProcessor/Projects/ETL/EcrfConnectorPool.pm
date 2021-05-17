@@ -94,12 +94,7 @@ sub sqlite_db_tableidentifier {
 
 }
 
-
-
-
 sub destroy_dbs {
-
-
 
     foreach my $name (keys %$sqlite_dbs) {
         cleartableinfo($sqlite_dbs->{$name});

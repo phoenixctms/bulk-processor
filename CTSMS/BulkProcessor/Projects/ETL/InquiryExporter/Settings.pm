@@ -41,12 +41,16 @@ our @EXPORT_OK = qw(
     $defaultconfig
 
     $force
+
+    $inquiry_data_row_block
 );
 
 our $defaultconfig = 'config.cfg';
 our $defaultsettings = 'settings.yml';
 
 our $force = 0;
+
+our $inquiry_data_row_block = 100;
 
 sub update_settings {
 
@@ -55,6 +59,8 @@ sub update_settings {
     if (defined $data) {
 
         my $result = 1;
+
+        $inquiry_data_row_block = $data->{inquiry_data_row_block} if exists $data->{inquiry_data_row_block};
 
 
         return $result;

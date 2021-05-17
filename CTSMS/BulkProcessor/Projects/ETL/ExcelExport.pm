@@ -4,7 +4,6 @@ use strict;
 ## no critic
 no strict 'refs';
 
-
 use Spreadsheet::WriteExcel qw();
 use Excel::Writer::XLSX qw();
 use Encode qw();
@@ -124,16 +123,6 @@ sub _write_output_table {
 
 sub _mark_utf8 {
     return Encode::decode("UTF-8", shift);
-
-
-
-
-
-
-
-
-
-
 }
 
 1;

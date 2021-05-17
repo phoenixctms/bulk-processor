@@ -19,8 +19,20 @@ use CTSMS::BulkProcessor::RestItem qw();
 use CTSMS::BulkProcessor::Utils qw(utf8bytes_to_string booltostring);
 use CTSMS::BulkProcessor::Array qw(array_to_map);
 
+use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputFieldSelectionSetValue qw();
+
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::InputFieldType qw(
+    $CHECKBOX
+    $DATE
+    $TIME
+    $TIMESTAMP
+
+    $INTEGER
+    $FLOAT
+
+);
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
@@ -37,9 +49,10 @@ my $get_item_path_query = sub {
     return 'ecrffieldvalue/' . $id;
 };
 my $get_clear_path_query = sub {
-    my ($listentry_id, $ecrf_id, $visit_id) = @_;
+    my ($listentry_id, $ecrf_id, $visit_id, $section) = @_;
     my %params = ();
     $params{visit_id} = $visit_id if defined $visit_id;
+    $params{section} = $section if defined $section;
     return 'ecrfstatusentry/' . $listentry_id . '/' . $ecrf_id . '/ecrffieldvalues' . get_query_string(\%params);
 };
 
@@ -88,12 +101,11 @@ sub get_item {
 
 sub clear {
 
-    my ($listentry_id, $ecrf_id, $visit_id, $restapi,$headers) = @_;
+    my ($listentry_id, $ecrf_id, $visit_id, $section, $restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->delete(&$get_clear_path_query($listentry_id, $ecrf_id, $visit_id),$headers));
+    return builditems_fromrows($api->delete(&$get_clear_path_query($listentry_id, $ecrf_id, $visit_id, $section),$headers));
 
 }
-
 
 sub builditems_fromrows {
 
@@ -123,6 +135,7 @@ sub builditems_fromrows {
 
 sub transformitem {
     my ($item,$load_recursive,$restapi) = @_;
+    $item->{listEntry} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::builditems_fromrows($item->{listEntry},$load_recursive,$restapi);
     $item->{ecrfField} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::builditems_fromrows($item->{ecrfField},$load_recursive,$restapi);
     #$item->{visit} = ...
     $item->{inkValues} = utf8bytes_to_string($item->{inkValues});
@@ -141,23 +154,29 @@ sub transformitem {
 
 }
 
+sub created {
+    my $item = shift;
+    return ($item->{id} ? 1 : 0);
+}
+
 sub _get_item_value {
     my $item = shift;
     my $fieldtype = $item->{ecrfField}->{field}->{fieldType}->{nameL10nKey};
-    if ('CHECKBOX' eq $fieldtype) {
+    return undef unless $item->created;
+    if ($CHECKBOX eq $fieldtype) {
         return booltostring($item->{booleanValue});
-    } elsif ('DATE' eq $fieldtype) {
-        return $item->{dateValue};
-    } elsif ('TIME' eq $fieldtype) {
-        return $item->{timeValue};
-    } elsif ('TIMESTAMP' eq $fieldtype) {
-        return $item->{timestampValue};
-    } elsif ('FLOAT' eq $fieldtype) {
-        return $item->{floatValue};
-    } elsif ('INTEGER' eq $fieldtype) {
-        return $item->{longValue};
+    } elsif ($DATE eq $fieldtype) {
+        return ($item->{dateValue} // '');
+    } elsif ($TIME eq $fieldtype) {
+        return ($item->{timeValue} // '');
+    } elsif ($TIMESTAMP eq $fieldtype) {
+        return ($item->{timestampValue} // '');
+    } elsif ($FLOAT eq $fieldtype) {
+        return ($item->{floatValue} // '');
+    } elsif ($INTEGER eq $fieldtype) {
+        return ($item->{longValue} // '');
     } elsif ($item->{ecrfField}->{field}->is_text()) {
-        return $item->{textValue};
+        return ($item->{textValue} // '');
     } elsif ($item->{ecrfField}->{field}->is_select()) {
         return join(',', map { local $_ = $_; $_->{value}; } @{$item->{selectionValues}}) if defined $item->{selectionValues};
     }

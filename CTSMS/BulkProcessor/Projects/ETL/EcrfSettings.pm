@@ -11,7 +11,6 @@ use CTSMS::BulkProcessor::Globals qw(
     $cpucount
     create_path
     $ctsmsrestapi_path
-    $completionemailrecipient
 );
 
 use CTSMS::BulkProcessor::Logging qw(
@@ -25,6 +24,8 @@ use CTSMS::BulkProcessor::LogError qw(
     fileerror
     configurationwarn
     configurationerror
+    scriptwarn
+    scripterror
 );
 
 use CTSMS::BulkProcessor::LoadConfig qw(
@@ -37,8 +38,7 @@ use CTSMS::BulkProcessor::ConnectorPool qw(
 
 );
 
-use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring cat_file);
-
+use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring);
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 
@@ -47,6 +47,8 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
     update_settings
     update_job
+    get_proband_columns
+    get_probandlistentry_columns
 
     $input_path
     $output_path
@@ -55,42 +57,36 @@ our @EXPORT_OK = qw(
 
     $skip_errors
 
-    $ecrf_data_truncate_table
-    $ecrf_data_ignore_duplicates
     $ecrf_data_trial_id
-    $job_id
-    @job_file
 
     $ecrf_data_api_listentries_page_size
     $ecrf_data_api_ecrfs_page_size
     $ecrf_data_api_values_page_size
     $ecrf_data_row_block
-    $ecrf_data_api_tagvalues_page_size
+    $ecrf_data_api_probandlistentrytagvalues_page_size
+    $ecrf_data_api_probandlistentrytags_page_size
     $ecrf_data_api_ecrffields_page_size
 
-    $ecrf_data_listentrytags
-
-    %export_colname_abbreviation
+    %colname_abbreviation
     $col_per_selection_set_value
     $selection_set_value_separator
     ecrf_data_include_ecrffield
-    $ecrf_data_export_upload_folder
-    $ecrf_data_export_sqlite_filename
-    $ecrf_data_export_horizontal_csv_filename
-    $ecrf_data_export_xls_filename
-    $ecrf_data_export_xlsx
 
-    $audit_trail_export_xls_filename
-    $ecrf_journal_export_xls_filename
-    $ecrfs_export_xls_filename
 
     $ctsms_base_url
     $dbtool
     $lockfile
-    $ecrf_data_export_pdf_filename
-    $ecrf_data_export_pdfs_filename
 
-    $proband_list_filename
+    $show_page_progress
+    $listentrytag_map_mode
+
+    $ecrf_proband_alias_column_name
+    $ecrf_proband_category_column_name
+    $ecrf_proband_department_column_name
+    $ecrf_proband_gender_column_name
+
+    $ecrf_probandlistentry_group_column_name
+    $ecrf_probandlistentry_status_column_name
 
 );
 
@@ -102,39 +98,27 @@ our $csv_dir = 'ecrf';
 
 our $skip_errors = 0;
 
-our $ecrf_data_truncate_table = 1;
-our $ecrf_data_ignore_duplicates = 0;
 our $ecrf_data_trial_id = undef;
-our $job_id = undef;
-my $job = undef;
-our @job_file = ();
 
 our $ecrf_data_api_listentries_page_size = 10;
 our $ecrf_data_api_ecrfs_page_size  = 10;
 our $ecrf_data_api_values_page_size = 10;
-our $ecrf_data_row_block = 100;
-our $ecrf_data_api_tagvalues_page_size = 10;
+
+our $ecrf_data_api_probandlistentrytagvalues_page_size = 10;
+our $ecrf_data_api_probandlistentrytags_page_size = 10;
 our $ecrf_data_api_ecrffields_page_size = 100;
-
-our $ecrf_data_listentrytags = {};
-
-our $ecrf_data_export_upload_folder = '';
-our $ecrf_data_export_sqlite_filename = '%s%s';
-our $ecrf_data_export_horizontal_csv_filename = '%s%s';
-our $ecrf_data_export_xls_filename = '%s%s';
-our $ecrf_data_export_xlsx = 0;
-
-our $audit_trail_export_xls_filename = "%s%s";
-our $ecrf_journal_export_xls_filename = "%s%s";
-our $ecrfs_export_xls_filename = "%s%s";
 
 our $ctsms_base_url = undef;
 our $dbtool = undef;
 our $lockfile = undef;
-our $ecrf_data_export_pdf_filename = '%s%s';
-our $ecrf_data_export_pdfs_filename = '%s_%s%s';
 
-our $proband_list_filename = '%s_%s%s';
+our $ecrf_proband_alias_column_name = 'alias';
+our $ecrf_proband_category_column_name;
+our $ecrf_proband_department_column_name;
+our $ecrf_proband_gender_column_name;
+
+our $ecrf_probandlistentry_group_column_name; #subject_group
+our $ecrf_probandlistentry_status_column_name; #enrollment_status
 
 my $ecrfname_abbreviate_opts = {};
 my $ecrfrevision_abbreviate_opts = {};
@@ -146,14 +130,18 @@ my $selectionvalue_abbreviate_opts = {};
 our $col_per_selection_set_value = 1;
 our $selection_set_value_separator = ',';
 
+our $show_page_progress = 0;
+our $listentrytag_map_mode = 'last';
+
 my $ecrf_data_include_ecrffield_code = sub {
     my ($ecrffield) = @_;
     return 1;
 };
 
-our %export_colname_abbreviation = (
+our %colname_abbreviation = (
     ignore_external_ids => undef,
     ecrffield_position_digits => 2,
+    listentrytag_position_digits => 2,
     index_digits => 2,
     abbreviate_ecrf_name_code => sub {
         my ($ecrf_name,$ecrf_revision,$ecrf_id) = @_;
@@ -264,38 +252,32 @@ sub update_settings {
 
         $skip_errors = $data->{skip_errors} if exists $data->{skip_errors};
 
-        $ecrf_data_truncate_table = $data->{ecrf_data_truncate_table} if exists $data->{ecrf_data_truncate_table};
-        $ecrf_data_ignore_duplicates = $data->{ecrf_data_ignore_duplicates} if exists $data->{ecrf_data_ignore_duplicates};
-
         $ecrf_data_trial_id = $data->{ecrf_data_trial_id} if exists $data->{ecrf_data_trial_id};
         if (defined $ecrf_data_trial_id and length($ecrf_data_trial_id) > 0) {
             my $ecrf_data_trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($ecrf_data_trial_id);
-            configurationerror($configfile,"error loading trial id $ecrf_data_trial_id",getlogger(__PACKAGE__)) unless defined $ecrf_data_trial;
+            if (defined $ecrf_data_trial) {
+                scriptinfo("trial '$ecrf_data_trial->{name}'",getlogger(__PACKAGE__));
+            } else {
+                scripterror("error loading trial id $ecrf_data_trial_id",getlogger(__PACKAGE__));
+            }
         }
-        $job_id = $data->{job_id} if exists $data->{job_id};
-        if (defined $job_id and length($job_id) > 0) {
-            $job = CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job::get_item($job_id);
-            configurationerror($configfile,"error loading job id $job_id",getlogger(__PACKAGE__)) unless defined $job;
-            $completionemailrecipient = $job->{emailRecipients};
-        }
+
+        #$ecrf_data_listentrytags = $data->{ecrf_data_listentrytags} if exists $data->{ecrf_data_listentrytags};
+        $ecrf_proband_alias_column_name = $data->{ecrf_proband_alias_column_name} if exists $data->{ecrf_proband_alias_column_name};
+        $ecrf_proband_category_column_name = $data->{ecrf_proband_category_column_name} if exists $data->{ecrf_proband_category_column_name};
+        $ecrf_proband_department_column_name = $data->{ecrf_proband_department_column_name} if exists $data->{ecrf_proband_department_column_name};
+        $ecrf_proband_gender_column_name = $data->{ecrf_proband_gender_column_name} if exists $data->{ecrf_proband_gender_column_name};
+
+        $ecrf_probandlistentry_group_column_name = $data->{ecrf_probandlistentry_group_column_name} if exists $data->{ecrf_probandlistentry_group_column_name};
+        $ecrf_probandlistentry_status_column_name = $data->{ecrf_probandlistentry_status_column_name} if exists $data->{ecrf_probandlistentry_status_column_name};
 
         $ecrf_data_api_listentries_page_size = $data->{ecrf_data_api_listentries_page_size} if exists $data->{ecrf_data_api_listentries_page_size};
         $ecrf_data_api_ecrfs_page_size = $data->{ecrf_data_api_ecrfs_page_size} if exists $data->{ecrf_data_api_ecrfs_page_size};
         $ecrf_data_api_values_page_size = $data->{ecrf_data_api_values_page_size} if exists $data->{ecrf_data_api_values_page_size};
 
-        $ecrf_data_row_block = $data->{ecrf_data_row_block} if exists $data->{ecrf_data_row_block};
-
-        $ecrf_data_api_tagvalues_page_size = $data->{ecrf_data_api_tagvalues_page_size} if exists $data->{ecrf_data_api_tagvalues_page_size};
+        $ecrf_data_api_probandlistentrytagvalues_page_size = $data->{ecrf_data_api_probandlistentrytagvalues_page_size} if exists $data->{ecrf_data_api_probandlistentrytagvalues_page_size};
+        $ecrf_data_api_probandlistentrytags_page_size = $data->{ecrf_data_api_probandlistentrytags_page_size} if exists $data->{ecrf_data_api_probandlistentrytags_page_size};
         $ecrf_data_api_ecrffields_page_size = $data->{ecrf_data_api_ecrffields_page_size} if exists $data->{ecrf_data_api_ecrffields_page_size};
-
-        $ecrf_data_listentrytags = $data->{ecrf_data_listentrytags} if exists $data->{ecrf_data_listentrytags};
-
-        $ecrf_data_export_upload_folder = $data->{ecrf_data_export_upload_folder} if exists $data->{ecrf_data_export_upload_folder};
-
-        $ecrf_data_export_sqlite_filename = $data->{ecrf_data_export_sqlite_filename} if exists $data->{ecrf_data_export_sqlite_filename};
-        $ecrf_data_export_horizontal_csv_filename = $data->{ecrf_data_export_horizontal_csv_filename} if exists $data->{ecrf_data_export_horizontal_csv_filename};
-        $ecrf_data_export_xls_filename = $data->{ecrf_data_export_xls_filename} if exists $data->{ecrf_data_export_xls_filename};
-        $ecrf_data_export_xlsx = $data->{ecrf_data_export_xlsx} if exists $data->{ecrf_data_export_xlsx};
 
         $col_per_selection_set_value = $data->{col_per_selection_set_value} if exists $data->{col_per_selection_set_value};
         $selection_set_value_separator = $data->{selection_set_value_separator} if exists $data->{selection_set_value_separator};
@@ -313,16 +295,8 @@ sub update_settings {
         $ctsms_base_url = _get_ctsms_baseuri() unless $ctsms_base_url;
         $dbtool = $data->{dbtool} if exists $data->{dbtool};
         $lockfile = $data->{lockfile} if exists $data->{lockfile};
-        $ecrf_data_export_pdf_filename = $data->{ecrf_data_export_pdf_filename} if exists $data->{ecrf_data_export_pdf_filename};
-        $ecrf_data_export_pdfs_filename = $data->{ecrf_data_export_pdfs_filename} if exists $data->{ecrf_data_export_pdfs_filename};
 
-        $proband_list_filename = $data->{proband_list_filename} if exists $data->{proband_list_filename};
-
-        $audit_trail_export_xls_filename = $data->{audit_trail_export_xls_filename} if exists $data->{audit_trail_export_xls_filename};
-        $ecrf_journal_export_xls_filename = $data->{ecrf_journal_export_xls_filename} if exists $data->{ecrf_journal_export_xls_filename};
-        $ecrfs_export_xls_filename = $data->{ecrfs_export_xls_filename} if exists $data->{ecrfs_export_xls_filename};
-
-        $export_colname_abbreviation{ignore_external_ids} = $data->{ignore_external_ids} if exists $data->{ignore_external_ids};
+        $colname_abbreviation{ignore_external_ids} = $data->{ignore_external_ids} if exists $data->{ignore_external_ids};
         $ecrfname_abbreviate_opts = $data->{ecrfname_abbreviate_opts} if exists $data->{ecrfname_abbreviate_opts};
         $ecrfrevision_abbreviate_opts = $data->{ecrfrevision_abbreviate_opts} if exists $data->{ecrfrevision_abbreviate_opts};
         $visit_abbreviate_opts = $data->{visit_abbreviate_opts} if exists $data->{visit_abbreviate_opts};
@@ -338,23 +312,34 @@ sub update_settings {
 
 }
 
-sub update_job {
-
-    my ($status) = @_;
-    if (defined $job) {
-        my $in = {
-            id => $job->{id},
-            version => $job->{version},
-            status => $status,
-            jobOutput => cat_file($attachmentlogfile,\&fileerror,getlogger(__PACKAGE__)),
-        };
-
-        my @args = ($in);
-        push(@args,@job_file) if $job->{type}->{outputFile};
-
-        $job = CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job::update_item(@args);
+sub get_proband_columns {
+    my $proband = shift;
+    my @columns = ();
+    if ($proband) {
+        push(@columns,$proband->{alias}) if length($ecrf_proband_alias_column_name);
+        push(@columns,$proband->{category}->{nameL10nKey}) if length($ecrf_proband_category_column_name);
+        push(@columns,$proband->{department}->{nameL10nKey}) if length($ecrf_proband_department_column_name);
+        push(@columns,$proband->{gender}->{sex}) if length($ecrf_proband_gender_column_name);
+    } else {
+        push(@columns,lc($ecrf_proband_alias_column_name)) if length($ecrf_proband_alias_column_name);
+        push(@columns,lc($ecrf_proband_category_column_name)) if length($ecrf_proband_category_column_name);
+        push(@columns,lc($ecrf_proband_department_column_name)) if length($ecrf_proband_department_column_name);
+        push(@columns,lc($ecrf_proband_gender_column_name)) if length($ecrf_proband_gender_column_name);
     }
+    return @columns;
+}
 
+sub get_probandlistentry_columns {
+    my $listentry = shift;
+    my @columns = ();
+    if ($listentry) {
+        push(@columns,$listentry->{group} ? $listentry->{group}->{token} : undef) if length($ecrf_probandlistentry_group_column_name);
+        push(@columns,$listentry->{lastStatus} ? $listentry->{lastStatus}->{status}->{nameL10nKey} : undef) if length($ecrf_probandlistentry_status_column_name);
+    } else {
+        push(@columns,lc($ecrf_probandlistentry_group_column_name)) if length($ecrf_probandlistentry_group_column_name);
+        push(@columns,lc($ecrf_probandlistentry_status_column_name)) if length($ecrf_probandlistentry_status_column_name);
+    }
+    return @columns;
 }
 
 sub _prepare_working_paths {

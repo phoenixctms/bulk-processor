@@ -207,6 +207,9 @@ sub _import_proband_checks {
     my ($context) = @_;
 
     my $result = 1;
+
+    $context->{tid} = threadid();
+
     eval {
         my ($keys,$values);
         ($context->{criteriontie_map}, $keys, $values) = array_to_map(CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::get_items(),
@@ -218,7 +221,7 @@ sub _import_proband_checks {
             sub { my $item = shift; return $item->{nameL10nKey}; },sub { my $item = shift; return $item->{id}; },'last');
     };
     if ($@) {
-        rowprocessingerror(undef,'error loading criteria building blocks',getlogger(__PACKAGE__));
+        rowprocessingerror($context->{tid},'error loading criteria building blocks',getlogger(__PACKAGE__));
         $result = 0; #even in skip-error mode..
     } else {
         $context->{proband_criteria} = {
@@ -352,12 +355,14 @@ sub _create_duplicate_checks {
 
     my $result = 1;
 
+    $context->{tid} = threadid();
+
     my $proband_count = 0;
     eval {
         $proband_count = CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText::countby_lastnamefirstnamedateofbirth();
     };
     if ($@) {
-        rowprocessingerror(undef,'please import probands first',getlogger(__PACKAGE__));
+        rowprocessingerror($context->{tid},'please import probands first',getlogger(__PACKAGE__));
         $result = 0; #even in skip-error mode..
     }
 
@@ -520,7 +525,7 @@ sub _update_proband_checks {
         $proband_count = CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText::countby_lastnamefirstnamedateofbirth();
     };
     if ($@) {
-        rowprocessingerror(undef,'please import probands first',getlogger(__PACKAGE__));
+        rowprocessingerror($context->{tid},'please import probands first',getlogger(__PACKAGE__));
         $result = 0; #even in skip-error mode..
     }
 
@@ -529,7 +534,7 @@ sub _update_proband_checks {
         $duplicate_count = CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandDuplicate::countby_probandidduplicateid();
     };
     if ($@) {
-        rowprocessingerror(undef,'please identify duplicates first',getlogger(__PACKAGE__));
+        rowprocessingerror($context->{tid},'please identify duplicates first',getlogger(__PACKAGE__));
         $result = 0; #even in skip-error mode..
     }
 
@@ -539,7 +544,7 @@ sub _update_proband_checks {
             sub { my $item = shift; return $item->{nameL10nKey}; },undef,'last');
     };
     if ($@ or not $context->{proband_categories}->{$duplicate_proband_category}) {
-        rowprocessingerror(undef,"cannot load '$duplicate_proband_category' proband category",getlogger(__PACKAGE__));
+        rowprocessingerror($context->{tid},"cannot load '$duplicate_proband_category' proband category",getlogger(__PACKAGE__));
         $result = 0; #even in skip-error mode..
     }
 
@@ -550,16 +555,6 @@ sub _update_proband_checks {
 
 sub _mark_utf8 {
     return Encode::decode("UTF-8", shift);
-
-
-
-
-
-
-
-
-
-
 }
 
 sub _warn_or_error {

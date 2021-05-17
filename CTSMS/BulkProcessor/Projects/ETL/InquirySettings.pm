@@ -11,7 +11,6 @@ use CTSMS::BulkProcessor::Globals qw(
     $cpucount
     create_path
     $ctsmsrestapi_path
-    $completionemailrecipient
 );
 
 use CTSMS::BulkProcessor::Logging qw(
@@ -37,8 +36,7 @@ use CTSMS::BulkProcessor::ConnectorPool qw(
 
 );
 
-use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring cat_file);
-
+use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring);
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 
@@ -47,6 +45,7 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
     update_settings
     update_job
+    get_proband_columns
 
     $input_path
     $output_path
@@ -58,8 +57,6 @@ our @EXPORT_OK = qw(
     $inquiry_data_truncate_table
     $inquiry_data_ignore_duplicates
     $inquiry_data_trial_id
-    $job_id
-    @job_file
 
     $active
     $active_signup
@@ -71,9 +68,9 @@ our @EXPORT_OK = qw(
     $inquiry_data_api_probands_page_size
     $inquiry_data_api_inquiries_page_size
     $inquiry_data_api_values_page_size
-    $inquiry_data_row_block
 
-    %export_colname_abbreviation
+
+    %colname_abbreviation
     inquiry_data_include_inquiry
     $col_per_selection_set_value
     $selection_set_value_separator
@@ -86,40 +83,16 @@ our @EXPORT_OK = qw(
 
     $inquiry_data_export_pdfs_filename
 
+    $inquiry_proband_alias_column_name
+    $inquiry_proband_category_column_name
+    $inquiry_proband_department_column_name
+    $inquiry_proband_gender_column_name
+
     $ctsms_base_url
 
     $lockfile
 
 );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 our $input_path = $working_path . 'input/';
 our $output_path = $working_path . 'output/';
@@ -132,14 +105,10 @@ our $skip_errors = 0;
 our $inquiry_data_truncate_table = 1;
 our $inquiry_data_ignore_duplicates = 0;
 our $inquiry_data_trial_id = undef;
-our $job_id = undef;
-my $job = undef;
-our @job_file = ();
 
 our $inquiry_data_api_probands_page_size = 10;
 our $inquiry_data_api_inquiries_page_size = 10;
 our $inquiry_data_api_values_page_size = 10;
-our $inquiry_data_row_block = 100;
 
 our $inquiry_data_export_upload_folder = '';
 our $inquiry_data_export_sqlite_filename = '%s%s';
@@ -147,9 +116,10 @@ our $inquiry_data_export_horizontal_csv_filename = '%s%s';
 our $inquiry_data_export_xls_filename = '%s%s';
 our $inquiry_data_export_xlsx = 0;
 
-
-
-
+our $inquiry_proband_alias_column_name = 'alias';
+our $inquiry_proband_category_column_name;
+our $inquiry_proband_department_column_name;
+our $inquiry_proband_gender_column_name;
 
 our $ctsms_base_url = undef;
 
@@ -157,10 +127,7 @@ our $lockfile = undef;
 
 our $inquiry_data_export_pdfs_filename = '%s_%s%s';
 
-
-
-my $ecrfname_abbreviate_opts = {};
-
+#my $ecrfname_abbreviate_opts = {};
 
 my $category_abbreviate_opts = {};
 my $inputfieldname_abbreviate_opts = {};
@@ -174,11 +141,11 @@ my $inquiry_data_include_inquiry_code = sub {
     return 1;
 };
 
-our %export_colname_abbreviation = (
+our %colname_abbreviation = (
     ignore_external_ids => undef,
 
     inquiry_position_digits => 2,
-
+    #listentrytag_position_digits => 2,
 
     abbreviate_category_code => sub {
         my $category = shift;
@@ -265,10 +232,7 @@ sub update_settings {
 
         my $result = 1;
 
-
-
         $result &= _prepare_working_paths(1);
-
 
         $sqlite_db_file = $data->{sqlite_db_file} if exists $data->{sqlite_db_file};
         $csv_dir = $data->{csv_dir} if exists $data->{csv_dir};
@@ -281,30 +245,21 @@ sub update_settings {
         $inquiry_data_trial_id = $data->{inquiry_data_trial_id} if exists $data->{inquiry_data_trial_id};
         if (defined $inquiry_data_trial_id and length($inquiry_data_trial_id) > 0) {
             my $inquiry_data_trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($inquiry_data_trial_id);
-            configurationerror($configfile,"error loading trial id $inquiry_data_trial_id",getlogger(__PACKAGE__)) unless defined $inquiry_data_trial;
+            if (defined $inquiry_data_trial) {
+                scriptinfo("trial '$inquiry_data_trial->{name}'",getlogger(__PACKAGE__));
+            } else {
+                scripterror("error loading trial id $inquiry_data_trial_id",getlogger(__PACKAGE__));
+            }
         }
-        $job_id = $data->{job_id} if exists $data->{job_id};
-        if (defined $job_id and length($job_id) > 0) {
-            $job = CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job::get_item($job_id);
-            configurationerror($configfile,"error loading job id $job_id",getlogger(__PACKAGE__)) unless defined $job;
-            $completionemailrecipient = $job->{emailRecipients};
-        }
+
+        $inquiry_proband_alias_column_name = $data->{inquiry_proband_alias_column_name} if exists $data->{inquiry_proband_alias_column_name};
+        $inquiry_proband_category_column_name = $data->{inquiry_proband_category_column_name} if exists $data->{inquiry_proband_category_column_name};
+        $inquiry_proband_department_column_name = $data->{inquiry_proband_department_column_name} if exists $data->{inquiry_proband_department_column_name};
+        $inquiry_proband_gender_column_name = $data->{inquiry_proband_gender_column_name} if exists $data->{inquiry_proband_gender_column_name};
 
         $inquiry_data_api_probands_page_size = $data->{inquiry_data_api_probands_page_size} if exists $data->{inquiry_data_api_probands_page_size};
         $inquiry_data_api_inquiries_page_size = $data->{inquiry_data_api_inquiries_page_size} if exists $data->{inquiry_data_api_inquiries_page_size};
         $inquiry_data_api_values_page_size = $data->{inquiry_data_api_values_page_size} if exists $data->{inquiry_data_api_values_page_size};
-        $inquiry_data_row_block = $data->{inquiry_data_row_block} if exists $data->{inquiry_data_row_block};
-
-
-
-
-
-
-
-
-
-
-
 
         $inquiry_data_export_upload_folder = $data->{inquiry_data_export_upload_folder} if exists $data->{inquiry_data_export_upload_folder};
 
@@ -332,18 +287,10 @@ sub update_settings {
 
         $inquiry_data_export_pdfs_filename = $data->{inquiry_data_export_pdfs_filename} if exists $data->{inquiry_data_export_pdfs_filename};
 
-
-
-
-
-
-
-        $export_colname_abbreviation{ignore_external_ids} = $data->{ignore_external_ids} if exists $data->{ignore_external_ids};
-        $ecrfname_abbreviate_opts = $data->{ecrfname_abbreviate_opts} if exists $data->{ecrfname_abbreviate_opts};
+        $colname_abbreviation{ignore_external_ids} = $data->{ignore_external_ids} if exists $data->{ignore_external_ids};
+        #$ecrfname_abbreviate_opts = $data->{ecrfname_abbreviate_opts} if exists $data->{ecrfname_abbreviate_opts};
         $inputfieldname_abbreviate_opts = $data->{inputfieldname_abbreviate_opts} if exists $data->{inputfieldname_abbreviate_opts};
         $selectionvalue_abbreviate_opts = $data->{selectionvalue_abbreviate_opts} if exists $data->{selectionvalue_abbreviate_opts};
-
-
 
         $category_abbreviate_opts = $data->{category_abbreviate_opts} if exists $data->{category_abbreviate_opts};
 
@@ -354,23 +301,21 @@ sub update_settings {
 
 }
 
-sub update_job {
-
-    my ($status) = @_;
-    if (defined $job) {
-        my $in = {
-            id => $job->{id},
-            version => $job->{version},
-            status => $status,
-            jobOutput => cat_file($attachmentlogfile,\&fileerror,getlogger(__PACKAGE__)),
-        };
-
-        my @args = ($in);
-        push(@args,@job_file) if $job->{type}->{outputFile};
-
-        $job = CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job::update_item(@args);
+sub get_proband_columns {
+    my $proband = shift;
+    my @columns = ();
+    if ($proband) {
+        push(@columns,$proband->{alias}) if length($inquiry_proband_alias_column_name);
+        push(@columns,$proband->{category}->{nameL10nKey}) if length($inquiry_proband_category_column_name);
+        push(@columns,$proband->{department}->{nameL10nKey}) if length($inquiry_proband_department_column_name);
+        push(@columns,$proband->{gender}->{sex}) if length($inquiry_proband_gender_column_name);
+    } else {
+        push(@columns,lc($inquiry_proband_alias_column_name)) if length($inquiry_proband_alias_column_name);
+        push(@columns,lc($inquiry_proband_category_column_name)) if length($inquiry_proband_category_column_name);
+        push(@columns,lc($inquiry_proband_department_column_name)) if length($inquiry_proband_department_column_name);
+        push(@columns,lc($inquiry_proband_gender_column_name)) if length($inquiry_proband_gender_column_name);
     }
-
+    return @columns;
 }
 
 sub _prepare_working_paths {
@@ -383,8 +328,6 @@ sub _prepare_working_paths {
     $result &= $path_result;
     ($path_result,$output_path) = create_path($working_path . 'output',$output_path,$create,\&fileerror,getlogger(__PACKAGE__));
     $result &= $path_result;
-
-
 
     return $result;
 

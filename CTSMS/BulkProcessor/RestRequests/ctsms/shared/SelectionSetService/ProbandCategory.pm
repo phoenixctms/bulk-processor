@@ -23,9 +23,10 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-    
+
     get_preset_item
     get_all
+    get_items
 );
 
 my $default_restapi = \&get_ctsms_restapi;
@@ -40,6 +41,13 @@ my $get_preset_item_path_query = sub {
 my $get_all_path_query = sub {
     return 'selectionset/allprobandcategories/';
 };
+my $get_items_path_query = sub {
+    my ($person,$animal) = @_;
+    my %params = ();
+    $params{person} = booltostring($person) if defined $person;
+    $params{animal} = booltostring($animal) if defined $animal;
+    return 'selectionset/probandcategories/' . get_query_string(\%params);
+};
 
 my $fieldnames = [
     "color",
@@ -49,6 +57,7 @@ my $fieldnames = [
     "nameL10nKey",
     "nodeStyleClass",
     "preset",
+    "signup",
     "privacyConsentControl",
     "person",
     "animal",
@@ -70,6 +79,14 @@ sub get_item {
     my ($id,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
     return builditems_fromrows($api->get(&$get_item_path_query($id),$headers),$load_recursive,$restapi);
+
+}
+
+sub get_items {
+
+    my ($person,$animal,$load_recursive,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return builditems_fromrows($api->get(&$get_items_path_query($person,$animal),$headers),$load_recursive,$restapi);
 
 }
 

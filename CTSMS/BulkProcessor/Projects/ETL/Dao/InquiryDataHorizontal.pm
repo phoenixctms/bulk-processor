@@ -3,6 +3,10 @@ use strict;
 
 ## no critic
 
+use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
+    get_proband_columns
+);
+
 use CTSMS::BulkProcessor::Projects::ETL::InquiryConnectorPool qw(
     get_csv_db
     destroy_all_dbs
@@ -20,8 +24,6 @@ use CTSMS::BulkProcessor::SqlProcessor qw(
 
 use CTSMS::BulkProcessor::SqlRecord qw();
 
-
-
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::SqlRecord);
 our @EXPORT_OK = qw(
@@ -32,10 +34,6 @@ our @EXPORT_OK = qw(
 
     process_records
 );
-
-
-
-
 
 my $tablename = 'inquiy_data_horizontal';
 my $get_db = \&get_csv_db;
@@ -49,24 +47,12 @@ sub _set_expected_fieldnames {
     $inquiryvalue_cols = [] unless defined $inquiryvalue_cols;
     my @fieldnames = (
         'proband_id',
-
-
-
-
+        get_proband_columns(), #'alias',
 
     );
     push(@fieldnames,@$inquiryvalue_cols);
     $expected_fieldnames = \@fieldnames;
 }
-
-
-
-
-
-
-
-
-
 
 sub new {
 
@@ -172,7 +158,6 @@ sub transformitem {
 
 }
 
-
 sub getinsertstatement {
 
     my ($insert_ignore) = @_;
@@ -180,8 +165,6 @@ sub getinsertstatement {
     return insert_stmt($get_db,__PACKAGE__,$insert_ignore);
 
 }
-
-
 
 sub gettablename {
 

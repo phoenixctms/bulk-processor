@@ -142,7 +142,7 @@ sub next_cell {
 # values()
 #
 # Return an array of values for a row. The range is from the first cell up
-# to the last cell. Returns '' for empty cells.
+# to the last cell.
 #
 sub values {
 
@@ -166,9 +166,9 @@ sub values {
     }
 
     # Convert any undef values to an empty string.
-    for my $value ( @values ) {
-        $value = '' if !defined $value;
-    }
+    #for my $value ( @values ) {
+    #    $value = '' if !defined $value;
+    #}
 
     # Store the values to allow multiple calls return the same data.
     $self->{_values} = \@values;

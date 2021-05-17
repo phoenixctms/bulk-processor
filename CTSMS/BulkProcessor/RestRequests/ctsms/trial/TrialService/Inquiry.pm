@@ -28,7 +28,7 @@ our @EXPORT_OK = qw(
 
     get_trial_list
 
-    get_export_colnames
+    get_colnames
 );
 
 my $default_restapi = \&get_ctsms_restapi;
@@ -143,40 +143,27 @@ sub TO_JSON {
     my $self = shift;
     return { %{$self} };
 
-
-
-
 }
 
-sub get_export_colnames {
+sub get_colnames {
     my %params = @_;
     my ($inquiry,
-
         $get_colname_parts_code,
         $ignore_external_ids,
-
-
-
         $abbreviate_category_code,
         $abbreviate_inputfield_name_code,
         $abbreviate_selectionvalue_code,
-
         $inquiry_position_digits,
-
         $col_per_selection_set_value,
         $selectionValues,
         $sanitize_colname_symbols_code) = @params{qw/
             inquiry
-
             get_colname_parts_code
             ignore_external_ids
-
             abbreviate_category_code
             abbreviate_inputfield_name_code
             abbreviate_selectionvalue_code
-
             inquiry_position_digits
-
             col_per_selection_set_value
             selectionValues
             sanitize_colname_symbols_code
@@ -187,7 +174,7 @@ sub get_export_colnames {
     my $selectionSetValues = $inquiry->{field}->{selectionSetValues};
     $selectionSetValues = $selectionValues if exists $params{selectionValues};
     $selectionSetValues //= [];
-    my @export_colnames = ();
+    my @colnames = ();
     my $prefix;
     my @parts = &$get_colname_parts_code($inquiry);
     unless ((scalar @parts) > 0) {
@@ -211,26 +198,26 @@ sub get_export_colnames {
             push(@parts,zerofill($inquiry->{position},$inquiry_position_digits));
             push(@parts,&$abbreviate_inputfield_name_code($inquiry->{field}->{nameL10nKey},$inquiry->{field}->{id}));
         }
-        $prefix = 'p' unless $external_id_used;
+        $prefix = 'i' unless $external_id_used; # i for Inquiry
     }
     if ($col_per_selection_set_value and $inquiry->{field}->is_select()) {
         foreach my $selectionsetvalue (@$selectionSetValues) {
-            push(@export_colnames,_sanitize_export_colname(join(' ',@parts,&$abbreviate_selectionvalue_code($selectionsetvalue->{value},$selectionsetvalue->{id})),$sanitize_colname_symbols_code,$prefix));
+            push(@colnames,_sanitize_colname(join(' ',@parts,&$abbreviate_selectionvalue_code($selectionsetvalue->{value},$selectionsetvalue->{id})),$sanitize_colname_symbols_code,$prefix));
         }
     } else {
-        push(@export_colnames,_sanitize_export_colname(join(' ',@parts),$sanitize_colname_symbols_code,$prefix));
+        push(@colnames,_sanitize_colname(join(' ',@parts),$sanitize_colname_symbols_code,$prefix));
     }
-    return @export_colnames;
+    return map { lc($_); } @colnames; # normalize to lowercase, as DBD are case-insensitive in general
 }
 
-sub _sanitize_export_colname {
-    my ($colname,$sanitize_colname_symbols_code,$p_prefix) = @_;
+sub _sanitize_colname {
+    my ($colname,$sanitize_colname_symbols_code,$prefix) = @_;
 
     $colname = &$sanitize_colname_symbols_code($colname) if 'CODE' eq ref $sanitize_colname_symbols_code;
 
     $colname =~ s/[^0-9a-z_]/_/gi;
     $colname =~ s/_+/_/g;
-    return $p_prefix . $colname if defined $p_prefix;
+    return $prefix . $colname if defined $prefix;
     return $colname;
 }
 

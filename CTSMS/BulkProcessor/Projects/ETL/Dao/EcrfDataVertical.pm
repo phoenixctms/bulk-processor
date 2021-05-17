@@ -3,6 +3,11 @@ use strict;
 
 ## no critic
 
+use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
+    get_proband_columns
+    get_probandlistentry_columns
+);
+
 use CTSMS::BulkProcessor::Projects::ETL::EcrfConnectorPool qw(
     get_sqlite_db
     destroy_all_dbs
@@ -42,9 +47,9 @@ sub _set_expected_fieldnames {
     $option_col_count //= 0;
     my @fieldnames = (
         'proband_id',
+        get_proband_columns(), #'alias',
         (sort keys %$listentrytags),
-        'subject_group',
-        'enrollment_status',
+        get_probandlistentry_columns(),
         'ecrf_status',
         'ecrf_name',
         'ecrf_revision',

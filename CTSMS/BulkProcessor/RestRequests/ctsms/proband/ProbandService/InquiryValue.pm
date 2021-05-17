@@ -19,8 +19,20 @@ use CTSMS::BulkProcessor::RestItem qw();
 use CTSMS::BulkProcessor::Utils qw(utf8bytes_to_string booltostring);
 use CTSMS::BulkProcessor::Array qw(array_to_map);
 
+use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Inquiry qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputFieldSelectionSetValue qw();
+
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::InputFieldType qw(
+    $CHECKBOX
+    $DATE
+    $TIME
+    $TIMESTAMP
+
+    $INTEGER
+    $FLOAT
+
+);
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
@@ -101,6 +113,7 @@ sub builditems_fromrows {
 
 sub transformitem {
     my ($item,$load_recursive,$restapi) = @_;
+    $item->{proband} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::builditems_fromrows($item->{proband},$load_recursive,$restapi);
     $item->{inquiry} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Inquiry::builditems_fromrows($item->{inquiry},$load_recursive,$restapi);
     $item->{inkValues} = utf8bytes_to_string($item->{inkValues});
     $item->{selectionValues} = CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputFieldSelectionSetValue::builditems_fromrows($item->{selectionValues},$load_recursive,$restapi);
@@ -118,23 +131,29 @@ sub transformitem {
 
 }
 
+sub created {
+    my $item = shift;
+    return ($item->{id} ? 1 : 0);
+}
+
 sub _get_item_value {
     my $item = shift;
     my $fieldtype = $item->{inquiry}->{field}->{fieldType}->{nameL10nKey};
-    if ('CHECKBOX' eq $fieldtype) {
+    return undef unless $item->created;
+    if ($CHECKBOX eq $fieldtype) {
         return booltostring($item->{booleanValue});
-    } elsif ('DATE' eq $fieldtype) {
-        return $item->{dateValue};
-    } elsif ('TIME' eq $fieldtype) {
-        return $item->{timeValue};
-    } elsif ('TIMESTAMP' eq $fieldtype) {
-        return $item->{timestampValue};
-    } elsif ('FLOAT' eq $fieldtype) {
-        return $item->{floatValue};
-    } elsif ('INTEGER' eq $fieldtype) {
-        return $item->{longValue};
+    } elsif ($DATE eq $fieldtype) {
+        return ($item->{dateValue} // '');
+    } elsif ($TIME eq $fieldtype) {
+        return ($item->{timeValue} // '');
+    } elsif ($TIMESTAMP eq $fieldtype) {
+        return ($item->{timestampValue} // '');
+    } elsif ($FLOAT eq $fieldtype) {
+        return ($item->{floatValue} // '');
+    } elsif ($INTEGER eq $fieldtype) {
+        return ($item->{longValue} // '');
     } elsif ($item->{inquiry}->{field}->is_text()) {
-        return $item->{textValue};
+        return ($item->{textValue} // '');
     } elsif ($item->{inquiry}->{field}->is_select()) {
         return join(',', map { local $_ = $_; $_->{value}; } @{$item->{selectionValues}}) if defined $item->{selectionValues};
     }

@@ -47,11 +47,6 @@ my $upload_path_query = sub {
 };
 my $get_trialfiles_path_query = sub {
     my ($trial_id) = @_;
-
-
-
-
-
     return 'trial/' . $trial_id . '/files';
 };
 
@@ -118,7 +113,7 @@ sub download {
 
 sub upload {
 
-    my ($in,$file,$filename,$content_type,$content_encoding,$load_recursive,$restapi,$headers) = @_;
+    my ($in,$file,$filename,$content_type,$load_recursive,$restapi,$headers,$content_encoding) = @_;
     my $api = _get_api($restapi,$default_restapi);
     return builditems_fromrows($api->post_file(&$upload_path_query(),$in,$file,$filename,$content_type,$content_encoding,$headers),$load_recursive,$restapi);
 

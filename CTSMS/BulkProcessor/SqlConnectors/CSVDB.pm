@@ -52,7 +52,7 @@ use IO::Uncompress::Unzip qw(unzip $UnzipError);
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::SqlConnector);
 our @EXPORT_OK = qw(
-    cleanupcvsdirs
+    cleanupcsvdirs
     xlsbin2csv
     xlsxbin2csv
     sanitize_column_name
@@ -79,6 +79,8 @@ my $LongTruncOk = 0;
 my $rowblock_transactional = 0;
 
 my $invalid_excel_spreadsheet_chars_pattern = '[' . quotemeta('[]:*?/\\') . ']';
+
+my $encoding = undef; #"utf8";
 
 sub sanitize_spreadsheet_name { #Invalid character []:*?/\ in worksheet name
     my $spreadsheet_name = shift;
@@ -213,6 +215,10 @@ sub db_connect {
             cvs_sep_char    => $default_csv_config->{sep_char},
             cvs_quote_char  => $default_csv_config->{quote_char},
             cvs_escape_char => $default_csv_config->{escape_char},
+
+            csv_null        => 1, # compatibility with CSVFile.pm
+            f_encoding      => $encoding,
+
             PrintError      => 0,
             RaiseError      => 0,
         };
@@ -304,7 +310,7 @@ sub vacuum {
 
 }
 
-sub cleanupcvsdirs {
+sub cleanupcsvdirs {
 
     my (@remainingdbdirs) = @_;
     local *DBDIR;
