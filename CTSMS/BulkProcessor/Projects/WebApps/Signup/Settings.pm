@@ -77,6 +77,7 @@ our @EXPORT_OK = qw(
     $ctsms_base_uri
 
     $google_site_verification
+    $favicon
 );
 
 our $defaultconfig = 'config.cfg';
@@ -109,6 +110,7 @@ our $force_default_geolocation = 1;
 our $ctsms_base_uri = undef;
 
 our $google_site_verification = undef;
+our $favicon = undef;
 
 sub update_settings {
 
@@ -137,6 +139,7 @@ sub update_settings {
         $ctsms_base_uri = $data->{ctsms_base_uri} if exists $data->{ctsms_base_uri};
 
         $google_site_verification = $data->{google_site_verification} if exists $data->{google_site_verification};
+        $favicon = $data->{favicon} if exists $data->{favicon};
 
         $ctsms_sites = $data->{ctsms_sites} if exists $data->{ctsms_sites};
         $default_site = undef;

@@ -33,6 +33,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $language_menu
     $ctsms_base_uri
     $google_site_verification
+    $favicon
 );
 use CTSMS::BulkProcessor::Calendar qw(
     split_datetime
@@ -44,7 +45,6 @@ use CTSMS::BulkProcessor::Calendar qw(
 
 use CTSMS::BulkProcessor::Utils qw(
     zerofill
-
 );
 
 use CTSMS::BulkProcessor::Array qw(contains);
@@ -91,23 +91,9 @@ our @EXPORT_OK = qw(
     get_lang
 );
 
-
-
-
-
-
-
-
-
-
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 
 our $restapi = \&get_restapi;
-
-
-
-
-
 
 our $id_separator_string = ',';
 
@@ -304,13 +290,6 @@ sub datetime_iso_to_ui {
     return ($dt->strftime(_get_dt_dateformat($site)), zerofill($dt->hour,2) . ':' . zerofill($dt->minute,2));
 }
 
-
-
-
-
-
-
-
 sub json_response {
     my $data = shift;
     Dancer::content_type('application/json');
@@ -329,15 +308,10 @@ sub json_error {
     }
     return json_response($respose_data);
 
-
-
-
-
 }
 
 sub to_json_safe {
     my $data = shift;
-
     return Dancer::to_json($data,{ allow_blessed => 1, convert_blessed => 1, pretty => 0 });
 }
 
@@ -346,19 +320,6 @@ sub to_json_base64 {
     my $json = to_json_safe($data);
     return encode_base64(utf8::is_utf8($json) ? encode_utf8($json) : $json,'');
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 sub _save_param {
     my ($result,$params,$param_name) = @_;
@@ -398,59 +359,28 @@ sub save_params {
         }
     }
 
-
-
-
-
-
-
-
-
     return $result;
 }
 
 sub get_restapi {
     return get_ctsms_site_lang_restapi(_get_site_name(), get_lang());
-
-
-
-
-
-
-
-
-
 }
 
 sub _get_site_name {
     my $site_name = Dancer::session('site');
     if ($site_name) {
         if (exists $ctsms_sites->{$site_name}) {
-
             return $site_name;
-
-
         }
-
-
     }
     return $default_site;
 }
 
-
-
-
-
-
-
-
 sub get_lang {
     my $lang = Dancer::Plugin::I18N::localize('lang');
     if ($lang) {
-
         return $lang;
     } else {
-
         die('no or empty lang in .po');
     }
 }
@@ -481,7 +411,6 @@ sub get_site_option {
     my $selected_site_name = _get_site_name();
     $site_name //= $selected_site_name;
     my $site = $ctsms_sites->{$site_name};
-
 
     my $site_label = Dancer::Plugin::I18N::localize($site->{label}) || $site_name;
     my $description;
@@ -555,7 +484,6 @@ sub apply_lwp_file_response {
     $response->content($lwp_response->content);
     $response->content_type($lwp_response->content_type);
 
-
     my $content_disposition = ($for_download ? 'attachment' : 'inline');
     if (defined $filename and length($filename) > 0) {
         $content_disposition .= '; filename="' . $filename . '"';
@@ -585,14 +513,7 @@ sub get_template {
     $js_vars->{sessionTimerPattern} = Dancer::Plugin::I18N::localize('session_timer_pattern');
     $js_vars->{enableSessionTimer} = (contains($view_name,[ 'start', '404', 'runtime_error' ]) ? \0 : \1);
 
-
-
-
-
-
-
     my $js_context_json = _quote_js(to_json_safe($js_vars));
-
 
     my $script_names = delete $params{script_names};
     my $scripts;
@@ -636,7 +557,7 @@ sub get_template {
         language_menu => $language_menu,
         navigation_options => $navigation_options,
         google_site_verification => $google_site_verification,
-
+        favicon => $favicon,
 
         %params,
     });
@@ -644,8 +565,6 @@ sub get_template {
 
 sub _get_minified {
     my ($res,$ext) = @_;
-
-
     unless ($res =~ /\.min$/) {
         $res .= '.min';
     }
@@ -667,9 +586,7 @@ sub get_ctsms_baseuri {
         my $api = get_restapi();
         my $path = $api->path // '';
         $path =~ s!/*$ctsmsrestapi_path/*$!!;
-
-            $path .= '/' if $path !~ m!/$!;
-
+        $path .= '/' if $path !~ m!/$!;
         my $uri = $api->baseuri;
         $uri->path_query($path);
         return $uri->as_string();
@@ -723,10 +640,6 @@ sub get_error {
     clear_error() if $clear;
     return $error;
 
-
-
-
-
 }
 
 sub _quote_js {
@@ -735,11 +648,6 @@ sub _quote_js {
    $s =~ s/'/\\'/g;
    return qq{'$s'};
 }
-
-
-
-
-
 
 sub get_page_index {
     my $params = shift;
@@ -767,16 +675,7 @@ sub check_done {
     my $forward = shift;
     my $params = Dancer::params();
     if ($params->{done}) {
-
         Dancer::forward('/end', undef, { method => 'GET' });
-
-
-
-
-
-
-
-
     } else {
         &$forward() if 'CODE' eq ref $forward;
     }
@@ -786,16 +685,7 @@ sub check_prev {
     my ($forward,$backward) = @_;
     my $params = Dancer::params();
     if ($params->{prev}) {
-
         &$backward() if 'CODE' eq ref $backward;
-
-
-
-
-
-
-
-
     } else {
         &$forward() if 'CODE' eq ref $forward;
     }
@@ -815,8 +705,6 @@ sub sanitize_integer {
 
     my ($integer) = @_;
     return undef if (not defined $integer or length($integer) == 0);
-
-
     return $integer;
 
 }

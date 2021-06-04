@@ -15,7 +15,9 @@
 <meta name="description" content="[% l('meta_description') %]">
 <link rel="alternate" href="[% request.uri_base %]/?lang=en" hreflang="en" />
 <link rel="alternate" href="[% request.uri_base %]/?lang=de" hreflang="de" />
-<link rel="shortcut icon" href="[% request.uri_base %]/favicon.ico" type="image/x-icon">
+[% IF favicon %]
+<link rel="shortcut icon" href="[% request.uri_base %]/[% favicon %]" type="[% favicon.match('\.ico$') ? 'image/x-icon' : 'image/svg+xml' %]">
+[% END %]
 <title>[% l('page_title') %]</title>
 
 <link rel="stylesheet" type="text/css" href="[% request.uri_base %]/css/reset.min.css" />
