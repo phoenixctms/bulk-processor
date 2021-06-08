@@ -21,7 +21,7 @@
 <title>[% l('page_title') %]</title>
 
 <link rel="stylesheet" type="text/css" href="[% request.uri_base %]/css/reset.min.css" />
-<link rel="stylesheet" href="[% request.uri_base %]/themes/aristo/theme.min.css" />
+<!-- <link rel="stylesheet" href="[% request.uri_base %]/themes/aristo/theme.min.css" /> -->
 <link rel="stylesheet" type="text/css" href="[% request.uri_base %]/css/font-awesome.min.css" />
 <link rel="stylesheet" href="[% request.uri_base %]/css/jquery-ui.min.css" />
 <link rel="stylesheet" href="[% request.uri_base %]/css/primeui.min.css" />
@@ -70,6 +70,8 @@
   });
 
 </script>
+
+[% INCLUDE layouts/js.tt %]
 
 <link rel="stylesheet" href="[% request.uri_base %]/css/default.min.css" />
 
