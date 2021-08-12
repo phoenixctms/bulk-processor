@@ -70,6 +70,8 @@ my $fieldnames = [
    "visibleMassMailTabList",
    "identity",
    "department",
+   "parent",
+   "children",
 ];
 
 sub new {
