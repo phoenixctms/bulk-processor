@@ -16,6 +16,7 @@ use CTSMS::BulkProcessor::Globals qw(
 use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $output_path
     $skip_errors
+    $timezone
     $ctsms_base_url
     $ecrf_data_trial_id
     $lockfile
@@ -167,7 +168,7 @@ sub init {
         "jid=i" => \$job_id,
         "auth=s" => \$auth,
         "upload" => \$upload_files,
-
+        "tz=s" => \$timezone,
     );
 
     my $result = load_config($configfile);

@@ -56,6 +56,7 @@ our @EXPORT_OK = qw(
     $csv_dir
 
     $skip_errors
+    $timezone
 
     $ecrf_data_trial_id
 
@@ -111,6 +112,8 @@ our $ecrf_data_api_ecrffields_page_size = 100;
 our $ctsms_base_url = undef;
 our $dbtool = undef;
 our $lockfile = undef;
+
+our $timezone = undef;
 
 our $ecrf_proband_alias_column_name = 'alias';
 our $ecrf_proband_category_column_name;
@@ -282,6 +285,8 @@ sub update_settings {
         $col_per_selection_set_value = $data->{col_per_selection_set_value} if exists $data->{col_per_selection_set_value};
         $selection_set_value_separator = $data->{selection_set_value_separator} if exists $data->{selection_set_value_separator};
         $selection_set_value_separator //= '';
+
+        $timezone = $data->{timezone} if exists $data->{timezone};
 
         if (exists $data->{ecrf_data_include_ecrffield_code}) {
             if ('CODE' eq ref $data->{ecrf_data_include_ecrffield_code}) {
