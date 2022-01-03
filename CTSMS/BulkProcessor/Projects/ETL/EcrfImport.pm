@@ -22,6 +22,7 @@ use CTSMS::BulkProcessor::FileProcessors::XlsxFileSimple qw();
 
 use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $skip_errors
+    $timezone
     $ecrf_data_trial_id
 
     %colname_abbreviation
@@ -1345,7 +1346,7 @@ sub _save_ecrf_values {
     return $result unless scalar @{$context->{in}};
     my $out;
     eval {
-        $out = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues::set_ecrffieldvalues($context->{in});
+        $out = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues::set_ecrffieldvalues($context->{in},undef,$timezone);
     };
     my $stats = _get_values_stats($context,$out,sub {
             my $in_row = shift;
@@ -1395,7 +1396,7 @@ sub _save_listentrytag_values {
     return unless scalar @{$context->{in}};
     my $out;
     eval {
-        $out = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValues::set_probandlistentrytagvalues($context->{in});
+        $out = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValues::set_probandlistentrytagvalues($context->{in},undef,$timezone);
     };
     my $stats = _get_values_stats($context,$out,sub {
             my $in_row = shift;
