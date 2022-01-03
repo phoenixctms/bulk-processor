@@ -39,18 +39,20 @@ my $get_item_path_query = sub {
     return 'proband/' . $proband_id . '/inquiryvalue/' . $inquiry_id;
 };
 my $get_getinquiryvalues_path_query = sub {
-    my ($proband_id, $trial_id, $active, $active_signup, $sort, $load_all_js_values) = @_;
+    my ($proband_id, $trial_id, $active, $active_signup, $sort, $load_all_js_values, $tz) = @_;
     my %params = ();
     $params{active} = booltostring($active) if defined $active;
     $params{active_signup} = booltostring($active_signup) if defined $active_signup;
     $params{sort} = booltostring($sort);
     $params{load_all_js_values} = booltostring($load_all_js_values);
+    $params{tz} = $tz if $tz;
     return 'proband/' . $proband_id . '/inquiryvalues/' . $trial_id . get_query_string(\%params);
 };
 my $get_setinquiryvalues_path_query = sub {
-    my ($force) = @_;
+    my ($force,$tz) = @_;
     my %params = ();
     $params{force} = booltostring($force) if defined $force;
+    $params{tz} = $tz if $tz;
     return 'inquiryvalue/' . get_query_string(\%params);
 };
 my $get_renderinquiries_path_query = sub {
@@ -95,17 +97,17 @@ sub get_item {
 
 sub get_inquiryvalues {
 
-    my ($proband_id,$trial_id,$active,$active_signup, $sort, $load_all_js_values, $p,$sf,$load_recursive,$restapi,$headers) = @_;
+    my ($proband_id,$trial_id,$active,$active_signup, $sort, $load_all_js_values, $tz, $p, $sf, $load_recursive, $restapi, $headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_getinquiryvalues_path_query($proband_id,$trial_id,$active,$active_signup, $sort, $load_all_js_values),$p,$sf),$headers),$p),$load_recursive,$restapi);
+    return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_getinquiryvalues_path_query($proband_id,$trial_id,$active,$active_signup, $sort, $load_all_js_values, $tz),$p,$sf),$headers),$p),$load_recursive,$restapi);
 
 }
 
 sub set_inquiryvalues {
 
-    my ($in,$force,$load_recursive,$restapi,$headers) = @_;
+    my ($in,$force,$tz,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->put(&$get_setinquiryvalues_path_query($force),$in,$headers),$load_recursive,$restapi);
+    return builditems_fromrows($api->put(&$get_setinquiryvalues_path_query($force,$tz),$in,$headers),$load_recursive,$restapi);
 
 }
 
