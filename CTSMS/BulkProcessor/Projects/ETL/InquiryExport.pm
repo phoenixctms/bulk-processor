@@ -45,6 +45,7 @@ use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
     $inquiry_data_export_pdfs_filename
 
     $skip_errors
+    $timezone
 
     get_proband_columns
     update_job
@@ -284,7 +285,7 @@ NEXT_PROBAND:
 
             my $first = $context->{api_values_page_num} * $inquiry_data_api_values_page_size;
             _info($context,"fetch inquiry values page: " . $first . '-' . ($first + $inquiry_data_api_values_page_size) . ' of ' . (defined $context->{api_values_page_total_count} ? $context->{api_values_page_total_count} : '?'),not $show_page_progress);
-            $context->{api_values_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::get_inquiryvalues($context->{proband}->{id},$context->{inquiry_data_trial}->{id},$active,$active_signup,1,0, $p, $sf, { _value => 1, _selectionValueMap => 1 })->{rows};
+            $context->{api_values_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::get_inquiryvalues($context->{proband}->{id},$context->{inquiry_data_trial}->{id},$active,$active_signup,1,0,$timezone,$p, $sf, { _value => 1, _selectionValueMap => 1 })->{rows};
             $context->{api_values_page_total_count} = $p->{total_count};
             $context->{api_values_page_num} += 1;
         }
@@ -553,7 +554,6 @@ sub _inquiry_data_horizontal_items_to_row {
     return \@row;
 }
 
-
 sub _insert_inquiry_data_horizontal_rows {
     my ($context,$inquiry_data_rows) = @_;
     my $result = 1;
@@ -657,7 +657,7 @@ sub _get_inquiryvalues {
 
             my $first = $api_values_page_num * $inquiry_data_api_values_page_size;
             _info($context,"fetch inquiry values page: " . $first . '-' . ($first + $inquiry_data_api_values_page_size) . ' of ' . (defined $api_values_page_total_count ? $api_values_page_total_count : '?'),not $show_page_progress);
-            $api_values_page = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::get_inquiryvalues($context->{proband}->{id},$context->{inquiry_data_trial}->{id},$active,$active_signup, 1, 0, $p, $sf, { _value => 1, _selectionValueMap => 1 })->{rows};
+            $api_values_page = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::get_inquiryvalues($context->{proband}->{id},$context->{inquiry_data_trial}->{id},$active,$active_signup, 1, 0,$timezone,$p, $sf, { _value => 1, _selectionValueMap => 1 })->{rows};
             $api_values_page_total_count = $p->{total_count};
             $api_values_page_num += 1;
         }
