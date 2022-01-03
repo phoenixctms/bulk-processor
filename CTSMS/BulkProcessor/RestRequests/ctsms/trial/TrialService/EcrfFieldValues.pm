@@ -43,17 +43,19 @@ my $get_item_path_query = sub {
     return 'ecrfstatusentry/' . $listentry_id . '/ecrffieldvalue/' . $ecrffield_id . get_query_string(\%params);
 };
 my $get_getecrffieldvalues_path_query = sub {
-    my ($listentry_id, $ecrf_id, $visit_id, $load_all_js_values) = @_;
+    my ($listentry_id, $ecrf_id, $visit_id, $load_all_js_values, $tz) = @_;
     my %params = ();
     $params{load_all_js_values} = booltostring($load_all_js_values);
     $params{visit_id} = $visit_id if defined $visit_id;
+    $params{tz} = $tz if $tz;
     return 'ecrfstatusentry/' . $listentry_id . '/' . $ecrf_id . '/ecrffieldvalues' . get_query_string(\%params);
 };
 
 my $get_setecrffieldvalues_path_query = sub {
-    my ($force) = @_;
+    my ($force,$tz) = @_;
     my %params = ();
     $params{force} = booltostring($force) if defined $force;
+    $params{tz} = $tz if $tz;
     return 'ecrffieldvalue/' . get_query_string(\%params);
 };
 
@@ -91,17 +93,17 @@ sub get_item {
 
 sub get_ecrffieldvalues {
 
-    my ($listentry_id, $ecrf_id, $visit_id, $load_all_js_values, $p,$sf,$load_recursive,$restapi,$headers) = @_;
+    my ($listentry_id, $ecrf_id, $visit_id, $load_all_js_values, $tz, $p, $sf, $load_recursive, $restapi, $headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_getecrffieldvalues_path_query($listentry_id, $ecrf_id, $visit_id, $load_all_js_values),$p,$sf),$headers),$p),$load_recursive,$restapi);
+    return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_getecrffieldvalues_path_query($listentry_id, $ecrf_id, $visit_id, $load_all_js_values, $tz),$p,$sf),$headers),$p),$load_recursive,$restapi);
 
 }
 
 sub set_ecrffieldvalues {
 
-    my ($in,$force,$load_recursive,$restapi,$headers) = @_;
+    my ($in,$force,$tz,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->put(&$get_setecrffieldvalues_path_query($force),$in,$headers),$load_recursive,$restapi);
+    return builditems_fromrows($api->put(&$get_setecrffieldvalues_path_query($force,$tz),$in,$headers),$load_recursive,$restapi);
 
 }
 
