@@ -56,6 +56,7 @@ our @EXPORT_OK = qw(
     $default_language_code
     $dancer_maketext_options
     $system_timezone
+    $convert_timezone
     $default_timezone
     $default_date_format
     $default_decimal_separator
@@ -89,6 +90,7 @@ our $default_language_code = 'en';
 our $dancer_maketext_options = { Style => 'gettext' };
 our $system_timezone = 'UTC';
 our $default_timezone = $system_timezone;
+our $convert_timezone = 0; # 1 for clientside user timezone conversion
 our $default_date_format = 'yyyy-MM-dd';
 our $default_decimal_separator = '.'; # expected by the user
 

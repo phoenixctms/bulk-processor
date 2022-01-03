@@ -27,6 +27,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $decimal_point
     $system_timezone
     $default_timezone
+    $convert_timezone
     $default_date_format
     $default_decimal_separator
     $google_maps_api_url
@@ -133,11 +134,13 @@ sub date_ui_to_iso {
         pattern => _get_dt_dateformat($site),
         (defined $error_code ? (on_error => $error_code) : ()),
         strict => 1,
-        time_zone => ($is_user_timezone ? get_input_timezone($site) : $system_timezone),
+        time_zone => (($convert_timezone and $is_user_timezone) ? get_input_timezone($site) : $system_timezone),
     );
     my $dt = $parser->parse_datetime($ui_date);
     if ($dt) {
-        $dt->set_time_zone($system_timezone) if $is_user_timezone;
+        if ($convert_timezone and $is_user_timezone) {
+            $dt->set_time_zone($system_timezone);
+        }
         return $dt->ymd . ' 00:00:00';
     }
     return undef;
@@ -151,11 +154,13 @@ sub date_ui_to_json {
         pattern => _get_dt_dateformat($site),
         (defined $error_code ? (on_error => $error_code) : ()),
         strict => 1,
-        time_zone => ($is_user_timezone ? get_input_timezone($site) : $system_timezone),
+        time_zone => (($convert_timezone and $is_user_timezone) ? get_input_timezone($site) : $system_timezone),
     );
     my $dt = $parser->parse_datetime($ui_date);
     if ($dt) {
-        $dt->set_time_zone($system_timezone) if $is_user_timezone;
+        if ($convert_timezone and $is_user_timezone) {
+            $dt->set_time_zone($system_timezone);
+        }
         return $dt->ymd . ' 00:00';
     }
     return undef;
@@ -173,7 +178,9 @@ sub date_iso_to_ui {
         time_zone  => $system_timezone,
     );
     my $site = get_site();
-    $dt->set_time_zone(get_input_timezone($site)) if $is_user_timezone;
+    if ($convert_timezone and $is_user_timezone) {
+        $dt->set_time_zone(get_input_timezone($site));
+    }
     return $dt->strftime(_get_dt_dateformat($site));
 }
 
@@ -185,11 +192,13 @@ sub time_ui_to_iso {
         pattern => '%Y-%m-%d ' . _get_dt_timeformat($site),
         (defined $error_code ? (on_error => $error_code) : ()),
         strict => 1,
-        time_zone => ($is_user_timezone ? get_input_timezone($site) : $system_timezone),
+        time_zone => (($convert_timezone and $is_user_timezone) ? get_input_timezone($site) : $system_timezone),
     );
     my $dt = $parser->parse_datetime('1970-01-01 ' . $ui_time);
     if ($dt) {
-        $dt->set_time_zone($system_timezone) if $is_user_timezone;
+        if ($convert_timezone and $is_user_timezone) {
+            $dt->set_time_zone($system_timezone);
+        }
         return ($dt->ymd . ' ' . $dt->hms);
     }
     return undef;
@@ -203,11 +212,13 @@ sub time_ui_to_json {
         pattern => '%Y-%m-%d ' . _get_dt_timeformat($site),
         (defined $error_code ? (on_error => $error_code) : ()),
         strict => 1,
-        time_zone => ($is_user_timezone ? get_input_timezone($site) : $system_timezone),
+        time_zone => (($convert_timezone and $is_user_timezone) ? get_input_timezone($site) : $system_timezone),
     );
     my $dt = $parser->parse_datetime('1970-01-01 ' . $ui_time);
     if ($dt) {
-        $dt->set_time_zone($system_timezone) if $is_user_timezone;
+        if ($convert_timezone and $is_user_timezone){
+            $dt->set_time_zone($system_timezone);
+        }
         return ($dt->ymd . ' ' . zerofill($dt->hour,2) . ':' . zerofill($dt->minute,2));
     }
     return undef;
@@ -228,7 +239,9 @@ sub time_iso_to_ui {
         time_zone  => $system_timezone,
     );
     my $site = get_site();
-    $dt->set_time_zone(get_input_timezone($site)) if $is_user_timezone;
+    if ($convert_timezone and $is_user_timezone) {
+        $dt->set_time_zone(get_input_timezone($site));
+    }
     return (zerofill($dt->hour,2) . ':' . zerofill($dt->minute,2));
 }
 
@@ -241,11 +254,13 @@ sub datetime_ui_to_iso {
         pattern => _get_dt_datetimeformat($site),
         (defined $error_code ? (on_error => $error_code) : ()),
         strict => 1,
-        time_zone => ($is_user_timezone ? get_input_timezone($site) : $system_timezone),
+        time_zone => (($convert_timezone and $is_user_timezone) ? get_input_timezone($site) : $system_timezone),
     );
     my $dt = $parser->parse_datetime($ui_date . ' ' . $ui_time);
     if ($dt) {
-        $dt->set_time_zone($system_timezone) if $is_user_timezone;
+        if ($convert_timezone and $is_user_timezone) {
+            $dt->set_time_zone($system_timezone);
+        }
         return ($dt->ymd . ' ' . $dt->hms);
     }
     return undef;
@@ -260,11 +275,13 @@ sub datetime_ui_to_json {
         pattern => _get_dt_datetimeformat($site),
         (defined $error_code ? (on_error => $error_code) : ()),
         strict => 1,
-        time_zone => ($is_user_timezone ? get_input_timezone($site) : $system_timezone),
+        time_zone => (($convert_timezone and $is_user_timezone) ? get_input_timezone($site) : $system_timezone),
     );
     my $dt = $parser->parse_datetime($ui_date . ' ' . $ui_time);
     if ($dt) {
-        $dt->set_time_zone($system_timezone) if $is_user_timezone;
+        if ($convert_timezone and $is_user_timezone) {
+            $dt->set_time_zone($system_timezone);
+        }
         return ($dt->ymd . ' ' . zerofill($dt->hour,2) . ':' . zerofill($dt->minute,2));
     }
     return undef;
@@ -286,7 +303,9 @@ sub datetime_iso_to_ui {
         time_zone  => $system_timezone,
     );
     my $site = get_site();
-    $dt->set_time_zone(get_input_timezone($site)) if $is_user_timezone;
+    if ($convert_timezone and $is_user_timezone) {
+        $dt->set_time_zone(get_input_timezone($site));
+    }
     return ($dt->strftime(_get_dt_dateformat($site)), zerofill($dt->hour,2) . ':' . zerofill($dt->minute,2));
 }
 

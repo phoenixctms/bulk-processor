@@ -53,6 +53,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $enable_geolocation_services
     $force_default_geolocation
     $system_timezone
+    $convert_timezone
 );
 
 
@@ -157,7 +158,6 @@ Dancer::get('/inquiry',sub {
     my $site = get_site();
     my $trial = Dancer::session('trial');
 
-
     return get_template('inquiry',
         script_names => [ 'sketch/jquery.colorPicker', 'sketch/raphael-2.2.0', 'sketch/raphael.sketchpad', 'sketch/json2.min', 'sketch/sketch',
                           'fieldcalculation/js-joda', 'fieldcalculation/js-joda-timezone', 'fieldcalculation/strip-comments', 'fieldcalculation/jquery.base64',
@@ -231,6 +231,7 @@ Dancer::post('/inquiries',sub {
             1,
             1,
             $params->{load_all_js_values},
+            ($convert_timezone ? undef : get_input_timezone()),
             $p,
             undef,
             { _selectionSetValueMap => 1, _inputFieldSelectionSelectionSetValueMap => 1 },$restapi);
@@ -286,17 +287,6 @@ Dancer::post('/inquiries',sub {
     });
 });
 
-
-
-
-
-
-
-
-
-
-
-
 Dancer::post('/inquiry/savepage',sub {
     my $ajax_error;
     return $ajax_error if $ajax_error = CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_selected_ajax();
@@ -332,10 +322,6 @@ Dancer::post('/inquiry',sub {
     my $trial = Dancer::session('trial');
     my $posted_inquiries_map = _save_page_params($trial,$save_all_pages);
 
-
-
-
-
     return check_done(sub {
         check_prev(sub {
             return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
@@ -362,7 +348,8 @@ sub _save_page {
     my $trial_inquiries_saved_map = Dancer::session('trial_inquiries_saved_map') // {};
     my $inquiries_saved_map = $trial_inquiries_saved_map->{$trial->{id}} // {};
     my $in = _get_inquiryvalues_in($posted_inquiries_map,$inquiries_saved_map);
-    my $out = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::set_inquiryvalues($in,0,0,$restapi);
+    my $out = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::set_inquiryvalues($in,0,
+        ($convert_timezone ? undef : get_input_timezone()),0,$restapi);
     foreach my $inquiry_value (@{$out->{rows}}) {
        $inquiries_saved_map->{$inquiry_value->{inquiry}->{id}} = { id => $inquiry_value->{id}, version => $inquiry_value->{version}, user_timezone => $inquiry_value->{inquiry}->{field}->{userTimeZone}, };
        Dancer::debug('inquiry value ' . $inquiry_value->{id} . ' set');
@@ -505,17 +492,6 @@ sub _unpack_inkvalue {
     return (undef, undef);
 
 }
-
-
-
-
-
-
-
-
-
-
-
 
 sub _save_page_params {
     my ($trial,$all_pages) = @_;
