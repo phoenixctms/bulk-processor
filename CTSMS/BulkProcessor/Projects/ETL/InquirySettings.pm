@@ -53,6 +53,7 @@ our @EXPORT_OK = qw(
     $csv_dir
 
     $skip_errors
+    $timezone
 
     $inquiry_data_truncate_table
     $inquiry_data_ignore_duplicates
@@ -126,6 +127,8 @@ our $ctsms_base_url = undef;
 our $lockfile = undef;
 
 our $inquiry_data_export_pdfs_filename = '%s_%s%s';
+
+our $timezone = undef;
 
 #my $ecrfname_abbreviate_opts = {};
 
@@ -271,6 +274,8 @@ sub update_settings {
         $col_per_selection_set_value = $data->{col_per_selection_set_value} if exists $data->{col_per_selection_set_value};
         $selection_set_value_separator = $data->{selection_set_value_separator} if exists $data->{selection_set_value_separator};
         $selection_set_value_separator //= '';
+
+        $timezone = $data->{timezone} if exists $data->{timezone};
 
         if (exists $data->{inquiry_data_include_inquiry_code}) {
             if ('CODE' eq ref $data->{inquiry_data_include_inquiry_code}) {

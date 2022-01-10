@@ -7,7 +7,7 @@ use CTSMS::BulkProcessor::Table qw(get_rowhash);
 
 use CTSMS::BulkProcessor::SqlProcessor qw(init_record);
 
-use NGCP::BulkProcessor::Utils qw(load_module);
+use CTSMS::BulkProcessor::Utils qw(load_module);
 
 require Exporter;
 our @ISA = qw(Exporter);

@@ -215,6 +215,7 @@ sub _get_sf_query_param {
                 push(@params,'a=' . $sort_by);
             }
         }
+        #filtertimezone is applied through ?tz= parameter
         foreach my $param (keys %sorting_filtering) {
             push(@params, URI::Escape::uri_escape($param) . '=' . URI::Escape::uri_escape_utf8($sorting_filtering{$param}));
         }

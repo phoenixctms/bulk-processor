@@ -40,17 +40,19 @@ my $get_item_path_query = sub {
     return 'probandlistentry/' . $listentry_id . '/tagvalue/' . $tag_id;
 };
 my $get_getprobandlistentrytagvalues_path_query = sub {
-    my ($listentry_id, $sort, $load_all_js_values) = @_;
+    my ($listentry_id, $sort, $load_all_js_values, $tz) = @_;
     my %params = ();
     $params{load_all_js_values} = booltostring($load_all_js_values);
     $params{sort} = booltostring($sort);
+    $params{tz} = $tz if $tz;
     return 'probandlistentry/' . $listentry_id . '/tagvalues' . get_query_string(\%params);
 };
 
 my $get_setprobandlistentrytagvalues_path_query = sub {
-    my ($force) = @_;
+    my ($force,$tz) = @_;
     my %params = ();
     $params{force} = booltostring($force) if defined $force;
+    $params{tz} = $tz if $tz;
     return 'probandlistentrytagvalue/' . get_query_string(\%params);
 };
 
@@ -80,17 +82,17 @@ sub get_item {
 
 sub get_probandlistentrytagvalues {
 
-    my ($listentry_id, $sort, $load_all_js_values, $p,$sf,$load_recursive,$restapi,$headers) = @_;
+    my ($listentry_id, $sort, $load_all_js_values, $tz, $p, $sf, $load_recursive, $restapi, $headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_getprobandlistentrytagvalues_path_query($listentry_id, $sort, $load_all_js_values),$p,$sf),$headers),$p),$load_recursive,$restapi);
+    return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_getprobandlistentrytagvalues_path_query($listentry_id, $sort, $load_all_js_values, $tz),$p,$sf),$headers),$p),$load_recursive,$restapi);
 
 }
 
 sub set_probandlistentrytagvalues {
 
-    my ($in,$force,$load_recursive,$restapi,$headers) = @_;
+    my ($in,$force,$tz,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->put(&$get_setprobandlistentrytagvalues_path_query($force),$in,$headers),$load_recursive,$restapi);
+    return builditems_fromrows($api->put(&$get_setprobandlistentrytagvalues_path_query($force,$tz),$in,$headers),$load_recursive,$restapi);
 
 }
 
