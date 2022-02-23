@@ -10,6 +10,7 @@ use Thread::Queue;
 use utf8;
 
 use Time::HiRes qw(sleep);
+use File::Basename qw(basename);
 
 use CTSMS::BulkProcessor::Globals qw(
     $enablemultithreading
@@ -29,6 +30,7 @@ use CTSMS::BulkProcessor::LogError qw(
     fileprocessingfailed
     fileerror
     notimplementederror
+    fileprocessingwarn
 );
 
 use CTSMS::BulkProcessor::Utils qw(threadid);
@@ -36,6 +38,8 @@ use CTSMS::BulkProcessor::Utils qw(threadid);
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
+
+    create_process_context
 
     get_other_threads_state
     $RUNNING
@@ -99,7 +103,6 @@ sub _extractlines {
         $last_line = $line;
         push(@$lines,$line);
     }
-
     $$buffer_ref = $last_line;
     pop @$lines;
 
@@ -127,19 +130,15 @@ sub process {
         $multithreading) = @params{@opts};
     delete @params{@opts};
 
-    if (ref $process_code eq 'CODE') {
+    my $files_code = $file;
+    my $single_file = 1;
+    $single_file = 0 if ('CODE' eq ref $file);
+    $files_code = sub {
+        my ($context,$cb) = @_;
+        $cb->($file);
+    } if $single_file;
 
-        if (length($file)) {
-            if (-s $file > 0) {
-                fileprocessingstarted($file,getlogger(__PACKAGE__));
-            } else {
-                processzerofilesize($file,getlogger(__PACKAGE__));
-                return;
-            }
-        } else {
-            fileerror('no file specified',getlogger(__PACKAGE__));
-            return;
-        }
+    if (ref $process_code eq 'CODE') {
 
         my $errorstate = $RUNNING;
         my $tid = threadid();
@@ -158,22 +157,23 @@ sub process {
                                             queue                => $queue,
                                             errorstates          => \%errorstates,
                                             instance             => $self,
-                                            filename             => $file,
+                                            files_code           => $files_code,
+                                            single_file          => $single_file,
                                           });
 
             for (my $i = 0; $i < $self->{numofthreads}; $i++) {
                 filethreadingdebug('starting processor thread ' . ($i + 1) . ' of ' . $self->{numofthreads},getlogger(__PACKAGE__));
                 my $processor = threads->create(\&_process,
-                                              _create_process_context($static_context,
+                                              create_process_context($static_context,
                                               { %params,
-                                                queue                => $queue,
-                                                errorstates          => \%errorstates,
-                                                readertid              => $reader->tid(),
-                                                filename             => $file,
-                                                process_code         => $process_code,
-                                                init_process_context_code => $init_process_context_code,
+                                                queue                       => $queue,
+                                                errorstates                 => \%errorstates,
+                                                readertid                   => $reader->tid(),
+                                                process_code                => $process_code,
+                                                single_file                 => $single_file,
+                                                init_process_context_code   => $init_process_context_code,
                                                 uninit_process_context_code => $uninit_process_context_code,
-                                                instance             => $self,
+                                                instance                    => $self,
                                               }));
                 if (!defined $processor) {
                     filethreadingdebug('processor thread ' . ($i + 1) . ' of ' . $self->{numofthreads} . ' NOT started',getlogger(__PACKAGE__));
@@ -198,13 +198,12 @@ sub process {
 
         } else {
 
-            my $context = _create_process_context($static_context,{
+            my $context = create_process_context($static_context,{
                 %params,
                 instance => $self,
-                filename => $file,
                 tid      => $tid,
             });
-            my $rowblock_result = 1;
+            my $filename;
             eval {
 
                 my $init_reader_context_code = $self->can('init_reader_context');
@@ -214,10 +213,24 @@ sub process {
                 if (defined $init_process_context_code and 'CODE' eq ref $init_process_context_code) {
                     &$init_process_context_code($context);
                 }
-
                 my $read_and_process_code = $self->can('read_and_process');
                 if (defined $read_and_process_code) {
-                    $rowblock_result = &$read_and_process_code($self,$context,$process_code);
+                    $files_code->($context,sub {
+                        $filename = shift;
+                        if (-s $filename > 0) {
+                            fileprocessingstarted($filename,getlogger(__PACKAGE__));
+                        } else {
+                            if ($single_file) {
+                                processzerofilesize($filename,getlogger(__PACKAGE__));
+                            } else {
+                                fileprocessingwarn($filename,basename($filename) . ' ' . (-e $filename ? 'has 0 bytes' : 'not found'),getlogger(__PACKAGE__));
+                            }
+                            return;
+                        }
+                        $context->{filename} = $filename;
+                        my $rowblock_result = &$read_and_process_code($self,$context,$process_code);
+                        fileprocessingdone($filename,getlogger(__PACKAGE__));
+                    });
                 } else {
                     my $extractlines_code = (ref $self)->can('extractlines');
                     if (!defined $extractlines_code) {
@@ -232,67 +245,85 @@ sub process {
                         notimplementederror((ref $self) . ': ' . 'extractfields class method not implemented',getlogger(__PACKAGE__));
                     }
 
-                    local *INPUTFILE;
-                    if (not open (INPUTFILE, '<:encoding(' . $self->{encoding} . ')', $file)) {
-                        fileerror('processing file - cannot open file ' . $file . ': ' . $!,getlogger(__PACKAGE__));
-                        return;
-                    }
-                    binmode INPUTFILE;
-
-                    my $buffer = undef;
-                    my $chunk = undef;
-                    my $n = 0;
-                    $context->{charsread} = 0;
-                    $context->{linesread} = 0;
-
-                    my $i = 0;
-                    while (1) {
-
-                        my $block_n = 0;
-                        my @lines = ();
-                        while ((scalar @lines) < $self->{blocksize} and defined ($n = read(INPUTFILE,$chunk,$self->{buffersize})) and $n != 0) {
-                            if (defined $buffer) {
-                                $buffer .= $chunk;
-                            } else {
-                                $buffer = $chunk;
-                            }
-                            $context->{charsread} += $n;
-                            $block_n += $n;
-                            last unless &$extractlines_code($context,\$buffer,\@lines);
-                        }
-                        lines_read($file,$i,$self->{blocksize},$block_n,undef,getlogger(__PACKAGE__));
-
-                        if (not defined $n) {
-                            fileerror('processing file - error reading file ' . $file . ': ' . $!,getlogger(__PACKAGE__));
-                            close(INPUTFILE);
-                            last;
+                    $files_code->($context,sub {
+                        $filename = shift;
+                        if (-s $filename > 0) {
+                            fileprocessingstarted($filename,getlogger(__PACKAGE__));
                         } else {
-                            if ($n == 0 && defined $buffer) {
-                                push(@lines,$buffer);
+                            if ($single_file) {
+                                processzerofilesize($filename,getlogger(__PACKAGE__));
+                            } else {
+                                fileprocessingwarn($filename,basename($filename) . ' ' . (-e $filename ? 'has 0 bytes' : 'not found'),getlogger(__PACKAGE__));
                             }
-                            my @rowblock = ();
-                            foreach my $line (@lines) {
-                                $context->{linesread} += 1;
-                                my $row = &$extractfields_code($context,(ref $line ? $line : \$line));
-                                push(@rowblock,$row) if defined $row;
+                            return;
+                        }
+
+                        local *INPUTFILE;
+                        if (not open (INPUTFILE, '<:encoding(' . $self->{encoding} . ')', $filename)) {
+                            fileerror('processing file - cannot open file ' . $filename . ': ' . $!,getlogger(__PACKAGE__));
+                            return;
+                        }
+                        binmode INPUTFILE;
+
+                        my $buffer = undef;
+                        my $chunk = undef;
+                        my $n = 0;
+                        $context->{charsread} = 0;
+                        $context->{linesread} = 0;
+
+                        my $i = 0;
+                        my $rowblock_result = 1;
+                        while (1) {
+                            my $block_n = 0;
+                            my @lines = ();
+                            while ((scalar @lines) < $self->{blocksize} and defined ($n = read(INPUTFILE,$chunk,$self->{buffersize})) and $n != 0) {
+                                if (defined $buffer) {
+                                    $buffer .= $chunk;
+                                } else {
+                                    $buffer = $chunk;
+                                }
+                                $context->{charsread} += $n;
+                                $block_n += $n;
+                                last unless &$extractlines_code($context,\$buffer,\@lines);
                             }
-                            my $realblocksize = scalar @rowblock;
-                            if ($realblocksize > 0) {
-                                processing_lines($tid,$i,$realblocksize,undef,getlogger(__PACKAGE__));
+                            lines_read($filename,$i,$self->{blocksize},$block_n,getlogger(__PACKAGE__));
 
-                                $rowblock_result = &$process_code($context,\@rowblock,$i);
+                            if (not defined $n) {
+                                fileerror('processing file - error reading file ' . $filename . ': ' . $!,getlogger(__PACKAGE__));
+                                close(INPUTFILE);
+                                last;
+                            } else {
+                                if ($n == 0 && defined $buffer) {
+                                    push(@lines,$buffer);
+                                }
+                                my @rowblock = ();
+                                foreach my $line (@lines) {
+                                    $context->{linesread} += 1;
+                                    my $row = &$extractfields_code($context,(ref $line ? $line : \$line));
+                                    push(@rowblock,$row) if defined $row;
+                                }
+                                my $realblocksize = scalar @rowblock;
+                                if ($realblocksize > 0) {
+                                    processing_lines($tid,$i,$realblocksize,undef,getlogger(__PACKAGE__));
 
-                                $i += $realblocksize;
-                                if ($n == 0 || not $rowblock_result) {
+                                    $rowblock_result = &$process_code($context,\@rowblock,$i);
+
+                                    $i += $realblocksize;
+                                    if ($n == 0 || not $rowblock_result) {
+                                        last;
+                                    }
+                                } else {
                                     last;
                                 }
-                            } else {
-                                last;
                             }
                         }
-                    }
-                    close(INPUTFILE);
+                        close(INPUTFILE);
+
+                        fileprocessingdone($filename,getlogger(__PACKAGE__));
+
+                    });
                 }
+
             };
 
             if ($@) {
@@ -306,13 +337,14 @@ sub process {
                     &$uninit_process_context_code($context);
                 }
             };
+
+            unless ($errorstate == $COMPLETED) {
+                fileprocessingfailed($filename,getlogger(__PACKAGE__));
+            }
         }
 
         if ($errorstate == $COMPLETED) {
-            fileprocessingdone($file,getlogger(__PACKAGE__));
             return 1;
-        } else {
-            fileprocessingfailed($file,getlogger(__PACKAGE__));
         }
 
     }
@@ -335,20 +367,38 @@ sub _reader {
     filethreadingdebug('[' . $tid . '] reader thread tid ' . $tid . ' started',getlogger(__PACKAGE__));
 
     my $blockcount = 0;
+    my $filename;
     eval {
 
         my $init_reader_context_code = $context->{instance}->can('init_reader_context');
         if (defined $init_reader_context_code) {
             &$init_reader_context_code($context->{instance},$context);
         }
-        filethreadingdebug('[' . $tid . '] reader thread waiting for consumer threads',getlogger(__PACKAGE__));
-        while ((get_other_threads_state($context->{errorstates},$tid) & $RUNNING) == 0) { #wait on cosumers to come up
-            sleep($thread_sleep_secs);
-        }
         my $read_code = $context->{instance}->can('read');
-        my $state = $RUNNING; #start at first
         if (defined $read_code) {
-            $state = &$read_code($context->{instance},$context);
+            $context->{files_code}->($context,sub {
+                $filename = shift;
+                if (-s $filename > 0) {
+                    fileprocessingstarted($filename,getlogger(__PACKAGE__));
+                } else {
+                    if ($context->{single_file}) {
+                        processzerofilesize($filename,getlogger(__PACKAGE__));
+                    } else {
+                        fileprocessingwarn($filename,basename($filename) . ' ' . (-e $filename ? 'has 0 bytes' : 'not found'),getlogger(__PACKAGE__));
+                    }
+                    return;
+                }
+                $context->{filename} = $filename;
+                my $state = &$read_code($context->{instance},$context);
+                if (not (($state & $RUNNING) == $RUNNING and ($state & $ERROR) == 0)) {
+                    filethreadingdebug('[' . $tid . '] reader thread is shutting down (' .
+                                      (($state & $RUNNING) == $RUNNING ? 'still running consumer threads' : 'no running consumer threads') . ', ' .
+                                      (($state & $ERROR) == 0 ? 'no defunct thread(s)' : 'defunct thread(s)') . ') ...'
+                    ,getlogger(__PACKAGE__));
+                }
+
+                fileprocessingdone($filename,getlogger(__PACKAGE__));
+            });
         } else {
             my $extractlines_code = (ref $context->{instance})->can('extractlines');
             if (!defined $extractlines_code) {
@@ -364,89 +414,106 @@ sub _reader {
                 notimplementederror((ref $context->{instance}) . ': ' . 'extractfields class method not implemented',getlogger(__PACKAGE__));
             }
 
-            local *INPUTFILE_READER;
-            if (not open (INPUTFILE_READER, '<:encoding(' . $context->{instance}->{encoding} . ')', $context->{filename})) {
-                fileerror('processing file - cannot open file ' . $context->{filename} . ': ' . $!,getlogger(__PACKAGE__));
-                return;
-            }
-            binmode INPUTFILE_READER;
-
-            #filethreadingdebug('[' . $tid . '] reader thread waiting for consumer threads',getlogger(__PACKAGE__));
-            #while ((get_other_threads_state($context->{errorstates},$tid) & $RUNNING) == 0) { #wait on cosumers to come up
-            #    sleep($thread_sleep_secs);
-            #}
-
-            my $buffer = undef;
-            my $chunk = undef;
-            my $n = 0;
-            $context->{charsread} = 0;
-            $context->{linesread} = 0;
-
-            my $i = 0;
-            while (($state & $RUNNING) == $RUNNING and ($state & $ERROR) == 0) { #as long there is one running consumer and no defunct consumer
-
-                my $block_n = 0;
-                my @lines = ();
-                while ((scalar @lines) < $context->{instance}->{blocksize} and defined ($n = read(INPUTFILE_READER,$chunk,$context->{instance}->{buffersize})) and $n != 0) {
-                    if (defined $buffer) {
-                        $buffer .= $chunk;
-                    } else {
-                        $buffer = $chunk;
-                    }
-                    $context->{charsread} += 1;
-                    $block_n += $n;
-                    last unless &$extractlines_code($context,\$buffer,\@lines);
-                    yield();
-                }
-                lines_read($context->{filename},$i,$context->{instance}->{blocksize},$block_n,undef,getlogger(__PACKAGE__));
-                if (not defined $n) {
-                    fileerror('processing file - error reading file ' . $context->{filename} . ': ' . $!,getlogger(__PACKAGE__));
-                    close(INPUTFILE_READER);
-                    last;
+            $context->{files_code}->($context,sub {
+                $filename = shift;
+                if (-s $filename > 0) {
+                    fileprocessingstarted($filename,getlogger(__PACKAGE__));
                 } else {
-                    if ($n == 0 && defined $buffer) {
-                        push(@lines,$buffer);
+                    if ($context->{single_file}) {
+                        processzerofilesize($filename,getlogger(__PACKAGE__));
+                    } else {
+                        fileprocessingwarn($filename,basename($filename) . ' ' . (-e $filename ? 'has 0 bytes' : 'not found'),getlogger(__PACKAGE__));
                     }
-                    my @rowblock :shared = ();
-                    foreach my $line (@lines) {
-                        $context->{linesread} += 1;
-                        my $row = &$extractfields_code($context,(ref $line ? $line : \$line));
-                        push(@rowblock,shared_clone($row)) if defined $row;
+                    return;
+                }
+
+                local *INPUTFILE_READER;
+                if (not open (INPUTFILE_READER, '<:encoding(' . $context->{instance}->{encoding} . ')', $filename)) {
+                    fileerror('processing file - cannot open file ' . $filename . ': ' . $!,getlogger(__PACKAGE__));
+                    return;
+                }
+                binmode INPUTFILE_READER;
+
+                filethreadingdebug('[' . $tid . '] reader thread waiting for consumer threads',getlogger(__PACKAGE__));
+                while ((get_other_threads_state($context->{errorstates},$tid) & $RUNNING) == 0) { #wait on cosumers to come up
+                    sleep($thread_sleep_secs);
+                }
+
+                my $buffer = undef;
+                my $chunk = undef;
+                my $n = 0;
+                $context->{charsread} = 0;
+                $context->{linesread} = 0;
+
+                my $i = 0;
+                my $state = $RUNNING; #start at first
+                while (($state & $RUNNING) == $RUNNING and ($state & $ERROR) == 0) { #as long there is one running consumer and no defunct consumer
+                    my $block_n = 0;
+                    my @lines = ();
+                    while ((scalar @lines) < $context->{instance}->{blocksize} and defined ($n = read(INPUTFILE_READER,$chunk,$context->{instance}->{buffersize})) and $n != 0) {
+                        if (defined $buffer) {
+                            $buffer .= $chunk;
+                        } else {
+                            $buffer = $chunk;
+                        }
+                        $context->{charsread} += 1;
+                        $block_n += $n;
+                        last unless &$extractlines_code($context,\$buffer,\@lines);
                         yield();
                     }
-                    my $realblocksize = scalar @rowblock;
-                    my %packet :shared = ();
-                    $packet{rows} = \@rowblock;
-                    $packet{size} = $realblocksize;
-                    $packet{row_offset} = $i;
-                    $packet{block_n} = $block_n;
-                    if ($realblocksize > 0) {
-                        $context->{queue}->enqueue(\%packet);
-                        $blockcount++;
-                        #wait if the queue is full and there there is one running consumer
-                        while (((($state = get_other_threads_state($context->{errorstates},$tid)) & $RUNNING) == $RUNNING) and $context->{queue}->pending() >= $context->{instance}->{threadqueuelength}) {
-                            sleep($thread_sleep_secs);
+                    lines_read($filename,$i,$context->{instance}->{blocksize},$block_n,getlogger(__PACKAGE__));
+                    if (not defined $n) {
+                        fileerror('processing file - error reading file ' . $filename . ': ' . $!,getlogger(__PACKAGE__));
+                        close(INPUTFILE_READER);
+                        last;
+                    } else {
+                        if ($n == 0 && defined $buffer) {
+                            push(@lines,$buffer);
                         }
-                        $i += $realblocksize;
-                        if ($n == 0) {
-                            filethreadingdebug('[' . $tid . '] reader thread is shutting down (end of data) ...',getlogger(__PACKAGE__));
+                        my @rowblock :shared = ();
+                        foreach my $line (@lines) {
+                            $context->{linesread} += 1;
+                            my $row = &$extractfields_code($context,(ref $line ? $line : \$line));
+                            push(@rowblock,shared_clone($row)) if defined $row;
+                            yield();
+                        }
+                        my $realblocksize = scalar @rowblock;
+                        my %packet :shared = ();
+                        $packet{rows} = \@rowblock;
+                        $packet{size} = $realblocksize;
+                        $packet{row_offset} = $i;
+                        $packet{block_n} = $block_n;
+                        if ($realblocksize > 0) {
+                            $context->{queue}->enqueue(\%packet); #$packet);
+                            $blockcount++;
+                            #wait if thequeue is full and there there is one running consumer
+                            while (((($state = get_other_threads_state($context->{errorstates},$tid)) & $RUNNING) == $RUNNING) and $context->{queue}->pending() >= $context->{instance}->{threadqueuelength}) {
+                                #yield();
+                                sleep($thread_sleep_secs);
+                            }
+                            $i += $realblocksize;
+                            if ($n == 0) {
+                                filethreadingdebug('[' . $tid . '] reader thread is shutting down (end of data) ...',getlogger(__PACKAGE__));
+                                last;
+                            }
+                        } else {
+                            $context->{queue}->enqueue(\%packet); #$packet);
+                            filethreadingdebug('[' . $tid . '] reader thread is shutting down (end of data - empty block) ...',getlogger(__PACKAGE__));
                             last;
                         }
-                    } else {
-                        $context->{queue}->enqueue(\%packet);
-                        filethreadingdebug('[' . $tid . '] reader thread is shutting down (end of data - empty block) ...',getlogger(__PACKAGE__));
-                        last;
                     }
                 }
-            }
+                if (not (($state & $RUNNING) == $RUNNING and ($state & $ERROR) == 0)) {
+                    filethreadingdebug('[' . $tid . '] reader thread is shutting down (' .
+                                      (($state & $RUNNING) == $RUNNING ? 'still running consumer threads' : 'no running consumer threads') . ', ' .
+                                      (($state & $ERROR) == 0 ? 'no defunct thread(s)' : 'defunct thread(s)') . ') ...'
+                    ,getlogger(__PACKAGE__));
+                }
+                close(INPUTFILE_READER);
 
-            close(INPUTFILE_READER);
-        }
-        if (not (($state & $RUNNING) == $RUNNING and ($state & $ERROR) == 0)) {
-            filethreadingdebug('[' . $tid . '] reader thread is shutting down (' .
-                              (($state & $RUNNING) == $RUNNING ? 'still running consumer threads' : 'no running consumer threads') . ', ' .
-                              (($state & $ERROR) == 0 ? 'no defunct thread(s)' : 'defunct thread(s)') . ') ...'
-            ,getlogger(__PACKAGE__));
+                fileprocessingdone($filename,getlogger(__PACKAGE__));
+
+            });
         }
     };
 
@@ -454,6 +521,7 @@ sub _reader {
     lock $context->{errorstates};
     if ($@) {
         $context->{errorstates}->{$tid} = $ERROR;
+        fileprocessingfailed($filename,getlogger(__PACKAGE__));
     } else {
         $context->{errorstates}->{$tid} = $COMPLETED;
     }
@@ -495,12 +563,13 @@ sub _process {
                         last;
                     }
 
-                } else {
+                } elsif ($context->{single_file}) {
                     filethreadingdebug('[' . $tid . '] shutting down processor thread (end of data - empty block) ...',getlogger(__PACKAGE__));
                     last;
+                } else {
+                    sleep($thread_sleep_secs);
                 }
             } else {
-
                 sleep($thread_sleep_secs);
             }
         }
@@ -516,7 +585,7 @@ sub _process {
     if ($err) {
         $context->{errorstates}->{$tid} = $ERROR;
     } else {
-        $context->{errorstates}->{$tid} = $COMPLETED;
+        $context->{errorstates}->{$tid} = $COMPLETED; #(not $rowblock_result) ? $ERROR : $COMPLETED;
     }
     return $context->{errorstates}->{$tid};
 }
@@ -568,14 +637,14 @@ sub _get_stop_consumer_thread {
 
 }
 
-sub _create_process_context {
+sub create_process_context {
 
     my $context = {};
     foreach my $ctx (@_) {
         if (defined $ctx and 'HASH' eq ref $ctx) {
             foreach my $key (keys %$ctx) {
                 $context->{$key} = $ctx->{$key};
-
+                #delete $ctx->{$key};
             }
         }
     }
