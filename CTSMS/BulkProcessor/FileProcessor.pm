@@ -206,10 +206,6 @@ sub process {
             my $filename;
             eval {
 
-                my $init_reader_context_code = $self->can('init_reader_context');
-                if (defined $init_reader_context_code) {
-                    &$init_reader_context_code($self,$context);
-                }
                 if (defined $init_process_context_code and 'CODE' eq ref $init_process_context_code) {
                     &$init_process_context_code($context);
                 }
@@ -217,6 +213,8 @@ sub process {
                 if (defined $read_and_process_code) {
                     $files_code->($context,sub {
                         $filename = shift;
+                        $context->{filename} = $filename;
+
                         if (-s $filename > 0) {
                             fileprocessingstarted($filename,getlogger(__PACKAGE__));
                         } else {
@@ -227,7 +225,11 @@ sub process {
                             }
                             return;
                         }
-                        $context->{filename} = $filename;
+
+                        my $init_reader_context_code = $self->can('init_reader_context');
+                        if (defined $init_reader_context_code) {
+                            &$init_reader_context_code($self,$context);
+                        }
                         my $rowblock_result = &$read_and_process_code($self,$context,$process_code);
                         fileprocessingdone($filename,getlogger(__PACKAGE__));
                     });
@@ -247,6 +249,7 @@ sub process {
 
                     $files_code->($context,sub {
                         $filename = shift;
+
                         if (-s $filename > 0) {
                             fileprocessingstarted($filename,getlogger(__PACKAGE__));
                         } else {
@@ -256,6 +259,12 @@ sub process {
                                 fileprocessingwarn($filename,basename($filename) . ' ' . (-e $filename ? 'has 0 bytes' : 'not found'),getlogger(__PACKAGE__));
                             }
                             return;
+                        }
+
+                        $context->{filename} = $filename;
+                        my $init_reader_context_code = $self->can('init_reader_context');
+                        if (defined $init_reader_context_code) {
+                            &$init_reader_context_code($self,$context);
                         }
 
                         local *INPUTFILE;
@@ -370,10 +379,6 @@ sub _reader {
     my $filename;
     eval {
 
-        my $init_reader_context_code = $context->{instance}->can('init_reader_context');
-        if (defined $init_reader_context_code) {
-            &$init_reader_context_code($context->{instance},$context);
-        }
         my $read_code = $context->{instance}->can('read');
         if (defined $read_code) {
             $context->{files_code}->($context,sub {
@@ -389,6 +394,10 @@ sub _reader {
                     return;
                 }
                 $context->{filename} = $filename;
+                my $init_reader_context_code = $context->{instance}->can('init_reader_context');
+                if (defined $init_reader_context_code) {
+                    &$init_reader_context_code($context->{instance},$context);
+                }
                 my $state = &$read_code($context->{instance},$context);
                 if (not (($state & $RUNNING) == $RUNNING and ($state & $ERROR) == 0)) {
                     filethreadingdebug('[' . $tid . '] reader thread is shutting down (' .
@@ -425,6 +434,12 @@ sub _reader {
                         fileprocessingwarn($filename,basename($filename) . ' ' . (-e $filename ? 'has 0 bytes' : 'not found'),getlogger(__PACKAGE__));
                     }
                     return;
+                }
+
+                $context->{filename} = $filename;
+                my $init_reader_context_code = $context->{instance}->can('init_reader_context');
+                if (defined $init_reader_context_code) {
+                    &$init_reader_context_code($context->{instance},$context);
                 }
 
                 local *INPUTFILE_READER;
