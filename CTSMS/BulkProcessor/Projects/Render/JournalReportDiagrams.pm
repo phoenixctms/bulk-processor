@@ -194,17 +194,12 @@ sub _create_journalentry_24hheatmap {
 
         my $filter_and = (defined $filter and length($filter) > 0 ? $filter . ' and' : '');
         for (my $day = 0; $day <= $days; $day++) {
-
     	    for (my $hour = 0; $hour <= 23; $hour++) {
     		    $statement = "select count(*) from journal_entry where" . $filter_and . " modified_timestamp >= ? and modified_timestamp < ? and EXTRACT(HOUR FROM modified_timestamp) = ?";
     		    my $count = $db->db_get_value($statement, $start . ' 00:00:00', $stop . ' 00:00:00', $hour);
     		    print DATA_FILE substr($start,0,10) . "\t" . $hour . "\t" . $count . "\n";
     		    $max = $count > $max ? $count : $max;
-
     	    }
-
-
-
     	    $start = $stop;
     	    $stop = add_days(split_date($start),1);
     	    print DATA_FILE "\n";
