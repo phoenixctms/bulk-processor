@@ -6,8 +6,6 @@ use strict;
 
 use Dancer qw();
 
-
-
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     save_params
     $restapi
@@ -40,7 +38,6 @@ Dancer::get('/contact',sub {
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
     Dancer::session('proband_address_country_name',Dancer::session('proband_address_country_name') || Dancer::session('proband_citizenship'));
 
-
     unless (defined Dancer::session(_type_to_param_prefix('email_contact_detail_type') . 'notify')) {
         Dancer::session(_type_to_param_prefix('email_contact_detail_type') . 'notify',($email_notify_preset ? 'true' : ''));
     }
@@ -51,6 +48,7 @@ Dancer::get('/contact',sub {
             apiError => get_error(1),
             probandAddressCountryNameTooltip => Dancer::Plugin::I18N::localize('proband_address_country_name_tooltip'),
             probandAddressZipCodeTooltip => Dancer::Plugin::I18N::localize('proband_address_zip_code_tooltip'),
+            probandAddressProvinceTooltip => Dancer::Plugin::I18N::localize('proband_address_province_tooltip'),
             probandAddressCityNameTooltip => Dancer::Plugin::I18N::localize('proband_address_city_name_tooltip'),
             probandAddressStreetNameTooltip => Dancer::Plugin::I18N::localize('proband_address_street_name_tooltip'),
             probandAddressHouseNumberTooltip => Dancer::Plugin::I18N::localize('proband_address_house_number_tooltip'),
@@ -73,6 +71,7 @@ Dancer::post('/contact',sub {
         'proband_address_house_number',
         'proband_address_street_name',
         'proband_address_zip_code',
+        'proband_address_province',
         _type_to_param_prefix('phone_contact_detail_type') . 'value',
         _type_to_param_prefix('email_contact_detail_type') . 'value',
         _type_to_param_prefix('email_contact_detail_type') . 'notify',
@@ -166,6 +165,7 @@ sub _get_address_in {
         "streetName" => trim($params->{proband_address_street_name}),
         "typeId" => $site->{address_type}->{id},
         "zipCode" => trim($params->{proband_address_zip_code}),
+        "province" => trim($params->{proband_address_province}),
     };
 }
 

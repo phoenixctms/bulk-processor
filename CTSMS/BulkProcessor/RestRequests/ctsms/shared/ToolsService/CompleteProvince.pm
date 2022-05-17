@@ -1,4 +1,4 @@
-package CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteZipCode;
+package CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteProvince;
 use strict;
 
 ## no critic
@@ -19,7 +19,7 @@ use CTSMS::BulkProcessor::RestItem qw();
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
-    complete_zip_code
+    complete_province
 );
 
 my $default_restapi = \&get_ctsms_restapi;
@@ -31,11 +31,11 @@ my $get_complete_path_query = sub {
     $params{cityNameInfix} = $city_name_infix if defined $city_name_infix;
     $params{provinceInfix} = $province_infix if length($province_infix);
     $params{limit} = $limit if defined $limit;
-    return 'tools/complete/zipcode/' . get_query_string(\%params);
+    return 'tools/complete/province/' . get_query_string(\%params);
 };
 
 my $fieldnames = [
-    'zipcode',
+    'province',
 ];
 
 sub new {
@@ -49,7 +49,7 @@ sub new {
 
 }
 
-sub complete_zip_code {
+sub complete_province {
 
     my ($zip_code_prefix, $country_name_infix, $province_infix, $city_name_infix, $limit, $load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
@@ -85,8 +85,8 @@ sub TO_JSON {
 
     my $self = shift;
     return {
-        value => $self->{zipcode},
-        label => $self->{zipcode},
+        value => $self->{province},
+        label => $self->{province},
     };
 
 }

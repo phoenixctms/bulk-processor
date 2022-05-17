@@ -15,6 +15,7 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteStr
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteZipCode qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteCountryName qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteCityName qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteProvince qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteTitle qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteInputFieldSelectionSetValueValue qw();
 
@@ -23,6 +24,7 @@ Dancer::post('/autocomplete/street',sub {
     return json_response(CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteStreetName::complete_street_name(
         $params->{street_name},
         $params->{country_name},
+        $params->{province},
         $params->{city_name},
         undef,
         undef,0,$restapi)
@@ -34,6 +36,7 @@ Dancer::post('/autocomplete/zip',sub {
     return json_response(CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteZipCode::complete_zip_code(
         $params->{zip_code},
         $params->{country_name},
+        $params->{province},
         length($params->{city_name}) > 0 ? $params->{city_name} : undef,
         undef,0,$restapi)
     );
@@ -52,6 +55,18 @@ Dancer::post('/autocomplete/city',sub {
     return json_response(CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteCityName::complete_city_name(
         $params->{city_name},
         $params->{country_name},
+        $params->{province},
+        length($params->{zip_code}) > 0 ? $params->{zip_code} : undef,
+        undef,0,$restapi)
+    );
+});
+
+Dancer::post('/autocomplete/province',sub {
+    my $params = Dancer::params();
+    return json_response(CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteProvince::complete_province(
+        $params->{city_name},
+        $params->{country_name},
+        $params->{province},
         length($params->{zip_code}) > 0 ? $params->{zip_code} : undef,
         undef,0,$restapi)
     );

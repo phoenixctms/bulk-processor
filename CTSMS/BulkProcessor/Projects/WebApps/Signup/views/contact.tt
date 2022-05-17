@@ -17,6 +17,10 @@
         </div>
 
         <div class="ctsms-form-entry">
+
+        <label class="ctsms-required">[% l('proband_address_province_label') %]</label>
+        <input name="proband_address_province" id="province" type="text" class="ctsms-control" value="[% HTML.escape(session.proband_address_province) %]" required/>
+
         <label class="ctsms-required">[% l('proband_address_zip_code_label') %]</label>
         <input name="proband_address_zip_code" id="zip_code" type="text" class="ctsms-control-smaller" value="[% HTML.escape(session.proband_address_zip_code) %]" required/>
         <label class="ctsms-required ctsms-adjacent">[% l('proband_address_city_name_label') %]</label>
