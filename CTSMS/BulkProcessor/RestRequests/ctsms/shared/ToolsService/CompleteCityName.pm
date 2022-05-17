@@ -24,11 +24,12 @@ our @EXPORT_OK = qw(
 
 my $default_restapi = \&get_ctsms_restapi;
 my $get_complete_path_query = sub {
-    my ($city_name_infix,$country_name_infix,$zip_code_prefix, $limit) = @_;
+    my ($city_name_infix,$country_name_infix,$province_infix,$zip_code_prefix, $limit) = @_;
     my %params = ();
     $params{cityNameInfix} = $city_name_infix if defined $city_name_infix;
     $params{countryNameInfix} = $country_name_infix if defined $country_name_infix;
     $params{zipCodePrefix} = $zip_code_prefix if defined $zip_code_prefix;
+    $params{provinceInfix} = $province_infix if length($province_infix);
     $params{limit} = $limit if defined $limit;
     return 'tools/complete/cityname/' . get_query_string(\%params);
 };
@@ -51,9 +52,9 @@ sub new {
 
 sub complete_city_name {
 
-    my ($city_name_infix,$country_name_infix,$zip_code_prefix, $limit, $load_recursive,$restapi,$headers) = @_;
+    my ($city_name_infix,$country_name_infix,$province_infix,$zip_code_prefix, $limit, $load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->get(&$get_complete_path_query($city_name_infix,$country_name_infix,$zip_code_prefix, $limit),$headers),$load_recursive,$restapi);
+    return builditems_fromrows($api->get(&$get_complete_path_query($city_name_infix,$country_name_infix,$province_infix,$zip_code_prefix, $limit),$headers),$load_recursive,$restapi);
 
 }
 
@@ -83,7 +84,7 @@ sub builditems_fromrows {
 }
 
 sub TO_JSON {
-    
+
     my $self = shift;
     return {
         value => $self->{cityname},
