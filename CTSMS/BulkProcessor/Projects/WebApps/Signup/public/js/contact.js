@@ -1,6 +1,4 @@
 
-
-
 function initPrimeUI(context) {
 
     $('#images').puigalleria({
@@ -18,21 +16,28 @@ function initPrimeUI(context) {
         content: context.probandAddressCountryNameTooltip
     });
 
-    $('#zip_code').puiautocomplete(getZipCodeAutoCompleteConfig('country_name','city_name'));
+    $('#province').puiautocomplete(getProvinceAutoCompleteConfig('country_name'));
+    $('#province').puitooltip({
+        my: 'left bottom',
+        at: 'left top',
+        content: context.probandAddressProvinceTooltip
+    });
+
+    $('#zip_code').puiautocomplete(getZipCodeAutoCompleteConfig('country_name','province','city_name'));
     $('#zip_code').puitooltip({
         my: 'left bottom',
         at: 'left top',
         content: context.probandAddressZipCodeTooltip
     });
 
-    $('#city_name').puiautocomplete(getCityNameAutoCompleteConfig('country_name','zip_code'));
+    $('#city_name').puiautocomplete(getCityNameAutoCompleteConfig('country_name','province','zip_code'));
     $('#city_name').puitooltip({
         my: 'left bottom',
         at: 'left top',
         content: context.probandAddressCityNameTooltip
     });
 
-    $('#street_name').puiautocomplete(getStreetNameAutoCompleteConfig('country_name','city_name'));
+    $('#street_name').puiautocomplete(getStreetNameAutoCompleteConfig('country_name','province','city_name'));
     $('#street_name').puitooltip({
         my: 'left bottom',
         at: 'left top',
@@ -90,11 +95,6 @@ function initPrimeUI(context) {
         return _sanitizeForm(context);
     });
 
-
-
-
-
-
     $('#save_next_btn').puibutton({
 
         icon: 'fa-angle-right',
@@ -113,41 +113,6 @@ function initPrimeUI(context) {
 
 function _sanitizeForm(context) {
 
-
-
-
-
-
-
-
-
-
-
     showWaitDlg();
     return true;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

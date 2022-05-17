@@ -169,7 +169,27 @@ function getCountryNameAutoCompleteConfig() {
     };
 }
 
-function getCityNameAutoCompleteConfig(countryNameId,zipCodeId) {
+function getProvinceAutoCompleteConfig(countryNameId) {
+    return {
+
+        effect: 'fade',
+        effectSpeed: 'fast',
+        completeSource: function(request, response) {
+            $.ajax($.extend( true, autoCompleteAjaxSettings, {
+
+                url: context.uriBase + '/autocomplete/province',
+                data: { province: request.query, country_name: $('#' + countryNameId).val() },
+
+                context: this,
+                success: function(data) {
+                    response.call(this, data);
+                }
+            }));
+        }
+    };
+}
+
+function getCityNameAutoCompleteConfig(countryNameId,provinceId,zipCodeId) {
     return {
 
         effect: 'fade',
@@ -178,7 +198,7 @@ function getCityNameAutoCompleteConfig(countryNameId,zipCodeId) {
             $.ajax($.extend( true, autoCompleteAjaxSettings, {
 
                 url: context.uriBase + '/autocomplete/city',
-                data: { city_name: request.query, country_name: $('#' + countryNameId).val(), zip_code: $('#' + zipCodeId).val() },
+                data: { city_name: request.query, country_name: $('#' + countryNameId).val(), province: $('#' + provinceId).val(), zip_code: $('#' + zipCodeId).val() },
 
                 context: this,
                 success: function(data) {
@@ -189,7 +209,7 @@ function getCityNameAutoCompleteConfig(countryNameId,zipCodeId) {
     };
 }
 
-function getZipCodeAutoCompleteConfig(countryNameId,cityNameId) {
+function getZipCodeAutoCompleteConfig(countryNameId,provinceId,cityNameId) {
     return {
 
         effect: 'fade',
@@ -198,7 +218,7 @@ function getZipCodeAutoCompleteConfig(countryNameId,cityNameId) {
             $.ajax($.extend( true, autoCompleteAjaxSettings, {
 
                 url: context.uriBase + '/autocomplete/zip',
-                data: { zip_code: request.query, country_name: $('#' + countryNameId).val(), city_name: $('#' + cityNameId).val() },
+                data: { zip_code: request.query, country_name: $('#' + countryNameId).val(), province: $('#' + provinceId).val(), city_name: $('#' + cityNameId).val() },
 
                 context: this,
                 success: function(data) {
@@ -209,7 +229,7 @@ function getZipCodeAutoCompleteConfig(countryNameId,cityNameId) {
     };
 }
 
-function getStreetNameAutoCompleteConfig(countryNameId,cityNameId) {
+function getStreetNameAutoCompleteConfig(countryNameId,provinceId,cityNameId) {
     return {
 
         effect: 'fade',
@@ -218,7 +238,7 @@ function getStreetNameAutoCompleteConfig(countryNameId,cityNameId) {
             $.ajax($.extend( true, autoCompleteAjaxSettings, {
 
                 url: context.uriBase + '/autocomplete/street',
-                data: { street_name: request.query, country_name: $('#' + countryNameId).val(), city_name: $('#' + cityNameId).val() },
+                data: { street_name: request.query, country_name: $('#' + countryNameId).val(), province: $('#' + provinceId).val(), city_name: $('#' + cityNameId).val() },
 
                 context: this,
                 success: function(data) {
