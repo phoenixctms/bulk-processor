@@ -60,6 +60,7 @@ our @EXPORT_OK = qw(
     $default_timezone
     $default_date_format
     $default_decimal_separator
+    $address_show_province
 
     $ctsms_sites
     $default_site
@@ -93,6 +94,7 @@ our $default_timezone = $system_timezone;
 our $convert_timezone = 0; # 1 for clientside user timezone conversion
 our $default_date_format = 'yyyy-MM-dd';
 our $default_decimal_separator = '.'; # expected by the user
+our $address_show_province = 1;
 
 our $ctsms_sites = {};
 our $default_site = undef;
@@ -122,10 +124,7 @@ sub update_settings {
 
         my $result = 1;
 
-
-
         $result &= _prepare_working_paths(1);
-
 
         $dancer_environment = $data->{dancer_environment} if exists $data->{dancer_environment};
         $proband_create_interval_limit = $data->{proband_create_interval_limit} if exists $data->{proband_create_interval_limit};
@@ -137,6 +136,8 @@ sub update_settings {
         $default_timezone = $data->{default_timezone} if exists $data->{default_timezone};
         $default_date_format = $data->{default_date_format} if exists $data->{default_date_format};
         $default_decimal_separator = $data->{default_decimal_separator} if exists $data->{default_decimal_separator}; # expected by the user entry
+
+        $address_show_province = stringtobool($data->{address_show_province}) if exists $data->{address_show_province};
 
         $ctsms_base_uri = $data->{ctsms_base_uri} if exists $data->{ctsms_base_uri};
 
@@ -269,16 +270,6 @@ sub update_settings {
             configurationerror($configfile,"ctsms_sites hash required",getlogger(__PACKAGE__));
         }
         configurationerror($configfile,"no default site specified",getlogger(__PACKAGE__)) unless defined $default_site;
-
-
-
-
-
-
-
-
-
-
 
         return $result;
 

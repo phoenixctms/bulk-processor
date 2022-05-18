@@ -53,15 +53,6 @@ Dancer::get('/proband',sub {
         Dancer::session('proband_agreed',($proband_agreed_preset ? 'true' : ''));
     }
 
-
-
-
-
-
-
-
-
-
     my $site = get_site();
     return get_template('proband',
         script_names => 'proband',

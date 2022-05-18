@@ -29,9 +29,13 @@ my $get_complete_path_query = sub {
     $params{countryName} = $country_name if defined $country_name;
     $params{zipCode} = $zip_code if defined $zip_code;
     $params{cityName} = $city_name if defined $city_name;
-    $params{province} = $province if length($province);
     $params{limit} = $limit if defined $limit;
-    return 'tools/complete/streetname/' . get_query_string(\%params);
+    if (length($province)) {
+        $params{province} = $province if length($province);
+        return 'tools/complete/streetnameprovince/' . get_query_string(\%params);
+    } else {
+        return 'tools/complete/streetname/' . get_query_string(\%params);
+    }
 };
 
 my $fieldnames = [

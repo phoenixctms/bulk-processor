@@ -29,9 +29,13 @@ my $get_complete_path_query = sub {
     $params{cityNameInfix} = $city_name_infix if defined $city_name_infix;
     $params{countryNameInfix} = $country_name_infix if defined $country_name_infix;
     $params{zipCodePrefix} = $zip_code_prefix if defined $zip_code_prefix;
-    $params{provinceInfix} = $province_infix if length($province_infix);
     $params{limit} = $limit if defined $limit;
-    return 'tools/complete/cityname/' . get_query_string(\%params);
+    if (length($province_infix)) {
+        $params{provinceInfix} = $province_infix;
+        return 'tools/complete/citynameprovince/' . get_query_string(\%params);
+    } else {
+        return 'tools/complete/cityname/' . get_query_string(\%params);
+    }
 };
 
 

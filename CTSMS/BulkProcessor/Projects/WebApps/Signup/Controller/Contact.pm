@@ -20,6 +20,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $phone_number_prefix_preset
     $email_notify_preset
+    $address_show_province
 );
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::ProbandAddress qw();
@@ -59,6 +60,7 @@ Dancer::get('/contact',sub {
             probandEmailNotifyTooltip => Dancer::Plugin::I18N::localize('proband_email_notify_tooltip'),
         },
         trials_na => CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::trials_na(),
+        address_show_province => $address_show_province,
     );
 });
 
