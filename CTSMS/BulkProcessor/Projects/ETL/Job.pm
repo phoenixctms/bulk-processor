@@ -63,6 +63,7 @@ sub update_settings {
         $job_id = $data->{job_id} if exists $data->{job_id};
         if (defined $job_id and length($job_id) > 0) {
             lock %job;
+            sleep 2; #the database record might no exist yet, so wait
             _set_job(CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job::get_item($job_id, { _file => 1, }));
             if (keys %job) {
                 scriptinfo("job '$job{type}->{name}' id $job_id",getlogger(__PACKAGE__));
