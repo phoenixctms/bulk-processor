@@ -704,7 +704,7 @@ sub insert_stmt {
     my $expected_fieldnames = $table_expected_fieldnames->{$tid}->{$connectidentifier}->{$class};
     if ($exclude_identity_fieldnames) {
         $expected_fieldnames = [ grep { not contains($_,$exclude_identity_fieldnames); } @$expected_fieldnames ];
-    }    
+    }
     my $tablename = $table_names->{$tid}->{$connectidentifier}->{$class};
     return 'INSERT ' . ($insert_ignore ? $db->insert_ignore_phrase() . ' ' : '') . 'INTO ' . $db->tableidentifier($tablename) . ' (' .
       join(', ',map { local $_ = $_; $_ = $db->columnidentifier($_); $_; } @$expected_fieldnames) .
@@ -789,7 +789,7 @@ sub transfer_table {
             if (length($select) > 0) {
                 $selectstatement = $select;
             } else {
-                $selectstatement = 'SELECT ' . join(', ',map { local $_ = $_; $_ = $db->columnidentifier($_); $_; } @fieldnames) . ' FROM ' . $db->tableidentifier($tablename)
+                $selectstatement = 'SELECT ' . join(', ',map { local $_ = $_; $_ = $db->columnidentifier($_); $_; } @fieldnames) . ' FROM ' . $db->tableidentifier($tablename);
             }
 
             my $insertstatement = 'INSERT INTO ' . $target_db->tableidentifier($targettablename) . ' (' . join(', ',map { local $_ = $_; $_ = $target_db->columnidentifier($_); $_; } @fieldnames) . ') VALUES (' . $valueplaceholders . ')';
