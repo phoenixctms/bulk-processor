@@ -11,7 +11,7 @@ use CTSMS::BulkProcessor::Logging qw(
     nosqlinfo
     nosqldebug);
 
-use CTSMS::BulkProcessor::LogError qw(nosqlerror);
+use CTSMS::BulkProcessor::LogError qw(nosqlerror notimplementederror);
 use CTSMS::BulkProcessor::Utils qw(threadid);
 
 require Exporter;
