@@ -38,7 +38,7 @@ use CTSMS::BulkProcessor::ConnectorPool qw(
 
 );
 
-use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring);
+use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring stringtobool);
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 
@@ -89,6 +89,7 @@ our @EXPORT_OK = qw(
     $ecrf_probandlistentry_group_column_name
     $ecrf_probandlistentry_status_column_name
 
+    $publish_public_file
 );
 
 our $input_path = $working_path . 'input/';
@@ -135,6 +136,8 @@ our $selection_set_value_separator = ',';
 
 our $show_page_progress = 0;
 our $listentrytag_map_mode = 'last';
+
+our $publish_public_file = 0;
 
 my $ecrf_data_include_ecrffield_code = sub {
     my ($ecrffield) = @_;
@@ -309,6 +312,8 @@ sub update_settings {
         $selectionvalue_abbreviate_opts = $data->{selectionvalue_abbreviate_opts} if exists $data->{selectionvalue_abbreviate_opts};
 
         $section_abbreviate_opts = $data->{section_abbreviate_opts} if exists $data->{section_abbreviate_opts};
+        
+        $publish_public_file = stringtobool($data->{publish_public_file}) if exists $data->{publish_public_file};
 
         return $result;
 

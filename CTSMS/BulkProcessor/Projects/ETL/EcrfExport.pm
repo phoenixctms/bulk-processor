@@ -41,6 +41,8 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
 
     get_proband_columns
     get_probandlistentry_columns
+    
+    $publish_public_file
 
 );
 #$ecrf_data_listentrytags
@@ -341,6 +343,7 @@ sub _get_file_in {
     $subfolder //= '';
     return {
         "active" => \1,
+        "publicFile" => ($publish_public_file ? \1 : \0),
         "comment" => $system_name . ' ' . $system_version . ' (' . $system_instance_label . ') [' . $local_fqdn . ']',
         "trialId" => $ecrf_data_trial_id,
         "module" => $CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::TRIAL_FILE_MODULE,
