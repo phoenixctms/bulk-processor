@@ -46,6 +46,8 @@ use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
 
     $skip_errors
     $timezone
+    
+    $publish_public_file
 
     get_proband_columns
     update_job
@@ -184,6 +186,7 @@ sub _get_file_in {
     $subfolder //= '';
     return {
         "active" => \1,
+        "publicFile" => ($publish_public_file ? \1 : \0),
         "comment" => $system_name . ' ' . $system_version . ' (' . $system_instance_label . ') [' . $local_fqdn . ']',
         "trialId" => $inquiry_data_trial_id,
         "module" => $CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::TRIAL_FILE_MODULE,

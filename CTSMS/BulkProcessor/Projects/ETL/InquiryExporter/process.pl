@@ -310,7 +310,7 @@ sub publish_inquiry_data_sqlite_task {
         push(@$messages,'publish_inquiry_data_sqlite error: ' . $err);
         return 0;
     } else {
-        push(@$messages,"- file '$out->{title}' added to the '$out->{trial}->{name}' trial") if $out;
+        push(@$messages,"- file '$out->{title}' (file ID $out->{id}) added to the '$out->{trial}->{name}' trial") if $out;
         return 1;
     }
 }
@@ -326,7 +326,7 @@ sub publish_inquiry_data_horizontal_csv_task {
         push(@$messages,'publish_inquiry_data_horizontal_csv error: ' . $err);
         return 0;
     } else {
-        push(@$messages,"- file '$out->{title}' added to the '$out->{trial}->{name}' trial") if $out;
+        push(@$messages,"- file '$out->{title}' (file ID $out->{id}) added to the '$out->{trial}->{name}' trial") if $out;
         push(@$messages,'- publish_inquiry_data_horizontal_csv finished (specify --upload to store the files)') unless $out;
         return 1;
     }
@@ -343,7 +343,7 @@ sub publish_inquiry_data_xls_task {
         push(@$messages,'publish_inquiry_data_xls error: ' . $err);
         return 0;
     } else {
-        push(@$messages,"- file '$out->{title}' added to the '$out->{trial}->{name}' trial") if $out;
+        push(@$messages,"- file '$out->{title}' (file ID $out->{id}) added to the '$out->{trial}->{name}' trial") if $out;
         push(@$messages,'- publish_inquiry_data_xls finished (specify --upload to store the files)') unless $out;
         return 1;
     }
@@ -362,7 +362,7 @@ sub publish_inquiry_data_pdfs_task {
     } else {
         foreach my $upload (@$uploads) {
             my ($out,$filename) = @$upload;
-            push(@$messages,"- file '$out->{title}' added to the '$out->{trial}->{name}' trial");
+            push(@$messages,"- file '$out->{title}' (file ID $out->{id}) added to the '$out->{trial}->{name}' trial");
         }
         push(@$messages,'- publish_inquiry_data_pdfs finished (specify --upload to store the files)') unless ('ARRAY' eq ref $uploads and (scalar @$uploads > 0));
         return 1;

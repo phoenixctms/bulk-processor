@@ -36,7 +36,7 @@ use CTSMS::BulkProcessor::ConnectorPool qw(
 
 );
 
-use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring);
+use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring stringtobool);
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 
@@ -93,6 +93,7 @@ our @EXPORT_OK = qw(
 
     $lockfile
 
+    $publish_public_file
 );
 
 our $input_path = $working_path . 'input/';
@@ -131,6 +132,8 @@ our $inquiry_data_export_pdfs_filename = '%s_%s%s';
 our $timezone = undef;
 
 #my $ecrfname_abbreviate_opts = {};
+
+our $publish_public_file = 0;
 
 my $category_abbreviate_opts = {};
 my $inputfieldname_abbreviate_opts = {};
@@ -298,6 +301,8 @@ sub update_settings {
         $selectionvalue_abbreviate_opts = $data->{selectionvalue_abbreviate_opts} if exists $data->{selectionvalue_abbreviate_opts};
 
         $category_abbreviate_opts = $data->{category_abbreviate_opts} if exists $data->{category_abbreviate_opts};
+        
+        $publish_public_file = stringtobool($data->{publish_public_file}) if exists $data->{publish_public_file};
 
         return $result;
 
