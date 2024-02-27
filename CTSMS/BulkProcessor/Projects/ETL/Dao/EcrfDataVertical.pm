@@ -62,6 +62,7 @@ sub _set_expected_fieldnames {
         'ecrf_field_id',
         'ecrf_field_position',
         'ecrf_field_title',
+        'ecrf_field_ref',
         'ecrf_field_external_id',
         'input_field_name',
         'input_field_title',
