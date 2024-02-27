@@ -51,6 +51,7 @@ my $fieldnames = [
     "comment",
     "disabled",
     "ecrf",
+    "ref",
     "externalId",
     "field",
     "id",

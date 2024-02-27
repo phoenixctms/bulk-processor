@@ -531,6 +531,7 @@ sub _ecrf_data_vertical_items_to_row {
     push(@row,$context->{ecrf_status} ? $context->{ecrf_status}->{status}->{nameL10nKey} : undef);
     push(@row,$item->{ecrfField}->{ecrf}->{name});
     push(@row,$item->{ecrfField}->{ecrf}->{revision});
+    push(@row,$item->{ecrfField}->{ecrf}->{ref});
     push(@row,$item->{ecrfField}->{ecrf}->{externalId});
     push(@row,$item->{ecrfField}->{ecrf}->{id});
     if (defined $item->{ecrfField}->{ecrf}->{visits} and scalar @{$item->{ecrfField}->{ecrf}->{visits}} > 0) {
@@ -548,6 +549,7 @@ sub _ecrf_data_vertical_items_to_row {
     push(@row,$item->{ecrfField}->{id});
     push(@row,$item->{ecrfField}->{position});
     push(@row,$item->{ecrfField}->{titleL10nKey});
+    push(@row,$item->{ecrfField}->{ref});
     push(@row,$item->{ecrfField}->{externalId});
     push(@row,$item->{ecrfField}->{field}->{nameL10nKey});
     push(@row,$item->{ecrfField}->{field}->{titleL10nKey});
