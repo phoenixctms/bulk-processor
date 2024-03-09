@@ -64,9 +64,10 @@ my $get_renderinquiries_path_query = sub {
     return 'proband/' . $proband_id . '/inquiryvalues/' . $trial_id . '/pdf' . get_query_string(\%params);
 };
 my $get_renderinquiriessignup_path_query = sub {
-    my ($department_id,$proband_id, $active_signup) = @_;
+    my ($department_id,$inquiry_trial_id,$proband_id, $active_signup) = @_;
     my %params = ();
     $params{department_id} = $department_id if defined $department_id;
+    $params{inquiry_trial_id} = $inquiry_trial_id if defined $inquiry_trial_id;
     $params{active_signup} = booltostring($active_signup) if defined $active_signup;
     return 'proband/' . $proband_id . '/inquiryvalues/signuppdf' . get_query_string(\%params);
 };
@@ -121,9 +122,9 @@ sub render_inquiries {
 
 sub render_inquiries_signup {
 
-    my ($department_id,$proband_id, $active_signup,$restapi,$headers) = @_;
+    my ($department_id,$inquiry_trial_id,$proband_id, $active_signup,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return $api->get_file(&$get_renderinquiriessignup_path_query($department_id,$proband_id, $active_signup),$headers);
+    return $api->get_file(&$get_renderinquiriessignup_path_query($department_id,$inquiry_trial_id,$proband_id, $active_signup),$headers);
 
 }
 

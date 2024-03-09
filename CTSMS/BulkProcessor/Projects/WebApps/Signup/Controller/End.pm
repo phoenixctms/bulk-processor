@@ -60,6 +60,7 @@ Dancer::get('/end/inquiryformspdf',sub {
 
     return apply_lwp_file_response(CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::render_inquiries_signup(
         $site->{trial_department} ? $site->{trial_department}->{id} : undef,
+        $site->{inquiry_trial} ? $site->{inquiry_trial}->{id} : undef,
         $proband_id,
         1,
         $restapi,
