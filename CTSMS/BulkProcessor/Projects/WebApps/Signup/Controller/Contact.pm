@@ -251,7 +251,7 @@ sub _sanitize_contactdetailvalue {
     } elsif ('email_contact_detail_type' eq $type) {
         $value = trim($value);
     }
-    return $value
+    return $value;
 }
 
 1;
