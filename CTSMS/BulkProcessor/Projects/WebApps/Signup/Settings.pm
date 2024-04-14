@@ -183,7 +183,7 @@ sub update_settings {
                             my $trial_department_nameL10nKey = (ref $site->{trial_department} ? $site->{trial_department}->{nameL10nKey} : $site->{trial_department});
                             if ($trial_department_nameL10nKey) {
                                 my $trial_department = [ grep { local $_ = $_; $_->{nameL10nKey} eq $trial_department_nameL10nKey; } @$departments ]->[0];
-                                configurationerror($configfile,"$site_name - no or unknown trial department",getlogger(__PACKAGE__)) unless defined $trial_department;
+                                configurationerror($configfile,"$site_name - no or unknown trial site",getlogger(__PACKAGE__)) unless defined $trial_department;
 
                                     if (ref $site->{trial_department}) {
                                         $site->{trial_department}->{name}->{$lang} = $trial_department->{name};

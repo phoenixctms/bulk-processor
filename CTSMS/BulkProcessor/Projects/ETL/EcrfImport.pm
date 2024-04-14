@@ -1251,7 +1251,7 @@ sub _append_probandalias_criterion {
                     return 0;
                 }
             } else {
-                _warn_or_error($context,"empty proband department");
+                _warn_or_error($context,"empty proband site");
                 return 0;
             }
         }
