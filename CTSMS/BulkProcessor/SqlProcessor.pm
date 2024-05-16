@@ -771,7 +771,7 @@ sub transfer_table {
             tabletransferstarted($db,$tablename,$target_db,$targettablename,$rowcount,getlogger(__PACKAGE__));
         } else {
             transferzerorowcount($db,$tablename,$target_db,$targettablename,$rowcount,getlogger(__PACKAGE__));
-            return;
+            return 1;
         }
 
         my $errorstate = $RUNNING;
@@ -1012,7 +1012,7 @@ sub process_table {
             tableprocessingstarted($db,$tablename,$rowcount,getlogger(__PACKAGE__));
         } else {
             processzerorowcount($db,$tablename,$rowcount,getlogger(__PACKAGE__));
-            return;
+            return 1;
         }
 
         my @fieldnames = @$expected_fieldnames;
