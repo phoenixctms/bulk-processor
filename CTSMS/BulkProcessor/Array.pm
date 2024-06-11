@@ -23,6 +23,7 @@ our @EXPORT_OK = qw(
     getrandomitem
     array_to_map
     powerset
+    flatten
 );
 
 sub mergearrays {
@@ -389,6 +390,11 @@ sub powerset {
     my $first = shift;
     my $pow = &powerset;
     [ map { [$first, @$_ ], [ @$_] } @$pow ];
+}
+
+#https://metacpan.org/dist/List-Flatten/source/lib/List/Flatten.pm
+sub flatten(@) {
+    return map { ref eq 'ARRAY' ? @$_ : $_ } @_;
 }
 
 1;
