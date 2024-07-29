@@ -58,7 +58,7 @@ sub load_relation {
                 $include = 1;
             }
         }
-        if (('CODE' eq ref $include and $include->($self))
+        if (('CODE' eq ref $include and _closure($include,$load_recursive->{_context})->($self))
              or (not ref $include and $include)) {
             load_module($findby);
             no strict "refs";  ## no critic (ProhibitNoStrict)
