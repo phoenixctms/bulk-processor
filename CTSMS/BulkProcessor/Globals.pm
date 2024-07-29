@@ -47,6 +47,7 @@ our @EXPORT_OK = qw(
 	$enablemultithreading
 	$root_threadid
 	$cpucount
+    get_threadqueuelength
 
 	$cells_transfer_memory_limit
 	$LongReadLen_limit
@@ -136,6 +137,14 @@ if ($is_perl_debug) {
 }
 
 our $cpucount = get_cpucount();
+
+sub get_threadqueuelength {
+    my $length = shift;
+    if ($length < 2 * $cpucount) {
+        $length = 2 * $cpucount;
+    }
+    return $length;
+}
 
 our $root_threadid = 0;
 our $cells_transfer_memory_limit = 10000000; #db fields
@@ -316,6 +325,13 @@ sub update_masterconfig {
         $screenloglevel = $data->{screenloglevel} if exists $data->{screenloglevel};
         $screenlogstderr = $data->{screenlogstderr} if exists $data->{screenlogstderr};
         $emailloglevel = $data->{emailloglevel} if exists $data->{emailloglevel};
+        
+        if ('debug' eq lc($fileloglevel)
+            or 'debug' eq lc($screenloglevel)
+            or 'debug' eq lc($screenlogstderr)
+            or 'debug' eq lc($emailloglevel)) {
+            $NGCP::BulkProcessor::SqlConnector::log_db_operations = 1;
+        }
 
         if (exists $data->{working_path}) {
             $result &= _prepare_working_paths($data->{working_path},1,$fileerrorcode,$configlogger);

@@ -29,11 +29,11 @@ use CTSMS::BulkProcessor::RandomString qw(createtmpstring);
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(get_tableidentifier);
+our @EXPORT_OK = qw(get_tableidentifier $log_db_operations);
 
 
 
-my $log_db_operations = 0;
+our $log_db_operations = 0;
 
 my $temptable_randomstringlength = 4;
 

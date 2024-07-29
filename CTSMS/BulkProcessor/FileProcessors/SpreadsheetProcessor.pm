@@ -6,6 +6,10 @@ use strict;
 use threads qw(yield);
 use threads::shared qw(shared_clone);
 
+use CTSMS::BulkProcessor::Globals qw(
+    get_threadqueuelength
+);
+
 use CTSMS::BulkProcessor::Logging qw(
     getlogger
     lines_read
@@ -111,7 +115,7 @@ sub read {
             @rowblock = ();
 
             #wait if the queue is full and there there is one running consumer
-            while (((($state = get_other_threads_state($context->{errorstates},$context->{tid})) & $RUNNING) == $RUNNING) and $context->{queue}->pending() >= $context->{instance}->{threadqueuelength}) {
+            while (((($state = get_other_threads_state($context->{errorstates},$context->{tid})) & $RUNNING) == $RUNNING) and $context->{queue}->pending() >= get_threadqueuelength($context->{instance}->{threadqueuelength})) {
                 sleep($thread_sleep_secs);
             }
 

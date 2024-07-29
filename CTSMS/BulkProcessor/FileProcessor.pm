@@ -15,6 +15,7 @@ use File::Basename qw(basename);
 use CTSMS::BulkProcessor::Globals qw(
     $enablemultithreading
     $cpucount
+    get_threadqueuelength
 );
 use CTSMS::BulkProcessor::Logging qw(
     getlogger
@@ -514,7 +515,7 @@ sub _reader {
                             $context->{queue}->enqueue(\%packet); #$packet);
                             $blockcount++;
                             #wait if thequeue is full and there there is one running consumer
-                            while (((($state = get_other_threads_state($context->{errorstates},$tid)) & $RUNNING) == $RUNNING) and $context->{queue}->pending() >= $context->{instance}->{threadqueuelength}) {
+                            while (((($state = get_other_threads_state($context->{errorstates},$tid)) & $RUNNING) == $RUNNING) and $context->{queue}->pending() >= get_threadqueuelength($context->{instance}->{threadqueuelength})) {
                                 #yield();
                                 sleep($thread_sleep_secs);
                             }

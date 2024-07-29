@@ -13,6 +13,7 @@ use Time::HiRes qw(sleep);
 use CTSMS::BulkProcessor::Globals qw(
     $enablemultithreading
     $cpucount
+    get_threadqueuelength
     $cells_transfer_memory_limit
     $transfer_defer_indexes
 );
@@ -1185,7 +1186,7 @@ sub _calc_blocksize {
         my $blocksize = int ( 10 ** $exp );
         my $cellcount_in_memory = $columncount * $blocksize;
         if ($multithreaded) {
-            $cellcount_in_memory *= $threadqueuelength;
+            $cellcount_in_memory *= get_threadqueuelength($threadqueuelength);
         }
 
         while ( $cellcount_in_memory > $cells_transfer_memory_limit or
@@ -1194,7 +1195,7 @@ sub _calc_blocksize {
             $blocksize = int ( 10 ** $exp );
             $cellcount_in_memory = $columncount * $blocksize;
             if ($multithreaded) {
-                $cellcount_in_memory *= $threadqueuelength;
+                $cellcount_in_memory *= get_threadqueuelength($threadqueuelength);
             }
         }
 
@@ -1300,7 +1301,7 @@ sub _reader {
                 $context->{queue}->enqueue(\%packet);
                 $blockcount++;
                 #wait if thequeue is full and there there is one running consumer
-                while (((($state = _get_other_threads_state($context->{errorstates},$tid)) & $RUNNING) == $RUNNING) and $context->{queue}->pending() >= $context->{threadqueuelength}) {
+                while (((($state = _get_other_threads_state($context->{errorstates},$tid)) & $RUNNING) == $RUNNING) and $context->{queue}->pending() >= get_threadqueuelength($context->{threadqueuelength})) {
 
                     sleep($thread_sleep_secs);
                 }

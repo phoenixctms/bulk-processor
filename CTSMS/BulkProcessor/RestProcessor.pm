@@ -13,6 +13,7 @@ use URI::Escape qw();
 use CTSMS::BulkProcessor::Globals qw(
     $enablemultithreading
     $cpucount
+    get_threadqueuelength
 );
 use CTSMS::BulkProcessor::Logging qw(
     getlogger
@@ -318,7 +319,7 @@ sub _reader {
                 $context->{queue}->enqueue(\%packet);
                 $blockcount++;
                 #wait if thequeue is full and there there is one running consumer
-                while (((($state = _get_other_threads_state($context->{errorstates},$tid)) & $RUNNING) == $RUNNING) and $context->{queue}->pending() >= $context->{threadqueuelength}) {
+                while (((($state = _get_other_threads_state($context->{errorstates},$tid)) & $RUNNING) == $RUNNING) and $context->{queue}->pending() >= get_threadqueuelength($context->{threadqueuelength})) {
 
                     sleep($thread_sleep_secs);
                 }
