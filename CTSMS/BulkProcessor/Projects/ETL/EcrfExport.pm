@@ -342,7 +342,7 @@ sub _get_file_in {
     my ($title,$subfolder) = @_;
     $subfolder //= '';
     return {
-        "active" => \1,
+        "active" => \0,
         "publicFile" => ($publish_public_file ? \1 : \0),
         "comment" => $system_name . ' ' . $system_version . ' (' . $system_instance_label . ') [' . $local_fqdn . ']',
         "trialId" => $ecrf_data_trial_id,
