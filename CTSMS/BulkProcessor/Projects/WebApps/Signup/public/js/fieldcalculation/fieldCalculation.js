@@ -505,20 +505,25 @@ var FieldCalculation = FieldCalculation || {};
 		if (inputFieldVariable && inputFieldVariable.outputId != null && inputFieldVariable.outputId.length > 0) {
 			var outputElement = _getElement(inputFieldVariable.outputId);
 			if (outputElement != null) {
-
 				outputElement.removeClass('ctsms-inputfield-output-valueerror ctsms-inputfield-output-outputerror ctsms-inputfield-output-delta ctsms-inputfield-output-nodelta ctsms-inputfield-output');
 				if (inputFieldVariable.valueErrorMessage != null && inputFieldVariable.valueErrorMessage.length > 0) {
 					outputElement.html(inputFieldVariable.valueErrorMessage);
-
-						outputElement.addClass('ctsms-inputfield-output-valueerror');
-
+					outputElement.addClass('ctsms-inputfield-output-valueerror');
 				} else if (inputFieldVariable.outputErrorMessage != null && inputFieldVariable.outputErrorMessage.length > 0) {
 					outputElement.html(inputFieldVariable.outputErrorMessage);
 					if (!outputElement.hasClass('ctsms-inputfield-output-disabled')) {
 						outputElement.addClass('ctsms-inputfield-output-outputerror');
 					}
 				} else if (inputFieldVariable.output != null && inputFieldVariable.output.length > 0) {
-					outputElement.html(inputFieldVariable.output);
+					try  {
+						outputElement.html(inputFieldVariable.output);
+					} catch (e) {
+						outputElement.html(e.message);
+						if (!outputElement.hasClass('ctsms-inputfield-output-disabled')) {
+							outputElement.addClass('ctsms-inputfield-output-outputerror');
+						}
+						return;
+					}
 					if (inputFieldVariable.value.jsValueExpression != null && inputFieldVariable.value.jsValueExpression.length > 0) {
 						if (!outputElement.hasClass('ctsms-inputfield-output-disabled')) {
     						if (inputFieldVariable.delta) {
@@ -1061,6 +1066,7 @@ var FieldCalculation = FieldCalculation || {};
 		} else {
 			mask["console"] = null;
 		}
+		mask["loadExpressionUtils"] = function(resource, fileId) { return _loadExpressionUtils(mask, resource, fileId); };
 	}
 
 	function _empty(input) {
@@ -1726,6 +1732,7 @@ var FieldCalculation = FieldCalculation || {};
 		}
 		inputFieldVariableMap = {};
 		inputFieldVars = {};
+		expressionUtilsCache = {};
 		errorMessageId = null;
 		silent = false;
 		if (FIELD_CALCULATION_DEBUG_LEVEL >= 1) {
@@ -1902,16 +1909,16 @@ var FieldCalculation = FieldCalculation || {};
 					inputFieldVariableValue.jsOutputExpression = cs.strip(inputFieldVariableValue.jsOutputExpression);
 
 
-						if (_testPropertyExists(inputFieldVariableValue, "inquiryId")) {
-							inputFieldVariable.outputId = INPUT_FIELD_OUTPUT_ID_PREFIX + inputFieldVariableValue.inquiryId;
-						} else if (_testPropertyExists(inputFieldVariableValue, "tagId")) {
-							inputFieldVariable.outputId = INPUT_FIELD_OUTPUT_ID_PREFIX + inputFieldVariableValue.tagId;
-						} else if (_testPropertyExists(inputFieldVariableValue, "ecrfFieldId")) {
-							inputFieldVariable.outputId = INPUT_FIELD_OUTPUT_ID_PREFIX + inputFieldVariableValue.ecrfFieldId;
-							if (inputFieldVariableValue.series) {
-								inputFieldVariable.outputId += INPUT_FIELD_OUTPUT_ID_INDEX_SEPARATOR + inputFieldVariableValue.index;
-							}
+					if (_testPropertyExists(inputFieldVariableValue, "inquiryId")) {
+						inputFieldVariable.outputId = INPUT_FIELD_OUTPUT_ID_PREFIX + inputFieldVariableValue.inquiryId;
+					} else if (_testPropertyExists(inputFieldVariableValue, "tagId")) {
+						inputFieldVariable.outputId = INPUT_FIELD_OUTPUT_ID_PREFIX + inputFieldVariableValue.tagId;
+					} else if (_testPropertyExists(inputFieldVariableValue, "ecrfFieldId")) {
+						inputFieldVariable.outputId = INPUT_FIELD_OUTPUT_ID_PREFIX + inputFieldVariableValue.ecrfFieldId;
+						if (inputFieldVariableValue.series) {
+							inputFieldVariable.outputId += INPUT_FIELD_OUTPUT_ID_INDEX_SEPARATOR + inputFieldVariableValue.index;
 						}
+					}
 
 					if (_testPropertyExists(inputFieldVariableValue, "inquiryId")) {
 						inputFieldVariable.widgetVarName = INPUT_FIELD_WIDGET_VAR_PREFIX + inputFieldVariableValue.inquiryId;
@@ -2309,10 +2316,50 @@ var FieldCalculation = FieldCalculation || {};
 		return decodeURIComponent(str);
 	}
 
+	var expressionUtilsCache = {};
+	function _loadExpressionUtils(mask, resource, fileId) {
+		var js;
+		if (resource in expressionUtilsCache) {
+			js = expressionUtilsCache[resource];
+		} else {
+			js = FieldCalculation.getScript(resource, fileId);
+			expressionUtilsCache[resource] = js;
+		}
+		eval("with(mask){(\n" + js + "\n)(mask);}");
+	}
+	
+	function _getScriptAjax(resource, fileId) {
+		var js;
+		var error;
+		jQuery.ajax({
+		    url: resource,
+		    type: 'GET',
+		    dataType: 'text',
+		    async: false,
+		    cache: false,
+	        timeout: 30000,
+		    error: function(jqXHR, textStatus, errorThrown) {
+		        if (FIELD_CALCULATION_DEBUG_LEVEL >= 1) {
+					console.log(resource + ': ' + textStatus + (errorThrown != null ? ' - ' + errorThrown.toString() : ''));
+				}
+				error = resource + ': ' + textStatus + (errorThrown != null ? ' - ' + errorThrown.toString() : '');
+		    },
+		    success: function(data, textStatus, jqXHR) { 
+				if (FIELD_CALCULATION_DEBUG_LEVEL >= 1) {1
+					console.log(resource + ': ' + textStatus);
+				}
+		        js = data;
+		    },
+		});
+		if (error != null) {
+			throw error;
+		}
+		return js;
+	}
+	
 	FieldCalculation.handleInitInputFieldVariables = handleInitInputFieldVariables;
 	FieldCalculation.resetInputFieldVariables = resetInputFieldVariables;
 	FieldCalculation.handleUpdateInputFieldVariables = handleUpdateInputFieldVariables;
-
 
 	FieldCalculation.singleLineTextOnChange = singleLineTextOnChange;
 	FieldCalculation.multiLineTextOnChange = multiLineTextOnChange;
@@ -2342,6 +2389,9 @@ var FieldCalculation = FieldCalculation || {};
 	FieldCalculation.timeApplyCalculatedValue = timeApplyCalculatedValue;
 	FieldCalculation.sketchApplyCalculatedValue = sketchApplyCalculatedValue;
 
+	FieldCalculation.getScriptAjax = _getScriptAjax;
+	FieldCalculation.getScript = _getScriptAjax;
+	
 	_exportExpressionUtils(FieldCalculation);
 
 	if (FIELD_CALCULATION_DEBUG_LEVEL >= 1) {
@@ -2349,3 +2399,10 @@ var FieldCalculation = FieldCalculation || {};
 	}
 
 })(window.FieldCalculation);
+
+FieldCalculation.getScript = function(resource,fileId) {
+	if (fileId != null) {
+		return FieldCalculation.getScriptAjax(sprintf("/file/%d",fileId),null);
+	}
+	return FieldCalculation.getScriptAjax(resource,fileId);
+};
