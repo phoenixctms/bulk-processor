@@ -2340,12 +2340,12 @@ var FieldCalculation = FieldCalculation || {};
 	        timeout: 30000,
 		    error: function(jqXHR, textStatus, errorThrown) {
 		        if (FIELD_CALCULATION_DEBUG_LEVEL >= 1) {
-					console.log(resource + ': ' + textStatus + (errorThrown != null ? ' - ' + errorThrown.toString() : ''));
+					console.log(resource + ': ' + textStatus + ((errorThrown != null && errorThrown.toString().length > 0) ? ' - ' + errorThrown.toString() : ''));
 				}
-				error = resource + ': ' + textStatus + (errorThrown != null ? ' - ' + errorThrown.toString() : '');
+				error = resource + ': ' + textStatus + ((errorThrown != null && errorThrown.toString().length > 0) ? ' - ' + errorThrown.toString() : '');
 		    },
 		    success: function(data, textStatus, jqXHR) { 
-				if (FIELD_CALCULATION_DEBUG_LEVEL >= 1) {1
+				if (FIELD_CALCULATION_DEBUG_LEVEL >= 1) {
 					console.log(resource + ': ' + textStatus);
 				}
 		        js = data;
