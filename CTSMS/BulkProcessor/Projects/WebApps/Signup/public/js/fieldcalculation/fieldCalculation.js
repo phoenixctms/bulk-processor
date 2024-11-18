@@ -733,6 +733,7 @@ var FieldCalculation = FieldCalculation || {};
 		if (inputFieldVariable.value.series) {
 			mask["$index"] = inputFieldVariable.value.index;
 		}
+		mask["$variableName"] = inputFieldVariable.value.jsVariableName;
 
 		mask["$selectionSetValues"] = inputFieldVariable.value.selectionSetValues;
 		mask["$proband"] =  inputFieldVars.proband;
@@ -1772,9 +1773,9 @@ var FieldCalculation = FieldCalculation || {};
 		if (_testPropertyExists(args, AJAX_INPUT_FIELD_PROBAND_LIST_ENTRY_BASE64)) {
 			inputFieldVars.probandListEntry = _decode(args[AJAX_INPUT_FIELD_PROBAND_LIST_ENTRY_BASE64]);
 		}
-		if (_testPropertyExists(args, AJAX_INPUT_FIELD_VISIT_SCHEDULE_ITEMS_BASE64)) {
-			inputFieldVars.visitScheduleItems = _decode(args[AJAX_INPUT_FIELD_VISIT_SCHEDULE_ITEMS_BASE64]);
-		}
+		//if (_testPropertyExists(args, AJAX_INPUT_FIELD_VISIT_SCHEDULE_ITEMS_BASE64)) {
+		//	inputFieldVars.visitScheduleItems = _decode(args[AJAX_INPUT_FIELD_VISIT_SCHEDULE_ITEMS_BASE64]);
+		//}
 		if (_testPropertyExists(args, AJAX_INPUT_FIELD_PROBAND_GROUPS_BASE64)) {
 			inputFieldVars.probandGroups = _decode(args[AJAX_INPUT_FIELD_PROBAND_GROUPS_BASE64]);
 		}
@@ -1891,6 +1892,9 @@ var FieldCalculation = FieldCalculation || {};
     }
 
 	function _initInputFieldVariableValues(args) {
+		if (_testPropertyExists(args, AJAX_INPUT_FIELD_VISIT_SCHEDULE_ITEMS_BASE64)) {
+			inputFieldVars.visitScheduleItems = _decode(args[AJAX_INPUT_FIELD_VISIT_SCHEDULE_ITEMS_BASE64]);
+		}
 		if (_testPropertyExists(args, AJAX_INPUT_FIELD_VARIABLE_VALUES_BASE64)) {
 			var inputFieldVariableValues = _decode(args[AJAX_INPUT_FIELD_VARIABLE_VALUES_BASE64]);
 			var msg = "merged " + inputFieldVariableValues.length + " variable values";
