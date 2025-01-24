@@ -239,6 +239,7 @@ sub _reader {
         my $i = 0;
         my $cursor = 0;
         my $state = $RUNNING; #start at first
+        sleep(1); #wait for processors to come up
         while (($state & $RUNNING) == $RUNNING and ($state & $ERROR) == 0) { #as long there is one running consumer and no defunct consumer
             fetching_entries($store,$context->{scan_pattern},$i,$blocksize,getlogger(__PACKAGE__));
             ($cursor, my $rowblock) = $store->scan_shared($cursor,get_scan_args($context->{scan_pattern},$blocksize,$context->{type}));

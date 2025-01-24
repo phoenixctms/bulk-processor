@@ -145,6 +145,7 @@ sub get_item_path {
 sub get_colnames {
     my %params = @_;
     my ($ecrffield,
+        $ecrf,
         $visit,
         $index,
         $get_colname_parts_code,
@@ -161,6 +162,7 @@ sub get_colnames {
         $selectionValues,
         $sanitize_colname_symbols_code) = @params{qw/
             ecrffield
+            ecrf
             visit
             index
             get_colname_parts_code
@@ -187,16 +189,19 @@ sub get_colnames {
     my @parts = &$get_colname_parts_code($ecrffield,$visit,$index);
     unless ((scalar @parts) > 0) {
         my $external_id_used = 0;
-        if (not $ignore_external_ids and defined $ecrffield->{ecrf}->{externalId} and length($ecrffield->{ecrf}->{externalId}) > 0) {
-            push(@parts,$ecrffield->{ecrf}->{externalId});
-            $external_id_used = 1;
-        } else {
-            $abbreviate_ecrf_name_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_ecrf_name_code;
-            $abbreviate_ecrf_revision_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_ecrf_revision_code;
-            my $ecrf_name = &$abbreviate_ecrf_name_code($ecrffield->{ecrf}->{name},$ecrffield->{ecrf}->{revision},$ecrffield->{ecrf}->{id});
-            push(@parts,$ecrf_name) if defined $ecrf_name and length($ecrf_name) > 0;
-            my $ecrf_revision = &$abbreviate_ecrf_revision_code($ecrffield->{ecrf}->{revision});
-            push(@parts,$ecrf_revision) if defined $ecrf_revision and length($ecrf_revision) > 0;
+        #$ecrf //= $ecrffield->{ecrf};
+        if (defined $ecrf) {
+            if (not $ignore_external_ids and defined $ecrf->{externalId} and length($ecrf->{externalId}) > 0) {
+                push(@parts,$ecrf->{externalId});
+                $external_id_used = 1;
+            } else {
+                $abbreviate_ecrf_name_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_ecrf_name_code;
+                $abbreviate_ecrf_revision_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_ecrf_revision_code;
+                my $ecrf_name = &$abbreviate_ecrf_name_code($ecrf->{name},$ecrf->{revision},$ecrf->{id});
+                push(@parts,$ecrf_name) if defined $ecrf_name and length($ecrf_name) > 0;
+                my $ecrf_revision = &$abbreviate_ecrf_revision_code($ecrf->{revision});
+                push(@parts,$ecrf_revision) if defined $ecrf_revision and length($ecrf_revision) > 0;
+            }
         }
         if (defined $visit) {
             $abbreviate_visit_code = sub { return shift; } unless 'CODE' eq ref $abbreviate_visit_code;

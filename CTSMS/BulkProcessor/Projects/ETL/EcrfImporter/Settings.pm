@@ -57,6 +57,12 @@ our @EXPORT_OK = qw(
 
     $ecrf_values_col_block
     $listentrytag_values_col_block
+    
+    $ecrf_name_column_name
+    $ecrf_visit_column_name
+    
+    get_ecrf_columns
+
 );
 #$ecrf_department_nameL10nKey
 #$ecrf_proband_alias_format
@@ -83,6 +89,9 @@ our $listentrytag_values_col_block = 0; # save all proband list attributes at on
 our $clear_sections;
 our $clear_all_sections;
 our $append_selection_set_values;
+
+our $ecrf_name_column_name = 'ecrf';
+our $ecrf_visit_column_name = 'visit';
 
 sub update_settings {
 
@@ -117,12 +126,22 @@ sub update_settings {
 
         $ecrf_values_col_block = $data->{ecrf_values_col_block} if exists $data->{ecrf_values_col_block};
         $listentrytag_values_col_block = $data->{listentrytag_values_col_block} if exists $data->{listentrytag_values_col_block};
+        
+        $ecrf_name_column_name = $data->{ecrf_name_column_name} if exists $data->{ecrf_name_column_name};
+        $ecrf_visit_column_name = $data->{ecrf_visit_column_name} if exists $data->{ecrf_visit_column_name};
 
         return $result;
 
     }
     return 0;
 
+}
+
+sub get_ecrf_columns {
+    my @columns = ();
+    push(@columns,lc($ecrf_name_column_name)) if length($ecrf_name_column_name);
+    push(@columns,lc($ecrf_visit_column_name)) if length($ecrf_visit_column_name);
+    return @columns;
 }
 
 sub _get_numofthreads {

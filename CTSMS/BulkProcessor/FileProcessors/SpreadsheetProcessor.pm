@@ -96,6 +96,7 @@ sub read {
     my $i = 0;
 
     my $state = $RUNNING; #start at first
+    sleep(1); #wait for processors to come up
     while (($state & $RUNNING) == $RUNNING and ($state & $ERROR) == 0 and $self->has_next_row($context)) { #as long there is one running consumer and no defunct consumer
         my $row = $self->get_row($context);
         push(@rowblock,$row) if defined $row;

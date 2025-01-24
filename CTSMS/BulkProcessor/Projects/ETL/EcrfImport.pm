@@ -51,6 +51,11 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfImporter::Settings qw(
 
     $ecrf_values_col_block
     $listentrytag_values_col_block
+    
+    $ecrf_name_column_name
+    $ecrf_visit_column_name
+    
+    get_ecrf_columns
 );
 #$ecrf_department_nameL10nKey
 #$ecrf_proband_alias_format
@@ -134,7 +139,8 @@ our @EXPORT_OK = qw(
 
 my @header_row :shared = ();
 my $header_rownum :shared = 0;
-my $probandlistentrymaxposition :shared = 0;
+#my $probandlistentrymaxposition :shared = 0;
+my $registration :shared;
 my $warning_count :shared = 0;
 my $value_count :shared = 0;
 
@@ -313,13 +319,16 @@ sub _init_context {
         $context->{ctsmsrestapi_user} = $users->[0];
     }
 
-    $context->{listentrytag_map} = get_probandlistentrytag_map($context);
+    $context->{all_listentrytag_map} = get_probandlistentrytag_map($context);
+    $context->{listentrytag_map} = { %{$context->{all_listentrytag_map}} };
 
     $context->{ecrf_map} = get_ecrf_map($context,1);
     $context->{all_columns} = get_horizontal_cols($context, 10 ** ($colname_abbreviation{index_digits} // 2) - 1);
 
     ($context->{all_column_map}, $keys, $values) = array_to_map($context->{all_columns},
         sub { my $item = shift; return $item->{colname}; },undef,'first');
+    
+    $context->{visit_map} = { map { defined $_->{visit} ? ($_->{visit}->{id} => $_->{visit}) : (); } @$values };
 
     return $result;
 }
@@ -379,80 +388,140 @@ sub _init_horizontal_record {
         last if ($header_rownum > 0 or $context->{row_offset} == 0);
     }
     my %header = ();
+    my @headerrow = ();
     my $initialized = 0;
     if ($header_rownum > 0) {
         $context->{record} = {};
         my $i = 0;
         foreach my $val (@$row) {
-            $context->{record}->{$header_row[$i]} = $val;
+            if (length(trim($header_row[$i]))) {
+                $context->{record}->{$header_row[$i]} = $val;
+                push(@headerrow,$header_row[$i]);
+            }
             $i++;
         }
         $initialized = 1;
     } else {
         $context->{record} = undef;
         foreach my $colname (@$row) {
-            if (exists $header{$colname}) {
-                #alias/list entry tag/ecrf column name conflict
-                _error($context,"column '$colname' specified more than once in header row");
-            } else {
-                $header{$colname} = 1;
-                push(@header_row,$colname);
+            if (length(trim($colname))) {
+                if (exists $header{$colname}) {
+                    #alias/list entry tag/ecrf column name conflict
+                    _error($context,"column '$colname' specified more than once in header row");
+                } else {
+                    $header{$colname} = 1;
+                    push(@headerrow,$colname);
+                }
             }
+            push(@header_row,$colname);
         }
-        _info($context,"header row with " . (scalar @header_row) . " columns - " . chopstring(join(', ', @header_row)));
+        _info($context,"header row with " . (scalar @headerrow) . " columns - " . chopstring(join(', ', @headerrow)));
         lock $header_rownum;
         $header_rownum = $context->{rownum};
     }
-
-    unless ($context->{columns}) {
-        %header = map { $_ => 1; } @header_row if $initialized;
-        my @columns = grep { exists $header{$_->{colname}}; } @{$context->{all_columns}}; # do not clone columns
-
-        my %disabled_ecrf_map = ();
-        my %disabled_ecrffield_map = ();
-        my %sketch_inputfield_map = ();
-        $context->{columns} = [];
-        my $message;
-        foreach my $column (@columns) {
-            next if exists $disabled_ecrf_map{$column->{ecrffield}->{ecrf}->{id}};
-            next if exists $disabled_ecrffield_map{$column->{ecrffield}->{id}};
-            next if exists $sketch_inputfield_map{$column->{ecrffield}->{field}->{id}};
-            if ($column->{ecrffield}->{ecrf}->{disabled}) {
-                $message = "skipping disabled eCRF: $column->{ecrffield}->{ecrf}->{uniqueName}";
-                $disabled_ecrf_map{$column->{ecrffield}->{ecrf}->{id}} = $column->{ecrffield}->{ecrf};
-            } elsif ($column->{ecrffield}->{disabled}) {
-                $message = "skipping disabled eCRF field: $column->{ecrffield}->{uniqueName}";
-                $disabled_ecrffield_map{$column->{ecrffield}->{id}} = $column->{ecrffield};
-            } elsif ($column->{ecrffield}->{field}->{fieldType}->{type} eq $SKETCH) {
-                $message = "skipping sketch input field: $column->{ecrffield}->{field}->{name}";
-                $sketch_inputfield_map{$column->{ecrffield}->{field}->{id}} = $column->{ecrffield}->{field};
-            } else {
-                $message = "column '$column->{colname}' mapped to $column->{ecrffield}->{uniqueName}";
-                push(@{$context->{columns}},$column);
+    
+    if ($initialized) {
+        my ($keys, $values);
+        my $colums_changed = 0;
+        my @ecrfvisit = ();
+        if (length($ecrf_name_column_name)
+            and exists $context->{record}->{$ecrf_name_column_name}) {
+            _error($context,"empty ecrf name") unless length($context->{record}->{$ecrf_name_column_name});
+            my @ecrfs = grep { $_->{id} eq $context->{record}->{$ecrf_name_column_name}
+                   or $_->{name} eq $context->{record}->{$ecrf_name_column_name}; } map { $_->{ecrf}; } values %{$context->{ecrf_map}};
+            _error($context,"unknown ecrf name/id '" . $context->{record}->{$ecrf_name_column_name} . "'") unless scalar @ecrfs;
+            my $ecrf = shift @ecrfs;
+            unless (defined $context->{ecrf} and $ecrf->{id} == $context->{ecrf}->{id}) {
+                $colums_changed = 1;
             }
-            processing_debug($context->{tid},$message,getlogger(__PACKAGE__)) unless $initialized;
+            $context->{ecrf} = $ecrf;
+            push(@ecrfvisit,$context->{ecrf}->{name});
+        } else {
+            $colums_changed = 1 if defined $context->{ecrf};
+            undef $context->{ecrf};
         }
-
-        $message = (scalar @{$context->{columns}}) . ' columns mapped';
-        processing_info($context->{tid},$message,getlogger(__PACKAGE__)) unless $initialized; # print in first thread only
-        #processing_debug($context->{tid},$message,getlogger(__PACKAGE__)) if $initialized;
-
-        rowprocessingerror($context->{tid},"no columns mapped",getlogger(__PACKAGE__)) unless scalar @{$context->{columns}};
-
-        if (not $initialized and my @unknown_colnames = grep { not exists $context->{all_column_map}->{$_}
-               and not exists $context->{listentrytag_map}->{$_}
-               and not contains($_,[ get_proband_columns() ])
-               #and not contains($_,[ get_probandlistentry_columns() ]) # updating these is not implemented (yet)
-               ; } @header_row) {
-            map { processing_debug($context->{tid},"ignoring column '$_'",getlogger(__PACKAGE__)); } @unknown_colnames;
-            rowprocessingwarn($context->{tid},"ignoring " . (scalar @unknown_colnames) . " columns - " . chopstring(join(', ', @unknown_colnames)),getlogger(__PACKAGE__));
+        if (length($ecrf_visit_column_name)
+            and exists $context->{record}->{$ecrf_visit_column_name}
+            and length($context->{record}->{$ecrf_visit_column_name})) {
+            my @visits = grep { $_->{id} eq $context->{record}->{$ecrf_visit_column_name}
+                   or $_->{token} eq $context->{record}->{$ecrf_visit_column_name}; } (defined $context->{ecrf} ? @{$context->{ecrf}->{visits}} : (values %{$context->{visit_map}}));
+            _error($context,"unknown visit token/id '" . $context->{record}->{$ecrf_visit_column_name} . "'" .
+                (defined $context->{ecrf} ? " for eCRF '$context->{ecrf}->{name}'" : '')) unless scalar @visits;
+            my $visit = shift @visits;
+            unless (defined $context->{visit} and $visit->{id} == $context->{visit}->{id}) {
+                $colums_changed = 1;
+            }
+            $context->{visit} = $visit;
+            push(@ecrfvisit,$context->{visit}->{token});
+        } else {
+            $colums_changed = 1 if defined $context->{visit};
+            undef $context->{visit};
         }
-
-        ($context->{column_map}, my $colnames, my $columns) = array_to_map($context->{columns},
-            sub { my $item = shift; return $item->{colname}; },undef,'first');
-
-        delete @{$context->{listentrytag_map}}{grep { not exists $context->{listentrytag_map}->{$_}; } @header_row};
-
+        
+        _info($context,"mapping columns for " . join('@',@ecrfvisit)) if scalar @ecrfvisit;
+        
+        if ($colums_changed) {
+            $context->{listentrytag_map} = { %{$context->{all_listentrytag_map}} };
+            $context->{all_columns} = get_horizontal_cols($context, 10 ** ($colname_abbreviation{index_digits} // 2) - 1);
+            ($context->{all_column_map}, $keys, $values) = array_to_map($context->{all_columns},
+                sub { my $item = shift; return $item->{colname}; },undef,'first');
+            undef $context->{columns};
+        }
+            
+        unless ($context->{columns}) {
+            %header = map { $_ => 1; } @headerrow; # if $initialized;
+            
+            my @columns = grep { exists $header{$_->{colname}}; } @{$context->{all_columns}}; # do not clone columns
+    
+            my %disabled_ecrf_map = ();
+            my %disabled_ecrffield_map = ();
+            my %sketch_inputfield_map = ();
+            $context->{columns} = [];
+            my $message;
+            foreach my $column (@columns) {
+                next if exists $disabled_ecrf_map{$column->{ecrffield}->{ecrf}->{id}};
+                next if exists $disabled_ecrffield_map{$column->{ecrffield}->{id}};
+                next if exists $sketch_inputfield_map{$column->{ecrffield}->{field}->{id}};
+                if ($column->{ecrffield}->{ecrf}->{disabled}) {
+                    $message = "skipping disabled eCRF: $column->{ecrffield}->{ecrf}->{uniqueName}";
+                    $disabled_ecrf_map{$column->{ecrffield}->{ecrf}->{id}} = $column->{ecrffield}->{ecrf};
+                } elsif ($column->{ecrffield}->{disabled}) {
+                    $message = "skipping disabled eCRF field: $column->{ecrffield}->{uniqueName}";
+                    $disabled_ecrffield_map{$column->{ecrffield}->{id}} = $column->{ecrffield};
+                } elsif ($column->{ecrffield}->{field}->{fieldType}->{type} eq $SKETCH) {
+                    $message = "skipping sketch input field: $column->{ecrffield}->{field}->{name}";
+                    $sketch_inputfield_map{$column->{ecrffield}->{field}->{id}} = $column->{ecrffield}->{field};
+                } else {
+                    $message = "column '$column->{colname}' mapped to $column->{ecrffield}->{uniqueName}";
+                    push(@{$context->{columns}},$column);
+                }
+                _info($context,$message,1); # unless $initialized;
+            }
+    
+            $message = (scalar @{$context->{columns}}) . ' columns mapped';
+            _info($context,$message); # unless $initialized; # print in first thread only
+            #processing_debug($context->{tid},$message,getlogger(__PACKAGE__)) if $initialized;
+    
+            _error($context,"no columns mapped") unless scalar @{$context->{columns}};
+    
+            #not $initialized and
+            if (my @unknown_colnames = grep { not exists $context->{all_column_map}->{$_}
+                   and not exists $context->{listentrytag_map}->{$_}
+                   and not contains($_,[ get_proband_columns() ])
+                   and not contains($_,[ get_ecrf_columns() ])
+                   and $_ ne 'proband_id'
+                   #and not contains($_,[ get_probandlistentry_columns() ]) # updating these is not implemented (yet)
+                   ; } @headerrow) {
+                map { _info($context,"ignoring column '$_'",1); } @unknown_colnames;
+                _warn($context,"ignoring " . (scalar @unknown_colnames) . " columns - " . chopstring(join(', ', @unknown_colnames)));
+            }
+    
+            ($context->{column_map}, $keys, $values) = array_to_map($context->{columns},
+                sub { my $item = shift; return $item->{colname}; },undef,'first');
+    
+            delete @{$context->{listentrytag_map}}{grep { not exists $context->{listentrytag_map}->{$_}; } @headerrow};
+    
+        }
     }
 
     return $initialized;
@@ -667,11 +736,18 @@ sub _register_proband {
     $context->{listentry_created} = 0;
     $context->{criterions} = [];
     my $alias;
-    # use alias column if specified and not empty:
-    if (length($ecrf_proband_alias_column_name)
+    my $id;
+    if (length($ecrf_proband_alias_column_name) 
         and exists $context->{record}->{$ecrf_proband_alias_column_name}
         and length($context->{record}->{$ecrf_proband_alias_column_name})) {
         $alias = $context->{record}->{$ecrf_proband_alias_column_name};
+    }
+    if (exists $context->{record}->{proband_id}
+        and length($context->{record}->{proband_id})) {
+        # use proband_id column if specified and not empty:
+        $id = $context->{record}->{proband_id};
+        $result = _append_probandid_criterion($context,$id);
+    } elsif (defined $alias) {
         $result = _append_probandalias_criterion($context,$alias);
     } elsif (scalar keys %{$context->{listentrytag_map}}) {
         # otherwise use proband list entry tags if specified:
@@ -694,6 +770,7 @@ sub _register_proband {
 
     if ($result) {
         if (scalar @{$context->{criterions}}) { # requires at least one proband list attribute of supported field type ...
+            lock $registration;
             my $probands = undef;
             my $set_listentrytag_values = 0;
             my $proband_created = 0;
@@ -707,7 +784,10 @@ sub _register_proband {
                 _warn_or_error($context,"error loading proband: " . $@);
                 $result = 0;
             } elsif ((scalar @$probands) == 0) {
-                if (defined $alias) {
+                if (defined $id) {
+                    _warn_or_error($context,"cannot find proband id " . $id);
+                    $result = 0;
+                } elsif (defined $alias) {
                     eval {
                          $context->{proband} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::add_item(_get_proband_in($context,$alias));
                     };
@@ -719,19 +799,27 @@ sub _register_proband {
                         $proband_created = 1;
                     }
                 } else {
-                    eval {
-                        lock $probandlistentrymaxposition;
-                        $context->{probandlistentry} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::add_item(
-                            _get_probandlistentry_in($context),undef,1);
-                    };
-                    if ($@) {
-                        _warn_or_error($context,"error creating proband with proband list entry: " . $@);
+                    if (defined $context->{ecrf}) {
+                        _warn_or_error($context,"cannot create proband with proband list entry when eCRF is specified for the data row");
+                        $result = 0;
+                    } elsif (defined $context->{visit}) {
+                        _warn_or_error($context,"cannot create proband with proband list entry when visit is specified for the data row");
                         $result = 0;
                     } else {
-                        $context->{proband} = $context->{probandlistentry}->{proband};
-                        _info($context,"proband " . $context->{proband}->alias . " with proband list entry position $context->{probandlistentry}->{position} created");
-                        $proband_created = 1;
-                        $context->{listentry_created} = 1;
+                        eval {
+                            #lock $probandlistentrymaxposition;
+                            $context->{probandlistentry} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::add_item(
+                                _get_probandlistentry_in($context),undef,1);
+                        };
+                        if ($@) {
+                            _warn_or_error($context,"error creating proband with proband list entry: " . $@);
+                            $result = 0;
+                        } else {
+                            $context->{proband} = $context->{probandlistentry}->{proband};
+                            _info($context,"proband " . $context->{proband}->alias . " with proband list entry position $context->{probandlistentry}->{position} created");
+                            $proband_created = 1;
+                            $context->{listentry_created} = 1;
+                        }
                     }
                 }
                 $set_listentrytag_values = 1;
@@ -740,8 +828,13 @@ sub _register_proband {
                 $result = 0;
             } else {
                 $context->{proband} = $probands->[0];
-                _info($context,"proband " . $context->{proband}->alias . " found");
-                $set_listentrytag_values = $update_listentrytag_values if defined $alias;
+                if (defined $alias and (not defined $context->{proband}->{alias} or $alias ne $context->{proband}->{alias})) {
+                    _warn_or_error($context,"differring proband id $context->{proband}->{id} alias");
+                    #$result = 0;
+                } else {
+                    _info($context,"proband " . $context->{proband}->alias . " found");
+                }
+                $set_listentrytag_values = $update_listentrytag_values if (defined $id or defined $alias);
             }
 
             if ($context->{proband} and $context->{proband}->locked) {
@@ -762,7 +855,7 @@ sub _register_proband {
                     $result = 0;
                 } elsif ((scalar @$probandlistentries) == 0) {
                     eval {
-                        lock $probandlistentrymaxposition;
+                        #lock $probandlistentrymaxposition;
                         $context->{probandlistentry} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::add_item(
                             _get_probandlistentry_in($context));
                     };
@@ -817,8 +910,9 @@ sub _register_proband {
 sub _rollback_proband {
 
     my ($context) = @_;
+    lock $registration;
     eval {
-        lock $probandlistentrymaxposition;
+        #lock $probandlistentrymaxposition;
         $context->{proband} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::delete_item($context->{proband}->{id},1,undef);
     };
     if ($@) {
@@ -888,7 +982,7 @@ sub _get_proband_in {
 sub _get_probandlistentry_in {
     my ($context) = @_;
     #lock $probandlistentrymaxposition;
-    $probandlistentrymaxposition = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_probandlistentrymaxposition($ecrf_data_trial_id);
+    my $probandlistentrymaxposition = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_probandlistentrymaxposition($ecrf_data_trial_id);
     $probandlistentrymaxposition = 0 unless length($probandlistentrymaxposition);
     return {
         "position" => ($probandlistentrymaxposition + 1),
@@ -1258,6 +1352,23 @@ sub _append_probandalias_criterion {
         return 1;
     } else {
         _warn_or_error($context,"empty proband alias");
+        return 0;
+    }
+}
+
+sub _append_probandid_criterion {
+    my ($context,$id) = @_;
+    if (length($id)) {
+        push(@{$context->{criterions}},{
+            position => 1,
+            #tieId => undef,
+            restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
+            propertyId => $context->{criterionproperty_map}->{'proband.id'},
+            longValue => $id,
+        });
+        return 1;
+    } else {
+        _warn_or_error($context,"empty proband id");
         return 0;
     }
 }

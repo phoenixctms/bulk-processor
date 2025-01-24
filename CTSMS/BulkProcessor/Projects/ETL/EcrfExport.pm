@@ -559,7 +559,7 @@ sub _ecrf_data_vertical_items_to_row {
     push(@row,booltostring($item->{ecrfField}->{series}));
     push(@row,$item->{index});
     push(@row,join(',',CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
-        ecrffield => $item->{ecrfField}, visit => $item->{visit}, index => $item->{index},
+        ecrffield => $item->{ecrfField}, ecrf => $item->{ecrfField}->{ecrf}, visit => $item->{visit}, index => $item->{index},
         col_per_selection_set_value => $col_per_selection_set_value, %colname_abbreviation,
     )));
 
@@ -763,21 +763,21 @@ sub _ecrf_data_horizontal_items_to_row {
             if ($col_per_selection_set_value) {
                 if ($item->created) {
                     foreach my $colname (CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
-                            ecrffield => $item->{ecrfField}, visit => $item->{visit}, index => $item->{index},
+                            ecrffield => $item->{ecrfField}, ecrf => $item->{ecrfField}->{ecrf}, visit => $item->{visit}, index => $item->{index},
                             selectionValues => $item->{selectionValues},
                             col_per_selection_set_value => 1,
                             %colname_abbreviation,)) {
                         $value_map{$colname} = booltostring(1);
                     }
                     foreach my $colname (CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
-                            ecrffield => $item->{ecrfField}, visit => $item->{visit}, index => $item->{index},
+                            ecrffield => $item->{ecrfField}, ecrf => $item->{ecrfField}->{ecrf}, visit => $item->{visit}, index => $item->{index},
                             col_per_selection_set_value => 1,
                             %colname_abbreviation,)) {
                         $value_map{$colname} = booltostring(0) if not exists $value_map{$colname};
                     }
                 } else {
                     foreach my $colname (CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
-                            ecrffield => $item->{ecrfField}, visit => $item->{visit}, index => $item->{index},
+                            ecrffield => $item->{ecrfField}, ecrf => $item->{ecrfField}->{ecrf}, visit => $item->{visit}, index => $item->{index},
                             col_per_selection_set_value => 1,
                             %colname_abbreviation,)) {
                         $value_map{$colname} = undef;
@@ -785,7 +785,7 @@ sub _ecrf_data_horizontal_items_to_row {
                 }
             } else {
                 my ($colname) = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
-                    ecrffield => $item->{ecrfField}, visit => $item->{visit}, index => $item->{index},
+                    ecrffield => $item->{ecrfField}, ecrf => $item->{ecrfField}->{ecrf}, visit => $item->{visit}, index => $item->{index},
                     selectionValues => $item->{selectionValues},
                     col_per_selection_set_value => 0,
                     %colname_abbreviation,);
@@ -797,7 +797,7 @@ sub _ecrf_data_horizontal_items_to_row {
             }
         } else {
             my ($colname) = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
-                ecrffield => $item->{ecrfField}, visit => $item->{visit}, index => $item->{index},
+                ecrffield => $item->{ecrfField}, ecrf => $item->{ecrfField}->{ecrf}, visit => $item->{visit}, index => $item->{index},
                 %colname_abbreviation,);
             $value_map{$colname} = $item->{_value};
         }

@@ -303,6 +303,7 @@ sub _reader {
         }
         my $i = 0;
         my $state = $RUNNING; #start at first
+        sleep(1); #wait for processors to come up
         while (($state & $RUNNING) == $RUNNING and ($state & $ERROR) == 0) { #as long there is one running consumer and no defunct consumer
             fetching_items($restapi,$context->{path_query},$i,$blocksize,getlogger(__PACKAGE__));
 
