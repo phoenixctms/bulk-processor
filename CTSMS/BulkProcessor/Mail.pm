@@ -440,7 +440,7 @@ sub send_smtp {
         }
         return $smtpnetfatalerror;
     }
-    return 1;
+    return $mailsentsuccessfully;
     } else {
 
     print MAIL $data;

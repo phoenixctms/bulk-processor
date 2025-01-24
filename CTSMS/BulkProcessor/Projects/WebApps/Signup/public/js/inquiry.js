@@ -907,8 +907,11 @@ function setSelectManyVal(inquiryId,selectionValueIds) {
 
     var elems = $('[id^="' + inquiryId + '_"] input[type="checkbox"]');
     var ids = {};
-    if (selectionValueIds != null) {
+    if (selectionValueIds != null && selectionValueIds instanceof Array) {
         for (var i = 0; i < selectionValueIds.length; i++) {
+            if (selectionValueIds[i] instanceof Array) {
+                throw new Error('value element is an array');
+            }
             ids[selectionValueIds[i]] = 1;
         }
     }

@@ -469,6 +469,7 @@ sub _reader {
 
                 my $i = 0;
                 my $state = $RUNNING; #start at first
+                sleep(1); #wait for processors to come up
                 while (($state & $RUNNING) == $RUNNING and ($state & $ERROR) == 0) { #as long there is one running consumer and no defunct consumer
                     my $block_n = 0;
                     my @lines = ();

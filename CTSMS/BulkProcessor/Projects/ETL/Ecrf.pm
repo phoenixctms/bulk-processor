@@ -56,9 +56,20 @@ sub get_horizontal_cols {
     my $import = 0;
     $import = 1 if defined $series_section_maxindex;
     my $ecrf_map = $context->{ecrf_map};
-    foreach my $ecrfid (keys %$ecrf_map) {
-        my @visits = @{$ecrf_map->{$ecrfid}->{ecrf}->{visits} // []};
-        push(@visits,{ id => undef, }) unless scalar @visits;
+    my @ecrfids = ();
+    if (defined $context->{ecrf}) {
+        push(@ecrfids,$context->{ecrf}->{id});
+    } else {
+        @ecrfids = keys %$ecrf_map;
+    }
+    foreach my $ecrfid (@ecrfids) {
+        my @visits = ();
+        if (defined $context->{visit}) {
+            push(@visits,$context->{visit});
+        } else {
+            @visits = @{$ecrf_map->{$ecrfid}->{ecrf}->{visits} // []};
+            push(@visits,{ id => undef, }) unless scalar @visits;
+        }
         foreach my $visit (@visits) {
             foreach my $section (keys %{$ecrf_map->{$ecrfid}->{sections}}) {
                 my $section_info = $ecrf_map->{$ecrfid}->{sections}->{$section};
@@ -74,7 +85,9 @@ sub get_horizontal_cols {
                 foreach my $index (0..$maxindex) {
                     foreach my $ecrffield (@{$section_info->{fields}}) {
                         my @colnames = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
-                                ecrffield => $ecrffield, visit => (defined $visit->{id} ? $visit : undef),
+                                ecrffield => $ecrffield,
+                                ecrf => (defined $context->{ecrf} ? undef : $ecrffield->{ecrf}),
+                                visit => ((defined $context->{visit} or not defined $visit->{id}) ? undef : $visit),
                                 index => $index, col_per_selection_set_value => $col_per_selection_set_value, %colname_abbreviation,
                             );
                         my @selectionSetValues = @{$ecrffield->{field}->{selectionSetValues} // []};
@@ -125,7 +138,7 @@ sub get_horizontal_cols {
         $dupe_map{$colname} = $column;
     }
     if ($import) {
-        _info($context,'dictionary created for ' . (scalar @columns) . ' columns',0);
+        _info($context,'dictionary created for ' . (scalar @columns) . ' columns',1);
     } else {
         _info($context,(scalar @columns) . " columns, max column name length: $max_colname_length",0);
     }

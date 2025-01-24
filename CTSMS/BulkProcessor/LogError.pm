@@ -202,16 +202,21 @@ sub warning {
 
     my ($message,$logger,$sendemail) = @_;
 
-    if (threadid() == $root_threadid and $cli) {
+    if (threadid() == $root_threadid and ($cli or $sendemail)) {
         if ($sendemail and length($warnemailrecipient) > 0 and defined $logger) {
             my ($mailresult,$mailresultmessage) = send_message($warnemailrecipient,$warnemailsubject . $logger->{category},getscriptpath() . ":\n\n" . wrap_mailbody($message) . "\n\n" . $signature,\&fileerror,\&emailwarn);
         }
-        carp($message);
+        #carp($message);
+        if ($cli) {
+            carp($message);
+        } else {
+            warn($message."\n");
+        }
 
     } else {
 
         if ($cli) {
-            carp($message)
+            carp($message);
         } else {
             warn($message."\n");
         }
@@ -233,12 +238,17 @@ sub terminate {
         if (length($erroremailrecipient) > 0 and defined $logger) {
             my ($mailresult,$mailresultmessage) = send_message($erroremailrecipient,$erroremailsubject . $logger->{category},getscriptpath() . ":\n\n" . wrap_mailbody($message) . "\n\n" . $signature,\&fileerror,\&emailwarn);
         }
-        croak($message);
+        #croak($message);
+        if ($cli) {
+            croak($message);
+        } else {
+            die($message."\n");
+        }
 
     } else {
 
         if ($cli) {
-            croak($message)
+            croak($message);
         } else {
             die($message."\n");
         }

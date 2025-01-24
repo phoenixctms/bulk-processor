@@ -69,7 +69,7 @@ sub main {
                     }
                     unless ($cleanup) {
                         my @args = (
-                            'java',
+                            'C:/java/jdk-19.0.1/bin/java',
                             '-jar',
                             $yuicompressor_jar,
                             $input_file,
