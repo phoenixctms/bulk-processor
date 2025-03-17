@@ -52,7 +52,6 @@ our @EXPORT_OK = qw(
 
     $proband_plain_text_ignore_duplicates
     $proband_plain_text_truncate_table
-    $person_name_prefix_length
     $import_proband_page_size
     $import_proband_multithreading
     $import_proband_numofthreads
@@ -85,8 +84,6 @@ our $dry = 0;
 our $proband_plain_text_ignore_duplicates = 0;
 our $proband_plain_text_truncate_table = 1;
 
-
-our $person_name_prefix_length = 2;
 our $import_proband_page_size = 100;
 our $import_proband_multithreading = $enablemultithreading;
 our $import_proband_numofthreads = $cpucount;
@@ -119,8 +116,6 @@ sub update_settings {
         $proband_plain_text_ignore_duplicates = $data->{proband_plain_text_ignore_duplicates} if exists $data->{proband_plain_text_ignore_duplicates};
         $proband_plain_text_truncate_table = $data->{proband_plain_text_truncate_table} if exists $data->{proband_plain_text_truncate_table};
 
-
-        $person_name_prefix_length = $data->{person_name_prefix_length} if exists $data->{person_name_prefix_length};
         $import_proband_page_size = $data->{import_proband_page_size} if exists $data->{import_proband_page_size};
         $import_proband_multithreading = $data->{import_proband_multithreading} if exists $data->{import_proband_multithreading};
         $import_proband_numofthreads = _get_numofthreads($cpucount,$data,'import_proband_numofthreads');
