@@ -4,13 +4,7 @@ use strict;
 ## no critic
 
 use threads::shared qw();
-
 use Unicode::Normalize qw();
-
-
-
-
-
 use Encode qw();
 
 use CTSMS::BulkProcessor::Projects::ETL::Duplicates::Settings qw(
@@ -61,10 +55,7 @@ use CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText qw();
 use CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandDuplicate qw();
 
 use CTSMS::BulkProcessor::Array qw(array_to_map powerset contains);
-
 use CTSMS::BulkProcessor::Utils qw(threadid);
-
-
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -75,7 +66,6 @@ our @EXPORT_OK = qw(
 );
 
 sub import_proband {
-
 
     my $static_context = {};
 
@@ -103,7 +93,7 @@ sub import_proband {
                 } else {
                     my $cnt = 0;
                     
-                    my @item = ()
+                    my @item = ();
                     push(@item,$item->{dateOfBirth});
                     push(@item,$item->{id});
                     push(@item,$item->{version});
@@ -126,7 +116,6 @@ sub import_proband {
                     }
                     _info($context,"$cnt name variants for proband id $item->{id}") if $cnt > 1;
                 }
-
             }
 
             if ((scalar @rows) > 0) {
@@ -256,7 +245,6 @@ sub create_duplicate {
     my $result = _create_duplicate_checks($static_context);
     $result = CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandDuplicate::create_table($proband_duplicate_truncate_table) if $result;
 
-
     my $warning_count :shared = 0;
 
     $result = CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText::process_records(
@@ -265,8 +253,6 @@ sub create_duplicate {
             my ($context,$records,$row_offset) = @_;
             my $rownum = $row_offset;
 
-
-
             foreach my $record (@$records) {
                 $rownum++;
                 if (CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandDuplicate::countby_probandidduplicateid(undef,$record->{proband_id}) > 0) {
@@ -274,10 +260,6 @@ sub create_duplicate {
                     next;
                 }
                 my %matches = ();
-
-
-
-
                 foreach my $match (@{CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText::findby_lastnamefirstnamedateofbirthprobandid(
                         $record->{last_name},
                         $record->{first_name},
@@ -300,7 +282,6 @@ sub create_duplicate {
                 }
                 _info($context,(scalar keys %matches) . " duplicates for proband id $record->{proband_id}") if (scalar keys %matches) > 0;
                 if ((scalar @rows) > 0) {
-
                     $context->{db}->db_do_begin(
                         CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandDuplicate::getinsertstatement(1),
                     );
@@ -317,12 +298,10 @@ sub create_duplicate {
                     }
                 }
             }
-
             return 1;
         },
         init_process_context_code => sub {
             my ($context)= @_;
-
 
             $context->{db} = &get_sqlite_db();
             $context->{error_count} = 0;
@@ -369,7 +348,6 @@ sub update_proband {
     my $static_context = {};
     my $result = _update_proband_checks($static_context);
 
-
     my $warning_count :shared = 0;
     my $updated_proband_count :shared = 0;
     $result = CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandDuplicate::process_records(
@@ -379,9 +357,6 @@ sub update_proband {
             my $rownum = $row_offset;
             foreach my $record (@$records) {
                 $rownum++;
-
-
-
 
                 my %duplicate_proband_ids = ();
                 $duplicate_proband_ids{$record->{proband_id}} = undef;
@@ -393,12 +368,6 @@ sub update_proband {
 
                 my $label = "duplicate group - proband ids " . join (', ',@duplicate_group);
                 foreach my $proband_id (@duplicate_group) {
-
-
-
-
-
-
                     my $category_info;
                     eval {
                         $category_info = CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText::findby_lastnamefirstnamedateofbirthprobandid(
@@ -419,16 +388,6 @@ sub update_proband {
                                 "categoryId" => $context->{proband_categories}->{$new_category}->{id},
                                 "comment" => $new_comment,
                             };
-
-
-
-
-
-
-
-
-
-
                             my $out;
                             eval {
                                 if ($dry) {
@@ -448,10 +407,7 @@ sub update_proband {
                         }
                     }
                 }
-
-
             }
-
             return 1;
         },
         init_process_context_code => sub {
