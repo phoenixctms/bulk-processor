@@ -20,7 +20,6 @@ use CTSMS::BulkProcessor::Projects::ETL::Duplicates::Settings qw(
     $proband_plain_text_truncate_table
     $proband_plain_text_ignore_duplicates
     $import_proband_page_size
-    $person_name_prefix_length
     $import_proband_multithreading
     $import_proband_numofthreads
 
@@ -103,22 +102,26 @@ sub import_proband {
                     _warn_or_error($context,"proband id $item->{id} is blinded");
                 } else {
                     my $cnt = 0;
-
-                    foreach my $first_names (@{powerset(_normalize_person_name($item->{firstName},0,1))}) {
+                    
+                    my @item = ()
+                    push(@item,$item->{dateOfBirth});
+                    push(@item,$item->{id});
+                    push(@item,$item->{version});
+                    push(@item,$item->{category}->{nameL10nKey});
+                    push(@item,$item->{comment});
+                    
+                    foreach my $first_names (@{powerset(_normalize_person_name($item->{firstName},1))}) {
                         next unless @$first_names;
-                        foreach my $last_names (@{powerset(_normalize_person_name($item->{lastName},1,1))}) {
+                        foreach my $last_names (@{powerset(_normalize_person_name($item->{lastName},1))}) {
                             next unless @$last_names;
+                            
                             my @row = ();
-                            push(@row,join(' ',@$first_names));
-                            push(@row,join(' ',@$last_names));
-                            push(@row,$item->{dateOfBirth});
-                            push(@row,$item->{id});
-                            push(@row,$item->{version});
-                            push(@row,$item->{category}->{nameL10nKey});
-                            push(@row,$item->{comment});
-
+                            push(@row,join('',@$first_names));
+                            push(@row,join('',@$last_names));
+                            push(@row,@item);
                             push(@rows,\@row);
                             $cnt++;
+
                         }
                     }
                     _info($context,"$cnt name variants for proband id $item->{id}") if $cnt > 1;
@@ -172,7 +175,7 @@ sub import_proband {
 
 sub _normalize_person_name {
 
-    my ($name,$suppress_prefixes,$split) = @_;
+    my ($name,$split) = @_;
 
     #$name = "Vous avez aimé l'épée offerte par les elfes à Frodon";
 
@@ -184,21 +187,13 @@ sub _normalize_person_name {
     $name =~ s/\s+/ /g;
     $name =~ s/^\s+//g;
     $name =~ s/\s+$//g;
-
-    if ($split or $suppress_prefixes) {
+    
+    if ($split) {
         my @parts = split(' ',$name);
-        if ($suppress_prefixes) {
-            my @parts_filtered = ();
-            foreach my $part (@parts) {
-                push(@parts_filtered,$part) if length($part) > $person_name_prefix_length;
-            }
-            return join(' ',@parts_filtered) unless $split;
-            return @parts_filtered;
-        } else {
-            return @parts;
-        }
+        return @parts;
     } else {
-        return $name;
+        $name =~ s/ //g;
+        return ($name);
     }
 
 }
