@@ -7,6 +7,7 @@ use Excel::Reader::XLSX qw();
 
 use CTSMS::BulkProcessor::Logging qw(
     getlogger
+    processing_info
 );
 
 use CTSMS::BulkProcessor::LogError qw(
@@ -54,6 +55,8 @@ sub init_reader_context {
         }
         if (not defined $context->{sheet}) {
             fileerror("processing file - invalid spreadsheet '$context->{sheet_name}'",getlogger(__PACKAGE__));
+        } else {
+            processing_info($context->{tid},"spreadsheet '" . $context->{sheet}->name() . "'",getlogger(__PACKAGE__));
         }
     }
 
@@ -76,6 +79,16 @@ sub get_row {
 
     return [ $context->{row}->values() ];
 
+}
+
+sub get_sheet_names {
+
+    my $self = shift;
+    my $file = shift;
+
+    my $parser = Excel::Reader::XLSX->new();
+    return map { $_->name() ; } $parser->read_file($file)->worksheets();
+    
 }
 
 1;

@@ -160,4 +160,14 @@ sub get_row {
 
 }
 
+sub get_sheet_names {
+
+    my $self = shift;
+    my $file = shift;
+
+    notimplementederror((ref $self) . ': ' . (caller(0))[3] . ' not implemented',getlogger(__PACKAGE__));
+    return undef;
+
+}
+
 1;

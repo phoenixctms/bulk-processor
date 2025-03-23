@@ -194,49 +194,57 @@ sub import_ecrf_data_horizontal {
     my $result = _init_context($static_context);
 
     $file = _get_input_filename($file,$ecrf_import_filename);
+    
+    if ($result) {
+        my $importer = _get_importer($static_context,$file,
+            numofthreads => $import_ecrf_data_horizontal_numofthreads,
+            blocksize => $import_ecrf_data_horizontal_blocksize);
+        foreach my $sheet_name ($importer->get_sheet_names($file)) {
+            $result &= $importer->process(
+                file => $file,
+                static_context => $static_context,
+                sheet_name => $sheet_name,
+                process_code => sub {
+                    my ($context,$rows,$row_offset) = @_;
+                    $context->{row_offset} = $row_offset;
+                    my $rownum = $row_offset;
+                    foreach my $row (@$rows) {
+                        $rownum++;
+                        #next unless $rownum == 1 or $rownum == 5;
+                        next if (scalar @$row) <= 1;
+                        next if substr(trim($row->[0]),0,length($comment_char)) eq $comment_char;
+                        update_job($PROCESSING_JOB_STATUS);
+                        next unless _set_ecrf_data_horizontal_context($context,$row,$rownum);
+                        #next unless id == $context->{proband}->{id};
+                        _load_ecrf_status($context);
+                        next unless _clear_ecrf($context);
+                        next unless _set_ecrf_values_horizontal($context);
+                    }
+        
+                    return 1;
+                },
+                init_process_context_code => sub {
+                    my ($context)= @_;
+                    $context->{error_count} = 0;
+                    $context->{warning_count} = 0;
+                },
+                uninit_process_context_code => sub {
+                    my ($context)= @_;
+                    {
+                        lock $warning_count;
+                        $warning_count += $context->{warning_count};
+                    }
+        
+                },
+                multithreading => $import_ecrf_data_horizontal_multithreading,
+            );
+            lock $header_rownum;
+            @header_row = ();
+            $header_rownum = 0;
+        }
+    }
 
-    return ($result & _get_importer($static_context,$file,
-        numofthreads => $import_ecrf_data_horizontal_numofthreads,
-        blocksize => $import_ecrf_data_horizontal_blocksize)->process(
-        file => $file,
-        static_context => $static_context,
-        #sheet_name => 'test',
-        process_code => sub {
-            my ($context,$rows,$row_offset) = @_;
-            $context->{row_offset} = $row_offset;
-            my $rownum = $row_offset;
-            foreach my $row (@$rows) {
-                $rownum++;
-                #next unless $rownum == 1 or $rownum == 5;
-                next if (scalar @$row) <= 1;
-                next if substr(trim($row->[0]),0,length($comment_char)) eq $comment_char;
-                update_job($PROCESSING_JOB_STATUS);
-                next unless _set_ecrf_data_horizontal_context($context,$row,$rownum);
-                #next unless id == $context->{proband}->{id};
-                _load_ecrf_status($context);
-                next unless _clear_ecrf($context);
-                next unless _set_ecrf_values_horizontal($context);
-            }
-
-            return 1;
-        },
-        init_process_context_code => sub {
-            my ($context)= @_;
-            $context->{error_count} = 0;
-            $context->{warning_count} = 0;
-
-
-        },
-        uninit_process_context_code => sub {
-            my ($context)= @_;
-            {
-                lock $warning_count;
-                $warning_count += $context->{warning_count};
-            }
-
-        },
-        multithreading => $import_ecrf_data_horizontal_multithreading,
-    ),$warning_count,$value_count);
+    return ($result,$warning_count,$value_count);
 
 }
 
@@ -422,7 +430,7 @@ sub _init_horizontal_record {
     
     if ($initialized) {
         my ($keys, $values);
-        my $colums_changed = 0;
+        my $columns_changed = 0;
         my @ecrfvisit = ();
         if (length($ecrf_name_column_name)
             and exists $context->{record}->{$ecrf_name_column_name}) {
@@ -432,12 +440,12 @@ sub _init_horizontal_record {
             _error($context,"unknown ecrf name/id '" . $context->{record}->{$ecrf_name_column_name} . "'") unless scalar @ecrfs;
             my $ecrf = shift @ecrfs;
             unless (defined $context->{ecrf} and $ecrf->{id} == $context->{ecrf}->{id}) {
-                $colums_changed = 1;
+                $columns_changed = 1;
             }
             $context->{ecrf} = $ecrf;
             push(@ecrfvisit,$context->{ecrf}->{name});
         } else {
-            $colums_changed = 1 if defined $context->{ecrf};
+            $columns_changed = 1 if defined $context->{ecrf};
             undef $context->{ecrf};
         }
         if (length($ecrf_visit_column_name)
@@ -449,18 +457,18 @@ sub _init_horizontal_record {
                 (defined $context->{ecrf} ? " for eCRF '$context->{ecrf}->{name}'" : '')) unless scalar @visits;
             my $visit = shift @visits;
             unless (defined $context->{visit} and $visit->{id} == $context->{visit}->{id}) {
-                $colums_changed = 1;
+                $columns_changed = 1;
             }
             $context->{visit} = $visit;
             push(@ecrfvisit,$context->{visit}->{token});
         } else {
-            $colums_changed = 1 if defined $context->{visit};
+            $columns_changed = 1 if defined $context->{visit};
             undef $context->{visit};
         }
         
         _info($context,"mapping columns for " . join('@',@ecrfvisit)) if scalar @ecrfvisit;
         
-        if ($colums_changed) {
+        if ($columns_changed) {
             $context->{listentrytag_map} = { %{$context->{all_listentrytag_map}} };
             $context->{all_columns} = get_horizontal_cols($context, 10 ** ($colname_abbreviation{index_digits} // 2) - 1);
             ($context->{all_column_map}, $keys, $values) = array_to_map($context->{all_columns},

@@ -8,6 +8,7 @@ use Spreadsheet::ParseExcel::FmtUnicode qw();
 
 use CTSMS::BulkProcessor::Logging qw(
     getlogger
+    processing_info
 );
 
 use CTSMS::BulkProcessor::LogError qw(
@@ -41,6 +42,15 @@ sub new {
 
 }
 
+sub _get_formatter {
+    my $self = shift;
+    
+    my $formatter;
+    $formatter = Spreadsheet::ParseExcel::FmtUnicode->new(Unicode_Map => $self->{encoding}) if $self->{encoding};
+    
+    return $formatter;
+}
+
 sub init_reader_context {
 
     my $self = shift;
@@ -48,15 +58,13 @@ sub init_reader_context {
 
     #$context->{filename} = $context->{file};
 
-    my $formatter;
-    $formatter = Spreadsheet::ParseExcel::FmtUnicode->new(Unicode_Map => $self->{encoding}) if $self->{encoding};
     #    my $Recoder;
     #if ($DestCharset) {
     #$Recoder = Locale::Recode->new(from => $SourceCharset, to => $DestCharset);
     #}
 
     $context->{parser} = Spreadsheet::ParseExcel->new();
-    $context->{workbook} = $context->{parser}->parse($context->{filename},$formatter);
+    $context->{workbook} = $context->{parser}->parse($context->{filename},$self->_get_formatter());
     $context->{sheet} = undef;
     $context->{r} = undef;
     $context->{row_min} = undef;
@@ -75,6 +83,7 @@ sub init_reader_context {
         if (not defined $context->{sheet}) {
             fileerror("processing file - invalid spreadsheet '$context->{sheet_name}'",getlogger(__PACKAGE__));
         } else {
+            processing_info($context->{tid},"spreadsheet '" . $context->{sheet}->get_name() . "'",getlogger(__PACKAGE__));
             ($context->{row_min},$context->{row_max}) = $context->{sheet}->row_range();
             $context->{r} = $context->{row_min};
             ($context->{col_min},$context->{col_max}) = $context->{sheet}->col_range();
@@ -117,6 +126,16 @@ sub get_row {
 
     return [ @{$context->{row}} ];
 
+}
+
+sub get_sheet_names {
+
+    my $self = shift;
+    my $file = shift;
+
+    my $parser = Spreadsheet::ParseExcel->new();
+    return map { $_->get_name() ; } $parser->parse($file,$self->_get_formatter())->worksheets();
+    
 }
 
 1;
