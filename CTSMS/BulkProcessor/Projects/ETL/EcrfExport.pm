@@ -760,7 +760,7 @@ sub _ecrf_data_horizontal_items_to_row {
     my %value_map = ();
     foreach my $item (@$items) {
         if ($item->{ecrfField}->{field}->is_select()) {
-            if ($col_per_selection_set_value) {
+            if ($col_per_selection_set_value && $item->{ecrfField}->{field}->is_select_many()) {
                 if ($item->created) {
                     foreach my $colname (CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
                             ecrffield => $item->{ecrfField}, ecrf => $item->{ecrfField}->{ecrf}, visit => $item->{visit}, index => $item->{index},

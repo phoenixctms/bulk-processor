@@ -200,7 +200,7 @@ sub get_colnames {
         }
         $prefix = 'i' unless $external_id_used; # i for Inquiry
     }
-    if ($col_per_selection_set_value and $inquiry->{field}->is_select()) {
+    if ($col_per_selection_set_value and $inquiry->{field}->is_select_many()) {
         foreach my $selectionsetvalue (@$selectionSetValues) {
             push(@colnames,_sanitize_colname(join(' ',@parts,&$abbreviate_selectionvalue_code($selectionsetvalue->{value},$selectionsetvalue->{id})),$sanitize_colname_symbols_code,$prefix));
         }

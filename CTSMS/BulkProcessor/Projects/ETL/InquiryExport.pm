@@ -521,7 +521,7 @@ sub _inquiry_data_horizontal_items_to_row {
     my %value_map = ();
     foreach my $item (@$items) {
         if ($item->{inquiry}->{field}->is_select()) {
-            if ($col_per_selection_set_value) {
+            if ($col_per_selection_set_value && $item->{inquiry}->{field}->is_select_many()) {
                 foreach my $colname (CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Inquiry::get_colnames(
                         inquiry => $item->{inquiry},
                         selectionValues => $item->{selectionValues},

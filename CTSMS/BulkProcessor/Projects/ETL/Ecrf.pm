@@ -99,7 +99,7 @@ sub get_horizontal_cols {
                                 colname => $colnames[$i],
                                 index => ($ecrffield->{series} ? $index : undef),
                             };
-                            if ($col_per_selection_set_value and $ecrffield->{field}->is_select()) {
+                            if ($col_per_selection_set_value and $ecrffield->{field}->is_select_many()) {
                                 $column->{colnames} = \@colnames;
                                 $column->{selection_set_value} = $selectionSetValues[$i];
                             }
