@@ -122,6 +122,7 @@ use CTSMS::BulkProcessor::Projects::ETL::Ecrf qw(
     get_ecrf_map
     get_horizontal_cols
     get_probandlistentrytag_map
+    get_section_blank
 );
 
 use CTSMS::BulkProcessor::Array qw(array_to_map contains);
@@ -210,7 +211,7 @@ sub import_ecrf_data_horizontal {
                     my $rownum = $row_offset;
                     foreach my $row (@$rows) {
                         $rownum++;
-                        #next unless $rownum == 1 or $rownum == 5;
+                        #next unless $rownum == 1 or $rownum >= 18;
                         next if (scalar @$row) <= 1;
                         next if substr(trim($row->[0]),0,length($comment_char)) eq $comment_char;
                         update_job($PROCESSING_JOB_STATUS);
@@ -1081,17 +1082,21 @@ sub _get_ecrffieldvalue_in {
     my ($context,$colname,$value,$contains_code) = @_;
 
     return (undef,1) unless defined $value;
-
+    
     my $listentry_id = $context->{probandlistentry}->{id};
 
     my $column;
     $column = $context->{column_map}->{$colname} if $colname;
 
+    
     if ($column) {
-        return (undef, 1) if exists $context->{skip_columns}->{$colname};
-        return (undef, 1) unless _get_ecrffieldvalue_editable($context,$colname);
 
         my $ecrffield = $column->{ecrffield};
+        
+        return (undef, 1) if exists $context->{skip_columns}->{$colname};
+        return (undef, 1) if $ecrffield->{series} and get_section_blank($context,$column);
+        return (undef, 1) unless _get_ecrffieldvalue_editable($context,$colname);
+
         my $ecrffield_id = $ecrffield->{id};
         my $visit_id = undef;
         $visit_id = $column->{visit}->{id} if $column->{visit};
@@ -1152,7 +1157,7 @@ sub _get_ecrffieldvalue_in {
                 }
             } else {
                 eval {
-                    $in{selectionValueIds} = _get_selection_set_value_ids($context,$ecrffield->{field},$value,$contains_code,$selection_set_value_separator) = @_;
+                    $in{selectionValueIds} = _get_selection_set_value_ids($context,$ecrffield->{field},$value,$contains_code,$selection_set_value_separator);
                 };
                 if ($@) {
                     _warn_or_error($context,$@);
@@ -1166,8 +1171,8 @@ sub _get_ecrffieldvalue_in {
         } elsif ($field_type eq $CHECKBOX) {
             $in{booleanValue} = (stringtobool($value) ? \1 : \0);
         } elsif ($field_type eq $DATE) {
-            #$in{dateValue} = _valid_excel_to_date($value);
-            $in{dateValue} = (length($value) ? $value : undef);
+            $in{dateValue} = _valid_excel_to_date($value);
+            #$in{dateValue} = (length($value) ? $value : undef);
         } elsif ($field_type eq $TIME) {
             $in{timeValue} = (length($value) ? $value : undef);
         } elsif ($field_type eq $TIMESTAMP) {
@@ -1248,8 +1253,8 @@ sub _get_listentrytagvalue_in {
         } elsif ($field_type eq $CHECKBOX) {
             $in{booleanValue} = (stringtobool($value) ? \1 : \0);
         } elsif ($field_type eq $DATE) {
-            #$in{dateValue} = _valid_excel_to_date($value);
-            $in{dateValue} = (length($value) ? $value : undef);
+            $in{dateValue} = _valid_excel_to_date($value);
+            #$in{dateValue} = (length($value) ? $value : undef);
         } elsif ($field_type eq $TIME) {
             $in{timeValue} = (length($value) ? $value : undef);
         } elsif ($field_type eq $TIMESTAMP) {

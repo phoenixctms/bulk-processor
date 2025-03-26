@@ -46,6 +46,7 @@ our @EXPORT_OK = qw(
     get_horizontal_cols
     get_probandlistentrytag_map
     get_probandlistentrytag_colname
+    get_section_blank
 );
 
 my $max_colname_length_warn = 64;
@@ -250,6 +251,32 @@ sub get_probandlistentrytag_map {
     }
 
     return \%listentrytag_map;
+}
+
+sub get_section_blank {
+    
+    my ($context,$column) = @_;
+    
+    my $result = 1;
+    
+    my @colnames = map {
+        CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
+            ecrffield => $_,
+            ecrf => $_->{ecrf},
+            visit => ((defined $context->{visit} or not defined $column->{visit}) ? undef : $column->{visit}),
+            index => $column->{index}, col_per_selection_set_value => $col_per_selection_set_value, %colname_abbreviation,
+        );
+    } @{$context->{ecrf_map}->{$column->{ecrffield}->{ecrf}->{id}}->{sections}->{$column->{ecrffield}->{section}}->{fields}};
+    
+    foreach my $colname (@colnames) {
+        if (length($context->{record}->{$colname})) {
+            $result = 0;
+            last;
+        }
+    }
+    
+    return $result;
+    
 }
 
 sub _warn_or_error {
