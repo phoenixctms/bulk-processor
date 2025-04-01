@@ -197,6 +197,7 @@ sub _read_worksheets {
     # Return if the worksheet data has already been read.
     return if defined $self->{_worksheets};
 
+    my $index = 0;
     # Iterate through the worksheet properties and set up a Worksheet object.
     for my $sheet ( @{ $self->{_worksheet_properties} } ) {
 
@@ -219,7 +220,8 @@ sub _read_worksheets {
         push @{ $self->{_worksheets} }, $worksheet;
 
         # Store the Worksheet index so it can be looked up by name.
-        $self->{_worksheet_indices}->{ $sheet->{_name} } = $sheet->{_index};
+        $self->{_worksheet_indices}->{ $sheet->{_name} } = $index; #$sheet->{_index};
+        $index++;
     }
 }
 

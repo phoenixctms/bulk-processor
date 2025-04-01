@@ -211,9 +211,10 @@ sub import_ecrf_data_horizontal {
                     my $rownum = $row_offset;
                     foreach my $row (@$rows) {
                         $rownum++;
-                        #next unless $rownum == 1 or $rownum >= 18;
+                        #next unless $rownum == 1 or $rownum >= 47;
                         next if (scalar @$row) <= 1;
                         next if substr(trim($row->[0]),0,length($comment_char)) eq $comment_char;
+                        next unless (scalar grep { length(trim($_)) > 0; } @$row) > 0;
                         update_job($PROCESSING_JOB_STATUS);
                         next unless _set_ecrf_data_horizontal_context($context,$row,$rownum);
                         #next unless id == $context->{proband}->{id};
@@ -760,6 +761,7 @@ sub _register_proband {
         $result = _append_probandalias_criterion($context,$alias);
     } elsif (scalar keys %{$context->{listentrytag_map}}) {
         # otherwise use proband list entry tags if specified:
+        my $blank = 1;
         foreach my $tag_col (keys %{$context->{listentrytag_map}}) {
             if (_append_listentrytag_criterion($context,$tag_col)) {
                 push(@{$context->{criterions}},{
@@ -767,8 +769,13 @@ sub _register_proband {
                     tieId => $context->{criteriontie_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::INTERSECT},
                 });
             }
+            $blank &= (length($context->{record}->{$tag_col}) > 0 ? 0 : 1);
         }
-        pop(@{$context->{criterions}});
+        if ($blank) {
+            $result = 0;
+        } else {
+            pop(@{$context->{criterions}});
+        }
     #} else {
     #    ## otherwise use first column as alias:
     #    ##$alias = $context->{record}->{$header_row[$ecrf_proband_alias_column_index]};
