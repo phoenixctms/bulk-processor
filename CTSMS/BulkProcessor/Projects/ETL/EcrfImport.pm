@@ -1354,6 +1354,13 @@ sub _append_probandalias_criterion {
             propertyId => $context->{criterionproperty_map}->{'proband.personParticulars.alias'},
             stringValue => _mark_utf8($alias),
         });
+        push(@{$context->{criterions}},{
+            position => 2,
+            tieId => $context->{criteriontie_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::AND},
+            restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
+            propertyId => $context->{criterionproperty_map}->{'proband.deferredDelete'},
+            booleanValue => \0,
+        });
         # if there is a department column, search for alias by department ...
         if (length($ecrf_proband_department_column_name)
             and exists $context->{record}->{$ecrf_proband_department_column_name}) {
@@ -1362,7 +1369,7 @@ sub _append_probandalias_criterion {
                 if (exists $context->{department_map}->{$value}) {
                     my $department = $context->{department_map}->{$value};
                     push(@{$context->{criterions}},{
-                        position => 2,
+                        position => 3,
                         tieId => $context->{criteriontie_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::AND},
                         restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
                         propertyId => $context->{criterionproperty_map}->{'proband.department.id'},
@@ -1445,6 +1452,13 @@ sub _append_listentrytag_criterion {
         return 0;
     }
     push(@criterions,\%criterion);
+    push(@criterions,{
+        position => ((scalar @{$context->{criterions}}) + 3),
+        tieId => $context->{criteriontie_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::AND},
+        restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
+        propertyId => $context->{criterionproperty_map}->{'proband.deferredDelete'},
+        booleanValue => \0,
+    });
     push(@{$context->{criterions}},@criterions);
     return 1;
 
