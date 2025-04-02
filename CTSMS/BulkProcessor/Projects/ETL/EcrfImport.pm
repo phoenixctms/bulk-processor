@@ -212,9 +212,9 @@ sub import_ecrf_data_horizontal {
                     foreach my $row (@$rows) {
                         $rownum++;
                         #next unless $rownum == 1 or $rownum >= 47;
-                        next if (scalar @$row) <= 1;
+                        next unless (scalar @$row);
+                        next unless (scalar grep { length(trim($_)) > 0; } @$row);
                         next if substr(trim($row->[0]),0,length($comment_char)) eq $comment_char;
-                        next unless (scalar grep { length(trim($_)) > 0; } @$row) > 0;
                         update_job($PROCESSING_JOB_STATUS);
                         next unless _set_ecrf_data_horizontal_context($context,$row,$rownum);
                         #next unless id == $context->{proband}->{id};
@@ -747,6 +747,7 @@ sub _register_proband {
     $context->{criterions} = [];
     my $alias;
     my $id;
+    my %record = %{$context->{record}};
     if (length($ecrf_proband_alias_column_name) 
         and exists $context->{record}->{$ecrf_proband_alias_column_name}
         and length($context->{record}->{$ecrf_proband_alias_column_name})) {
@@ -757,8 +758,10 @@ sub _register_proband {
         # use proband_id column if specified and not empty:
         $id = $context->{record}->{proband_id};
         $result = _append_probandid_criterion($context,$id);
+        delete $record{proband_id};
     } elsif (defined $alias) {
         $result = _append_probandalias_criterion($context,$alias);
+        delete $record{$alias};
     } elsif (scalar keys %{$context->{listentrytag_map}}) {
         # otherwise use proband list entry tags if specified:
         my $blank = 1;
@@ -770,6 +773,7 @@ sub _register_proband {
                 });
             }
             $blank &= (length($context->{record}->{$tag_col}) > 0 ? 0 : 1);
+            delete $record{$tag_col};
         }
         if ($blank) {
             $result = 0;
@@ -784,6 +788,10 @@ sub _register_proband {
     #    $result = 0;
     }
 
+    unless (scalar grep { length(trim($_)) > 0; } values %record) {
+        $result = 0; #no ecrf data to save
+    }
+    
     if ($result) {
         if (scalar @{$context->{criterions}}) { # requires at least one proband list attribute of supported field type ...
             lock $registration;
