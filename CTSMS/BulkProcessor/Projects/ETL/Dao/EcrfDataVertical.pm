@@ -69,6 +69,8 @@ sub _set_expected_fieldnames {
         'input_field_external_id',
         'input_field_id',
         'input_field_type',
+        'selectionset_names',
+        'selectionset_values',
         'ecrf_field_optional',
         'ecrf_field_series',
         'series_index',

@@ -58,6 +58,8 @@ sub _set_expected_fieldnames {
         'input_field_externals_id',
         'input_field_id',
         'input_field_type',
+        'selectionset_names',
+        'selectionset_values',        
         'inquiry_optional',
 
 

@@ -321,6 +321,8 @@ sub _inquiry_data_vertical_items_to_row {
     push(@row,$item->{inquiry}->{field}->{externalId});
     push(@row,$item->{inquiry}->{field}->{id});
     push(@row,$item->{inquiry}->{field}->{fieldType}->{nameL10nKey});
+    push(@row,join($selection_set_value_separator,map { local $_ = $_; $_->{name}; } @{$item->{inquiry}->{field}->{selectionSetValues}}));
+    push(@row,join($selection_set_value_separator,map { local $_ = $_; $_->{value}; } @{$item->{inquiry}->{field}->{selectionSetValues}}));    
     push(@row,booltostring($item->{inquiry}->{optional}));
 
     push(@row,join(',',CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Inquiry::get_colnames(

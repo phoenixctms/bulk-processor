@@ -555,6 +555,8 @@ sub _ecrf_data_vertical_items_to_row {
     push(@row,$item->{ecrfField}->{field}->{externalId});
     push(@row,$item->{ecrfField}->{field}->{id});
     push(@row,$item->{ecrfField}->{field}->{fieldType}->{nameL10nKey});
+    push(@row,join($selection_set_value_separator,map { local $_ = $_; $_->{name}; } @{$item->{ecrfField}->{field}->{selectionSetValues}}));
+    push(@row,join($selection_set_value_separator,map { local $_ = $_; $_->{value}; } @{$item->{ecrfField}->{field}->{selectionSetValues}}));
     push(@row,booltostring($item->{ecrfField}->{optional}));
     push(@row,booltostring($item->{ecrfField}->{series}));
     push(@row,$item->{index});
