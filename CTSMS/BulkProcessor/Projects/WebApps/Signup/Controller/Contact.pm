@@ -21,6 +21,9 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $phone_number_prefix_preset
     $email_notify_preset
     $address_show_province
+    $address_show_country
+    $address_country
+    $address_province
 );
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::ProbandAddress qw();
@@ -61,6 +64,9 @@ Dancer::get('/contact',sub {
         },
         trials_na => CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::trials_na(),
         address_show_province => $address_show_province,
+        address_show_country =>  $address_show_country,
+        address_country => $address_country,
+        address_province => $address_province,
     );
 });
 
@@ -81,18 +87,6 @@ Dancer::post('/contact',sub {
     Dancer::session(_type_to_param_prefix('email_contact_detail_type') . 'notify','') unless defined $params->{_type_to_param_prefix('email_contact_detail_type') . 'notify'};
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
     eval {
-        my $address_in = _get_address_in($params);
-        my $address_out;
-        if (_address_created()) {
-            $address_out = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::ProbandAddress::update_item($address_in,0,$restapi);
-            Dancer::debug('proband address id ' . $address_out->{id} . ' updated');
-        } else {
-            $address_out = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::ProbandAddress::add_item($address_in,0,$restapi);
-            Dancer::debug('proband address id ' . $address_out->{id} . ' created');
-        }
-        Dancer::session("proband_address_id",$address_out->{id});
-        Dancer::session("proband_address_version",$address_out->{version});
-        Dancer::session("proband_address_out",$address_out);
 
         my $type = 'phone_contact_detail_type';
         my $prefix = _type_to_param_prefix($type);
@@ -122,9 +116,29 @@ Dancer::post('/contact',sub {
         Dancer::session($prefix . 'id',$email_out->{id});
         Dancer::session($prefix . 'version',$email_out->{version});
 
-        if (not defined $phone_in->{value} and not defined $email_in->{value}) {
-            Dancer::error("neither phone nor email entered");
+        if (not defined $phone_in->{value}) { # and not defined $email_in->{value}) {
+            Dancer::error("no phone entered");
             die(Dancer::Plugin::I18N::localize('error_no_contact_details') . "\n");
+        }
+        
+        my $address_in = _get_address_in($params);
+        my $address_out;
+        if (_address_created()) {
+            $address_out = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::ProbandAddress::update_item($address_in,0,$restapi);
+            Dancer::debug('proband address id ' . $address_out->{id} . ' updated');
+        } else {
+            eval {
+                $address_out = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::ProbandAddress::add_item($address_in,0,$restapi);
+                Dancer::debug('proband address id ' . $address_out->{id} . ' created');
+            };
+            if ($@) {
+                Dancer::debug("address not created: " . $@);
+            }
+        }
+        if ($address_out) {
+            Dancer::session("proband_address_id",$address_out->{id});
+            Dancer::session("proband_address_version",$address_out->{version});
+            Dancer::session("proband_address_out",$address_out);
         }
 
     };
@@ -158,7 +172,7 @@ sub _get_address_in {
 
         "careOf" => "",
         "cityName" => trim($params->{proband_address_city_name}),
-        "countryName" => trim($params->{proband_address_country_name}),
+        "countryName" => trim($params->{proband_address_country_name} || $address_country),
         "deliver" => \1,
         "doorNumber" => trim($params->{proband_address_door_number}),
         "entrance" => trim($params->{proband_address_entrance}),
@@ -167,7 +181,7 @@ sub _get_address_in {
         "streetName" => trim($params->{proband_address_street_name}),
         "typeId" => $site->{address_type}->{id},
         "zipCode" => trim($params->{proband_address_zip_code}),
-        "province" => trim($params->{proband_address_province}),
+        "province" => trim($params->{proband_address_province} || $address_province),
     };
 }
 
@@ -184,7 +198,9 @@ sub _type_to_param_prefix {
 }
 
 sub contact_created {
-    return (_address_created() and _contactdetailvalue_created('email_contact_detail_type')
+    #return (_address_created() and _contactdetailvalue_created('email_contact_detail_type')
+    #    and _contactdetailvalue_created('phone_contact_detail_type'));
+    return (_contactdetailvalue_created('email_contact_detail_type')
         and _contactdetailvalue_created('phone_contact_detail_type'));
 }
 

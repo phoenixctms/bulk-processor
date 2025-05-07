@@ -11,6 +11,11 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     $restapi
 );
 
+use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
+    $address_country
+    $address_province
+);
+
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteStreetName qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteZipCode qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteCountryName qw();
@@ -23,8 +28,8 @@ Dancer::post('/autocomplete/street',sub {
     my $params = Dancer::params();
     return json_response(CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteStreetName::complete_street_name(
         $params->{street_name},
-        $params->{country_name},
-        $params->{province},
+        $params->{country_name} || $address_country,
+        $params->{province} || $address_province,
         $params->{city_name},
         undef,
         undef,0,$restapi)
@@ -35,8 +40,8 @@ Dancer::post('/autocomplete/zip',sub {
     my $params = Dancer::params();
     return json_response(CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteZipCode::complete_zip_code(
         $params->{zip_code},
-        $params->{country_name},
-        $params->{province},
+        $params->{country_name} || $address_country,
+        $params->{province} || $address_province,
         length($params->{city_name}) > 0 ? $params->{city_name} : undef,
         undef,0,$restapi)
     );
@@ -45,7 +50,7 @@ Dancer::post('/autocomplete/zip',sub {
 Dancer::post('/autocomplete/country',sub {
     my $params = Dancer::params();
     return json_response(CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteCountryName::complete_country_name(
-        $params->{country_name},
+        $params->{country_name} || $address_country,
         undef,0,$restapi)
     );
 });
@@ -54,8 +59,8 @@ Dancer::post('/autocomplete/city',sub {
     my $params = Dancer::params();
     return json_response(CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteCityName::complete_city_name(
         $params->{city_name},
-        $params->{country_name},
-        $params->{province},
+        $params->{country_name} || $address_country,
+        $params->{province} || $address_province,
         length($params->{zip_code}) > 0 ? $params->{zip_code} : undef,
         undef,0,$restapi)
     );
@@ -65,8 +70,8 @@ Dancer::post('/autocomplete/province',sub {
     my $params = Dancer::params();
     return json_response(CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::CompleteProvince::complete_province(
         $params->{city_name},
-        $params->{country_name},
-        $params->{province},
+        $params->{country_name} || $address_country,
+        $params->{province} || $address_province,
         length($params->{zip_code}) > 0 ? $params->{zip_code} : undef,
         undef,0,$restapi)
     );

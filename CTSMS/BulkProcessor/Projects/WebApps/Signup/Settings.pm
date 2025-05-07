@@ -61,6 +61,9 @@ our @EXPORT_OK = qw(
     $default_date_format
     $default_decimal_separator
     $address_show_province
+    $address_show_country
+    $address_country
+    $address_province
 
     $ctsms_sites
     $default_site
@@ -95,6 +98,9 @@ our $convert_timezone = 0; # 1 for clientside user timezone conversion
 our $default_date_format = 'yyyy-MM-dd';
 our $default_decimal_separator = '.'; # expected by the user
 our $address_show_province = 1;
+our $address_show_country = 1;
+our $address_country;
+our $address_province;
 
 our $ctsms_sites = {};
 our $default_site = undef;
@@ -138,6 +144,9 @@ sub update_settings {
         $default_decimal_separator = $data->{default_decimal_separator} if exists $data->{default_decimal_separator}; # expected by the user entry
 
         $address_show_province = stringtobool($data->{address_show_province}) if exists $data->{address_show_province};
+        $address_show_country = stringtobool($data->{address_show_country}) if exists $data->{address_show_country};
+        $address_country = $data->{address_country} if exists $data->{address_country};
+        $address_province = $data->{address_province} if exists $data->{address_province};
         $language_menu = stringtobool($data->{language_menu}) if exists $data->{language_menu};
 
         $ctsms_base_uri = $data->{ctsms_base_uri} if exists $data->{ctsms_base_uri};
