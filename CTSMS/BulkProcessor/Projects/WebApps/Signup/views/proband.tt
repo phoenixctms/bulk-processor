@@ -47,6 +47,7 @@
             <option value="">[% l('no_selection_label') %]</option>
             <option value="MALE"[% session.proband_gender == 'MALE' ? ' selected="selected"' : '' %]>[% l('male') %]</option>
             <option value="FEMALE"[% session.proband_gender == 'FEMALE' ? ' selected="selected"' : '' %]>[% l('female') %]</option>
+            <option value="DIVERSE"[% session.proband_gender == 'DIVERSE' ? ' selected="selected"' : '' %]>[% l('diverse') %]</option>
         </select>
         </div>
 

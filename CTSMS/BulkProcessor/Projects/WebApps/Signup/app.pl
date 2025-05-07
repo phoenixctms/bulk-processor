@@ -43,8 +43,6 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     get_error
 );
 
-
-
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::End;
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry;
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial;
@@ -62,8 +60,6 @@ Dancer::any(qr{.*},sub {
         style_names => '404',
         js_model => {
             apiError => get_error(1),
-
-
 
         },
     );
@@ -113,9 +109,6 @@ sub init {
 
         return 1;
     };
-
-
-
 
     return $result;
 

@@ -410,12 +410,12 @@ sub _get_lang_options {
     #die(Dumper($installed_languages));
     my $languages = Dancer::Plugin::I18N::languages();
     my @result = ();
-    foreach my $langtag (sort keys %$installed_languages) {
-        #Dancer::Plugin::I18N::languages($langtag);
+    foreach my $lang_tag (sort keys %$installed_languages) {
+        #Dancer::Plugin::I18N::languages($lang_tag);
         #my $lang = Dancer::Plugin::I18N::localize('lang');
-        #my $lang_label = Dancer::Plugin::I18N::localize('lang_label') || $installed_languages->{$langtag};
-        my $lang_label = $installed_languages->{$langtag};
-        push(@result,{ lang => $langtag, lang_label => $lang_label });
+        #my $lang_label = Dancer::Plugin::I18N::localize('lang_label') || $installed_languages->{$lang_tag};
+        my $lang_label = $installed_languages->{$lang_tag};
+        push(@result,{ lang => $lang_tag, lang_label => $lang_label });
     }
     #Dancer::Plugin::I18N::languages($languages);
     return \@result;

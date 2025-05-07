@@ -8,7 +8,6 @@ use HTTP::Status qw();
 
 use Dancer qw();
 
-
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     save_params
     $restapi
@@ -21,13 +20,10 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     json_error
 );
 
-
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $proband_create_interval_limit
     $proband_agreed_preset
 );
-
-
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband qw();
 
@@ -39,11 +35,6 @@ our $navigation_options = sub {
         undef,
         $CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::navigation_options);
 };
-
-
-
-
-
 
 Dancer::get('/proband',sub {
     Dancer::session("referer",Dancer::request->referer) unless Dancer::session("referer");
@@ -147,7 +138,6 @@ sub save_site {
 
             Dancer::session('trial_inquiries_saved_map',undef);
 
-
             Dancer::debug('site changed, starting new proband');
         }
     }
@@ -166,8 +156,6 @@ sub save_enabled_trial {
                 $p,
                 $sf,
                 undef,$restapi)->[0];
-
-
 
         };
         if ($enabled_trial) {
@@ -214,19 +202,6 @@ sub _proband_create_interval_limit_ok {
     return 1;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 sub _get_in {
     my $params = shift;
     my $site = get_site();
@@ -237,9 +212,6 @@ sub _get_in {
             "version" => Dancer::session('proband_version'),
         ) : ()),
         "categoryId" => $site->{proband_category}->{id},
-
-
-
         "person" => \1,
         "blinded" => \0,
         "citizenship" => trim($params->{proband_citizenship}),
