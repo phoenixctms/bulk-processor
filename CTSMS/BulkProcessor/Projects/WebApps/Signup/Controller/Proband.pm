@@ -130,17 +130,26 @@ sub save_site {
     }
     if (created()) {
         if ($site->{department}->{id} ne Dancer::session('proband_department_id')) {
-            Dancer::session("proband_id",undef);
-            CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::clear_contact_ids();
-            Dancer::session('proband_list_entry_id_map',undef);
-            Dancer::session('trial',undef);
-            Dancer::session('enabled_trial',undef);
-
-            Dancer::session('trial_inquiries_saved_map',undef);
-
-            Dancer::debug('site changed, starting new proband');
+            _clear_session();
         }
+    } else {
+        _clear_session();
     }
+}
+
+sub _clear_session {
+    
+    Dancer::session("proband_id",undef);
+    CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::clear_contact_ids();
+    Dancer::session('proband_list_entry_id_map',undef);
+    Dancer::session('trial',undef);
+    Dancer::session('trial_search',undef);
+    Dancer::session('enabled_trial',undef);
+
+    Dancer::session('trial_inquiries_saved_map',undef);
+
+    Dancer::debug('site changed, starting new proband');
+    
 }
 
 sub save_enabled_trial {
