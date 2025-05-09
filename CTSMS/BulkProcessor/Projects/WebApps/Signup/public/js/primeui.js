@@ -1659,6 +1659,7 @@
             columns: 3,
             datasource: null,
             paginator: null,
+            emptyMessage: null,
             header: null,
             footer: null,
             content: null,
@@ -1737,7 +1738,7 @@
         },
                
         _renderData: function() {
-            if(this.data) {
+            if(this.data != null && this.data.length > 0) {
                 this.content.html('');
                 //this.content.remove();
                 //this.content = $('<div class="ui-datagrid-content ui-widget-content ui-datagrid-col-' + this.options.columns + '"></div>').appendTo(this.element);
@@ -1759,6 +1760,8 @@
                         }
                     }
                 }
+            } else if (this.options.emptyMessage != null) {
+                this.content.html('<span class="ui-datagrid-emptymessage">' + this.options.emptyMessage + '</span>');
             }
         },
                                 
