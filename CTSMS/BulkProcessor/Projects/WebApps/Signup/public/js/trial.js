@@ -1,11 +1,19 @@
 
 function initPrimeUI(context) {
 
-    context.trialsPerPage = 4;
-    context.trialsPerRow = 2;
+    context.trialsPerPage = 5;
+    context.trialsPerRow = 1;
+    
+    $('#trial_search').puiinputtext();
+    $('#trial_search').puitooltip({
+        my: 'left bottom',
+        at: 'left top',
+        content: context.trialSearchTooltip
+    });    
 
     $("#trials").puidatagrid({
         header: context.trialsGridHeader,
+        emptyMessage: context.trialsGridEmptyMessage,
         paginator: {
             rows: context.trialsPerPage,
             page: +context.trialPage
@@ -16,7 +24,7 @@ function initPrimeUI(context) {
             $.ajax({
 
                 url: context.uriBase + '/trials',
-                data: { rows: ui.rows, first: ui.first },
+                data: { rows: ui.rows, first: ui.first, signupDescription:  $('#trial_search').val() },
 
                 context: this,
                 success: function(data) {
@@ -41,12 +49,7 @@ function initPrimeUI(context) {
                 trial: trial
             };
 
-
             var grid = $('<div class="ui-grid"/>');
-
-
-
-
 
             var row = $('<div class="ui-grid-row"/>');
             var iframeId = trial.id + '_signup_description';
@@ -66,10 +69,6 @@ function initPrimeUI(context) {
             } else {
                 row.append($('<div class="ui-grid-col-5 ctsms-pbar-cell"/>'));
             }
-
-
-
-
 
             var button = $('<button name="trial" type="submit" value="' + trial.id + '">' + (_trial._activeInquiryCount > 0 ? context.openInquiriesBtnLabel : context.signupBtnLabel) + '</button>').puibutton({
                 icon: (_trial._activeInquiryCount > 0 ? 'fa-caret-right' : 'fa-user-plus'),
@@ -93,6 +92,13 @@ function initPrimeUI(context) {
             initIframe(iframeId, trial.signupDescription);
         }
     });
+    
+    $('#trial_search').on('change', function(event) {
+        //$("#trials").puidatagrid('paginate');
+    }).on('keyup', delay(function() {
+            $("#trials").puidatagrid('paginate');
+        }, 300)
+    );
 
     $('#messages').puimessages();
     if (context.apiError != null) {
@@ -100,7 +106,6 @@ function initPrimeUI(context) {
     }
 
     $('#done_btn').puibutton({
-
         icon: 'fa-angle-double-right',
         iconPos: 'right'
     });
@@ -112,10 +117,7 @@ function initPrimeUI(context) {
 
 function _sanitizeForm(context) {
 
-
-
     showWaitDlg();
-
-
     return true;
+
 }

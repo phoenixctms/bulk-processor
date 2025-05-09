@@ -17,19 +17,15 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     get_error
     set_error
     get_paginated_response
+    get_filter
     json_error
     get_page_index
     get_site_option
     check_done
 );
 
-
-
-
-
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry qw();
-
 
 our $navigation_options = sub {
     my $trials_open = (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::created()
@@ -44,19 +40,9 @@ our $navigation_options = sub {
 
 Dancer::get('/trial',sub {
 
-
-
-
-
-
-
-
-
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created();
     return unless check_trials_na();
-
-
 
     my $site = get_site();
 
@@ -80,12 +66,13 @@ Dancer::get('/trial',sub {
             probandListEntryIdMap => Dancer::session('proband_list_entry_id_map') // {},
             trialPage => Dancer::session('trial_page') // 0,
 
+            trialSearchTooltip => Dancer::Plugin::I18N::localize('trials_search_tooltip'),
             trialsGridHeader => Dancer::Plugin::I18N::localize('trials_grid_header'),
+            trialsGridEmptyMessage => Dancer::Plugin::I18N::localize('trials_grid_empty_message'),
             openInquiriesBtnLabel => Dancer::Plugin::I18N::localize('open_inquiries_btn_label'),
             signupBtnLabel => Dancer::Plugin::I18N::localize('signup_btn_label'),
             inquiriesPbarTemplate => Dancer::Plugin::I18N::localize('inquiries_pbar_template'),
             inquiryTrial => $inquiry_trial,
-
 
         },
     );
@@ -94,28 +81,28 @@ Dancer::get('/trial',sub {
 Dancer::post('/trials',sub {
     my $params = Dancer::params();
     my $site = get_site();
-
+    
+    my $f = get_filter($params);
+    
     return get_paginated_response($params,sub { my $p = shift;
 
         my $enabled_trial = Dancer::session('enabled_trial');
         my $trials = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_signup_list(
             $site->{trial_department} ? $site->{trial_department}->{id} : undef,
             $p,
-            { sort_by => 'name', sort_dir => 'asc', (defined $enabled_trial ? ( id => $enabled_trial->{id}, ) : ()) },
+            { sort_by => 'name', sort_dir => 'asc',
+              (defined $enabled_trial ? ( id => $enabled_trial->{id}, ) : ()),
+              %$f,
+            },
             { _activeInquiryCount => 1 },$restapi);
         my $proband_list_entry_id_map = Dancer::session('proband_list_entry_id_map') // {};
         my $trial_inquiries_saved_map = Dancer::session('trial_inquiries_saved_map') // {};
         foreach my $trial (@$trials) {
             $trial->{_signedUp} = (exists $proband_list_entry_id_map->{$trial->{id}} ? \1 : \0);
-
-
-
-
             my $inquiries_saved_map = $trial_inquiries_saved_map->{$trial->{id}} // {};
             my $posted_inquiries_map = Dancer::session('posted_inquiries_map_' . $trial->{id}) // {};
             set_inquiry_counts($trial,$inquiries_saved_map,$posted_inquiries_map);
         }
-
 
         Dancer::session('trial_page',get_page_index($params));
         return $trials;
@@ -124,14 +111,10 @@ Dancer::post('/trials',sub {
 
 Dancer::post('/trial',sub {
 
-
-
     my $params = Dancer::params();
 
     Dancer::session('trial',undef);
     Dancer::session('inquiry_page',undef);
-
-
 
     return check_done(sub {
         return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
@@ -144,10 +127,6 @@ Dancer::post('/trial',sub {
                 my $trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($params->{trial},{ _activeInquiryCount => 1 },$restapi);
 
                 Dancer::debug('trial id ' . $trial->{id} . ' selected');
-
-
-
-
 
                 if ($trial->{signupProbandList} and not signedup($trial)) {
                     my $proband_list_entry_id_map = Dancer::session('proband_list_entry_id_map') // {};
@@ -170,16 +149,12 @@ Dancer::post('/trial',sub {
                 set_inquiry_counts($trial,$inquiries_saved_map,$posted_inquiries_map);
                 Dancer::session('trial',$trial);
 
-
         };
         if ($@) {
             set_error($@);
             return Dancer::forward('/trial', undef, { method => 'GET' });
         } else {
             return Dancer::forward(inquiries_na() ? '/trial' : '/inquiry', undef, { method => 'GET' });
-
-
-
         }
     });
 

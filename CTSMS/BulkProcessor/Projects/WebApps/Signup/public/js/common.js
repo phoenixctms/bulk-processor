@@ -64,8 +64,6 @@ function resetSessionTimers() {
 	}
 }
 
-
-
 $.ajaxSettings = $.extend( true, {}, $.ajaxSettings );
 $.ajaxSettings.crossDomain = false;
 $.ajaxSettings.type = "POST";
@@ -347,20 +345,7 @@ function zeroFill(integer,digits) {
     return result;
 }
 
-
-
-
-
-
-
-
-
 function initMainPrimeUI(context) {
-
-
-
-
-
 
     if (context.enableSessionTimer) {
         $('#session_timer_icon').show();
@@ -385,24 +370,6 @@ function initMainPrimeUI(context) {
 
     });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 function setMessages(severity, msgs) {
     $('div[id$="message"]').puimessages('clear');
@@ -454,11 +421,15 @@ function createIframe(id,htmlString) {
 function initIframe(id,htmlString) {
 
 
+}
 
-
-
-
-
-
-
+function delay(callback, ms) {
+    var timer = 0;
+    return function() {
+        var context = this, args = arguments;
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+            callback.apply(context, args);
+        }, ms || 0);
+    };
 }

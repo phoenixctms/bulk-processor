@@ -7,7 +7,18 @@
 %]
 
 <div class="ui-grid">
+
+  <div class="ui-grid-row">
+    <div class="ui-grid-col-12">
+      <div class="ctsms-form-entry">
+      <label class="ctsms-search">[% l('trial_search_label') %]</label>
+      <input id="trial_search" type="text" class="ctsms-control-larger" value="" />
+      </div>  
+    </div>
+  </div>
+  
   <div class="ui-grid-row ctsms-trials-content">
+  
     <div class="ui-grid-col-12">
 <div id="trials"></div>
     </div>
@@ -20,7 +31,6 @@
 
     </div>
   </div>
-
 
   <div class="ui-grid-row ctsms-toolbar-row">
     <div class="ui-grid-col-12 ctsms-btn-cell">

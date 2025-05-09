@@ -84,6 +84,7 @@ our @EXPORT_OK = qw(
     get_input_timezone
     get_paginated_response
     get_page_index
+    get_filter
     check_done
     check_prev
     $id_separator_string
@@ -674,6 +675,14 @@ sub _quote_js {
 sub get_page_index {
     my $params = shift;
     return int($params->{first} / $params->{rows});
+}
+
+sub get_filter {
+    my $params = shift;
+    my %filter = %$params;
+    delete $filter{first};
+    delete $filter{rows};
+    return \%filter;
 }
 
 sub get_paginated_response {
