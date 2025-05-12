@@ -73,9 +73,9 @@
 
 [% INCLUDE layouts/js.tt %]
 
-[% INCLUDE layouts/css.tt %]
-
 <link rel="stylesheet" href="[% request.uri_base %]/css/default.min.css" />
+
+[% INCLUDE layouts/css.tt %]
 
 <!-- <script type="text/javascript" src="[% request.uri_base %]/js/date.min.js"></script> -->
 <script type="text/javascript" src="[% request.uri_base %]/js/countdown.min.js"></script>
