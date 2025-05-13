@@ -131,25 +131,37 @@ sub save_site {
     if (created()) {
         if ($site->{department}->{id} ne Dancer::session('proband_department_id')) {
             _clear_session();
+            Dancer::debug('site changed, starting new proband');
         }
     } else {
         _clear_session();
+        Dancer::debug('starting new proband');
     }
 }
 
 sub _clear_session {
     
-    Dancer::session("proband_id",undef);
-    CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::clear_contact_ids();
-    Dancer::session('proband_list_entry_id_map',undef);
-    Dancer::session('trial',undef);
-    Dancer::session('trial_search',undef);
-    Dancer::session('enabled_trial',undef);
-
-    Dancer::session('trial_inquiries_saved_map',undef);
-
-    Dancer::debug('site changed, starting new proband');
+    my $referer = Dancer::session("referer");
+    my $site = Dancer::session('site');
+    my $lang = Dancer::session('lang');
+    my $last_created = Dancer::session("proband_created_timestamp");
+    my $error = Dancer::session('api_error');
     
+    Dancer::session->destroy();
+    
+    Dancer::session('referer',$referer) if $referer;
+    Dancer::session('site',$site) if $site;
+    Dancer::session('lang',$lang) if $lang;
+    Dancer::session('proband_created_timestamp',$last_created) if $last_created;
+    Dancer::session('api_error',$error) if $error;
+    
+    #Dancer::session("proband_id",undef);
+    #CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::clear_contact_ids();
+    #Dancer::session('proband_list_entry_id_map',undef);
+    #Dancer::session('trial',undef);
+    #Dancer::session('trial_search',undef);
+    #Dancer::session('enabled_trial',undef);
+
 }
 
 sub save_enabled_trial {

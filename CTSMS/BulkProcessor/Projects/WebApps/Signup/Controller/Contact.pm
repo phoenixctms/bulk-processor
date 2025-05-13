@@ -9,6 +9,7 @@ use Dancer qw();
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     save_params
     $restapi
+    get_lang
     get_site
     get_navigation_options
     get_template
@@ -28,6 +29,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::ProbandAddress qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::ProbandContactDetailValue qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::massmail::MassMailService::MassMailRecipient qw();
 
 use CTSMS::BulkProcessor::Utils qw(trim stringtobool);
 
@@ -71,6 +73,8 @@ Dancer::get('/contact',sub {
 });
 
 Dancer::post('/contact',sub {
+    my $type = 'email_contact_detail_type';
+    my $old_email_value =  _sanitize_contactdetailvalue(Dancer::session(_type_to_param_prefix('email_contact_detail_type') . 'value'),$type);
     my $params = save_params(
         'proband_address_city_name',
         'proband_address_country_name',
@@ -88,7 +92,7 @@ Dancer::post('/contact',sub {
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
     eval {
 
-        my $type = 'phone_contact_detail_type';
+        $type = 'phone_contact_detail_type';
         my $prefix = _type_to_param_prefix($type);
         my $phone_in = _get_contactdetailvalue_in($params,$type);
         my $phone_out;
@@ -119,6 +123,33 @@ Dancer::post('/contact',sub {
         if (not defined $phone_in->{value}) { # and not defined $email_in->{value}) {
             Dancer::error("no phone entered");
             die(Dancer::Plugin::I18N::localize('error_no_contact_details') . "\n");
+        } else {
+            eval {
+                foreach my $in (_get_mass_mail_recipient_ins()) {
+                    my $out;
+                    if (defined $in->{massMailId}) {
+                        if (_mass_mail_recipient_created($in->{massMailId})) {
+                            if (($old_email_value // '') ne ($email_in->{value} // '')) {
+                                $out = CTSMS::BulkProcessor::RestRequests::ctsms::massmail::MassMailService::MassMailRecipient::reset_item(
+                                    Dancer::session(_mass_mail_param_prefix($in->{massMailId},'recipient_id')),
+                                    Dancer::session(_mass_mail_param_prefix($in->{massMailId},'version')),0,$restapi);
+                                Dancer::debug('mass mail recipient id ' . $out->{id} . ' reset');
+                                Dancer::session(_mass_mail_param_prefix($in->{massMailId},'version'),$out->{version});
+                            } else {
+                                Dancer::debug('mass mail recipient id ' . Dancer::session(_mass_mail_param_prefix($in->{massMailId},'recipient_id')) . ' not reset (email not changed)');
+                            }
+                        } else {
+                            $out = CTSMS::BulkProcessor::RestRequests::ctsms::massmail::MassMailService::MassMailRecipient::add_item($in,0,$restapi);
+                            Dancer::debug('mass mail recipient id ' . $out->{id} . ' created');
+                            Dancer::session(_mass_mail_param_prefix($in->{massMailId},'recipient_id'),$out->{id});
+                            Dancer::session(_mass_mail_param_prefix($in->{massMailId},'version'),$out->{version});
+                        }
+                    }
+                }
+            };
+            if ($@) {
+                Dancer::error("failed to create/reset mass mail recipient: " . $@);
+            }
         }
         
         my $address_in = _get_address_in($params);
@@ -127,12 +158,16 @@ Dancer::post('/contact',sub {
             $address_out = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::ProbandAddress::update_item($address_in,0,$restapi);
             Dancer::debug('proband address id ' . $address_out->{id} . ' updated');
         } else {
-            eval {
-                $address_out = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::ProbandAddress::add_item($address_in,0,$restapi);
-                Dancer::debug('proband address id ' . $address_out->{id} . ' created');
-            };
-            if ($@) {
-                Dancer::debug("address not created: " . $@);
+            if (length($address_in->{zipCode}) > 0) {
+                eval {
+                    $address_out = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::ProbandAddress::add_item($address_in,0,$restapi);
+                    Dancer::debug('proband address id ' . $address_out->{id} . ' created');
+                };
+                if ($@) {
+                    Dancer::debug("address not created: " . $@);
+                }
+            } else {
+                Dancer::debug("address skipped");
             }
         }
         if ($address_out) {
@@ -208,6 +243,8 @@ sub clear_contact_ids {
     Dancer::session('proband_address_id',undef);
     Dancer::session(_type_to_param_prefix('email_contact_detail_type') . 'id',undef);
     Dancer::session(_type_to_param_prefix('phone_contact_detail_type') . 'id',undef);
+    map { Dancer::session(_mass_mail_param_prefix($_->{massMailId},'recipient_id'),undef); } _get_mass_mail_recipient_ins();
+    return;
 }
 
 sub check_contact_created {
@@ -268,6 +305,31 @@ sub _sanitize_contactdetailvalue {
         $value = trim($value);
     }
     return $value;
+}
+
+sub _mass_mail_param_prefix {
+    my ($mass_mail_id,$type) = @_;
+    return 'mass_mail_' . $mass_mail_id . '_' . $type;
+}
+
+sub _mass_mail_recipient_created {
+    my ($mass_mail_id) = @_;
+    my $id = Dancer::session(_mass_mail_param_prefix($mass_mail_id,'recipient_id'));
+    if (defined $id and length($id) > 0) {
+        return 1;
+    }
+    return 0;
+}
+
+sub _get_mass_mail_recipient_ins {
+
+    my $site = get_site();
+    my $lang = get_lang();
+    return () unless defined $site->{mass_mail}->{$lang};
+    return map { {
+        "probandId" => Dancer::session('proband_id'),
+        "massMailId" => $_->{id},
+    }; } @{$site->{mass_mail}->{$lang}};
 }
 
 1;

@@ -397,12 +397,13 @@ sub _get_site_name {
 }
 
 sub get_lang {
-    my $lang = Dancer::Plugin::I18N::localize('lang');
-    if ($lang) {
-        return $lang;
-    } else {
-        die('no or empty lang in .po');
-    }
+    return Dancer::Plugin::I18N::language_tag();
+    #my $lang = Dancer::Plugin::I18N::localize('lang');
+    #if ($lang) {
+    #    return $lang;
+    #} else {
+    #    die('no or empty lang in .po');
+    #}
 }
 
 sub _get_lang_options {
