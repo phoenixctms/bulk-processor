@@ -16,7 +16,7 @@ use CTSMS::BulkProcessor::RestProcessor qw(
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
 use CTSMS::BulkProcessor::RestItem qw();
 
-
+use CTSMS::BulkProcessor::Utils qw(booltostring);
 
 require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
@@ -37,9 +37,10 @@ my $get_add_path_query = sub {
     return 'massmailrecipient/';
 };
 my $get_reset_path_query = sub {
-    my ($id,$version) = @_;
+    my ($id,$sent,$version) = @_;
     my %params = ();
     $params{version} = $version;
+    $params{sent} = booltostring($sent) if defined $sent;
     return 'massmailrecipient/' . $id . '/reset' . get_query_string(\%params);
 };
 
@@ -58,6 +59,8 @@ my $fieldnames = [
     "readTimestamp",
     "unsubscribed",
     "unsubscribedTimestamp",
+    "confirmed",
+    "confirmedTimestamp",        
     "modifiedTimestamp",
     "pending",
     "version",
@@ -95,9 +98,9 @@ sub add_item {
 
 sub reset_item {
 
-    my ($id,$version,$load_recursive,$restapi,$headers) = @_;
+    my ($id,$sent,$version,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->put(&$get_reset_path_query($id,$version),undef,$headers),$load_recursive,$restapi);
+    return builditems_fromrows($api->put(&$get_reset_path_query($id,$sent,$version),undef,$headers),$load_recursive,$restapi);
 
 }
 
@@ -131,15 +134,5 @@ sub get_item_path {
     return &$get_item_path_query($id);
 
 }
-
-
-
-
-
-
-
-
-
-
 
 1;
