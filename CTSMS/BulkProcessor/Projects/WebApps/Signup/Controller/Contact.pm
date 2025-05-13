@@ -123,33 +123,6 @@ Dancer::post('/contact',sub {
         if (not defined $phone_in->{value}) { # and not defined $email_in->{value}) {
             Dancer::error("no phone entered");
             die(Dancer::Plugin::I18N::localize('error_no_contact_details') . "\n");
-        } else {
-            eval {
-                foreach my $in (_get_mass_mail_recipient_ins()) {
-                    my $out;
-                    if (defined $in->{massMailId}) {
-                        if (_mass_mail_recipient_created($in->{massMailId})) {
-                            if (($old_email_value // '') ne ($email_in->{value} // '')) {
-                                $out = CTSMS::BulkProcessor::RestRequests::ctsms::massmail::MassMailService::MassMailRecipient::reset_item(
-                                    Dancer::session(_mass_mail_param_prefix($in->{massMailId},'recipient_id')),
-                                    Dancer::session(_mass_mail_param_prefix($in->{massMailId},'version')),0,$restapi);
-                                Dancer::debug('mass mail recipient id ' . $out->{id} . ' reset');
-                                Dancer::session(_mass_mail_param_prefix($in->{massMailId},'version'),$out->{version});
-                            } else {
-                                Dancer::debug('mass mail recipient id ' . Dancer::session(_mass_mail_param_prefix($in->{massMailId},'recipient_id')) . ' not reset (email not changed)');
-                            }
-                        } else {
-                            $out = CTSMS::BulkProcessor::RestRequests::ctsms::massmail::MassMailService::MassMailRecipient::add_item($in,0,$restapi);
-                            Dancer::debug('mass mail recipient id ' . $out->{id} . ' created');
-                            Dancer::session(_mass_mail_param_prefix($in->{massMailId},'recipient_id'),$out->{id});
-                            Dancer::session(_mass_mail_param_prefix($in->{massMailId},'version'),$out->{version});
-                        }
-                    }
-                }
-            };
-            if ($@) {
-                Dancer::error("failed to create/reset mass mail recipient: " . $@);
-            }
         }
         
         my $address_in = _get_address_in($params);
@@ -175,6 +148,34 @@ Dancer::post('/contact',sub {
             Dancer::session("proband_address_version",$address_out->{version});
             Dancer::session("proband_address_out",$address_out);
         }
+        
+        eval {
+            foreach my $in (get_mass_mail_recipient_ins()) {
+                my $out;
+                if (defined $in->{massMailId}) {
+                    if (mass_mail_recipient_created($in->{massMailId})) {
+                        if (($old_email_value // '') ne ($email_in->{value} // '')) {
+                            $out = CTSMS::BulkProcessor::RestRequests::ctsms::massmail::MassMailService::MassMailRecipient::reset_item(
+                                Dancer::session(mass_mail_param_prefix($in->{massMailId},'recipient_id')),
+                                undef, #reset no matter if already sent
+                                Dancer::session(mass_mail_param_prefix($in->{massMailId},'version')),0,$restapi);
+                            Dancer::debug('mass mail recipient id ' . $out->{id} . ' reset');
+                            Dancer::session(mass_mail_param_prefix($in->{massMailId},'version'),$out->{version});
+                        } else {
+                            Dancer::debug('mass mail recipient id ' . Dancer::session(mass_mail_param_prefix($in->{massMailId},'recipient_id')) . ' not reset (email not changed)');
+                        }
+                    } else {
+                        $out = CTSMS::BulkProcessor::RestRequests::ctsms::massmail::MassMailService::MassMailRecipient::add_item($in,0,$restapi);
+                        Dancer::debug('mass mail recipient id ' . $out->{id} . ' created');
+                        Dancer::session(mass_mail_param_prefix($in->{massMailId},'recipient_id'),$out->{id});
+                        Dancer::session(mass_mail_param_prefix($in->{massMailId},'version'),$out->{version});
+                    }
+                }
+            }
+        };
+        if ($@) {
+            Dancer::error("failed to create/reset mass mail recipient: " . $@);
+        }        
 
     };
     if ($@) {
@@ -243,7 +244,7 @@ sub clear_contact_ids {
     Dancer::session('proband_address_id',undef);
     Dancer::session(_type_to_param_prefix('email_contact_detail_type') . 'id',undef);
     Dancer::session(_type_to_param_prefix('phone_contact_detail_type') . 'id',undef);
-    map { Dancer::session(_mass_mail_param_prefix($_->{massMailId},'recipient_id'),undef); } _get_mass_mail_recipient_ins();
+    map { Dancer::session(mass_mail_param_prefix($_->{massMailId},'recipient_id'),undef); } get_mass_mail_recipient_ins();
     return;
 }
 
@@ -307,21 +308,21 @@ sub _sanitize_contactdetailvalue {
     return $value;
 }
 
-sub _mass_mail_param_prefix {
+sub mass_mail_param_prefix {
     my ($mass_mail_id,$type) = @_;
     return 'mass_mail_' . $mass_mail_id . '_' . $type;
 }
 
-sub _mass_mail_recipient_created {
+sub mass_mail_recipient_created {
     my ($mass_mail_id) = @_;
-    my $id = Dancer::session(_mass_mail_param_prefix($mass_mail_id,'recipient_id'));
+    my $id = Dancer::session(mass_mail_param_prefix($mass_mail_id,'recipient_id'));
     if (defined $id and length($id) > 0) {
         return 1;
     }
     return 0;
 }
 
-sub _get_mass_mail_recipient_ins {
+sub get_mass_mail_recipient_ins {
 
     my $site = get_site();
     my $lang = get_lang();
