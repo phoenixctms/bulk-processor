@@ -86,7 +86,7 @@ Dancer::post('/proband',sub {
 
         unless (stringtobool($params->{'proband_agreed'} // '')) {
             set_error(Dancer::Plugin::I18N::localize('error_proband_not_agreed'));
-            return Dancer::forward('/proband', undef, { method => 'GET' });
+            return Dancer::forward('/proband', { keep => 1, } , { method => 'GET' });
         }
     }
     eval {
@@ -111,7 +111,7 @@ Dancer::post('/proband',sub {
     };
     if ($@) {
         set_error($@);
-        return Dancer::forward('/proband', undef, { method => 'GET' });
+        return Dancer::forward('/proband', { keep => 1, }, { method => 'GET' });
     } else {
         return Dancer::forward('/contact', undef, { method => 'GET' });
     }
@@ -133,7 +133,7 @@ sub save_site {
             _clear_session();
             Dancer::debug('site changed, starting new proband');
         }
-    } else {
+    } elsif (not $params->{'keep'}) {
         _clear_session();
         Dancer::debug('starting new proband');
     }
