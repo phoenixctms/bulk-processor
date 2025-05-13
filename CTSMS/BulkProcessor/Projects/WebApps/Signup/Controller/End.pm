@@ -16,11 +16,10 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     apply_lwp_file_response
     date_iso_to_ui
 );
-#get_lang
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::ProbandAddress qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues qw();
-#use CTSMS::BulkProcessor::RestRequests::ctsms::massmail::MassMailService::MassMailRecipient qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::massmail::MassMailService::MassMailRecipient qw();
 
 our $navigation_options = sub {
     my $done  = (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::created() and
@@ -78,28 +77,34 @@ Dancer::get('/end',sub {
         CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::set_inquiry_counts($trial,$inquiries_saved_map,undef);
         $saved_inquiry_count += $trial->{_savedInquiryCount};
     }
-    #eval {
-    #    foreach my $in (_get_mass_mail_recipient_ins()) {
-    #        my $out;
-    #        if (defined $in->{massMailId}) {
-    #            if (_mass_mail_recipient_created($in->{massMailId})) {
-    #                $out = CTSMS::BulkProcessor::RestRequests::ctsms::massmail::MassMailService::MassMailRecipient::reset_item(
-    #                    Dancer::session(_mass_mail_param_prefix($in->{massMailId},'recipient_id')),
-    #                    Dancer::session(_mass_mail_param_prefix($in->{massMailId},'version')),0,$restapi);
-    #                Dancer::debug('mass mail recipient id ' . $out->{id} . ' reset');
-    #                Dancer::session(_mass_mail_param_prefix($in->{massMailId},'version'),$out->{version});
-    #            } else {
-    #                $out = CTSMS::BulkProcessor::RestRequests::ctsms::massmail::MassMailService::MassMailRecipient::add_item($in,0,$restapi);
-    #                Dancer::debug('mass mail recipient id ' . $out->{id} . ' created');
-    #                Dancer::session(_mass_mail_param_prefix($in->{massMailId},'recipient_id'),$out->{id});
-    #                Dancer::session(_mass_mail_param_prefix($in->{massMailId},'version'),$out->{version});
-    #            }
-    #        }
-    #    }
-    #};
-    #if ($@) {
-    #    Dancer::error("failed to create/reset mass mail recipient: " . $@);
-    #}
+    eval {
+        foreach my $in (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::get_mass_mail_recipient_ins()) {
+            my $out;
+            if (defined $in->{massMailId}) {
+                if (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::mass_mail_recipient_created($in->{massMailId})) {
+                    my $version = Dancer::session(CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::mass_mail_param_prefix($in->{massMailId},'version'));
+                    $out = CTSMS::BulkProcessor::RestRequests::ctsms::massmail::MassMailService::MassMailRecipient::reset_item(
+                        Dancer::session(CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::mass_mail_param_prefix($in->{massMailId},'recipient_id')),
+                        0, # reset only if not sent yet
+                        $version,0,$restapi);
+                    if ($out->{version} != $version) {
+                        Dancer::debug('mass mail recipient id ' . $out->{id} . ' reset');
+                        Dancer::session(CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::mass_mail_param_prefix($in->{massMailId},'version'),$out->{version});
+                    } else {
+                        Dancer::debug('mass mail recipient id ' . $out->{id} . ' not reset (already sent)');
+                    }
+                } else {
+                    $out = CTSMS::BulkProcessor::RestRequests::ctsms::massmail::MassMailService::MassMailRecipient::add_item($in,0,$restapi);
+                    Dancer::debug('mass mail recipient id ' . $out->{id} . ' created');
+                    Dancer::session(CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::mass_mail_param_prefix($in->{massMailId},'recipient_id'),$out->{id});
+                    Dancer::session(CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::mass_mail_param_prefix($in->{massMailId},'version'),$out->{version});
+                }
+            }
+        }
+    };
+    if ($@) {
+        Dancer::error("failed to create/reset mass mail recipient: " . $@);
+    }
     return get_template('end',
         script_names => 'end',
         style_names => 'end',
@@ -132,30 +137,5 @@ Dancer::post('/end',sub {
     );
 
 });
-
-#sub _mass_mail_param_prefix {
-#    my ($mass_mail_id,$type) = @_;
-#    return 'mass_mail_' . $mass_mail_id . '_' . $type;
-#}
-
-#sub _mass_mail_recipient_created {
-#    my ($mass_mail_id) = @_;
-#    my $id = Dancer::session(_mass_mail_param_prefix($mass_mail_id,'recipient_id'));
-#    if (defined $id and length($id) > 0) {
-#        return 1;
-#    }
-#    return 0;
-#}
-
-#sub _get_mass_mail_recipient_ins {
-#
-#    my $site = get_site();
-#    my $lang = get_lang();
-#    return () unless defined $site->{mass_mail}->{$lang};
-#    return map { {
-#        "probandId" => Dancer::session('proband_id'),
-#        "massMailId" => $_->{id},
-#    }; } @{$site->{mass_mail}->{$lang}};
-#}
 
 1;
