@@ -166,7 +166,7 @@ sub _clear_session {
 
 sub save_enabled_trial {
     my $params = Dancer::params();
-    if (exists $params->{'trial'}) {
+    if ($params->{'trial'}) {
         my $enabled_trial;
         eval {
             my $site = get_site();
@@ -182,6 +182,8 @@ sub save_enabled_trial {
         if ($enabled_trial) {
             Dancer::session('enabled_trial', $enabled_trial);
             Dancer::debug('enabled trial: ', $enabled_trial->{id});
+        } else {
+            Dancer::debug('cannot set enabled trial: ', $params->{'trial'});
         }
     }
 }

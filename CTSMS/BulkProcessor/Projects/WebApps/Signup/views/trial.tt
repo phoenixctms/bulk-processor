@@ -8,6 +8,7 @@
 
 <div class="ui-grid">
 
+  [% UNLESS session.enabled_trial %]
   <div class="ui-grid-row">
     <div class="ui-grid-col-12">
       <div class="ctsms-form-entry">
@@ -16,6 +17,7 @@
       </div>  
     </div>
   </div>
+  [% END %]
   
   <div class="ui-grid-row ctsms-trials-content">
   
