@@ -154,8 +154,14 @@ visibility:hidden;
     display: inline-block;
     margin-right: 7px;
     text-align: right;
-    width: 138px;
 }
+
+@media (min-width: 768px)
+    .ctsms-form-entry > label {
+        width: 148px;
+    }
+}
+
 .ctsms-form-entry > label.ctsms-adjacent {
     display: inline-block;
     margin-right: 7px;
