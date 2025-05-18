@@ -156,7 +156,7 @@ visibility:hidden;
     text-align: right;
 }
 
-@media (min-width: 768px)
+@media (min-width: 768px) {
     .ctsms-form-entry > label {
         width: 148px;
     }

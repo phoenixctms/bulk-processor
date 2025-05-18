@@ -5,7 +5,8 @@ function initPrimeUI(context) {
         showCaption: false,
         showFilmstrip: false,
         panelWidth: '100%',
-        panelHeight: 248,
+        //panelHeight: 248,
+        panelWidth: '25%',
         transitionInterval: 10000
     });
 
