@@ -9,8 +9,7 @@ function initPrimeUI(context) {
         showCaption: false,
         showFilmstrip: false,
         panelWidth: '100%',
-        panelHeight: '20%',
-        //panelHeight: 180,
+        panelHeight: (window.innerWidth < 940 ? window.innerWidth / 940 : 1.0) * 180,
         transitionInterval: 10000
     });
 
