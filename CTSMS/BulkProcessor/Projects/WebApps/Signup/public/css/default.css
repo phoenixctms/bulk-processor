@@ -206,6 +206,12 @@ visibility:hidden;
 	width: 100px !important;
 }
 
+@media (min-width: 768px) {
+	.ctsms-control-smaller {
+		width: 40px !important;
+	}
+}
+
 .ctsms-control-smaller .ui-inputfield {
 	width: inherit !important;
 }
