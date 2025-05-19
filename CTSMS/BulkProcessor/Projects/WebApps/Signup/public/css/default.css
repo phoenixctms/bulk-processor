@@ -153,19 +153,14 @@ visibility:hidden;
 .ctsms-form-entry > label {
     display: inline-block;
     margin-right: 7px;
-    text-align: right;
+	width: 100%;
+    text-align: left
 }
 
 @media (min-width: 768px) {
     .ctsms-form-entry > label {
         width: 148px;
-    }
-}
-
-@media not (min-width: 768px) {
-    .ctsms-form-entry>label {
-        width: 100%;
-        text-align: left
+		text-align: right;
     }
 }
 
@@ -173,15 +168,15 @@ visibility:hidden;
     display: inline-block;
     margin-right: 7px;
 	margin-left: 7px;
-    text-align: right;
-    width: auto;
+    width: 100%;
+    text-align: left
 }
 
-@media not (min-width: 768px) {
-    .ctsms-form-entry>label.ctsms-adjacent {
-        width: 100%;
-        text-align: left
-    }   
+@media (min-width: 768px) {
+    .ctsms-form-entry > label.ctsms-adjacent {
+        text-align: right;
+        width: auto;
+    }
 }
 
 @media (min-width: 768px) {
