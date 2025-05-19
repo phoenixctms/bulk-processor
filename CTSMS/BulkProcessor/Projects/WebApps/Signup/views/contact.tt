@@ -24,7 +24,7 @@
             </div>
           </div>
 
-          <div class="ui-grid-col-7" style="padding-top:4px;">
+          <div class="ui-grid-col-7" id="email_notify_container">
             <div class="ctsms-form-entry">
             <input name="proband_email_notify" id="email_notify" type="checkbox" value="true"[% TTUTILS.stringtobool(session.proband_email_notify) ? ' checked="checked"' : '' %]/>
             <label for="email_notify">[% l('proband_email_notify_label') %]</label>

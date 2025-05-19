@@ -162,6 +162,13 @@ visibility:hidden;
     }
 }
 
+@media not (min-width: 768px) {
+    .ctsms-form-entry>label {
+        width: 100%;
+        text-align: left
+    }
+}
+
 .ctsms-form-entry > label.ctsms-adjacent {
     display: inline-block;
     margin-right: 7px;
@@ -169,6 +176,20 @@ visibility:hidden;
     text-align: right;
     width: auto;
 }
+
+@media not (min-width: 768px) {
+    .ctsms-form-entry>label.ctsms-adjacent {
+        width: 100%;
+        text-align: left
+    }   
+}
+
+@media (min-width: 768px) {
+    #email_notify_container {
+        padding-top:4px;	
+    }
+}
+
 .ctsms-form-entry > div.ui-chkbox + label {
     display: inline-block;
     margin-left: 7px;
