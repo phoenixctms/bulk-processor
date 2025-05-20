@@ -185,6 +185,54 @@ visibility:hidden;
     }
 }
 
+.ctsms-field-row {
+    display: inline !important;
+}
+.ctsms-field-label {
+    margin-top:4px;
+    width:100%;
+}
+.ctsms-field-input {
+    width:100%;
+}
+
+.ctsms-field-row-tied {
+    display: flex !important ;
+}
+
+.ctsms-field-label-tied {
+    margin-top: 4px;
+    width: 100%
+}
+
+.ctsms-field-input-tied {
+    width: auto;
+}
+
+@media (min-width: 768px) {
+    .ctsms-field-row {
+        display: block !important;
+    }
+    .ctsms-field-label {
+        margin-top:4px;
+        width: 33.33333%;
+    }
+    .ctsms-field-input {
+        width: 66.66666%;
+    }
+
+    .ctsms-field-row-tied {
+        display: block !important;
+    }
+    .ctsms-field-label-tied {
+        margin-top:4px;
+        width: 33.33333%;
+    }
+    .ctsms-field-input-tied {
+        width: 66.66666%;
+    }
+}
+
 .ctsms-form-entry > div.ui-chkbox + label {
     display: inline-block;
     margin-left: 7px;

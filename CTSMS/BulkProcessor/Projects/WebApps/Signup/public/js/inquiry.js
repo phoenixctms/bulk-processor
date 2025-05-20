@@ -154,10 +154,11 @@ function _createInquiryField(context,value) {
     });
     content.append(fieldSet);
 
-    var row = $('<div class="ui-grid-row"/>').appendTo(grid);
-    row.append($('<div class="ui-grid-col-4" style="margin-top:4px;"/>').append($('<label class="ctsms-align-top' + (value.inquiry.optional ? '' : ' ctsms-required') + '"/>').append(
+    var tied = isTiedFieldRow(value.inquiry.field.fieldType.type) ? '-tied' : '';
+    var row = $('<div class="ui-grid-row ctsms-field-row' + tied + '"/>').appendTo(grid);
+    row.append($('<div class="ui-grid-col-4 ctsms-field-label' + tied + '"/>').append($('<label class="ctsms-align-top' + (value.inquiry.optional ? '' : ' ctsms-required') + '"/>').append(
         document.createTextNode((value.inquiry.title != null && value.inquiry.title.length > 0) ? value.inquiry.title : value.inquiry.field.title))));
-    var inputContent = $('<div class="ui-grid-col-8"/>');
+    var inputContent = $('<div class="ui-grid-col-8 ctsms-field-input' + tied + '"/>');
     row.append(inputContent);
 
     switch (value.inquiry.field.fieldType.type) {
@@ -248,6 +249,45 @@ function _createInquiryField(context,value) {
 
     return content;
 
+}
+
+function isTiedFieldRow(fieldType) {
+    switch (fieldType) {
+        case 'SINGLE_LINE_TEXT':
+            return false;
+        case 'MULTI_LINE_TEXT':
+            return false;
+        case 'AUTOCOMPLETE':
+            return false;
+        case 'DATE':
+            return true;
+        case 'TIME':
+            return true;
+        case 'TIMESTAMP':
+            return false;
+        case 'CHECKBOX':
+            return true;
+        case 'SELECT_ONE_DROPDOWN':
+            return false;
+        case 'SELECT_ONE_RADIO_H':
+            return false;
+        case 'SELECT_ONE_RADIO_V':
+            return false;
+        case 'SELECT_MANY_H':
+            return false;
+        case 'SELECT_MANY_V':
+            return false;
+        case 'SKETCH':
+            return false;
+        case 'INTEGER':
+            return true;
+        case 'FLOAT':
+            return true;
+        default:
+            break;
+    }
+    return true;
+    
 }
 
 function _initInquiryField(context,value,content) {
