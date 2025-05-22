@@ -144,6 +144,7 @@ my $publish_sicl_task_opt = 'publish_sicl';
 push(@TASK_OPTS,$publish_sicl_task_opt);
 
 my $upload_files = 0;
+my $signed = 0;
 
 if (init()) {
     main();
@@ -168,6 +169,7 @@ sub init {
         "jid=i" => \$job_id,
         "auth=s" => \$auth,
         "upload" => \$upload_files,
+        "signed" => \$signed,
         "tz=s" => \$timezone,
     );
 
@@ -332,7 +334,7 @@ sub export_ecrf_data_vertical_task {
     my ($messages) = @_;
     my ($result, $warning_count) = (0,0);
     eval {
-        ($result, $warning_count) = export_ecrf_data_vertical();
+        ($result, $warning_count) = export_ecrf_data_vertical($signed);
     };
     my $err = $@;
     if ($err) {
@@ -348,7 +350,7 @@ sub export_ecrf_data_horizontal_task {
     my ($messages) = @_;
     my ($result, $warning_count) = (0,0);
     eval {
-        ($result, $warning_count) = export_ecrf_data_horizontal();
+        ($result, $warning_count) = export_ecrf_data_horizontal($signed);
     };
     my $err = $@;
     if ($err) {
@@ -431,7 +433,7 @@ sub publish_ecrf_data_pdfs_task {
     my ($messages,$attachmentfiles) = @_;
     my ($result, $warning_count, $uploads) = (0,0,undef);
     eval {
-        ($result, $warning_count, $uploads) = publish_ecrf_data_pdfs($upload_files);
+        ($result, $warning_count, $uploads) = publish_ecrf_data_pdfs($upload_files,$signed);
     };
     my $err = $@;
     if ($err) {

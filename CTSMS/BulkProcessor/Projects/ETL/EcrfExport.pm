@@ -175,8 +175,8 @@ sub publish_ecrf_data_pdf {
 
 sub publish_ecrf_data_pdfs {
 
-    my ($upload_files) = @_;
-    my $context = { upload_files => $upload_files, };
+    my ($upload_files,$signed) = @_;
+    my $context = { upload_files => $upload_files, signed => $signed, };
     my $result = _init_ecrf_data_pdfs_context($context);
 
     $result = _export_items($context) if $result;
@@ -354,7 +354,8 @@ sub _get_file_in {
 
 sub export_ecrf_data_vertical {
 
-    my $context = {};
+    my ($signed) = @_;
+    my $context = { signed => $signed, };
     my $result = _init_ecrf_data_vertical_context($context);
 
     # create tables:
@@ -372,6 +373,7 @@ sub _export_items {
     my $result = 1;
 
     my @rows = ();
+    #my $count=0;
     while (my $item = &{$context->{api_get_items_code}}($context)) {
 
         my $row = &{$context->{item_to_row_code}}($context,$item);
@@ -381,6 +383,9 @@ sub _export_items {
             $result &= &{$context->{export_code}}($context,\@rows);
             @rows = ();
         }
+        
+        #$count++;
+        #last if $count >= 10;
 
     }
 
@@ -484,8 +489,16 @@ NEXT_VISIT:
                 $context->{api_values_page_total_count} = undef;
                 $context->{api_values_page_num} = 0; #roll over
                 $context->{ecrf_status} = eval { CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::get_item($context->{listentry}->{id},$context->{ecrf}->{id},$context->{visit}->{id}) };
-                _info($context,'proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
-                      (defined $context->{visit}->{id} ? '@' . $context->{visit}->{token} : '') . "': " . ($context->{ecrf_status} ? $context->{ecrf_status}->{status}->{name} : '<new>'));
+                if (not $context->{signed} or ($context->{ecrf_status} and $context->{ecrf_status}->{status}->{done})) {
+                    _info($context,'proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
+                          (defined $context->{visit}->{id} ? '@' . $context->{visit}->{token} : '') . "': " . ($context->{ecrf_status} ? $context->{ecrf_status}->{status}->{name} : '<new>'));                    
+                } else {
+                    _info($context,'skipping unsigned - proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
+                          (defined $context->{visit}->{id} ? '@' . $context->{visit}->{token} : '') . "': " . ($context->{ecrf_status} ? $context->{ecrf_status}->{status}->{name} : '<new>'),1);                    
+                    $context->{ecrf} = undef;
+                    $context->{ecrf_status} = undef;
+                    goto NEXT_ECRF;
+                }
             } else {
                 $context->{ecrf} = undef;
                 $context->{ecrf_status} = undef;
@@ -619,7 +632,8 @@ sub _insert_ecrf_data_vertical_rows {
 
 sub export_ecrf_data_horizontal {
 
-    my $context = {};
+    my ($signed) = @_;
+    my $context = { signed => $signed, };
     my $result = _init_ecrf_data_horizontal_context($context);
 
     # create tables:
@@ -652,8 +666,14 @@ sub _init_ecrf_data_pdfs_context {
     $context->{uploads} = [];
     $context->{items_row_block} = 1;
     $context->{item_to_row_code} = sub {
-        my ($context,$lwp_response) = @_;
-        _info($context,'proband ' . $context->{listentry}->{proband}->alias() . ' eCRF casebook pdf rendered');
+        my ($context,$ecrfpdfvo) = @_;
+        
+        my $lwp_response;
+        if (@{$ecrfpdfvo->{statusEntries}} > 0) {
+            $lwp_response = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::render_ecrf($context->{listentry}->{id}, undef, undef, $context->{signed} ? 1 : undef);
+            _info($context,'proband ' . $context->{listentry}->{proband}->alias() . ' eCRF casebook pdf rendered: ' . @{$ecrfpdfvo->{statusEntries}} . ' eCRF(s)');
+        }
+        
         return $lwp_response;
     };
     $context->{export_code} = sub {
@@ -692,7 +712,8 @@ sub _init_ecrf_data_pdfs_context {
         if (defined $context->{listentry}) {
             #tag values
             ($context->{tagvalues}, my $tag_cols, my $tag_vals) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return get_probandlistentrytag_colname($item->{tag}); },undef,$listentrytag_map_mode);
-            return CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::render_ecrf($context->{listentry}->{id}, undef, undef);
+            
+            return CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::get_ecrfpdfvo($context->{listentry}->{id}, undef, undef, $context->{signed} ? 1 : undef);
         }
         return undef;
 
@@ -749,6 +770,8 @@ sub _init_ecrf_data_horizontal_context {
 
 sub _ecrf_data_horizontal_items_to_row {
     my ($context,$items) = @_;
+    
+    return undef unless $context->{ecrf_count};
 
     my @row = ();
     push(@row,$context->{listentry}->{proband}->{id});
@@ -863,6 +886,7 @@ sub _get_probandlistentrytagvalues {
 sub _get_ecrffieldvalues {
     my ($context) = @_;
     my @values;
+    $context->{ecrf_count} = 0;
     foreach my $ecrfid (keys %{$context->{ecrf_map}}) {
         $context->{ecrf} = $context->{ecrf_map}->{$ecrfid}->{ecrf};
         my @visits = @{$context->{ecrf}->{visits} // []};
@@ -877,22 +901,28 @@ sub _get_ecrffieldvalues {
                 $context->{visit} = undef;
             }
             $context->{ecrf_status} = eval { CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::get_item($context->{listentry}->{id},$ecrfid,$visit->{id}) };
-            _info($context,'proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
-                  (defined $visit->{id} ? '@' . $visit->{token} : '') . "': " . ($context->{ecrf_status} ? $context->{ecrf_status}->{status}->{name} : '<new>'));
-            while (1) {
-                if ((scalar @$api_values_page) == 0) {
-                    my $p = { page_size => $ecrf_data_api_values_page_size , page_num => $api_values_page_num + 1, total_count => undef };
-                    my $sf = {}; #sorted by default
+            if (not $context->{signed} or ($context->{ecrf_status} and $context->{ecrf_status}->{status}->{done})) {
+                $context->{ecrf_count} += 1;
+                _info($context,'proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
+                      (defined $visit->{id} ? '@' . $visit->{token} : '') . "': " . ($context->{ecrf_status} ? $context->{ecrf_status}->{status}->{name} : '<new>'));
+                while (1) {
+                    if ((scalar @$api_values_page) == 0) {
+                        my $p = { page_size => $ecrf_data_api_values_page_size , page_num => $api_values_page_num + 1, total_count => undef };
+                        my $sf = {}; #sorted by default
 
-                    my $first = $api_values_page_num * $ecrf_data_api_values_page_size;
-                    _info($context,"fetch eCRF values page: " . $first . '-' . ($first + $ecrf_data_api_values_page_size) . ' of ' . (defined $api_values_page_total_count ? $api_values_page_total_count : '?'),not $show_page_progress);
-                    $api_values_page = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues::get_ecrffieldvalues($context->{listentry}->{id},$ecrfid,$visit->{id},0, $timezone, $p, $sf, { _value => 1, _selectionValueMap => 1 })->{rows};
-                    $api_values_page_total_count = $p->{total_count};
-                    $api_values_page_num += 1;
+                        my $first = $api_values_page_num * $ecrf_data_api_values_page_size;
+                        _info($context,"fetch eCRF values page: " . $first . '-' . ($first + $ecrf_data_api_values_page_size) . ' of ' . (defined $api_values_page_total_count ? $api_values_page_total_count : '?'),not $show_page_progress);
+                        $api_values_page = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues::get_ecrffieldvalues($context->{listentry}->{id},$ecrfid,$visit->{id},0, $timezone, $p, $sf, { _value => 1, _selectionValueMap => 1 })->{rows};
+                        $api_values_page_total_count = $p->{total_count};
+                        $api_values_page_num += 1;
+                    }
+                    my $value = shift @$api_values_page;
+                    last unless $value;
+                    push(@values,$value);
                 }
-                my $value = shift @$api_values_page;
-                last unless $value;
-                push(@values,$value);
+            } else {
+                _info($context,'skipping unsigned - proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
+                      (defined $visit->{id} ? '@' . $visit->{token} : '') . "': " . ($context->{ecrf_status} ? $context->{ecrf_status}->{status}->{name} : '<new>'),1);
             }
         }
     }

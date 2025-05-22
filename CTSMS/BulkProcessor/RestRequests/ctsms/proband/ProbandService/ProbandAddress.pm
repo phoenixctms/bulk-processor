@@ -25,6 +25,7 @@ our @EXPORT_OK = qw(
     add_item
     update_item
     render_probandletter
+    get_probandletterpdfvo
 );
 
 my $default_restapi = \&get_ctsms_restapi;
@@ -41,6 +42,10 @@ my $get_update_path_query = sub {
 my $get_renderprobandletter_path_query = sub {
     my ($id) = @_;
     return 'probandaddress/' . $id . '/probandletterpdf';
+};
+my $get_probandletterpdfvo_path_query = sub {
+    my ($id) = @_;
+    return 'probandaddress/' . $id . '/probandletterpdf/head';
 };
 
 my $fieldnames = [
@@ -107,6 +112,14 @@ sub render_probandletter {
     my ($proband_address_id,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
     return $api->get_file(&$get_renderprobandletter_path_query($proband_address_id),$headers);
+
+}
+
+sub get_probandletterpdfvo {
+
+    my ($proband_address_id,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return $api->get(&$get_probandletterpdfvo_path_query($proband_address_id));
 
 }
 

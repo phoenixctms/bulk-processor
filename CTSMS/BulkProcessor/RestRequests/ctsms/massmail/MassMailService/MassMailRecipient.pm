@@ -50,6 +50,7 @@ my $fieldnames = [
     "mimeMessageSize",
     "mimeMessageTimestamp",
     "beacon",
+    "token",
     "sent",
     "cancelled",
     "timesProcessed",

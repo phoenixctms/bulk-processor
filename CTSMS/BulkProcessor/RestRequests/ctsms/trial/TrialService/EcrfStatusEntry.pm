@@ -25,6 +25,7 @@ our @EXPORT_OK = qw(
     get_item_path
 
     render_ecrf
+    get_ecrfpdfvo
 );
 
 
@@ -36,11 +37,20 @@ my $get_item_path_query = sub {
     return 'ecrfstatusentry/' . $listentry_id . '/' . $ecrf_id . get_query_string(\%params);
 };
 my $get_renderecrf_path_query = sub {
-    my ($listentry_id,$ecrf_id,$visit_id,$blank) = @_;
+    my ($listentry_id,$ecrf_id,$visit_id,$done,$blank) = @_;
     my %params = ();
+    $params{done} = booltostring($done) if defined $done;
     $params{blank} = booltostring($blank);
     $params{visit_id} = $visit_id if defined $visit_id;
     return 'ecrfstatusentry/' . $listentry_id . '/ecrfpdf' . ((defined $ecrf_id) ? '/' . $ecrf_id : '') . get_query_string(\%params);;
+};
+my $get_ecrfpdfvo_path_query = sub {
+    my ($listentry_id,$ecrf_id,$visit_id,$done,$blank) = @_;
+    my %params = ();
+    $params{done} = booltostring($done) if defined $done;
+    $params{blank} = booltostring($blank);
+    $params{visit_id} = $visit_id if defined $visit_id;
+    return 'ecrfstatusentry/' . $listentry_id . '/ecrfpdf' . ((defined $ecrf_id) ? '/' . $ecrf_id : '') . '/head' . get_query_string(\%params);;
 };
 
 my $fieldnames = [
@@ -81,9 +91,17 @@ sub get_item {
 
 sub render_ecrf {
 
-    my ($listentry_id,$ecrf_id,$visit_id,$blank,$restapi,$headers) = @_;
+    my ($listentry_id,$ecrf_id,$visit_id,$done,$blank,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return $api->get_file(&$get_renderecrf_path_query($listentry_id,$ecrf_id,$visit_id,$blank),$headers);
+    return $api->get_file(&$get_renderecrf_path_query($listentry_id,$ecrf_id,$visit_id,$done,$blank),$headers);
+
+}
+
+sub get_ecrfpdfvo {
+
+    my ($listentry_id,$ecrf_id,$visit_id,$done,$blank,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return $api->get(&$get_ecrfpdfvo_path_query($listentry_id,$ecrf_id,$visit_id,$done,$blank),$headers);
 
 }
 
