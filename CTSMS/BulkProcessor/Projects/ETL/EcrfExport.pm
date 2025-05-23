@@ -291,12 +291,12 @@ sub publish_proband_list {
 
 sub publish_ecrf_data_sqlite {
 
-    my ($upload_files) = @_;
+    my ($upload_files,$signed) = @_;
     my $db = &get_sqlite_db();
     my $dbfilename = $db->{dbfilename};
     destroy_all_dbs();
 
-    my $filename = sprintf($ecrf_data_export_sqlite_filename,timestampdigits(), $CTSMS::BulkProcessor::SqlConnectors::SQLiteDB::dbextension);
+    my $filename = sprintf($ecrf_data_export_sqlite_filename,timestampdigits() . ($signed ? '_signed' : ''), $CTSMS::BulkProcessor::SqlConnectors::SQLiteDB::dbextension);
 
     return (($upload_files ? CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'SQLite/'),
         $dbfilename,$filename,$CTSMS::BulkProcessor::SqlConnectors::SQLiteDB::mimetype) : undef),
@@ -306,12 +306,12 @@ sub publish_ecrf_data_sqlite {
 
 sub publish_ecrf_data_horizontal_csv {
 
-    my ($upload_files) = @_;
+    my ($upload_files,$signed) = @_;
     my $db = &get_csv_db();
     my $tablefilename = $db->_gettablefilename(CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataHorizontal::gettablename());
     destroy_all_dbs();
 
-    my $filename = sprintf($ecrf_data_export_horizontal_csv_filename,timestampdigits(), $CTSMS::BulkProcessor::SqlConnectors::CSVDB::csvextension);
+    my $filename = sprintf($ecrf_data_export_horizontal_csv_filename,timestampdigits() . ($signed ? '_signed' : ''), $CTSMS::BulkProcessor::SqlConnectors::CSVDB::csvextension);
 
     return (($upload_files ? CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'CSV/'),
         $tablefilename,$filename,$CTSMS::BulkProcessor::SqlConnectors::CSVDB::mimetype) : undef),
@@ -321,11 +321,11 @@ sub publish_ecrf_data_horizontal_csv {
 
 sub publish_ecrf_data_xls {
 
-    my ($upload_files) = @_;
+    my ($upload_files,$signed) = @_;
     my @modules = ();
     push(@modules,'CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataHorizontal');
     push(@modules,'CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataVertical');
-    my $filename = sprintf($ecrf_data_export_xls_filename,timestampdigits(), ($ecrf_data_export_xlsx ? $CTSMS::BulkProcessor::Projects::ETL::ExcelExport::xlsxextension : $CTSMS::BulkProcessor::Projects::ETL::ExcelExport::xlsextension));
+    my $filename = sprintf($ecrf_data_export_xls_filename,timestampdigits() . ($signed ? '_signed' : ''), ($ecrf_data_export_xlsx ? $CTSMS::BulkProcessor::Projects::ETL::ExcelExport::xlsxextension : $CTSMS::BulkProcessor::Projects::ETL::ExcelExport::xlsextension));
     my $outputfile = $output_path . $filename;
 
     my $result = CTSMS::BulkProcessor::Projects::ETL::ExcelExport::write_workbook($outputfile,$ecrf_data_export_xlsx,@modules);
@@ -681,7 +681,7 @@ sub _init_ecrf_data_pdfs_context {
         $lwp_response = $lwp_response->[0] if $lwp_response;
 
         if ($lwp_response and defined $lwp_response->content_ref) {
-            my $filename = sprintf($ecrf_data_export_pdfs_filename,$context->{listentry}->{proband}->{id},$context->{timestamp_digits}, $pdfextension);
+            my $filename = sprintf($ecrf_data_export_pdfs_filename,$context->{listentry}->{proband}->{id},$context->{timestamp_digits} . ($context->{signed} ? '_signed' : ''), $pdfextension);
 
             my $out;
             $out = CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(_get_file_in($filename,'PDF/' . $context->{timestamp_digits} . '/'),

@@ -366,7 +366,7 @@ sub publish_ecrf_data_sqlite_task {
     my ($messages,$attachmentfiles) = @_;
     my $out = undef;
     eval {
-        ($out,@job_file) = publish_ecrf_data_sqlite($upload_files);
+        ($out,@job_file) = publish_ecrf_data_sqlite($upload_files,$signed);
     };
     my $err = $@;
     if ($err) {
@@ -382,7 +382,7 @@ sub publish_ecrf_data_horizontal_csv_task {
     my ($messages,$attachmentfiles) = @_;
     my $out = undef;
     eval {
-        ($out,@job_file) = publish_ecrf_data_horizontal_csv($upload_files);
+        ($out,@job_file) = publish_ecrf_data_horizontal_csv($upload_files,$signed);
     };
     my $err = $@;
     if ($err) {
@@ -399,7 +399,7 @@ sub publish_ecrf_data_xls_task {
     my ($messages,$attachmentfiles) = @_;
     my $out = undef;
     eval {
-        ($out,@job_file) = publish_ecrf_data_xls($upload_files);
+        ($out,@job_file) = publish_ecrf_data_xls($upload_files,$signed);
     };
     my $err = $@;
     if ($err) {
