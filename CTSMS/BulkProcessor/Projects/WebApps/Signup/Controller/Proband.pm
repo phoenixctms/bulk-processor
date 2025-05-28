@@ -12,6 +12,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     save_params
     $restapi
     get_site
+    get_site_name
     get_navigation_options
     get_template
     set_error
@@ -23,6 +24,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $proband_create_interval_limit
     $proband_agreed_preset
+    $ctsms_sites
 );
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband qw();
@@ -118,11 +120,11 @@ Dancer::post('/proband',sub {
 });
 
 sub save_site {
+    my $site = shift;
     my $params = Dancer::params();
-    my $site;
-    if (exists $params->{'site'}) {
+    if ($site or exists $params->{'site'}) {
         Dancer::session('trial_page',undef);
-        Dancer::session('site',$params->{'site'});
+        Dancer::session('site',$site || $params->{'site'});
         $site = get_site();
         Dancer::debug('selected site: ', $site->{label});
     } else {
@@ -169,15 +171,33 @@ sub save_enabled_trial {
     if ($params->{'trial'}) {
         my $enabled_trial;
         eval {
-            my $site = get_site();
+            #my $site = get_site();
             my $p = { page_size => 1 , page_num => 1, total_count => undef };
             my $sf = { id => $params->{'trial'}, };
             $enabled_trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_signup_list(
-                $site->{trial_department} ? $site->{trial_department}->{id} : undef,
+                #$site->{trial_department} ? $site->{trial_department}->{id} : undef,
+                undef,
                 $p,
                 $sf,
                 undef,$restapi)->[0];
-
+            if ($enabled_trial) {
+                my @sites = grep { $ctsms_sites->{$_}->{department}->{id} == $enabled_trial->{department}->{id}
+                                        and $ctsms_sites->{$_}->{trial_signup}; } sort keys %$ctsms_sites;
+                my $site = shift @sites;
+                if ($site) {
+                    save_site($site) if $site ne get_site_name();
+                } else {
+                    @sites = grep { $ctsms_sites->{$_}->{trial_department}
+                                     and $ctsms_sites->{$_}->{trial_department}->{id} == $enabled_trial->{department}->{id}
+                                     and $ctsms_sites->{$_}->{trial_signup}; } sort keys %$ctsms_sites;
+                    $site = shift @sites;
+                    if ($site) {
+                        save_site($site) if $site ne get_site_name();
+                    } else {
+                        undef $enabled_trial;
+                    }
+                }
+            }
         };
         if ($enabled_trial) {
             Dancer::session('enabled_trial', $enabled_trial);

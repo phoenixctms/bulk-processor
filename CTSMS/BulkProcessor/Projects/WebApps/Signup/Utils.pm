@@ -63,6 +63,7 @@ our @EXPORT_OK = qw(
     get_restapi_uri
     $restapi
     get_site
+    get_site_name
     get_site_options
     get_site_option
     get_template
@@ -383,10 +384,10 @@ sub save_params {
 }
 
 sub get_restapi {
-    return get_ctsms_site_lang_restapi(_get_site_name(), get_lang());
+    return get_ctsms_site_lang_restapi(get_site_name(), get_lang());
 }
 
-sub _get_site_name {
+sub get_site_name {
     my $site_name = Dancer::session('site');
     if ($site_name) {
         if (exists $ctsms_sites->{$site_name}) {
@@ -432,7 +433,7 @@ sub get_site_option {
     my $site_name = shift;
 
     my $lang = Dancer::Plugin::I18N::localize('lang');
-    my $selected_site_name = _get_site_name();
+    my $selected_site_name = get_site_name();
     $site_name //= $selected_site_name;
     my $site = $ctsms_sites->{$site_name};
 
@@ -471,7 +472,7 @@ sub get_site_option {
 }
 
 sub get_site {
-    return dclone($ctsms_sites->{_get_site_name()});
+    return dclone($ctsms_sites->{get_site_name()});
 }
 
 sub get_navigation_options {
@@ -601,7 +602,7 @@ sub get_ctsms_baseuri {
         $path .= '/' if $path !~ m!/$!;
         return $path;
     }
-    my $site = $ctsms_sites->{_get_site_name()};
+    my $site = $ctsms_sites->{get_site_name()};
     if (defined $site and exists $site->{ctsms_base_uri} and defined $site->{ctsms_base_uri} and length($site->{ctsms_base_uri}) > 0) {
         my $path = $site->{ctsms_base_uri};
         $path .= '/' if $path !~ m!/$!;
