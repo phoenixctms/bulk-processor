@@ -49,6 +49,7 @@ use CTSMS::BulkProcessor::LogError qw (
     scripterror
     filewarn
     fileerror
+    $cli
 );
 use CTSMS::BulkProcessor::LoadConfig qw(
     load_config
@@ -182,6 +183,7 @@ sub main {
     }
 
     push(@attachmentfiles,$attachmentlogfile);
+    $cli = 1;
     if ($result and $completion) {
         completion(join("\n\n",@messages),\@attachmentfiles,getlogger(getscriptpath()));
         update_job($OK_JOB_STATUS);

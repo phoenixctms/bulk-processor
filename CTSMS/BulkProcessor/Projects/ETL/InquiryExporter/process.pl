@@ -47,6 +47,7 @@ use CTSMS::BulkProcessor::LogError qw (
     scripterror
     filewarn
     fileerror
+    $cli
 );
 use CTSMS::BulkProcessor::LoadConfig qw(
     load_config
@@ -218,6 +219,7 @@ sub main {
     }
 
     push(@attachmentfiles,$attachmentlogfile);
+    $cli = 1;
     if ($result and $completion) {
         if ($upload_files) {
             push(@messages,"Visit $ctsms_base_url/trial/trial.jsf?trialid=$inquiry_data_trial_id to download files.");
