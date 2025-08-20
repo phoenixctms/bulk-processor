@@ -100,7 +100,7 @@ use CTSMS::BulkProcessor::Projects::ETL::ExcelExport qw();
 
 use CTSMS::BulkProcessor::Array qw(array_to_map);
 
-use CTSMS::BulkProcessor::Utils qw(booltostring timestampdigits );
+use CTSMS::BulkProcessor::Utils qw(booltostring timestampdigits zerofill);
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -314,6 +314,7 @@ sub _inquiry_data_vertical_items_to_row {
     push(@row,$item->{inquiry}->{category});
     push(@row,$item->{inquiry}->{id});
     push(@row,$item->{inquiry}->{position});
+    push(@row, defined $item->{inquiry}->{position} ? zerofill($item->{inquiry}->{position},$colname_abbreviation{inquiry_position_digits}) : undef);
     push(@row,$item->{inquiry}->{titleL10nKey});
     push(@row,$item->{inquiry}->{externalId});
     push(@row,$item->{inquiry}->{field}->{nameL10nKey});

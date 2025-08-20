@@ -122,7 +122,7 @@ use CTSMS::BulkProcessor::Projects::ETL::ExcelExport qw();
 
 use CTSMS::BulkProcessor::Array qw(array_to_map);
 
-use CTSMS::BulkProcessor::Utils qw(booltostring timestampdigits run shell_args);
+use CTSMS::BulkProcessor::Utils qw(booltostring timestampdigits run shell_args zerofill);
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -560,6 +560,7 @@ sub _ecrf_data_vertical_items_to_row {
     push(@row,$item->{ecrfField}->{section});
     push(@row,$item->{ecrfField}->{id});
     push(@row,$item->{ecrfField}->{position});
+    push(@row, defined $item->{ecrfField}->{position} ? zerofill($item->{ecrfField}->{position},$colname_abbreviation{ecrffield_position_digits}) : undef);
     push(@row,$item->{ecrfField}->{titleL10nKey});
     push(@row,$item->{ecrfField}->{ref});
     push(@row,$item->{ecrfField}->{externalId});
@@ -572,7 +573,7 @@ sub _ecrf_data_vertical_items_to_row {
     push(@row,join($selection_set_value_separator,map { local $_ = $_; $_->{value}; } @{$item->{ecrfField}->{field}->{selectionSetValues}}));
     push(@row,booltostring($item->{ecrfField}->{optional}));
     push(@row,booltostring($item->{ecrfField}->{series}));
-    push(@row,$item->{index});
+    push(@row, defined $item->{index} ? zerofill($item->{index},$colname_abbreviation{index_digits}) : undef);
     push(@row,join(',',CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
         ecrffield => $item->{ecrfField}, ecrf => $item->{ecrfField}->{ecrf}, visit => $item->{visit}, index => $item->{index},
         col_per_selection_set_value => $col_per_selection_set_value, %colname_abbreviation,
