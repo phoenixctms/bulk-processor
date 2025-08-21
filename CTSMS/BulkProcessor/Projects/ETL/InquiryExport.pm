@@ -313,7 +313,6 @@ sub _inquiry_data_vertical_items_to_row {
 
     push(@row,$item->{inquiry}->{category});
     push(@row,$item->{inquiry}->{id});
-    push(@row,$item->{inquiry}->{position});
     push(@row, defined $item->{inquiry}->{position} ? zerofill($item->{inquiry}->{position},$colname_abbreviation{inquiry_position_digits}) : undef);
     push(@row,$item->{inquiry}->{titleL10nKey});
     push(@row,$item->{inquiry}->{externalId});

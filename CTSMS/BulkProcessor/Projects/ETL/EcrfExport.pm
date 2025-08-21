@@ -559,7 +559,6 @@ sub _ecrf_data_vertical_items_to_row {
     push(@row,$item->{visit} ? $item->{visit}->{token} : undef);
     push(@row,$item->{ecrfField}->{section});
     push(@row,$item->{ecrfField}->{id});
-    push(@row,$item->{ecrfField}->{position});
     push(@row, defined $item->{ecrfField}->{position} ? zerofill($item->{ecrfField}->{position},$colname_abbreviation{ecrffield_position_digits}) : undef);
     push(@row,$item->{ecrfField}->{titleL10nKey});
     push(@row,$item->{ecrfField}->{ref});
