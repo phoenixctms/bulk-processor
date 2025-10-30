@@ -78,13 +78,17 @@ function initPrimeUI(context) {
             if (_trial._activeInquiryCount > 0) {
                 if (_trial._inquiriesNa == 1) {
                     button.puibutton('disable'); //not $item->{status}->{inquiryValueInputEnabled} or not $item->{signupInquiries}
+                } else {
+                    $('#done_btn').puibutton('disable');
                 }
             } else {
                 if (signedUp) {
                     button.puibutton('disable'); //already signed up
+                } else {
+                    $('#done_btn').puibutton('disable');                    
                 }
             }
-            
+                      
             row.append($('<div class="ui-grid-col-7" style="text-align:right;"/>').append(button));
             grid.append(row);
 
