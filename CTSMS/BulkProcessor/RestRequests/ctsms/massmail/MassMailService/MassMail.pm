@@ -90,6 +90,15 @@ my $fieldnames = [
     "modifiedUser",
     "deferredDelete",
     "deferredDeleteReason",
+    "attachInquiriesOptional",
+    "attachProbandListEntryTagsOptional",
+    "attachEcrfsOptional",
+    "attachProbandLetterOptional",
+    "attachReimbursementsPdfOptional",
+    "attachVisitPlansOptional",
+    "attachProbandFilesOptional",
+    "attachTrialFilesOptional",
+    "attachMassMailFilesOptional",
 ];
 
 sub new {
