@@ -435,7 +435,8 @@ sub _init_ecrf_data_vertical_context {
 NEXT_LISTENTRY:
         if (not defined $context->{api_listentries_page_total_count} or ($context->{api_listentries_page_num} * $ecrf_data_api_listentries_page_size < $context->{api_listentries_page_total_count} and (scalar @{$context->{api_listentries_page}}) == 0)) {
             my $p = { page_size => $ecrf_data_api_listentries_page_size , page_num => $context->{api_listentries_page_num} + 1, total_count => undef };
-            my $sf = { sort_by => 'position', sort_dir => 'asc', };
+            my $sf = { sort_by => 'position', sort_dir => 'asc',
+                       'proband.deferredDelete' => booltostring(0), };
 
             my $first = $context->{api_listentries_page_num} * $ecrf_data_api_listentries_page_size;
             _info($context,"fetch proband list entries page: " . $first . '-' . ($first + $ecrf_data_api_listentries_page_size) . ' of ' . (defined $context->{api_listentries_page_total_count} ? $context->{api_listentries_page_total_count} : '?'),not $show_page_progress);
@@ -700,7 +701,8 @@ sub _init_ecrf_data_pdfs_context {
 
         if ((scalar @{$context->{api_listentries_page}}) == 0) {
             my $p = { page_size => $ecrf_data_api_listentries_page_size , page_num => $context->{api_listentries_page_num} + 1, total_count => undef };
-            my $sf = { sort_by => 'position', sort_dir => 'asc', };
+            my $sf = { sort_by => 'position', sort_dir => 'asc',
+                       'proband.deferredDelete' => booltostring(0), };
 
             my $first = $context->{api_listentries_page_num} * $ecrf_data_api_listentries_page_size;
             _info($context,"fetch proband list entries page: " . $first . '-' . ($first + $ecrf_data_api_listentries_page_size) . ' of ' . (defined $context->{api_listentries_page_total_count} ? $context->{api_listentries_page_total_count} : '?'),not $show_page_progress);
@@ -747,7 +749,8 @@ sub _init_ecrf_data_horizontal_context {
 
         if ((scalar @{$context->{api_listentries_page}}) == 0) {
             my $p = { page_size => $ecrf_data_api_listentries_page_size , page_num => $context->{api_listentries_page_num} + 1, total_count => undef };
-            my $sf = { sort_by => 'position', sort_dir => 'asc', };
+            my $sf = { sort_by => 'position', sort_dir => 'asc',
+                       'proband.deferredDelete' => booltostring(0), };
 
             my $first = $context->{api_listentries_page_num} * $ecrf_data_api_listentries_page_size;
             _info($context,"fetch proband list entries page: " . $first . '-' . ($first + $ecrf_data_api_listentries_page_size) . ' of ' . (defined $context->{api_listentries_page_total_count} ? $context->{api_listentries_page_total_count} : '?'),not $show_page_progress);

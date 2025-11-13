@@ -264,7 +264,8 @@ sub _init_inquiry_data_vertical_context {
 NEXT_PROBAND:
         if (not defined $context->{api_probands_page_total_count} or ($context->{api_probands_page_num} * $inquiry_data_api_probands_page_size < $context->{api_probands_page_total_count} and (scalar @{$context->{api_probands_page}}) == 0)) {
             my $p = { page_size => $inquiry_data_api_probands_page_size, page_num => $context->{api_probands_page_num} + 1, total_count => undef };
-            my $sf = { sort_by => 'id', sort_dir => 'asc', };
+            my $sf = { sort_by => 'id', sort_dir => 'asc',
+                       'deferredDelete' => booltostring(0), };
 
             my $first = $context->{api_probands_page_num} * $inquiry_data_api_probands_page_size;
             _info($context,"fetch probands page: " . $first . '-' . ($first + $inquiry_data_api_probands_page_size) . ' of ' . (defined $context->{api_probands_page_total_count} ? $context->{api_probands_page_total_count} : '?'),not $show_page_progress);
@@ -445,7 +446,8 @@ sub _init_inquiry_data_pdfs_context {
 
         if ((scalar @{$context->{api_probands_page}}) == 0) {
             my $p = { page_size => $inquiry_data_api_probands_page_size , page_num => $context->{api_probands_page_num} + 1, total_count => undef };
-            my $sf = { sort_by => 'id', sort_dir => 'asc', };
+            my $sf = { sort_by => 'id', sort_dir => 'asc',
+                       'deferredDelete' => booltostring(0), };
             #$sf->{fileName} = $dialysis_substitution_volume_file_pattern if defined $dialysis_substitution_volume_file_pattern;
             my $first = $context->{api_probands_page_num} * $inquiry_data_api_probands_page_size;
             _info($context,"fetch probands page: " . $first . '-' . ($first + $inquiry_data_api_probands_page_size) . ' of ' . (defined $context->{api_probands_page_total_count} ? $context->{api_probands_page_total_count} : '?'),not $show_page_progress);
@@ -495,7 +497,8 @@ sub _init_inquiry_data_horizontal_context {
 
         if ((scalar @{$context->{api_probands_page}}) == 0) {
             my $p = { page_size => $inquiry_data_api_probands_page_size , page_num => $context->{api_probands_page_num} + 1, total_count => undef };
-            my $sf = { sort_by => 'id', sort_dir => 'asc', };
+            my $sf = { sort_by => 'id', sort_dir => 'asc',
+                       'deferredDelete' => booltostring(0), };
 
             my $first = $context->{api_probands_page_num} * $inquiry_data_api_probands_page_size;
             _info($context,"fetch probands page: " . $first . '-' . ($first + $inquiry_data_api_probands_page_size) . ' of ' . (defined $context->{api_probands_page_total_count} ? $context->{api_probands_page_total_count} : '?'),not $show_page_progress);
