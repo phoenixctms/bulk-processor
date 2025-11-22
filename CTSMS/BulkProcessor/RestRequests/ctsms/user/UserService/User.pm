@@ -41,6 +41,7 @@ my $fieldnames = [
    "version",
    "modifiedTimestamp",
    "locked",
+   "lockedUntrusted",
    "locale",
    "timeZone",
    "dateFormat",
@@ -72,6 +73,10 @@ my $fieldnames = [
    "department",
    "parent",
    "children",
+   "tabOrientation",
+   "dutyRosterTurnCalendarFilters",
+   "inventoryBookingCalendarFilters",
+   "inheritedPropertyList",
 ];
 
 sub new {
