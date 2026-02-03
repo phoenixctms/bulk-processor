@@ -533,14 +533,14 @@ sub _ecrf_data_vertical_items_to_row {
     my ($context,$item) = @_;
     return undef unless ecrf_data_include_ecrffield($item->{ecrfField});
     my @row = ();
-    push(@row,$item->{listEntry}->{proband}->{id});
-    push(@row,get_proband_columns($item->{listEntry}->{proband}));
+    push(@row,$context->{listentry}->{proband}->{id});
+    push(@row,get_proband_columns($context->{listentry}->{proband}));
 
     foreach my $tag_col (keys %{$context->{listentrytag_map}}) {
         push(@row, $context->{tagvalues}->{$tag_col}->{_value});
     }
 
-    push(@row,get_probandlistentry_columns($item->{listEntry}));
+    push(@row,get_probandlistentry_columns($context->{listentry}));
 
     push(@row,$context->{ecrf_status} ? $context->{ecrf_status}->{status}->{nameL10nKey} : undef);
     push(@row,$item->{ecrfField}->{ecrf}->{name});
@@ -783,7 +783,7 @@ sub _ecrf_data_horizontal_items_to_row {
         push(@row, $context->{tagvalues}->{$tag_col}->{_value});
     }
 
-    push(@row,get_probandlistentry_columns($context->{listEntry}));
+    push(@row,get_probandlistentry_columns($context->{listentry}));
 
     my %value_map = ();
     foreach my $item (@$items) {

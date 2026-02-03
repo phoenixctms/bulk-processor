@@ -48,7 +48,7 @@ sub _set_expected_fieldnames {
     my @fieldnames = (
         'proband_id',
         get_proband_columns(), #'alias',
-        (sort keys %$listentrytags),
+        (keys %$listentrytags),
         get_probandlistentry_columns(),
     );
     push(@fieldnames,@$ecrfvalue_cols);
