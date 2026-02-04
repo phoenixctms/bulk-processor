@@ -343,8 +343,8 @@ sub get_probandlistentry_columns {
     my $listentry = shift;
     my @columns = ();
     if ($listentry) {
-        push(@columns,$listentry->{group} ? $listentry->{group}->{token} : undef) if length($ecrf_probandlistentry_group_column_name);
-        push(@columns,$listentry->{lastStatus} ? $listentry->{lastStatus}->{status}->{nameL10nKey} : undef) if length($ecrf_probandlistentry_status_column_name);
+        push(@columns,($listentry->{group} ? $listentry->{group}->{token} : undef)) if length($ecrf_probandlistentry_group_column_name);
+        push(@columns,($listentry->{lastStatus} ? $listentry->{lastStatus}->{status}->{nameL10nKey} : undef)) if length($ecrf_probandlistentry_status_column_name);
     } else {
         push(@columns,lc($ecrf_probandlistentry_group_column_name)) if length($ecrf_probandlistentry_group_column_name);
         push(@columns,lc($ecrf_probandlistentry_status_column_name)) if length($ecrf_probandlistentry_status_column_name);

@@ -63,6 +63,8 @@ my $fieldnames = [
 "trial",
 "type",
 "version",
+"progress",
+"progressMax",
 ];
 
 our $PROCESSING_JOB_STATUS = 'PROCESSING';

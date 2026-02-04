@@ -220,7 +220,7 @@ sub _export_items {
         my $row = &{$context->{item_to_row_code}}($context,$item);
         push(@rows,$row) if defined $row;
         if ((scalar @rows) >= $context->{items_row_block}) {
-            update_job($PROCESSING_JOB_STATUS);
+            update_job($PROCESSING_JOB_STATUS,$context->{api_probands_page_num} * $inquiry_data_api_probands_page_size,$context->{api_probands_page_total_count});
             $result &= &{$context->{export_code}}($context,\@rows);
             @rows = ();
         }

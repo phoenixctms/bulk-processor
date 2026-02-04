@@ -92,7 +92,7 @@ sub _set_job {
 
 sub update_job {
 
-    my ($status) = @_;
+    my ($status,$progress,$progress_max) = @_;
     lock %job;
     if (keys %job) {
         my $in = {
@@ -100,6 +100,8 @@ sub update_job {
             version => $job{version},
             status => $status,
             jobOutput => cat_file($attachmentlogfile,\&fileerror,getlogger(__PACKAGE__)),
+            progress => $progress,
+            progressMax => $progress_max,
         };
 
         my @args = ($in);

@@ -215,7 +215,7 @@ sub import_ecrf_data_horizontal {
                         next unless (scalar @$row);
                         next unless (scalar grep { length(trim($_)) > 0; } @$row);
                         next if substr(trim($row->[0]),0,length($comment_char)) eq $comment_char;
-                        update_job($PROCESSING_JOB_STATUS);
+                        update_job($PROCESSING_JOB_STATUS,$rownum,$row_offset + $import_ecrf_data_horizontal_blocksize);
                         next unless _set_ecrf_data_horizontal_context($context,$row,$rownum);
                         #next unless id == $context->{proband}->{id};
                         _load_ecrf_status($context);
