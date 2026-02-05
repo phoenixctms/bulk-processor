@@ -100,8 +100,8 @@ sub update_job {
             version => $job{version},
             status => $status,
             jobOutput => cat_file($attachmentlogfile,\&fileerror,getlogger(__PACKAGE__)),
-            progress => $progress,
-            progressMax => $progress_max,
+            progress => (defined $progress ? $progress : $job{progress}),
+            progressMax => (defined $progress_max ? $progress_max : $job{progressMax}),
         };
 
         my @args = ($in);
