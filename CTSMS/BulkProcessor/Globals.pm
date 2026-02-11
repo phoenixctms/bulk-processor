@@ -108,7 +108,7 @@ umask 0000;
 
 # general constants
 our $system_name = 'Bulk Processing Framework';
-our $VERSION = '1.8.1';
+our $VERSION = '1.9.0';
 our $system_version = $VERSION; #keep this filename-save
 our $system_abbreviation = 'bpf'; #keep this filename-, dbname-save
 our $system_instance = 'phoenix'; #'test'; #'2014'; #dbname-save 0-9a-z_
