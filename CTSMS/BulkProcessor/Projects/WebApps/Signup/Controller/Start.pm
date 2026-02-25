@@ -21,6 +21,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband qw();
 
 our $navigation_options = sub {
+    return &$CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::navigation_options() if CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode();
     return get_navigation_options(Dancer::Plugin::I18N::localize('navigation_start_label'),'/',
         undef,
         $CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::navigation_options);
@@ -28,6 +29,7 @@ our $navigation_options = sub {
 
 Dancer::get('/',sub {
 
+    return if CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::keep_listentry_mode();
     Dancer::session("referer",Dancer::request->referer);
     return get_template('start',
         script_names => 'start',

@@ -28,6 +28,7 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry qw();
 
 our $navigation_options = sub {
+    return &$CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::navigation_options() if CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode();
     my $trials_open = (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::created()
         and CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::contact_created()
         and not CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::trials_na());
@@ -40,6 +41,7 @@ our $navigation_options = sub {
 
 Dancer::get('/trial',sub {
 
+    CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::clear_listentry_mode();
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created();
     return unless check_trials_na();
@@ -133,7 +135,7 @@ Dancer::post('/trial',sub {
                     my $proband_list_entry = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::addsignup_item(
                         _get_probandlistentry_in($proband_list_entry_id_map,$trial),undef,undef,
                         0,$restapi);
-                    Dancer::debug('proband list entry id ' . $proband_list_entry->{id} . ' created');
+                    Dancer::debug('listentry id ' . $proband_list_entry->{id} . ' created');
                     $proband_list_entry_id_map->{$trial->{id}} = $proband_list_entry;
                     Dancer::session('proband_list_entry_id_map',$proband_list_entry_id_map);
 
@@ -186,7 +188,12 @@ sub check_selected_ajax {
 
 sub inquiries_na {
     my $trial = Dancer::session('trial');
-    return (defined $trial ? $trial->{_inquiriesNa} : 1);
+    return 1 unless $trial;
+    if (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode()) {
+        return $trial->{_listentryInquiriesNa};
+    } else {
+        return $trial->{_signupInquiriesNa};
+    }
 }
 
 sub check_inquiries_na_ajax {

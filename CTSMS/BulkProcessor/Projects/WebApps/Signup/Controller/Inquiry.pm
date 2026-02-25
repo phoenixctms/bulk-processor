@@ -41,23 +41,24 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     $id_separator_string
     sanitize_decimal
     sanitize_integer
+    get_site_name
 
     check_done
     check_prev
 );
-
-
-
 
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $enable_geolocation_services
     $force_default_geolocation
     $system_timezone
     $convert_timezone
+    $ctsms_sites
 );
 
 
-
+use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::ProbandAddress qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::InputFieldType qw(
     $SINGLE_LINE_TEXT
@@ -106,7 +107,7 @@ $param_value_types_re = qr/$param_value_types_re/;
 our $navigation_options = sub {
 
     my $inquiries_open = (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::created()
-        and CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::contact_created()
+        and (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode() or CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::contact_created())
         and CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::selected()
         and not CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::inquiries_na()
         and not CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::trials_na());
@@ -123,7 +124,7 @@ Dancer::get('/inquiry/pdf',sub {
     my $params = Dancer::params();
 
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
-    return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created();
+    return unless (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode() or CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created());
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_selected();
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_inquiries_na();
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_trials_na();
@@ -143,20 +144,17 @@ Dancer::get('/inquiry/pdf',sub {
 
 Dancer::get('/inquiry',sub {
 
-
-
-
-
-
+    return unless _save_listentry();
 
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
-    return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created();
+    return unless (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode() or CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created());
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_selected();
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_inquiries_na();
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_trials_na();
 
     my $site = get_site();
     my $trial = Dancer::session('trial');
+    my $address = Dancer::session('proband_address_out');
 
     return get_template('inquiry',
         script_names => [ 'sketch/jquery.colorPicker', 'sketch/raphael-2.2.0', 'sketch/raphael.sketchpad', 'sketch/json2.min', 'sketch/sketch',
@@ -173,8 +171,7 @@ Dancer::get('/inquiry',sub {
             trial => $trial,
             trialBase64 => to_json_base64($trial),
             probandBase64 => to_json_base64(Dancer::session('proband_out')),
-            probandAddressesBase64 => to_json_base64([ Dancer::session('proband_address_out') ]),
-
+            probandAddressesBase64 => to_json_base64($address ? [ $address ] : Dancer::session('proband_addresses')),
 
             ctsmsBaseUri => get_ctsms_baseuri(),
             restApiUrl => get_restapi_uri(),
@@ -298,7 +295,9 @@ Dancer::post('/inquiry/savepage',sub {
         return json_response($trial);
     } else {
         return $ajax_error if $ajax_error = CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created_ajax();
-        return $ajax_error if $ajax_error = CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created_ajax();
+        if (not CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode()) {
+            return $ajax_error if $ajax_error = CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created_ajax();
+        }
         return $ajax_error if $ajax_error = CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_inquiries_na_ajax();
         return $ajax_error if $ajax_error = CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_trials_na_ajax();
 
@@ -325,7 +324,7 @@ Dancer::post('/inquiry',sub {
     return check_done(sub {
         check_prev(sub {
             return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
-            return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created();
+            return unless (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode() or CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created());
             return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_inquiries_na();
             return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_trials_na();
             eval {
@@ -342,6 +341,168 @@ Dancer::post('/inquiry',sub {
         });
     });
 });
+
+sub listentry_mode {
+    my $id = Dancer::session('listentry_id');
+    if (defined $id and length($id) > 0) {
+        return 1;
+    }
+    return 0;
+}
+
+sub clear_listentry_mode {
+    CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::clear_session() if listentry_mode();
+}
+
+sub keep_listentry_mode {
+    if (listentry_mode()) {
+        Dancer::forward('/inquiry', { beacon => Dancer::session('listentry')->{beacon} }, { method => 'GET' });
+        return 1;
+    }
+    return 0;
+}
+
+sub reset_listentry_beacons {
+    if (listentry_mode()) {
+        eval {
+            CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::reset_beacon(
+                            Dancer::session('listentry')->{beacon},
+                            0,$restapi);
+        };
+        if ($@) {
+            Dancer::error("failed to reset listentry beacon: " . $@);
+        }
+    } else {
+        # for regular registations, retain the beacon for use in emails?
+        my $proband_list_entry_id_map = Dancer::session('proband_list_entry_id_map') // {};
+        if (scalar values %$proband_list_entry_id_map) {
+            foreach my $listentry (values %$proband_list_entry_id_map) {
+                eval {
+                    CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::reset_beacon(
+                            $listentry->{beacon},
+                            0,$restapi);
+                };
+                if ($@) {
+                    Dancer::error("failed to reset listentry beacon: " . $@);
+                }
+            }
+        }
+    }
+}
+
+sub _save_listentry {
+    my $params = Dancer::params();
+    my $beacon_id = $params->{'beacon'}; # || $params->{'id'} || $params->{'listentry_id'};
+    if ($beacon_id) {
+        my $log_prefix = "picked up listentry beacon/id $beacon_id: ";
+        my $proband_list_entry_id_map = Dancer::session('proband_list_entry_id_map') // {};
+        my $trial = Dancer::session("trial");
+        my $proband_list_entry;
+        if ($trial
+            and exists $proband_list_entry_id_map->{$trial->{id}}
+            and ($beacon_id eq $proband_list_entry_id_map->{$trial->{id}}->{beacon} or $beacon_id == $proband_list_entry_id_map->{$trial->{id}}->{id})) {
+            $proband_list_entry = $proband_list_entry_id_map->{$trial->{id}};
+            Dancer::debug($log_prefix . "proceeding listentry id " . $proband_list_entry_id_map->{$trial->{id}}->{id});
+        } else {
+            Dancer::debug($log_prefix . "loading listentry");
+            eval {
+                $proband_list_entry = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::get_item($beacon_id,0,$restapi);
+            };
+            if ($@) {
+                set_error($@);
+                return Dancer::forward('/proband', undef, { method => 'GET' });
+                return 0; 
+            }
+        }
+        if ($proband_list_entry) {
+            if (listentry_mode() and $proband_list_entry->{id} != Dancer::session("listentry_id")) {
+                Dancer::debug($log_prefix . "switching to listentry id $proband_list_entry->{id}");
+                CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::clear_session();
+            }
+            my $proband = $proband_list_entry->{proband};
+            $trial = $proband_list_entry->{trial};
+            if (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::created() and $proband->{id} != Dancer::session("proband_id")) {
+                Dancer::debug($log_prefix . "switching to proband id $proband->{id}");
+                CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::clear_session()
+            }
+            my @sites = grep { $ctsms_sites->{$_}->{department}->{id} ==  $trial->{department}->{id}; } sort keys %$ctsms_sites;
+            my $site = shift @sites;
+            if ($site) {
+                if ($site ne get_site_name()) {
+                    Dancer::debug($log_prefix . "enabling site $site");
+                    CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::save_site($site);
+                }
+                
+                Dancer::session("listentry_id", $proband_list_entry->{id});
+                Dancer::session("listentry", $proband_list_entry);
+                
+                Dancer::session("proband_id",$proband->{id});
+                Dancer::session("proband_version",$proband->{version});
+                Dancer::session("proband_department_id",$proband->{department}->{id});
+                Dancer::session("proband_out",$proband);
+                
+                my $addresses = Dancer::session("proband_addresses");
+                unless ($addresses) {
+                    Dancer::debug($log_prefix . "loading proband addresses");
+                    eval {
+                         $addresses = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::ProbandAddress::get_proband_list($proband->{beacon}, undef, undef , 0, $restapi);
+                    };
+                    if ($@) {
+                        set_error($@);
+                        return Dancer::forward('/proband', undef, { method => 'GET' });
+                        return 0; 
+                    } else {
+                        Dancer::session("proband_addresses",$addresses);
+                    }
+                }
+                CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::clear_contact_ids();
+                
+                $proband_list_entry_id_map->{$trial->{id}} = $proband_list_entry;
+                Dancer::session('proband_list_entry_id_map',$proband_list_entry_id_map);
+                
+                $trial = Dancer::session("trial");
+                if ($proband_list_entry->{trial}->{id} != ($trial ? $trial->{id} : 0)) {
+                    Dancer::debug($log_prefix . "loading inquiry count for trial $proband_list_entry->{trial}->{name}");
+                    eval {
+                        $trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($proband_list_entry->{trial}->{id},{ _activeInquiryCount => 1 },$restapi);
+                    };
+                    if ($@) {
+                        set_error($@);
+                        return Dancer::forward('/proband', undef, { method => 'GET' });
+                        return 0;
+                    }
+                }
+                
+                my $trial_inquiries_saved_map = Dancer::session('trial_inquiries_saved_map') // {};
+                my $inquiries_saved_map = $trial_inquiries_saved_map->{$trial->{id}} // {};
+                my $posted_inquiries_map = Dancer::session('posted_inquiries_map_' . $trial->{id}) // {};
+                CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::set_inquiry_counts($trial,$inquiries_saved_map,$posted_inquiries_map);
+                Dancer::session('trial',$trial);
+                
+                Dancer::session('enabled_trial', $trial); # enable trial, disregarding the signup state
+
+                if (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::inquiries_na()) {
+                    set_error(Dancer::Plugin::I18N::localize('error_inquiries_na'));
+                    return Dancer::forward('/proband', undef, { method => 'GET' });
+                    return 0;
+                }
+                
+                #use Data::Dumper;
+                #Dancer::debug($log_prefix . Dumper(Dancer::session));
+                          
+            } else {
+                Dancer::debug($log_prefix . "unknown site");
+                set_error(Dancer::Plugin::I18N::localize('error_listentry_unknown_site', $trial->{department}->{name}));
+                return 0; 
+            }
+        } else {
+            Dancer::debug($log_prefix . "invalid list entry");
+            set_error(Dancer::Plugin::I18N::localize('error_invalid_listentry', $beacon_id));
+            return 0; 
+        }
+    }
+    return 1;
+}
 
 sub _save_page {
     my ($trial,$posted_inquiries_map) = @_;
