@@ -2,7 +2,7 @@
 <img src="[% request.uri_base %]/images/error_404.png" width="697" height="191" />
 
 [% PROCESS 
-  headline.tt title = l('404_title');
+  headline.tt title = l('404_title'),
   description = l('404_description');
 %]
 

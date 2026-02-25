@@ -33,12 +33,15 @@ use CTSMS::BulkProcessor::Utils qw(timestamp secs_to_years trim stringtobool);
 use CTSMS::BulkProcessor::Calendar qw(datetime_delta);
 
 our $navigation_options = sub {
+    return &$CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::navigation_options() if CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode();
     return get_navigation_options(Dancer::Plugin::I18N::localize('navigation_proband_label'),'/proband',
         undef,
         $CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::navigation_options);
 };
 
 Dancer::get('/proband',sub {
+    
+    CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::clear_listentry_mode();
     Dancer::session("referer",Dancer::request->referer) unless Dancer::session("referer");
     save_site();
     save_enabled_trial();
@@ -132,16 +135,16 @@ sub save_site {
     }
     if (created()) {
         if ($site->{department}->{id} ne Dancer::session('proband_department_id')) {
-            _clear_session();
+            clear_session();
             Dancer::debug('site changed, starting new proband');
         }
     } elsif (not $params->{'keep'}) {
-        _clear_session();
+        clear_session();
         Dancer::debug('starting new proband');
     }
 }
 
-sub _clear_session {
+sub clear_session {
     
     my $referer = Dancer::session("referer");
     my $site = Dancer::session('site');
@@ -150,6 +153,8 @@ sub _clear_session {
     my $error = Dancer::session('api_error');
     
     Dancer::session->destroy();
+    Dancer::SharedData::reset_sessions();
+    Dancer::debug('session destroyed');
     
     Dancer::session('referer',$referer) if $referer;
     Dancer::session('site',$site) if $site;

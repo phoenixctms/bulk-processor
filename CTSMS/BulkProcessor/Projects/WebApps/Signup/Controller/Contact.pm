@@ -34,6 +34,7 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::massmail::MassMailService::MassMa
 use CTSMS::BulkProcessor::Utils qw(trim stringtobool);
 
 our $navigation_options = sub {
+    return &$CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::navigation_options() if CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode();
     return get_navigation_options(Dancer::Plugin::I18N::localize('navigation_contact_label'),
         CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::created() ? '/contact' : undef, #id exist...
         undef,
@@ -41,6 +42,8 @@ our $navigation_options = sub {
 };
 
 Dancer::get('/contact',sub {
+    
+    CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::clear_listentry_mode();
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
     Dancer::session('proband_address_country_name',Dancer::session('proband_address_country_name') || Dancer::session('proband_citizenship'));
 
@@ -89,6 +92,7 @@ Dancer::post('/contact',sub {
         _type_to_param_prefix('email_contact_detail_type') . 'notify',
     );
     Dancer::session(_type_to_param_prefix('email_contact_detail_type') . 'notify','') unless defined $params->{_type_to_param_prefix('email_contact_detail_type') . 'notify'};
+    Dancer::session("proband_addresses",undef);
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
     eval {
 
