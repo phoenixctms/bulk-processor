@@ -24,6 +24,7 @@ our @EXPORT_OK = qw(
 
     add_item
     update_item
+    get_proband_list
     render_probandletter
     get_probandletterpdfvo
 );
@@ -39,6 +40,13 @@ my $get_add_path_query = sub {
 my $get_update_path_query = sub {
     return 'probandaddress/';
 };
+
+my $get_proband_path_query = sub {
+    my ($beacon_id) = @_;
+    #my %params = ();
+    return 'proband/' . $beacon_id . '/list/probandaddress'; # . get_query_string(\%params);
+};
+
 my $get_renderprobandletter_path_query = sub {
     my ($id) = @_;
     return 'probandaddress/' . $id . '/probandletterpdf';
@@ -104,6 +112,14 @@ sub update_item {
     my ($in,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
     return builditems_fromrows($api->put(&$get_update_path_query(),$in,$headers),$load_recursive,$restapi);
+
+}
+
+sub get_proband_list {
+
+    my ($beacon_id,$p,$sf,$load_recursive,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return builditems_fromrows($api->extract_collection_items($api->get($api->get_collection_page_query_uri(&$get_proband_path_query($beacon_id),$p,$sf),$headers),$p),$load_recursive,$restapi);
 
 }
 
