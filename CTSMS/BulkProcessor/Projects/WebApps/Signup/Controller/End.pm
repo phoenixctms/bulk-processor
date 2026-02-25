@@ -67,8 +67,9 @@ Dancer::get('/end/inquiryformspdf',sub {
 
 
 Dancer::get('/end',sub {
-    CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
-    CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode() or CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created();
+    return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
+    return unless (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode() or CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created());
+    
     my $trial_inquiries_saved_map = Dancer::session('trial_inquiries_saved_map') // {};
     my $saved_inquiry_count = 0;
     foreach my $trial_id (keys %$trial_inquiries_saved_map) {
@@ -131,17 +132,7 @@ Dancer::post('/end',sub {
     
     Dancer::session->destroy();
     Dancer::SharedData::reset_sessions();
-    #Dancer::session->id(Dancer::Session::Abstract::build_id());
-    #Dancer::debug("before".Dumper( Dancer::SharedData->sessions));
-    #Dancer::SharedData::reset_sessions();
-    #Dancer::debug("after".Dumper( Dancer::SharedData->sessions));
-    #write_session_id 
-    #Dancer::session
-    #Dancer::session->flush();
     Dancer::debug('session destroyed');
-    #use Data::Dumper;
-    #Dancer::session->create();
-    #Dancer::debug(Dumper(Dancer::session()));
 
     Dancer::session("proband_created_timestamp",$last_created) unless $listentry_mode;
 
