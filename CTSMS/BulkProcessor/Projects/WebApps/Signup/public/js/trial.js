@@ -76,16 +76,14 @@ function initPrimeUI(context) {
             });
 
             if (_trial._activeInquiryCount > 0) {
-                if (_trial._inquiriesNa == 1) {
+                if (_trial._signupInquiriesNa == 1) {
                     button.puibutton('disable'); //not $item->{status}->{inquiryValueInputEnabled} or not $item->{signupInquiries}
-                } else {
-                    $('#done_btn').puibutton('disable');
+                    $('#done_btn').puibutton('enable');
                 }
             } else {
                 if (signedUp) {
                     button.puibutton('disable'); //already signed up
-                } else {
-                    $('#done_btn').puibutton('disable');                    
+                    $('#done_btn').puibutton('enable');
                 }
             }
                       
