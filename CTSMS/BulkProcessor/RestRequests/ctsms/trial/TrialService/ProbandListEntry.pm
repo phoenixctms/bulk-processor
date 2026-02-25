@@ -24,6 +24,7 @@ require Exporter;
 our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
+    reset_beacon
     get_item_path
 
     addsignup_item
@@ -31,11 +32,14 @@ our @EXPORT_OK = qw(
     get_trial_list
 );
 
-
 my $default_restapi = \&get_ctsms_restapi;
 my $get_item_path_query = sub {
-    my ($id) = @_;
-    return 'probandlistentry/' . $id;
+    my ($id_beacon) = @_;
+    return 'probandlistentry/' . $id_beacon;
+};
+my $get_resetbeacon_path_query = sub {
+    my ($beacon) = @_;
+    return 'probandlistentry/' . $beacon . '/resetbeacon';
 };
 my $get_trial_path_query = sub {
     my ($trial_id, $probandgroup_id,$proband_id,$total) = @_;
@@ -76,6 +80,8 @@ my $fieldnames = [
     "proband",
     "trial",
     "version",
+    "beacon",
+    "trialSignupUrl"
 ];
 
 sub new {
@@ -91,9 +97,17 @@ sub new {
 
 sub get_item {
 
-    my ($id,$load_recursive,$restapi,$headers) = @_;
+    my ($id_beacon,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
-    return builditems_fromrows($api->get(&$get_item_path_query($id),$headers),$load_recursive,$restapi);
+    return builditems_fromrows($api->get(&$get_item_path_query($id_beacon),$headers),$load_recursive,$restapi);
+
+}
+
+sub reset_beacon {
+
+    my ($beacon,$load_recursive,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return builditems_fromrows($api->put(&$get_resetbeacon_path_query($beacon),undef,$headers),$load_recursive,$restapi);
 
 }
 
