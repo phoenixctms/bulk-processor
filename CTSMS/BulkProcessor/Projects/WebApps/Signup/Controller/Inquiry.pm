@@ -410,7 +410,7 @@ sub _save_listentry {
             };
             if ($@) {
                 set_error($@);
-                return Dancer::forward('/proband', undef, { method => 'GET' });
+                Dancer::forward('/proband', undef, { method => 'GET' });
                 return 0; 
             }
         }
@@ -449,7 +449,7 @@ sub _save_listentry {
                     };
                     if ($@) {
                         set_error($@);
-                        return Dancer::forward('/proband', undef, { method => 'GET' });
+                        Dancer::forward('/proband', undef, { method => 'GET' });
                         return 0; 
                     } else {
                         Dancer::session("proband_addresses",$addresses);
@@ -468,7 +468,7 @@ sub _save_listentry {
                     };
                     if ($@) {
                         set_error($@);
-                        return Dancer::forward('/proband', undef, { method => 'GET' });
+                        Dancer::forward('/proband', undef, { method => 'GET' });
                         return 0;
                     }
                 }
@@ -483,7 +483,7 @@ sub _save_listentry {
 
                 if (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::inquiries_na()) {
                     set_error(Dancer::Plugin::I18N::localize('error_inquiries_na'));
-                    return Dancer::forward('/proband', undef, { method => 'GET' });
+                    Dancer::forward('/proband', undef, { method => 'GET' });
                     return 0;
                 }
                 
@@ -493,11 +493,13 @@ sub _save_listentry {
             } else {
                 Dancer::debug($log_prefix . "unknown site");
                 set_error(Dancer::Plugin::I18N::localize('error_listentry_unknown_site', $trial->{department}->{name}));
+                Dancer::forward('/proband', undef, { method => 'GET' });
                 return 0; 
             }
         } else {
             Dancer::debug($log_prefix . "invalid list entry");
             set_error(Dancer::Plugin::I18N::localize('error_invalid_listentry', $beacon_id));
+            Dancer::forward('/proband', undef, { method => 'GET' });
             return 0; 
         }
     }
