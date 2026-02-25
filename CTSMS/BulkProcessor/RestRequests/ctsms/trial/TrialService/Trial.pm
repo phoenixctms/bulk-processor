@@ -206,7 +206,8 @@ sub transformitem {
                 undef,
                 $load_recursive,$restapi);
             $item->{$field} = $p->{total_count};
-            $item->{_inquiriesNa} = (($item->{status}->{inquiryValueInputEnabled} and $item->{signupInquiries} and $item->{_activeInquiryCount} > 0) ? 0 : 1);
+            $item->{_listentryInquiriesNa} = (($item->{status}->{inquiryValueInputEnabled} and $item->{_activeInquiryCount} > 0) ? 0 : 1);
+            $item->{_signupInquiriesNa} = (($item->{status}->{inquiryValueInputEnabled} and $item->{signupInquiries} and $item->{_activeInquiryCount} > 0) ? 0 : 1);
         }
     }
 }
