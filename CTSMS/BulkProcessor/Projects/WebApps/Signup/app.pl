@@ -38,6 +38,14 @@ use CTSMS::BulkProcessor::LoadConfig qw(
 
 use Dancer qw();
 
+use Dancer::SharedData qw();
+*Dancer::SharedData::reset_sessions = sub {
+    eval {
+        Dancer::SharedData->sessions(undef); # n/a in Dancer 1.3202
+    };
+    #undef $Dancer::SharedData::_sessions;  
+};
+
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     get_template
     get_error
