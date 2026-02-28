@@ -223,7 +223,7 @@ sub _save_enabled_trial {
                         Dancer::debug('the selected site ' . $site_name . ' will list the enabled trial ' . $enabled_trial->{name});
                         save_site($site_name) if $site_name ne get_site_name();
                     } else {
-                        Dancer::debug('the selected site ' . $site_name . ' will not list the enabled trial ' . $enabled_trial->{name});
+                        Dancer::debug('the selected site ' . $params->{'site'} . ' will not list the enabled trial ' . $enabled_trial->{name});
                         #undef $enabled_trial;
                     } 
                 } 
