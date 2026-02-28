@@ -110,7 +110,7 @@ our $navigation_options = sub {
         and (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode() or CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::contact_created())
         and CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::selected()
         and not CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::inquiries_na()
-        and not CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::trials_na());
+        and (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode() or not CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::trials_na()));
     my $trial = Dancer::session('trial');
     return get_navigation_options($inquiries_open ? Dancer::Plugin::I18N::localize('navigation_inquiry_trial_label',$trial->{name}) : Dancer::Plugin::I18N::localize('navigation_inquiry_label'),
         $inquiries_open ? '/inquiry' : undef, #id exist...
@@ -127,7 +127,7 @@ Dancer::get('/inquiry/pdf',sub {
     return unless (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode() or CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created());
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_selected();
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_inquiries_na();
-    return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_trials_na();
+    return unless (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode() or CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_trials_na());
 
     my $proband_id = Dancer::session('proband_id');
     my $trial = Dancer::session('trial');
@@ -150,7 +150,7 @@ Dancer::get('/inquiry',sub {
     return unless (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode() or CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created());
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_selected();
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_inquiries_na();
-    return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_trials_na();
+    return unless (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode() or CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_trials_na());
 
     my $site = get_site();
     my $trial = Dancer::session('trial');
@@ -299,7 +299,9 @@ Dancer::post('/inquiry/savepage',sub {
             return $ajax_error if $ajax_error = CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created_ajax();
         }
         return $ajax_error if $ajax_error = CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_inquiries_na_ajax();
-        return $ajax_error if $ajax_error = CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_trials_na_ajax();
+        if (not CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode()) {
+            return $ajax_error if $ajax_error = CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_trials_na_ajax();
+        }
 
         eval {
             ($posted_inquiries_map, my $trial_inquiries_saved_map) = _save_page($trial,$posted_inquiries_map);
@@ -326,7 +328,7 @@ Dancer::post('/inquiry',sub {
             return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
             return unless (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode() or CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Contact::check_contact_created());
             return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_inquiries_na();
-            return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_trials_na();
+            return unless (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode() or CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_trials_na());
             eval {
                ($posted_inquiries_map, my $trial_inquiries_saved_map) = _save_page($trial,$posted_inquiries_map);
             };
@@ -425,14 +427,39 @@ sub _save_listentry {
                 Dancer::debug($log_prefix . "switching to proband id $proband->{id}");
                 CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::clear_session()
             }
-            my @sites = grep { $ctsms_sites->{$_}->{department}->{id} ==  $trial->{department}->{id}; } sort keys %$ctsms_sites;
-            my $site = shift @sites;
-            if ($site) {
-                if ($site ne get_site_name()) {
-                    Dancer::debug($log_prefix . "enabling site $site");
-                    CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::save_site($site);
+            
+            my $filter_mode;
+            my $filter_site = sub {
+                my $_site = shift;
+                my $result = 0;
+                if ($_site->{department}->{id} == $proband->{department}->{id}) {
+                    $result = 1;
                 }
-                
+                if ($filter_mode) {
+                    if ($filter_mode eq 'TRIAL') {
+                        if ($_site->{trial_department} and $_site->{trial_department}->{id} != $trial->{department}->{id}) {
+                            $result = 0;
+                        }
+                    }
+                }
+                return $result;
+            };            
+            
+            $filter_mode = 'TRIAL';
+            my $site_name = (grep { $filter_site->($ctsms_sites->{$_}); } sort keys %$ctsms_sites)[0];
+            if ($site_name) {
+                Dancer::debug($log_prefix . 'site ' . $site_name . ' found for department ' . $proband->{department}->{name} . ' and trial department ' . $trial->{department}->{name});
+            } else {
+                undef $filter_mode;
+                $site_name = (grep { $filter_site->($ctsms_sites->{$_}); } sort keys %$ctsms_sites)[0];
+                if ($site_name) {
+                    Dancer::debug($log_prefix . 'site ' . $site_name . ' found for department ' . $proband->{department}->{name});
+                }
+            }
+            
+            if ($site_name) {
+                CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::save_site($site_name) if $site_name ne get_site_name();
+            
                 Dancer::session("listentry_id", $proband_list_entry->{id});
                 Dancer::session("listentry", $proband_list_entry);
                 
@@ -491,7 +518,7 @@ sub _save_listentry {
                 #Dancer::debug($log_prefix . Dumper(Dancer::session));
                           
             } else {
-                Dancer::debug($log_prefix . "unknown site");
+                Dancer::debug($log_prefix . 'no site found for department ' . $proband->{department}->{name});
                 set_error(Dancer::Plugin::I18N::localize('error_listentry_unknown_site', $trial->{department}->{name}));
                 Dancer::forward('/proband', undef, { method => 'GET' });
                 return 0; 

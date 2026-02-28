@@ -174,6 +174,7 @@ sub clear_session {
 sub _save_enabled_trial {
     my $params = Dancer::params();
     if ($params->{'trial'}) {
+        my $site = get_site();
         my $enabled_trial;
         eval {
             #my $site = get_site();
@@ -185,26 +186,68 @@ sub _save_enabled_trial {
                 $p,
                 $sf,
                 undef,$restapi)->[0];
-            # if site param is not specified ...
-            if ($enabled_trial and not exists $params->{'site'}) {
-                my @sites = grep { $ctsms_sites->{$_}->{department}->{id} == $enabled_trial->{department}->{id}
-                                        and $ctsms_sites->{$_}->{trial_signup}; } sort keys %$ctsms_sites;
-                my $site = shift @sites;
-                if ($site) {
-                    # ... use the first best site that will create probands for the enabled trial's department
-                    save_site($site) if $site ne get_site_name();
-                } else {
-                    # if there is no such site, use the first best site that lists other trials of the enabled trial's department
-                    @sites = grep { $ctsms_sites->{$_}->{trial_department}
-                                     and $ctsms_sites->{$_}->{trial_department}->{id} == $enabled_trial->{department}->{id}
-                                     and $ctsms_sites->{$_}->{trial_signup}; } sort keys %$ctsms_sites;
-                    $site = shift @sites;
-                    if ($site) {
-                        save_site($site) if $site ne get_site_name();
-                    } else {
-                        undef $enabled_trial;
+            if ($enabled_trial) {
+                my $filter_mode;
+                my $filter_site = sub {
+                    my $_site = shift;
+                    my $result = 0;
+                    # always filter for enabled site that will list the enabled trial:
+                    if ($_site->{trial_signup}) {
+                        if (not $_site->{trial_department}) {
+                            $result = 1;
+                        } elsif ($_site->{trial_department}->{id} == $enabled_trial->{department}->{id}) {
+                            $result = 1;
+                        }
                     }
+                    if ($filter_mode) {
+                        # filter for the site selected:
+                        if ($filter_mode eq 'SITE') {
+                            if ($_site->{department}->{id} != $site->{department}->{id}) {
+                                $result = 0;
+                            }
+                        # filter for sites that create probands for the enabled_trial's department:
+                        } elsif ($filter_mode eq 'DEPARTMENT') {
+                            if ($_site->{department}->{id} != $enabled_trial->{department}->{id}) {
+                                $result = 0;
+                            }
+                        }
+                    }
+                    return $result;
+                };
+                
+                my $site_name;
+                if (exists $params->{'site'}) {
+                    $filter_mode = 'SITE';
+                    $site_name = (grep { $filter_site->($ctsms_sites->{$_}); } sort keys %$ctsms_sites)[0];
+                    if ($site_name) {
+                        Dancer::debug('the selected site ' . $site_name . ' will list the enabled trial ' . $enabled_trial->{name});
+                        save_site($site_name) if $site_name ne get_site_name();
+                    } else {
+                        Dancer::debug('the selected site ' . $site_name . ' will not list the enabled trial ' . $enabled_trial->{name});
+                        #undef $enabled_trial;
+                    } 
+                } 
+                unless ($site_name) {
+                    $filter_mode = 'DEPARTMENT';
+                    $site_name = (grep { $filter_site->($ctsms_sites->{$_}); } sort keys %$ctsms_sites)[0];
+                    if ($site_name) {
+                        Dancer::debug('using site ' . $site_name . ' with department ' . $enabled_trial->{department}->{name} . ' of trial ' . $enabled_trial->{name});
+                        save_site($site_name) if $site_name ne get_site_name();
+                    } else {
+                        Dancer::debug('no site found with department ' . $enabled_trial->{department}->{name} . ' of trial ' . $enabled_trial->{name});
+                        undef $filter_mode;
+                        $site_name = (grep { $filter_site->($ctsms_sites->{$_}); } sort keys %$ctsms_sites)[0];
+                        if ($site_name) {
+                            Dancer::debug('using site ' . $site_name . ' for trial ' . $enabled_trial->{name});
+                            save_site($site_name) if $site_name ne get_site_name();
+                        } else {
+                            Dancer::debug('no site found for trial ' . $enabled_trial->{name});
+                            undef $enabled_trial;
+                        } 
+                    }                    
                 }
+            } else {
+                Dancer::debug('trial ' . $params->{'trial'} . ' not found for signup');
             }
         };
         if ($enabled_trial) {
