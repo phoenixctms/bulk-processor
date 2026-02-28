@@ -44,7 +44,7 @@ Dancer::get('/proband',sub {
     CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::clear_listentry_mode();
     Dancer::session("referer",Dancer::request->referer) unless Dancer::session("referer");
     save_site();
-    save_enabled_trial();
+    _save_enabled_trial();
     unless (defined Dancer::session('proband_agreed')) {
         Dancer::session('proband_agreed',($proband_agreed_preset ? 'true' : ''));
     }
@@ -171,7 +171,7 @@ sub clear_session {
 
 }
 
-sub save_enabled_trial {
+sub _save_enabled_trial {
     my $params = Dancer::params();
     if ($params->{'trial'}) {
         my $enabled_trial;
@@ -185,13 +185,16 @@ sub save_enabled_trial {
                 $p,
                 $sf,
                 undef,$restapi)->[0];
-            if ($enabled_trial) {
+            # if site param is not specified ...
+            if ($enabled_trial and not exists $params->{'site'}) {
                 my @sites = grep { $ctsms_sites->{$_}->{department}->{id} == $enabled_trial->{department}->{id}
                                         and $ctsms_sites->{$_}->{trial_signup}; } sort keys %$ctsms_sites;
                 my $site = shift @sites;
                 if ($site) {
+                    # ... use the first best site that will create probands for the enabled trial's department
                     save_site($site) if $site ne get_site_name();
                 } else {
+                    # if there is no such site, use the first best site that lists other trials of the enabled trial's department
                     @sites = grep { $ctsms_sites->{$_}->{trial_department}
                                      and $ctsms_sites->{$_}->{trial_department}->{id} == $enabled_trial->{department}->{id}
                                      and $ctsms_sites->{$_}->{trial_signup}; } sort keys %$ctsms_sites;
