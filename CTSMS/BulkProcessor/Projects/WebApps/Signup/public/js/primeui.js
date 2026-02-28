@@ -752,6 +752,15 @@
             });
         },
         
+        values: function() {
+        	var val = [];
+        	var $this = this;
+        	$this.multiContainer.find('.ui-autocomplete-token').each(function(){
+        		val.push($(this).data());
+        	});
+        	return val;
+        },        
+        
         search: function(q) {            
             this.query = this.options.caseSensitive ? q : q.toLowerCase();
 
