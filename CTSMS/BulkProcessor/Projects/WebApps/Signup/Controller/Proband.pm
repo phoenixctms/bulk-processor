@@ -134,7 +134,7 @@ sub save_site {
         $site = get_site();
     }
     if (created()) {
-        if ($site->{department}->{id} ne Dancer::session('proband_department_id')) {
+        if ($site->{department}->{id} != Dancer::session('proband_department_id')) {
             clear_session();
             Dancer::debug('site changed, starting new proband');
         }
