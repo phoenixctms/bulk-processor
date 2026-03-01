@@ -54,14 +54,26 @@ Dancer::get('/end/inquiryformspdf',sub {
 
     my $proband_id = Dancer::session('proband_id');
     my $site = get_site();
-
-    return apply_lwp_file_response(CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::render_inquiries_signup(
-        $site->{trial_department} ? $site->{trial_department}->{id} : undef,
-        $site->{inquiry_trial} ? $site->{inquiry_trial}->{id} : undef,
-        $proband_id,
-        1,
-        $restapi,
-    ), $proband_id . '_inquiryforms.pdf',0);
+    
+    if (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::listentry_mode()) {
+        my $trial = Dancer::session('trial');
+        return apply_lwp_file_response(CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::render_inquiries(
+            $proband_id,
+            $trial->{id},
+            undef,
+            1,
+            $params->{blank},
+            $restapi,
+        ), $proband_id . '_' . $trial->{id} . '_inquiryform' . ($params->{blank} ? '_blank' : '') . '.pdf',0);
+    } else {
+        return apply_lwp_file_response(CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::render_inquiries_signup(
+            $site->{trial_department} ? $site->{trial_department}->{id} : undef,
+            $site->{inquiry_trial} ? $site->{inquiry_trial}->{id} : undef,
+            $proband_id,
+            1,
+            $restapi,
+        ), $proband_id . '_inquiryforms.pdf',0);
+    }
 
 });
 
