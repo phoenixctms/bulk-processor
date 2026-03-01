@@ -81,6 +81,7 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Inpu
 use CTSMS::BulkProcessor::Utils qw(trim stringtobool string_to_utf8bytes utf8bytes_to_string);
 use CTSMS::BulkProcessor::Array qw(removeduplicates array_to_map);
 
+my $listentry_load_all_existing_inquiryvalues = 1;
 my $save_all_pages = 0;
 
 my %field_to_param_type_map = (
@@ -155,6 +156,20 @@ Dancer::get('/inquiry',sub {
     my $site = get_site();
     my $trial = Dancer::session('trial');
     my $address = Dancer::session('proband_address_out');
+    
+    if ($listentry_load_all_existing_inquiryvalues and listentry_mode()) {
+        # preload all values, to indicate what was saved already.
+        my $p = {};
+        while (1) {
+            my ($values) = _load_inquiryvalues($trial,$p,0);
+            if (scalar @{$values->{rows}} > 0) {
+                Dancer::debug((scalar @{$values->{rows}}) . " inquiry values preloaded");
+                $p->{page_num} += 1;
+            } else {
+                last;
+            }
+        }
+    }    
 
     return get_template('inquiry',
         script_names => [ 'sketch/jquery.colorPicker', 'sketch/raphael-2.2.0', 'sketch/raphael.sketchpad', 'sketch/json2.min', 'sketch/sketch',
@@ -220,44 +235,9 @@ Dancer::post('/inquiries',sub {
     my $params = Dancer::params();
 
     my $trial = Dancer::session('trial');
+    
     return get_paginated_response($params,sub { my $p = shift;
-        my $values = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::get_inquiryvalues(
-            Dancer::session('proband_id'), #null will give error...
-            $trial->{id},
-            undef,
-            1,
-            1,
-            $params->{load_all_js_values},
-            ($convert_timezone ? undef : get_input_timezone()),
-            $p,
-            undef,
-            { _selectionSetValueMap => 1, _inputFieldSelectionSelectionSetValueMap => 1 },$restapi);
-        my $posted_inquiries_map = Dancer::session('posted_inquiries_map_' . $trial->{id}) // {};
-        my $strokes_id_map = Dancer::session('strokes_id_map') // {};
-        my $trial_inquiries_saved_map = Dancer::session('trial_inquiries_saved_map') // {}; #when saved somwhere else meantime; optional..?
-        my $inquiries_saved_map = $trial_inquiries_saved_map->{$trial->{id}} // {};
-        foreach my $inquiry_value (@{$values->{rows}}) {
-            $inquiry_value->{dateValue} = date_iso_to_ui($inquiry_value->{dateValue},0);
-            $inquiry_value->{timeValue} = time_iso_to_ui($inquiry_value->{timeValue},0);
-            ($inquiry_value->{timestampdateValue},$inquiry_value->{timestamptimeValue}) = datetime_iso_to_ui(delete $inquiry_value->{timestampValue},$inquiry_value->{inquiry}->{field}->{userTimeZone});
-            $inquiry_value->{inkValue} = _pack_inkvalue(delete $inquiry_value->{inkValues},$inquiry_value->{selectionValues});
-
-            if (not $inquiry_value->{inquiry}->{disabled}) {
-                _restore_from_session($posted_inquiries_map,$inquiry_value);
-            }
-            $inquiry_value->{_posted} = (exists $posted_inquiries_map->{$inquiry_value->{inquiry}->{id}} ? \1 : \0);
-
-            foreach my $selection_set_value (@{$inquiry_value->{inquiry}->{field}->{selectionSetValues}}) {
-                $strokes_id_map->{$selection_set_value->{strokesId}} = $selection_set_value->{id} if (defined $selection_set_value->{strokesId} and length($selection_set_value->{strokesId}) > 0);
-            }
-            $inquiries_saved_map->{$inquiry_value->{inquiry}->{id}} = { id => $inquiry_value->{id}, version => $inquiry_value->{version}, user_timezone => $inquiry_value->{inquiry}->{field}->{userTimeZone}, };
-        }
-        $trial_inquiries_saved_map->{$trial->{id}} = $inquiries_saved_map;
-        Dancer::session('trial_inquiries_saved_map', $trial_inquiries_saved_map);
-        $trial->{_activeInquiryCount} = $p->{total_count};
-        CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::set_inquiry_counts($trial,$inquiries_saved_map,$posted_inquiries_map);
-        Dancer::session('trial',$trial);
-        Dancer::session('strokes_id_map',$strokes_id_map);
+        my ($values,$posted_inquiries_map,$strokes_id_map,$trial_inquiries_saved_map,$inquiries_saved_map) = _load_inquiryvalues($trial,$p,$params->{load_all_js_values});
 
         foreach my $inquiry_value (@{$values->{js_rows}}) {
             $inquiry_value->{dateValue} = date_iso_to_ui($inquiry_value->{dateValue},0);
@@ -531,6 +511,49 @@ sub _save_listentry {
         }
     }
     return 1;
+}
+
+sub _load_inquiryvalues {
+    my ($trial,$p,$load_all_js_values) = @_;
+    my $values = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::get_inquiryvalues(
+        Dancer::session('proband_id'), #null will give error...
+        $trial->{id},
+        undef,
+        1,
+        1,
+        $load_all_js_values,
+        ($convert_timezone ? undef : get_input_timezone()),
+        $p,
+        undef,
+        { _selectionSetValueMap => 1, _inputFieldSelectionSelectionSetValueMap => 1 },$restapi);
+    my $posted_inquiries_map = Dancer::session('posted_inquiries_map_' . $trial->{id}) // {};
+    my $strokes_id_map = Dancer::session('strokes_id_map') // {};
+    my $trial_inquiries_saved_map = Dancer::session('trial_inquiries_saved_map') // {}; #when saved somwhere else meantime; optional..?
+    my $inquiries_saved_map = $trial_inquiries_saved_map->{$trial->{id}} // {};
+    foreach my $inquiry_value (@{$values->{rows}}) {
+        $inquiry_value->{dateValue} = date_iso_to_ui($inquiry_value->{dateValue},0);
+        $inquiry_value->{timeValue} = time_iso_to_ui($inquiry_value->{timeValue},0);
+        ($inquiry_value->{timestampdateValue},$inquiry_value->{timestamptimeValue}) = datetime_iso_to_ui(delete $inquiry_value->{timestampValue},$inquiry_value->{inquiry}->{field}->{userTimeZone});
+        $inquiry_value->{inkValue} = _pack_inkvalue(delete $inquiry_value->{inkValues},$inquiry_value->{selectionValues});
+
+        if (not $inquiry_value->{inquiry}->{disabled}) {
+            _restore_from_session($posted_inquiries_map,$inquiry_value);
+        }
+        $inquiry_value->{_posted} = (exists $posted_inquiries_map->{$inquiry_value->{inquiry}->{id}} ? \1 : \0);
+
+        foreach my $selection_set_value (@{$inquiry_value->{inquiry}->{field}->{selectionSetValues}}) {
+            $strokes_id_map->{$selection_set_value->{strokesId}} = $selection_set_value->{id} if (defined $selection_set_value->{strokesId} and length($selection_set_value->{strokesId}) > 0);
+        }
+        $inquiries_saved_map->{$inquiry_value->{inquiry}->{id}} = { id => $inquiry_value->{id}, version => $inquiry_value->{version}, user_timezone => $inquiry_value->{inquiry}->{field}->{userTimeZone}, };
+    }
+    $trial_inquiries_saved_map->{$trial->{id}} = $inquiries_saved_map;
+    Dancer::session('trial_inquiries_saved_map', $trial_inquiries_saved_map);
+    $trial->{_activeInquiryCount} = $p->{total_count};
+    CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::set_inquiry_counts($trial,$inquiries_saved_map,$posted_inquiries_map);
+    Dancer::session('trial',$trial);
+    Dancer::session('strokes_id_map',$strokes_id_map);
+    
+    return ($values,$posted_inquiries_map,$strokes_id_map,$trial_inquiries_saved_map,$inquiries_saved_map);
 }
 
 sub _save_page {
