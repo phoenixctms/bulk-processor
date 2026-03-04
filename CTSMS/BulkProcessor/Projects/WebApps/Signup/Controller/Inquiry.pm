@@ -82,6 +82,7 @@ use CTSMS::BulkProcessor::Utils qw(trim stringtobool string_to_utf8bytes utf8byt
 use CTSMS::BulkProcessor::Array qw(removeduplicates array_to_map);
 
 my $listentry_load_all_existing_inquiryvalues = 1;
+my $fields_per_page = 5;
 my $save_all_pages = 0;
 
 my %field_to_param_type_map = (
@@ -157,19 +158,33 @@ Dancer::get('/inquiry',sub {
     my $trial = Dancer::session('trial');
     my $address = Dancer::session('proband_address_out');
     
+    my $inquiry_page = Dancer::session('inquiry_page');
     if ($listentry_load_all_existing_inquiryvalues and listentry_mode()) {
         # preload all values, to indicate what was saved already.
-        my $p = {};
+        my $p = { page_num => 1, total_count => undef }; #page_size => $fields_per_page,
+        my $count = 0;
         while (1) {
             my ($values) = _load_inquiryvalues($trial,$p,0);
             if (scalar @{$values->{rows}} > 0) {
                 Dancer::debug((scalar @{$values->{rows}}) . " inquiry values preloaded");
+                unless (defined $inquiry_page) {
+                    foreach my $inquiry_value (@{$values->{rows}}) {
+                        $count++;
+                        unless ($inquiry_value->{id}) {
+                            $inquiry_page = int($count / $fields_per_page);
+                            #Dancer::debug("start showing page $inquiry_page");
+                            last;
+                        }
+                    }
+                }
                 $p->{page_num} += 1;
             } else {
                 last;
             }
         }
-    }    
+    }
+    $inquiry_page = 0 unless defined $inquiry_page;
+    Dancer::debug("showing inquiry page $inquiry_page");
 
     return get_template('inquiry',
         script_names => [ 'sketch/jquery.colorPicker', 'sketch/raphael-2.2.0', 'sketch/raphael.sketchpad', 'sketch/json2.min', 'sketch/sketch',
@@ -190,7 +205,8 @@ Dancer::get('/inquiry',sub {
 
             ctsmsBaseUri => get_ctsms_baseuri(),
             restApiUrl => get_restapi_uri(),
-            inquiryPage => Dancer::session('inquiry_page') // 0,
+            fieldsPerPage => $fields_per_page, #5,
+            inquiryPage => $inquiry_page,
             noSelectionLabel => Dancer::Plugin::I18N::localize('no_selection_label'),
             requiredLabel => Dancer::Plugin::I18N::localize('required_label'),
             optionalLabel => Dancer::Plugin::I18N::localize('optional_label'),

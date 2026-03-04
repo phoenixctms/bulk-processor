@@ -3,7 +3,7 @@ var idRegexp = /^(\d+)_(\d+_)?([a-z_]+)$/;
 
 function initPrimeUI(context) {
 
-    context.fieldsPerPage = 5;
+    //context.fieldsPerPage = 5;
     context.fieldsPerRow = 1;
 
 
