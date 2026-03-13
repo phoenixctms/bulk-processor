@@ -159,30 +159,6 @@ Dancer::get('/inquiry',sub {
     my $address = Dancer::session('proband_address_out');
     
     my $inquiry_page = Dancer::session('inquiry_page');
-    if ($listentry_load_all_existing_inquiryvalues and listentry_mode()) {
-        # preload all values, to indicate what was saved already.
-        my $p = { page_num => 1, total_count => undef }; #page_size => $fields_per_page,
-        my $count = 0;
-        while (1) {
-            my ($values) = _load_inquiryvalues($trial,$p,0);
-            if (scalar @{$values->{rows}} > 0) {
-                Dancer::debug((scalar @{$values->{rows}}) . " inquiry values preloaded");
-                unless (defined $inquiry_page) {
-                    foreach my $inquiry_value (@{$values->{rows}}) {
-                        $count++;
-                        unless ($inquiry_value->{id}) {
-                            $inquiry_page = int($count / $fields_per_page);
-                            #Dancer::debug("start showing page $inquiry_page");
-                            last;
-                        }
-                    }
-                }
-                $p->{page_num} += 1;
-            } else {
-                last;
-            }
-        }
-    }
     $inquiry_page = 0 unless defined $inquiry_page;
     Dancer::debug("showing inquiry page $inquiry_page");
 
@@ -421,7 +397,7 @@ sub _save_listentry {
             $trial = $proband_list_entry->{trial};
             if (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::created() and $proband->{id} != Dancer::session("proband_id")) {
                 Dancer::debug($log_prefix . "switching to proband id $proband->{id}");
-                CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::clear_session()
+                CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::clear_session();
             }
             
             my $filter_mode;
@@ -495,11 +471,41 @@ sub _save_listentry {
                         return 0;
                     }
                 }
-                
+
                 my $trial_inquiries_saved_map = Dancer::session('trial_inquiries_saved_map') // {};
-                my $inquiries_saved_map = $trial_inquiries_saved_map->{$trial->{id}} // {};
+                my $inquiry_page = Dancer::session('inquiry_page');
+                if ($listentry_load_all_existing_inquiryvalues and not defined $inquiry_page and not exists $trial_inquiries_saved_map->{$trial->{id}}) {
+                    # preload all values, to indicate what was saved already.
+                    my $p = { page_num => 1, total_count => undef }; #page_size => $fields_per_page,
+                    my $count = 0;
+                    while (1) {
+                        my ($values) = _load_inquiryvalues($trial,$p,0);
+                        if (scalar @{$values->{rows}} > 0) {
+                            Dancer::debug((scalar @{$values->{rows}}) . " inquiry values preloaded");
+                            unless (defined $inquiry_page) {
+                                foreach my $inquiry_value (@{$values->{rows}}) {
+                                    $count++;
+                                    unless ($inquiry_value->{id}) {
+                                        $inquiry_page = int($count / $fields_per_page);
+                                        #Dancer::debug("start showing page $inquiry_page");
+                                        last;
+                                    }
+                                }
+                            }
+                            $p->{page_num} += 1;
+                        } else {
+                            last;
+                        }
+                    }
+                }                
+                
+                $trial_inquiries_saved_map = Dancer::session('trial_inquiries_saved_map') // {};
+                my $inquiries_saved_map = $trial_inquiries_saved_map->{$trial->{id}} // {};                
                 my $posted_inquiries_map = Dancer::session('posted_inquiries_map_' . $trial->{id}) // {};
                 CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::set_inquiry_counts($trial,$inquiries_saved_map,$posted_inquiries_map);
+               
+                Dancer::session('inquiry_page',$inquiry_page);
+               
                 Dancer::session('trial',$trial);
                 
                 Dancer::session('enabled_trial', $trial); # enable trial, disregarding the signup state
