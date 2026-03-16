@@ -54,7 +54,7 @@ use CTSMS::BulkProcessor::Projects::ETL::Duplicates::ProjectConnectorPool qw(
 use CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandPlainText qw();
 use CTSMS::BulkProcessor::Projects::ETL::Duplicates::Dao::ProbandDuplicate qw();
 
-use CTSMS::BulkProcessor::Array qw(array_to_map powerset contains);
+use CTSMS::BulkProcessor::Array qw(array_to_map powerset contains removeduplicates);
 use CTSMS::BulkProcessor::Utils qw(threadid);
 
 require Exporter;
@@ -178,8 +178,8 @@ sub _normalize_person_name {
     $name =~ s/\s+$//g;
     
     if ($split) {
-        my @parts = split(' ',$name);
-        return @parts;
+        my $parts = removeduplicates([ split(' ',$name) ]);
+        return @$parts;
     } else {
         $name =~ s/ //g;
         return ($name);
