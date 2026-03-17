@@ -154,6 +154,12 @@ function _createInquiryField(context,value) {
     });
     content.append(fieldSet);
 
+    if (value.inquiry.field.topComment != null && value.inquiry.field.topComment.length > 0) {
+        var topComment = $('<pre class="ui-widget ctsms-multilinetext">');
+        topComment.append(document.createTextNode(value.inquiry.field.topComment));
+        grid.append($('<div class="ui-grid-col-12 ctsms-inputfield-comment-row"/>').append(topComment));
+    }
+    
     var tied = isTiedFieldRow(value.inquiry.field.fieldType.type) ? '-tied' : '';
     var row = $('<div class="ui-grid-row ctsms-field-row' + tied + '"/>').appendTo(grid);
     row.append($('<div class="ui-grid-col-4 ctsms-field-label' + tied + '"/>').append($('<label class="ctsms-align-top' + (value.inquiry.optional ? '' : ' ctsms-required') + '"/>').append(
@@ -227,10 +233,10 @@ function _createInquiryField(context,value) {
         grid.append($('<div class="ui-grid-col-12 ctsms-inputfield-output-row"/>').append(fieldOutput));
     }
 
-    if (value.inquiry.field.comment != null && value.inquiry.field.comment.length > 0) {
-        var fieldComment = $('<pre class="ui-widget ctsms-multilinetext">');
-        fieldComment.append(document.createTextNode(value.inquiry.field.comment));
-        grid.append($('<div class="ui-grid-col-12 ctsms-inputfield-comment-row"/>').append(fieldComment));
+    if (value.inquiry.field.bottomComment != null && value.inquiry.field.bottomComment.length > 0) {
+        var bottomComment = $('<pre class="ui-widget ctsms-multilinetext">');
+        bottomComment.append(document.createTextNode(value.inquiry.field.bottomComment));
+        grid.append($('<div class="ui-grid-col-12 ctsms-inputfield-comment-row"/>').append(bottomComment));
     }
 
     if (value.inquiry.comment != null && value.inquiry.comment.length > 0) {

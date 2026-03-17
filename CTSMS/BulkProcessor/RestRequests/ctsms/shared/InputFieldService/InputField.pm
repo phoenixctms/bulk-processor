@@ -61,8 +61,10 @@ my $get_item_path_query = sub {
 my $fieldnames = [
     "booleanPreset",
     "category",
-    "comment",
-    "commentL10nKey",
+    "topComment",
+    "topCommentL10nKey",
+    "bottomComment",
+    "bottomCommentL10nKey",    
     "datePreset",
     "externalId",
     "fieldType",
