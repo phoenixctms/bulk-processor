@@ -173,6 +173,8 @@ var FIELD_CALCULATION_DEBUG_LEVEL = 0;
 
 var FieldCalculation = FieldCalculation || {};
 
+var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
+
 (function(FieldCalculation) {
 	var inputFieldVariableMap = {};
 	var inputFieldVars = {};
@@ -556,7 +558,7 @@ var FieldCalculation = FieldCalculation || {};
 			inputFieldVariable.valueErrorMessage = null;
 			var evaluation = _evalInputFieldVariableExpression(inputFieldVariable, inputFieldVariable.value.jsValueExpression, "value expression", cycleCheckMap, true);
 			if (evaluation != null) {
-				inputFieldVariable.oldValue = _cloneJSON( inputFieldVariable.value);
+				inputFieldVariable.oldValue = _cloneJSON(inputFieldVariable.value);
 				inputFieldVariable.valueErrorMessage = evaluation.errorMessage;
 				_setInputFieldVariableValue(inputFieldVariable.value, evaluation.returnValue);
 			}
@@ -643,19 +645,31 @@ var FieldCalculation = FieldCalculation || {};
 										argsOk = false;
 										break;
 									} else {
-										argValue = _processInputFieldVariableValue(argInputFieldVariable, cycleCheckMap ? cycleCheckMap : {});
+										if (FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES && !_empty(_getInputFieldVariableValue(argInputFieldVariable.enteredValue))) {
+											argValue = _cloneJSON(argInputFieldVariable.enteredValue);
+										} else {
+											argValue = _processInputFieldVariableValue(argInputFieldVariable, cycleCheckMap ? cycleCheckMap : {});
+										}										
 									}
 								} else {
 									argValue = [];
 									length = argInputFieldVariable.length;
 									for (j = 0; j < length; j++) {
 										if (j in argInputFieldVariable) {
-											argValue.push(_processInputFieldVariableValue(argInputFieldVariable[j], cycleCheckMap ? cycleCheckMap : {}));
+											if (FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES && !_empty(_getInputFieldVariableValue(argInputFieldVariable[j].enteredValue))) {
+												argValue.push(_cloneJSON(argInputFieldVariable[j].enteredValue));
+											} else {
+												argValue.push(_processInputFieldVariableValue(argInputFieldVariable[j], cycleCheckMap ? cycleCheckMap : {}));	
+											}
 										}
 									}
 								}
 							} else {
-								argValue = _processInputFieldVariableValue(argInputFieldVariable, cycleCheckMap ? cycleCheckMap : {});
+								if (FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES && !_empty(_getInputFieldVariableValue(argInputFieldVariable.enteredValue))) {
+									argValue = _cloneJSON(argInputFieldVariable.enteredValue);
+								} else {
+									argValue = _processInputFieldVariableValue(argInputFieldVariable, cycleCheckMap ? cycleCheckMap : {});
+								}
 							}
 
 							if ((!argInputFieldVariable || (argInputFieldVariable.valueErrorMessage != null && argInputFieldVariable.valueErrorMessage.length > 0))) {
@@ -708,8 +722,8 @@ var FieldCalculation = FieldCalculation || {};
 			    'returnValue' : returnValue
 			};
 		} else if (copyEnteredValue) {
-			inputFieldVariable.oldValue = _cloneJSON( inputFieldVariable.value);
-			inputFieldVariable.value = _cloneJSON( inputFieldVariable.enteredValue);
+			inputFieldVariable.oldValue = _cloneJSON(inputFieldVariable.value);
+			inputFieldVariable.value = _cloneJSON(inputFieldVariable.enteredValue);
 			if (FIELD_CALCULATION_DEBUG_LEVEL >= 3) {
 				console.log("entered value of " + _debugVarName(inputFieldVariable) + " copied");
 			}
@@ -1081,7 +1095,7 @@ var FieldCalculation = FieldCalculation || {};
 		} else if(typeof input === "boolean"){
 			return !input;
 		} else if(typeof input === "number"){
-			return false;
+			return isNaN(input);
 		} else if (input instanceof Array) {
 		    return (input.length <= 0 || (input.length == 1 && input[0] == ""));
 		} else if(input instanceof JSJoda.LocalDate) {
@@ -1537,7 +1551,7 @@ var FieldCalculation = FieldCalculation || {};
 	function _setVariable(variable, value, apply) {
 	    var inputFieldVar = _getInputFieldVariable(variable);
 		if (inputFieldVar) {
-		    inputFieldVar.oldValue = _cloneJSON( inputFieldVar.value);
+		    inputFieldVar.oldValue = _cloneJSON(inputFieldVar.value);
 			_setInputFieldVariableValue(inputFieldVar.value, value);
 			if (FIELD_CALCULATION_DEBUG_LEVEL >= 1) {
 			    _debugVariableValue("user code sets variable value ", inputFieldVar);
@@ -2049,7 +2063,7 @@ var FieldCalculation = FieldCalculation || {};
 					inputFieldVariable.oldOutput = null;
 					inputFieldVariable.delta = false;
 					inputFieldVariable.value = inputFieldVariableValue;
-					inputFieldVariable.oldValue = _cloneJSON( inputFieldVariableValue);
+					inputFieldVariable.oldValue = _cloneJSON(inputFieldVariableValue);
 
 					var mask = {};
 					//mask global properties:
@@ -2097,7 +2111,7 @@ var FieldCalculation = FieldCalculation || {};
 						}
 						inputFieldVariableMap[inputFieldVariableValue.jsVariableName] = inputFieldVariable;
 					}
-					inputFieldVariable.enteredValue = _cloneJSON( inputFieldVariableValue);
+					inputFieldVariable.enteredValue = _cloneJSON(inputFieldVariableValue);
 				}
 			}
 			if (FIELD_CALCULATION_DEBUG_LEVEL >= 1) {
@@ -2260,7 +2274,7 @@ var FieldCalculation = FieldCalculation || {};
 	function _inputFieldApplyCalculatedValue(variableName, index) {
 		var inputFieldVariable = _getSeriesInputFieldVariable(variableName, index, false);
 		if (inputFieldVariable) {
-			inputFieldVariable.enteredValue = _cloneJSON( inputFieldVariable.value);
+			inputFieldVariable.enteredValue = _cloneJSON(inputFieldVariable.value);
 			inputFieldVariable.delta = !_equalInputFieldVariable(inputFieldVariable);
 			if (FIELD_CALCULATION_DEBUG_LEVEL >= 1) {
 				console.log("apply calculated value " + _debugVarName(inputFieldVariable));
