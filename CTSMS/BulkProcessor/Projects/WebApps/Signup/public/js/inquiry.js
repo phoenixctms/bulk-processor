@@ -76,6 +76,7 @@ function initPrimeUI(context) {
                 click: function() {
                     $('#incomplete_dlg').puidialog('hide');
                     context.checkForm = false;
+                    $('#form').append($("<input>").attr("type", "hidden").attr("name", "done").val("1"));
                     $('#form').submit();
                 }
             },
