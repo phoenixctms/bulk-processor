@@ -107,7 +107,10 @@ function initPrimeUI(context) {
     });
     $('#done_btn').puibutton({
         icon: 'fa-angle-double-right',
-        iconPos: 'right'
+        iconPos: 'right',
+        click: function(event) {
+            context.checkForm = true;
+        }        
     });
     $('#save_next_btn').puibutton({
         icon: 'fa-angle-right',
