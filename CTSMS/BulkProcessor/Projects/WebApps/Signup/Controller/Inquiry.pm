@@ -8,6 +8,8 @@ use Dancer qw();
 
 use HTTP::Status qw();
 
+use POSIX qw(ceil);
+
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     json_response
     json_error
