@@ -293,6 +293,7 @@ Dancer::post('/inquiry/savepage',sub {
 Dancer::post('/inquiry',sub {
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::check_selected();
     my $trial = Dancer::session('trial');
+    my $inquiry_page = Dancer::session('inquiry_page');
     my $posted_inquiries_map = _save_page_params($trial,$save_all_pages);
 
     return check_done(sub {
@@ -304,9 +305,17 @@ Dancer::post('/inquiry',sub {
             eval {
                ($posted_inquiries_map, my $trial_inquiries_saved_map) = _save_page($trial,$posted_inquiries_map);
             };
+            
+            ;
+
             if ($@) {
-                set_error(&$restapi()->responsedata);
-                return Dancer::forward('/inquiry', undef, { method => 'GET' });
+                # prevent navigation only if we are on the last page:                
+                if (($inquiry_page + 1) < ceil($trial->{_activeInquiryCount} / $fields_per_page)) {
+                    return Dancer::forward('/end', undef, { method => 'GET' });
+                } else {
+                    set_error(&$restapi()->responsedata);
+                    return Dancer::forward('/inquiry', undef, { method => 'GET' });                    
+                }
             } else {
                 return Dancer::forward('/end', undef, { method => 'GET' });
             }
