@@ -11,10 +11,21 @@
     <div class="ui-grid-col-12">
 
     <div id="contact_details_panel" class="ctsms-panel-row" title="[% l('contact_details_panel_title') %]">
-        <div class="ctsms-form-entry">
-        <label class="ctsms-required">[% l('proband_phone_label') %]</label>
-        <input name="proband_phone_value" id="phone" type="text" class="ctsms-control" value="[% HTML.escape(session.proband_phone_value) %]" required/>
-        </div>
+        <div class="ui-grid-row">
+          <div class="ui-grid-col-5">
+            <div class="ctsms-form-entry">
+            <label class="ctsms-required">[% l('proband_phone_label') %]</label>
+            <input name="proband_phone_value" id="phone" type="text" class="ctsms-control" value="[% HTML.escape(session.proband_phone_value) %]" required/>
+            </div>
+          </div>
+          
+          <div class="ui-grid-col-7" id="phone_notify_container">
+            <div class="ctsms-form-entry">
+            <input name="proband_phone_notify" id="phone_notify" type="checkbox" value="true"[% TTUTILS.stringtobool(session.proband_phone_notify) ? ' checked="checked"' : '' %]/>
+            <label for="phone_notify">[% l('proband_phone_notify_label') %]</label>
+            </div>
+          </div>
+        </div>          
 
         <div class="ui-grid-row">
           <div class="ui-grid-col-5">

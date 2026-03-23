@@ -85,6 +85,13 @@ function initPrimeUI(context) {
         at: 'left top',
         content: context.probandEmailNotifyTooltip
     });
+    
+    $('#phone_notify').puicheckbox();
+    $('#phone_notify').parent().parent().puitooltip({
+        my: 'left bottom',
+        at: 'left top',
+        content: context.probandPhoneNotifyTooltip
+    });
 
     $('#messages').puimessages();
     if (context.apiError != null) {

@@ -99,6 +99,8 @@ my $fieldnames = [
     "attachProbandFilesOptional",
     "attachTrialFilesOptional",
     "attachMassMailFilesOptional",
+    "phoneToEmailFormat",
+    "html",
 ];
 
 sub new {

@@ -72,6 +72,7 @@ our @EXPORT_OK = qw(
     $proband_create_interval_limit
     $phone_number_prefix_preset
     $email_notify_preset
+    $phone_notify_preset
     $proband_agreed_preset
     $language_menu
 
@@ -110,6 +111,7 @@ our $decimal_point = '.'; # expected by the rest-api
 our $proband_create_interval_limit = 300; #less than session timeout
 our $phone_number_prefix_preset = '+43';
 our $email_notify_preset = 1;
+our $phone_notify_preset = 1;
 our $proband_agreed_preset = 0;
 our $language_menu = 0;
 
@@ -136,6 +138,7 @@ sub update_settings {
         $proband_create_interval_limit = $data->{proband_create_interval_limit} if exists $data->{proband_create_interval_limit};
         $phone_number_prefix_preset = $data->{phone_number_prefix_preset} if exists $data->{phone_number_prefix_preset};
         $email_notify_preset = stringtobool($data->{email_notify_preset}) if exists $data->{email_notify_preset};
+        $phone_notify_preset = stringtobool($data->{phone_notify_preset}) if exists $data->{phone_notify_preset};
         $proband_agreed_preset = stringtobool($data->{proband_agreed_preset}) if exists $data->{proband_agreed_preset};
         $default_language_code = $data->{default_language_code} if exists $data->{default_language_code};
         $system_timezone = $data->{system_timezone} if exists $data->{system_timezone};

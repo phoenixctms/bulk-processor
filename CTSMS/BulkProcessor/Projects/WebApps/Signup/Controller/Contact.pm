@@ -21,6 +21,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $phone_number_prefix_preset
     $email_notify_preset
+    $phone_notify_preset
     $address_show_province
     $address_show_country
     $address_country
@@ -50,6 +51,9 @@ Dancer::get('/contact',sub {
     unless (defined Dancer::session(_type_to_param_prefix('email_contact_detail_type') . 'notify')) {
         Dancer::session(_type_to_param_prefix('email_contact_detail_type') . 'notify',($email_notify_preset ? 'true' : ''));
     }
+    unless (defined Dancer::session(_type_to_param_prefix('phone_contact_detail_type') . 'notify')) {
+        Dancer::session(_type_to_param_prefix('phone_contact_detail_type') . 'notify',($phone_notify_preset ? 'true' : ''));
+    }
     return get_template('contact',
         script_names => 'contact',
         style_names => 'contact',
@@ -66,6 +70,7 @@ Dancer::get('/contact',sub {
             probandPhoneTooltip => Dancer::Plugin::I18N::localize('proband_phone_tooltip'),
             probandEmailTooltip => Dancer::Plugin::I18N::localize('proband_email_tooltip'),
             probandEmailNotifyTooltip => Dancer::Plugin::I18N::localize('proband_email_notify_tooltip'),
+            probandPhoneNotifyTooltip => Dancer::Plugin::I18N::localize('proband_phone_notify_tooltip'),
         },
         trials_na => CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Trial::trials_na(),
         address_show_province => $address_show_province,
@@ -88,10 +93,12 @@ Dancer::post('/contact',sub {
         'proband_address_zip_code',
         'proband_address_province',
         _type_to_param_prefix('phone_contact_detail_type') . 'value',
+        _type_to_param_prefix('phone_contact_detail_type') . 'notify',
         _type_to_param_prefix('email_contact_detail_type') . 'value',
         _type_to_param_prefix('email_contact_detail_type') . 'notify',
     );
     Dancer::session(_type_to_param_prefix('email_contact_detail_type') . 'notify','') unless defined $params->{_type_to_param_prefix('email_contact_detail_type') . 'notify'};
+    Dancer::session(_type_to_param_prefix('phone_contact_detail_type') . 'notify','') unless defined $params->{_type_to_param_prefix('phone_contact_detail_type') . 'notify'};
     Dancer::session("proband_addresses",undef);
     return unless CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::check_created();
     eval {
@@ -282,7 +289,7 @@ sub _get_contactdetailvalue_in {
     my $site = get_site();
     my $prefix = _type_to_param_prefix($type);
     my $value = _sanitize_contactdetailvalue($params->{$prefix . 'value'},$type);
-    my $notify = (exists $params->{$prefix . 'notify'} ? stringtobool($params->{$prefix . 'notify'} // '') : 1); # default 1 for phone
+    my $notify = (exists $params->{$prefix . 'notify'} ? stringtobool($params->{$prefix . 'notify'} // '') : 0);
     return {
         (_contactdetailvalue_created($type) ? (
             "id" => Dancer::session($prefix . 'id'),

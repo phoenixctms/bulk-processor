@@ -185,6 +185,12 @@ visibility:hidden;
     }
 }
 
+@media (min-width: 768px) {
+    #phone_notify_container {
+        padding-top:4px;	
+    }
+}
+
 .ctsms-field-row {
     display: inline !important;
 }
