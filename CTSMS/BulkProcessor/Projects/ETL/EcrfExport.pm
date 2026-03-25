@@ -513,7 +513,12 @@ NEXT_VISIT:
 
             my $first = $context->{api_values_page_num} * $ecrf_data_api_values_page_size;
             _info($context,"fetch eCRF values page: " . $first . '-' . ($first + $ecrf_data_api_values_page_size) . ' of ' . (defined $context->{api_values_page_total_count} ? $context->{api_values_page_total_count} : '?'),not $show_page_progress);
-            $context->{api_values_page} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues::get_ecrffieldvalues($context->{listentry}->{id},$context->{ecrf}->{id},$context->{visit}->{id},0, $timezone, $p, $sf, { _value => 1, _selectionValueMap => 1 })->{rows};
+            eval {
+                $context->{api_values_page} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues::get_ecrffieldvalues($context->{listentry}->{id},$context->{ecrf}->{id},$context->{visit}->{id},0, $timezone, $p, $sf, { _value => 1, _selectionValueMap => 1 })->{rows};
+            };
+            if ($@) {
+                $context->{api_values_page} = [];
+            }
             $context->{api_values_page_total_count} = $p->{total_count};
             $context->{api_values_page_num} += 1;
         }
@@ -875,7 +880,12 @@ sub _get_probandlistentrytagvalues {
 
             my $first = $api_listentrytagvalues_page_num * $ecrf_data_api_probandlistentrytagvalues_page_size;
             _info($context,"fetch proband list attribute values page: " . $first . '-' . ($first + $ecrf_data_api_probandlistentrytagvalues_page_size) . ' of ' . (defined $api_listentrytagvalues_page_total_count ? $api_listentrytagvalues_page_total_count : '?'),not $show_page_progress);
-            $api_listentrytagvalues_page = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValues::get_probandlistentrytagvalues($context->{listentry}->{id}, 0, 0, $timezone, $p, $sf, { _value => 1 })->{rows};
+            #eval {
+                $api_listentrytagvalues_page = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValues::get_probandlistentrytagvalues($context->{listentry}->{id}, 0, 0, $timezone, $p, $sf, { _value => 1 })->{rows};
+            #};
+            #if ($@) {
+            #    $api_listentrytagvalues_page = [];
+            #}
             $api_listentrytagvalues_page_total_count = $p->{total_count};
             $api_listentrytagvalues_page_num += 1;
         }
@@ -915,7 +925,12 @@ sub _get_ecrffieldvalues {
 
                         my $first = $api_values_page_num * $ecrf_data_api_values_page_size;
                         _info($context,"fetch eCRF values page: " . $first . '-' . ($first + $ecrf_data_api_values_page_size) . ' of ' . (defined $api_values_page_total_count ? $api_values_page_total_count : '?'),not $show_page_progress);
-                        $api_values_page = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues::get_ecrffieldvalues($context->{listentry}->{id},$ecrfid,$visit->{id},0, $timezone, $p, $sf, { _value => 1, _selectionValueMap => 1 })->{rows};
+                        eval {
+                            $api_values_page = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues::get_ecrffieldvalues($context->{listentry}->{id},$ecrfid,$visit->{id},0, $timezone, $p, $sf, { _value => 1, _selectionValueMap => 1 })->{rows};
+                        };
+                        if ($@) {
+                            $api_values_page = [];
+                        }
                         $api_values_page_total_count = $p->{total_count};
                         $api_values_page_num += 1;
                     }
