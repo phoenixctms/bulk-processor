@@ -650,7 +650,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 											argValue = _cloneJSON(argInputFieldVariable.enteredValue);
 										} else {
 											argValue = _processInputFieldVariableValue(argInputFieldVariable, cycleCheckMap ? cycleCheckMap : {});
-										}										
+										}
 									}
 								} else {
 									argValue = [];
@@ -660,7 +660,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 											if (FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES && !_empty(_getInputFieldVariableValue(argInputFieldVariable[j].enteredValue))) {
 												argValue.push(_cloneJSON(argInputFieldVariable[j].enteredValue));
 											} else {
-												argValue.push(_processInputFieldVariableValue(argInputFieldVariable[j], cycleCheckMap ? cycleCheckMap : {}));	
+												argValue.push(_processInputFieldVariableValue(argInputFieldVariable[j], cycleCheckMap ? cycleCheckMap : {}));
 											}
 										}
 									}
@@ -920,7 +920,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			}
 			return result;
 		};
-		
+
 		mask["findInquiryValues"] = function(condition) {
 			var result = [];
 			if (_testFunction(condition)) {
@@ -933,7 +933,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 				}
 			}
 			return result;
-		};	
+		};
 
 		var _throwError = function(message,localize,noColon) {
 		    if (noColon) {
@@ -1347,10 +1347,10 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			return null;
 		}
 		var regexp = _getLocalizedMessage('customPartialDatePartRegExp',locale);
-		if (regexp.test(ary[2])) { 
-			if (regexp.test(ary[1])) { 
-				if (regexp.test(ary[0])) { 
-					
+		if (regexp.test(ary[2])) {
+			if (regexp.test(ary[1])) {
+				if (regexp.test(ary[0])) {
+
 				} else {
 					if (_testFunction(error)) {
 						error('month required');
@@ -1365,7 +1365,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			}
 		} else if (regexp.test(ary[1])) {
 			if (regexp.test(ary[0])) {
-				
+
 			} else {
 				if (_testFunction(error)) {
 					error('month required');
@@ -1484,7 +1484,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	    if (regexp.test(ary[0])) {
 	    	if (regexp.test(ary[1])) {
 		    	if (ary.length != 3 || regexp.test(ary[2])) {
-			 		
+
 				} else {
 					if (_testFunction(error)) {
 					    error('minute required');
@@ -1499,7 +1499,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			}
 	    } else if (regexp.test(ary[1])) {
 	    	if (ary.length != 3 || regexp.test(ary[2])) {
-		 		
+
 			} else {
 				if (_testFunction(error)) {
 				    error('minute required');
@@ -1507,7 +1507,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		        return null;
 			}
 		}
-	    
+
 		var h = ary[0];
 		if (regexp.test(h)) {
 			h = '00';
@@ -1725,7 +1725,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			case "SELECT_ONE_RADIO_V":
 			case "SELECT_MANY_H":
 			case "SELECT_MANY_V":
-			    if (inputFieldSelectionSetVals) {
+			    if (inputFieldSelectionSetVals && inputFieldVariableValue.selectionValueIds != null) {
 					var res = [];
     		        for (var j = 0; j < inputFieldVariableValue.selectionValueIds.length; j++) {
 			            var id = inputFieldVariableValue.selectionValueIds[j];
@@ -1928,7 +1928,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 					_sanitizeJsonValues(inquiryValues[i]);
 					if (!inputFieldVars.inquiryValues[inquiryValues[i].category]) {
 					    inputFieldVars.inquiryValues[inquiryValues[i].category] = {};
-					}					
+					}
 					inputFieldVars.inquiryValues[inquiryValues[i].category][inquiryValues[i].position] = inquiryValues[i];
 				}
 			}
@@ -2494,7 +2494,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		}
 		eval("with(mask){(\n" + js + "\n)(mask);}");
 	}
-	
+
 	function _getScriptAjax(resource, fileId) {
 		var js;
 		var error;
@@ -2511,7 +2511,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 				}
 				error = resource + ': ' + textStatus + ((errorThrown != null && errorThrown.toString().length > 0) ? ' - ' + errorThrown.toString() : '');
 		    },
-		    success: function(data, textStatus, jqXHR) { 
+		    success: function(data, textStatus, jqXHR) {
 				if (FIELD_CALCULATION_DEBUG_LEVEL >= 1) {
 					console.log(resource + ': ' + textStatus);
 				}
@@ -2523,7 +2523,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		}
 		return js;
 	}
-	
+
 	FieldCalculation.handleInitInputFieldVariables = handleInitInputFieldVariables;
 	FieldCalculation.resetInputFieldVariables = resetInputFieldVariables;
 	FieldCalculation.handleUpdateInputFieldVariables = handleUpdateInputFieldVariables;
@@ -2558,7 +2558,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 
 	FieldCalculation.getScriptAjax = _getScriptAjax;
 	FieldCalculation.getScript = _getScriptAjax;
-	
+
 	_exportExpressionUtils(FieldCalculation);
 
 	if (FIELD_CALCULATION_DEBUG_LEVEL >= 1) {
