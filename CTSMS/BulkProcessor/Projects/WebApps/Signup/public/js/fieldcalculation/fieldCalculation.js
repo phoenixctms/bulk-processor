@@ -914,7 +914,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			if (_testFunction(condition)) {
 				for ( var position in inputFieldVars.tagValues ) {
 					if (condition(inputFieldVars.tagValues[position])) {
-						result.push(_getInputFieldVariableValue(inputFieldVars.tagValues[position]));
+						result.push(_getInputFieldVariableValue(inputFieldVars.tagValues[position],inputFieldVars.tagValues[position].inputFieldSelectionSetValues));
 					}
 				}
 			}
@@ -927,13 +927,13 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 				for ( var category in inputFieldVars.inquiryValues ) {
 					for ( var position in inputFieldVars.inquiryValues[category] ) {
 						if (condition(inputFieldVars.inquiryValues[category][position])) {
-							result.push(_getInputFieldVariableValue(inputFieldVars.inquiryValues[category][position]));
+							result.push(_getInputFieldVariableValue(inputFieldVars.inquiryValues[category][position],inputFieldVars.inquiryValues[category][position].inputFieldSelectionSetValues));
 						}
 					}
 				}
 			}
 			return result;
-		};
+		};	
 
 		var _throwError = function(message,localize,noColon) {
 		    if (noColon) {
@@ -1713,7 +1713,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		}
 	}
 
-	function _getInputFieldVariableValue(inputFieldVariableValue) {
+	function _getInputFieldVariableValue(inputFieldVariableValue,inputFieldSelectionSetVals) {
 		if (inputFieldVariableValue != null) {
 			switch (inputFieldVariableValue.inputFieldType) {
 			case "SINGLE_LINE_TEXT":
@@ -1725,7 +1725,21 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			case "SELECT_ONE_RADIO_V":
 			case "SELECT_MANY_H":
 			case "SELECT_MANY_V":
-				return inputFieldVariableValue.selectionValueIds;
+			    if (inputFieldSelectionSetVals) {
+					var res = [];
+    		        for (var j = 0; j < inputFieldVariableValue.selectionValueIds.length; j++) {
+			            var id = inputFieldVariableValue.selectionValueIds[j];
+			            for (var i = 0; i < inputFieldSelectionSetVals.length; i++) {
+			                if (inputFieldSelectionSetVals[i].id == id) {
+			                    res.push(inputFieldSelectionSetVals[i]);
+			                    break;
+			                }
+			            }
+			        }
+			        return res;
+			    } else {
+				    return inputFieldVariableValue.selectionValueIds;
+				}
 			case "CHECKBOX":
 				return inputFieldVariableValue.booleanValue;
 			case "INTEGER":
