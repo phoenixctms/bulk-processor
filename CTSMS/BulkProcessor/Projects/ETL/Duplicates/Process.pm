@@ -449,7 +449,7 @@ sub _get_proband_comment {
     my $original_comment = _mark_utf8($context->{original}->{comment} // '');
     my $comment = $original_comment;
     if ($comment =~ /$duplicate_comment_pattern/mi) {
-        $comment =~ s/^.*$duplicate_comment_pattern/$new_comment/mig;
+        $comment =~ s/^.*$duplicate_comment_pattern/$new_comment/mi;
     } else {
         if (length($comment) > 0) {
             $comment =~ s/\s+$//mg;
