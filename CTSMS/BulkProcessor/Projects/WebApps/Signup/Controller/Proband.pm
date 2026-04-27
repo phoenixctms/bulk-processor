@@ -309,7 +309,7 @@ sub _get_in {
         "person" => \1,
         "blinded" => \0,
         "citizenship" => trim($params->{proband_citizenship}),
-        "comment" => Dancer::Plugin::I18N::localize('proband_comment',Dancer::request->uri_base(),Dancer::Plugin::I18N::localize($site->{label}),(defined $enabled_trial ? $enabled_trial->{name} : ''),Dancer::request->address(),Dancer::request->user_agent,Dancer::session("referer")),
+        "comment" => Dancer::Plugin::I18N::localize('proband_comment',timestamp(),Dancer::request->uri_base(),Dancer::Plugin::I18N::localize($site->{label}),(defined $enabled_trial ? $enabled_trial->{name} : ''),Dancer::request->address(),Dancer::request->user_agent,Dancer::session("referer")),
         "dateOfBirth" => date_ui_to_iso($params->{proband_dob}),
         "departmentId" => $site->{department}->{id},
         "firstName" => trim($params->{proband_first_name}),
