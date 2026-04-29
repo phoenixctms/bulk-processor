@@ -169,7 +169,7 @@ sub get_selection_set_value_ids {
         }
     } else {
         if (length($value)) {
-            $value = [ split(quotemeta($separator),$value) ];
+            $value = [ length($separator) ? split(quotemeta($separator),$value) : ($value) ];
         } else {
             $value = undef;
         }
@@ -267,8 +267,6 @@ sub get_values_stats {
     }
     return \%stats;
 }
-
-
 
 sub get_proband_in {
     my ($context,$alias,$proband_category_column_name,$proband_department_column_name,$proband_gender_column_name) = @_;

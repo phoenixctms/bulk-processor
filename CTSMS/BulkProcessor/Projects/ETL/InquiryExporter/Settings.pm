@@ -10,7 +10,6 @@ use CTSMS::BulkProcessor::Globals qw(
     $cpucount
 );
 
-
 use CTSMS::BulkProcessor::Logging qw(
     getlogger
     scriptinfo
@@ -28,7 +27,6 @@ use CTSMS::BulkProcessor::LoadConfig qw(
     parse_regexp
 );
 use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring stringtobool);
-
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 
@@ -87,12 +85,9 @@ sub update_settings {
 
         my $result = 1;
 
-
-
         $inquiry_data_truncate_table = $data->{inquiry_data_truncate_table} if exists $data->{inquiry_data_truncate_table};
         $inquiry_data_ignore_duplicates = $data->{inquiry_data_ignore_duplicates} if exists $data->{inquiry_data_ignore_duplicates};
         
-
         $inquiry_data_export_upload_folder = $data->{inquiry_data_export_upload_folder} if exists $data->{inquiry_data_export_upload_folder};
 
         $inquiry_data_export_sqlite_filename = $data->{inquiry_data_export_sqlite_filename} if exists $data->{inquiry_data_export_sqlite_filename};
@@ -100,10 +95,8 @@ sub update_settings {
         $inquiry_data_export_xls_filename = $data->{inquiry_data_export_xls_filename} if exists $data->{inquiry_data_export_xls_filename};
         $inquiry_data_export_xlsx = $data->{inquiry_data_export_xlsx} if exists $data->{inquiry_data_export_xlsx};
 
-        
         $inquiry_data_export_pdfs_filename = $data->{inquiry_data_export_pdfs_filename} if exists $data->{inquiry_data_export_pdfs_filename};        
         
-
         $inquiry_data_row_block = $data->{inquiry_data_row_block} if exists $data->{inquiry_data_row_block};
         
         $publish_public_file = stringtobool($data->{publish_public_file}) if exists $data->{publish_public_file};        

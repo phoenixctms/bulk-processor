@@ -95,14 +95,17 @@ sub update_job {
     my ($status,$progress,$progress_max) = @_;
     lock %job;
     if (keys %job) {
-        $progress = $progress_max if (defined $progress and defined $progress_max and $progress > $progress_max);
+        my $effective_progress = (defined $progress ? $progress : $job{progress});
+        my $effective_progress_max = (defined $progress_max ? $progress_max : $job{progressMax});
+        $effective_progress = $effective_progress_max
+            if (defined $effective_progress and defined $effective_progress_max and $effective_progress > $effective_progress_max);        
         my $in = {
             id => $job{id},
             version => $job{version},
             status => $status,
             jobOutput => cat_file($attachmentlogfile,\&fileerror,getlogger(__PACKAGE__)),
-            progress => (defined $progress ? $progress : $job{progress}),
-            progressMax => (defined $progress_max ? $progress_max : $job{progressMax}),
+            progress => $effective_progress,
+            progressMax => $effective_progress_max,
         };
 
         my @args = ($in);

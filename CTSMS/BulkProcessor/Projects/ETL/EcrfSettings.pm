@@ -89,7 +89,6 @@ our @EXPORT_OK = qw(
     $ecrf_probandlistentry_group_column_name
     $ecrf_probandlistentry_status_column_name
 
-
 );
 
 our $input_path = $working_path . 'input/';
@@ -136,7 +135,6 @@ our $selection_set_value_separator = ',';
 
 our $show_page_progress = 0;
 our $listentrytag_map_mode = 'last';
-
 
 
 my $ecrf_data_include_ecrffield_code = sub {
@@ -312,8 +310,6 @@ sub update_settings {
         $selectionvalue_abbreviate_opts = $data->{selectionvalue_abbreviate_opts} if exists $data->{selectionvalue_abbreviate_opts};
 
         $section_abbreviate_opts = $data->{section_abbreviate_opts} if exists $data->{section_abbreviate_opts};
-        
-            
 
         return $result;
 

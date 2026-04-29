@@ -28,8 +28,6 @@ use CTSMS::BulkProcessor::LoadConfig qw(
 );
 use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring stringtobool);
 
-#use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
-
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(

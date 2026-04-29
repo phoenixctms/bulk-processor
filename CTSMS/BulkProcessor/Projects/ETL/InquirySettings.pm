@@ -24,6 +24,8 @@ use CTSMS::BulkProcessor::LogError qw(
     fileerror
     configurationwarn
     configurationerror
+    scriptwarn
+    scripterror
 );
 
 use CTSMS::BulkProcessor::LoadConfig qw(
@@ -55,7 +57,6 @@ our @EXPORT_OK = qw(
     $skip_errors
     $timezone
 
-
     $inquiry_trial_id
 
     $active
@@ -71,8 +72,6 @@ our @EXPORT_OK = qw(
     inquiry_data_include_inquiry
     $col_per_selection_set_value
     $selection_set_value_separator
-
-
 
     $inquiry_proband_alias_column_name
     $inquiry_proband_category_column_name
@@ -94,14 +93,11 @@ our $csv_dir = 'inquiry';
 
 our $skip_errors = 0;
 
-
 our $inquiry_trial_id = undef;
 
 our $inquiry_data_api_probands_page_size = 10;
 our $inquiry_data_api_inquiries_page_size = 10;
 our $inquiry_data_api_values_page_size = 10;
-
-
 
 our $inquiry_proband_alias_column_name = 'alias';
 our $inquiry_proband_category_column_name;
@@ -112,14 +108,9 @@ our $ctsms_base_url = undef;
 
 our $lockfile = undef;
 
-
-
 our $timezone = undef;
 
-#my $ecrfname_abbreviate_opts = {};
-
 our $show_page_progress = 0;
-
 
 my $category_abbreviate_opts = {};
 my $inputfieldname_abbreviate_opts = {};
@@ -137,7 +128,6 @@ our %colname_abbreviation = (
     ignore_external_ids => undef,
 
     inquiry_position_digits => 2,
-    #listentrytag_position_digits => 2,
 
     abbreviate_category_code => sub {
         my $category = shift;
@@ -231,8 +221,6 @@ sub update_settings {
 
         $skip_errors = $data->{skip_errors} if exists $data->{skip_errors};
 
-
-
         $inquiry_trial_id = $data->{inquiry_trial_id} if exists $data->{inquiry_trial_id};
         if (defined $inquiry_trial_id and length($inquiry_trial_id) > 0) {
             my $inquiry_trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($inquiry_trial_id);
@@ -251,7 +239,6 @@ sub update_settings {
         $inquiry_data_api_probands_page_size = $data->{inquiry_data_api_probands_page_size} if exists $data->{inquiry_data_api_probands_page_size};
         $inquiry_data_api_inquiries_page_size = $data->{inquiry_data_api_inquiries_page_size} if exists $data->{inquiry_data_api_inquiries_page_size};
         $inquiry_data_api_values_page_size = $data->{inquiry_data_api_values_page_size} if exists $data->{inquiry_data_api_values_page_size};
-
 
         $col_per_selection_set_value = $data->{col_per_selection_set_value} if exists $data->{col_per_selection_set_value};
         $selection_set_value_separator = $data->{selection_set_value_separator} if exists $data->{selection_set_value_separator};
@@ -273,13 +260,11 @@ sub update_settings {
         $lockfile = $data->{lockfile} if exists $data->{lockfile};
 
         $colname_abbreviation{ignore_external_ids} = $data->{ignore_external_ids} if exists $data->{ignore_external_ids};
-        #$ecrfname_abbreviate_opts = $data->{ecrfname_abbreviate_opts} if exists $data->{ecrfname_abbreviate_opts};
         $inputfieldname_abbreviate_opts = $data->{inputfieldname_abbreviate_opts} if exists $data->{inputfieldname_abbreviate_opts};
         $selectionvalue_abbreviate_opts = $data->{selectionvalue_abbreviate_opts} if exists $data->{selectionvalue_abbreviate_opts};
 
         $category_abbreviate_opts = $data->{category_abbreviate_opts} if exists $data->{category_abbreviate_opts};
         
-
         return $result;
 
     }

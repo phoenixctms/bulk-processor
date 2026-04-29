@@ -43,7 +43,6 @@ use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
     get_proband_columns
     update_job
     
-    
 );
 
 use CTSMS::BulkProcessor::Projects::ETL::InquiryExporter::Settings qw(

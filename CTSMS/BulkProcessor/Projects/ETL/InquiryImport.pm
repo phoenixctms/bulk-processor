@@ -37,9 +37,6 @@ use CTSMS::BulkProcessor::Projects::ETL::InquiryImporter::Settings qw(
     $inquiry_values_col_block
     
 );
-#$inquiry_department_nameL10nKey
-#$inquiry_proband_alias_format
-#$inquiry_proband_alias_column_index
 
 use CTSMS::BulkProcessor::Projects::ETL::Job qw(
     update_job
@@ -132,13 +129,11 @@ our @EXPORT_OK = qw(
 
 my @header_row :shared = ();
 my $header_rownum :shared = 0;
-#my $probandlistentrymaxposition :shared = 0;
 my $registration :shared;
 my $warning_count :shared = 0;
 my $value_count :shared = 0;
 
 my $comment_char = '#';
-
 
 sub import_inquiry_data_horizontal {
 
@@ -177,7 +172,6 @@ sub import_inquiry_data_horizontal {
                         next if substr(trim($row->[0]),0,length($comment_char)) eq $comment_char;
                         update_job($PROCESSING_JOB_STATUS,$rownum,$row_offset + $import_inquiry_data_horizontal_blocksize);
                         next unless _set_inquiry_data_horizontal_context($context,$row,$rownum);
-                        #next unless id == $context->{proband}->{id};
                         next unless _clear_inquiries($context);
                         next unless _set_inquiry_values_horizontal($context);
                     }
@@ -329,13 +323,11 @@ sub _init_horizontal_record {
             
             my @columns = grep { exists $header{$_->{colname}}; } @{$context->{all_columns}}; # do not clone columns
     
-            #my %disabled_ecrf_map = ();
             my %disabled_inquiry_map = ();
             my %sketch_inputfield_map = ();
             $context->{columns} = [];
             my $message;
             foreach my $column (@columns) {
-                #next if exists $disabled_ecrf_map{$column->{ecrffield}->{ecrf}->{id}};
                 next if exists $disabled_inquiry_map{$column->{inquiry}->{id}};
                 next if exists $sketch_inputfield_map{$column->{inquiry}->{field}->{id}};
                 if ($column->{inquiry}->{disabled}) {
@@ -359,11 +351,8 @@ sub _init_horizontal_record {
     
             #not $initialized and
             if (my @unknown_colnames = grep { not exists $context->{all_column_map}->{$_}
-                   #and not exists $context->{listentrytag_map}->{$_}
                    and not contains($_,[ get_proband_columns() ])
-                   #and not contains($_,[ get_inquiry_columns() ])
                    and $_ ne 'proband_id'
-                   #and not contains($_,[ get_probandlistentry_columns() ]) # updating these is not implemented (yet)
                    ; } @headerrow) {
                 map { _info($context,"ignoring column '$_'",1); } @unknown_colnames;
                 _warn($context,"ignoring " . (scalar @unknown_colnames) . " columns - " . chopstring(join(', ', @unknown_colnames)));
@@ -371,8 +360,6 @@ sub _init_horizontal_record {
     
             ($context->{column_map}, $keys, $values) = array_to_map($context->{columns},
                 sub { my $item = shift; return $item->{colname}; },undef,'first');
-    
-            #delete @{$context->{listentrytag_map}}{grep { not exists $context->{listentrytag_map}->{$_}; } @headerrow};
     
         }
     }
@@ -387,14 +374,8 @@ sub _set_inquiry_values_horizontal {
 
     my $result = 1;
 
-    #undef $context->{section_maxindex_map};
     undef $context->{in};
     $context->{skip_columns} = {};
-    #$context->{last_ecrf} = undef;
-    #$context->{last_visit} = undef;
-    #$context->{last_section} = undef;
-    #$context->{last_series} = undef;
-    #$context->{last_index} = undef;
 
     $context->{inquiry_value_stats} = {
         total => 0,
@@ -402,53 +383,17 @@ sub _set_inquiry_values_horizontal {
         updated => 0,
     };
 
-    #my $last_ecrf;
-    #my $last_visit;
-    #my $last_section;
-    #my $last_series;
-    #my $last_index;
-
-    #my $last_ecrf_label;
-    #my $last_ecrf_section_label;
-
     foreach my $colname (map { $_->{colname}; } @{$context->{columns}}) {
-
-        #unless ($context->{all_column_map}->{$colname}->{ecrffield}->{field}->{nameL10nKey} eq 'field name'
-        #    and $context->{all_column_map}->{$colname}->{ecrffield}->{ecrf}->{name} eq 'ecrf name'
-        #    and $context->{all_column_map}->{$colname}->{ecrffield}->{section} eq 'section') {
-        #    next;
-        #}
 
         $result &= _append_inquiryvalue_in($context,$colname,$context->{record}->{$colname});
 
-
-        # save on next eCRF or visit or section or section index:
-        #if (defined $last_ecrf and (
-        #        $last_ecrf->{id} != $context->{last_ecrf}->{id}
-        #        or ($last_visit ? $last_visit->{id} : '') ne ($context->{last_visit} ? $context->{last_visit}->{id} : '')
-        #        or ($last_section // '') ne ($context->{last_section} // '')
-        #        or ($last_index // '') ne ($context->{last_index} // '')
-        #    )) {
-        #    my $last_in = pop(@{$context->{in}});
-        #    $result &= _save_ecrf_values($context,$last_ecrf_section_label);
-        #    push(@{$context->{in}},$last_in) if $last_in;
-        #    _log_ecrf_values_count($context,$last_ecrf_label) if ($last_ecrf->{id} != $context->{last_ecrf}->{id})
-        #}
         # save next chunk if full unless it's a new index section:
         if ($inquiry_values_col_block > 0
             and (scalar @{$context->{in}}) >= $inquiry_values_col_block
-            #and (not $context->{last_series} or
-            #     $context->{last_index} <= (_get_ecrf_section_maxindex($context) // -1))
             ) {
             $result &= _save_inquiry_values($context);
         }
-        #$last_ecrf = $context->{last_ecrf};
-        #$last_visit = $context->{last_visit};
-        #$last_section = $context->{last_section};
-        #$last_series = $context->{last_series};
-        #$last_index = $context->{last_index};
-        #$last_ecrf_label = _get_last_ecrf_label($context,0);
-        #$last_ecrf_section_label = _get_last_ecrf_label($context,1);
+
     }
 
     $result &= _save_inquiry_values($context);
@@ -479,25 +424,7 @@ sub _clear_inquiries {
 
         $context->{clear_map}->{$proband_id} = {};
         foreach my $column (@$columns) {
-            #$context->{clear_map}->{$listentry_id} //= {};
-
-            #next unless _get_ecrffieldvalue_editable($context,$column->{colname});
-
-            #my $ecrf_id = $column->{ecrffield}->{ecrf}->{id};
-            #$context->{clear_map}->{$proband_id} //= {};
             my $category_map = $context->{clear_map}->{$proband_id};
-
-            #my $visit_id = undef;
-            #$visit_id = $column->{visit}->{id} if $column->{visit};
-            #if (defined $visit_id) {
-            #    $context->{clear_map}->{$listentry_id}->{$ecrf_id}->{$visit_id} //= {};
-            #    $section_map = $context->{clear_map}->{$listentry_id}->{$ecrf_id}->{$visit_id};
-            #    next if ($context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id}->{$visit_id}->{status}
-            #        and $context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id}->{$visit_id}->{status}->{valueLockdown});
-            #} else {
-            #    next if ($context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id}->{status}
-            #        and $context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id}->{status}->{valueLockdown});
-            #}
 
             my $category = ($column->{inquiry}->{category} // '');
             unless (exists $category_map->{$category}) {
@@ -546,7 +473,7 @@ sub _register_proband {
         delete $record{proband_id};
     } elsif (defined $alias) {
         $result = append_probandalias_criterion($context,$alias,$inquiry_proband_department_column_name);
-        delete $record{$alias};
+        delete $record{$inquiry_proband_department_column_name};
     }
 
     unless (scalar grep { length(trim($_)) > 0; } values %record) {
@@ -557,8 +484,6 @@ sub _register_proband {
         if (scalar @{$context->{criterions}}) { # requires at least one proband list attribute of supported field type ...
             lock $registration;
             my $probands = undef;
-            #my $set_listentrytag_values = 0;
-            #my $proband_created = 0;
             eval {
                 $probands = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::search({
                     module => $CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::DBModule::PROBAND_DB,
@@ -590,7 +515,6 @@ sub _register_proband {
                     _warn_or_error($context,"alias required to create proband");
                     $result = 0;
                 }
-                #$set_listentrytag_values = 1;
             } elsif ((scalar @$probands) > 1) {
                 _warn_or_error($context,"more than one proband found");
                 $result = 0;
@@ -602,7 +526,6 @@ sub _register_proband {
                 } else {
                     _info($context,"proband " . $context->{proband}->alias . " found");
                 }
-                #$set_listentrytag_values = $update_listentrytag_values if (defined $id or defined $alias);
             }
 
             if ($context->{proband} and $context->{proband}->locked) {
@@ -619,8 +542,6 @@ sub _register_proband {
     return $result;
 }
 
-
-
 sub _get_inquiryvalue_in {
     my ($context,$colname,$value,$contains_code) = @_;
 
@@ -631,19 +552,13 @@ sub _get_inquiryvalue_in {
     my $column;
     $column = $context->{column_map}->{$colname} if $colname;
 
-    
     if ($column) {
 
         my $inquiry = $column->{inquiry};
         
         return (undef, 1) if exists $context->{skip_columns}->{$colname};
-        #return (undef, 1) if $ecrffield->{series} and get_section_blank($context,$column);
-        #return (undef, 1) unless _get_inquiryvalue_editable($context,$colname);
 
         my $inquiry_id = $inquiry->{id};
-        #my $visit_id = undef;
-        #$visit_id = $column->{visit}->{id} if $column->{visit};
-        #my $index = $column->{index};
 
         my %in = (
             inquiryId => $inquiry_id,
@@ -652,16 +567,12 @@ sub _get_inquiryvalue_in {
         my $old_value = undef;
         unless ($clear_categories or $clear_all_categories) {
             eval {
-                $old_value = CTSMS::BulkProcessor::RestRequests::ctsms::trial::ProbandService::InquiryValues::get_item($proband_id, $inquiry_id)->{rows}->[0];
+                $old_value = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::get_item($proband_id, $inquiry_id)->{rows}->[0];
             };
             if ($@) {
                 my $error_code = get_ctsms_restapi_last_error();
-                #if (contains($error_code, [ qw(ecrf_field_value_index_gap ecrf_field_value_index_not_zero) ])) {
-                #    _info($context,"error loading old eCRF field value: " . $@,1);
-                #} else {
-                    _warn($context,"error loading old eCRF field value: " . $@);
-                    return (undef,0);
-                #}
+                _warn($context,"error loading old inquiry value: " . $@);
+                return (undef,0);
             } elsif (defined $old_value) {
                 if ($old_value->{id}) {
                     $in{id} = $old_value->{id};
@@ -671,7 +582,6 @@ sub _get_inquiryvalue_in {
                 }
             }
         }
-        #return (undef, 1) unless _get_ecrffieldvalue_editable($context,$colname,$old_value);
         $value = mark_utf8($value);
         my $field_type = $inquiry->{field}->{fieldType}->{type};
         if ($inquiry->{field}->is_select() and $field_type ne $SKETCH) {
@@ -694,7 +604,6 @@ sub _get_inquiryvalue_in {
                             push(@{$in{selectionValueIds}},$column->{selection_set_value}->{id});
                         }
                     }
-
                 }
             } else {
                 eval {
@@ -742,11 +651,6 @@ sub _append_inquiryvalue_in {
         push(@{$context->{in}},$in);
         if ($result) {
             my $column = $context->{column_map}->{$colname};
-            #$context->{last_ecrf} = $column->{ecrffield}->{ecrf};
-            #$context->{last_visit} = $column->{visit};
-            #$context->{last_section} = $column->{ecrffield}->{section};
-            #$context->{last_series} = $column->{ecrffield}->{series};
-            #$context->{last_index} = $column->{index};
         }
     }
     return $result;
@@ -783,7 +687,6 @@ sub _save_inquiry_values {
             return ($out_row->{proband}->{id} . '-' . $out_row->{inquiry}->{id});
         });
     $context->{in} = [];
-    #$ecrf_section_label //= _get_last_ecrf_label($context,1);
     if ($@) {
         _warn_or_error($context,"error saving inquiry values: " . $@);
         $result = 0;

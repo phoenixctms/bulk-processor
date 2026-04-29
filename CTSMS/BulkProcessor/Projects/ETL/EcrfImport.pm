@@ -46,9 +46,6 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfImporter::Settings qw(
     
     get_ecrf_columns
 );
-#$ecrf_department_nameL10nKey
-#$ecrf_proband_alias_format
-#$ecrf_proband_alias_column_index
 
 use CTSMS::BulkProcessor::Projects::ETL::Job qw(
     update_job
@@ -94,8 +91,6 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Inpu
 
     $AUTOCOMPLETE
 );
-
-
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job qw(
     $PROCESSING_JOB_STATUS
@@ -147,14 +142,12 @@ our @EXPORT_OK = qw(
 
 my @header_row :shared = ();
 my $header_rownum :shared = 0;
-#my $probandlistentrymaxposition :shared = 0;
+
 my $registration :shared;
 my $warning_count :shared = 0;
 my $value_count :shared = 0;
 
 my $comment_char = '#';
-
-
 
 sub import_ecrf_data_horizontal {
 
@@ -193,7 +186,6 @@ sub import_ecrf_data_horizontal {
                         next if substr(trim($row->[0]),0,length($comment_char)) eq $comment_char;
                         update_job($PROCESSING_JOB_STATUS,$rownum,$row_offset + $import_ecrf_data_horizontal_blocksize);
                         next unless _set_ecrf_data_horizontal_context($context,$row,$rownum);
-                        #next unless id == $context->{proband}->{id};
                         _load_ecrf_status($context);
                         next unless _clear_ecrf($context);
                         next unless _set_ecrf_values_horizontal($context);
@@ -506,7 +498,6 @@ sub _set_ecrf_values_horizontal {
 
         $result &= _append_ecrffieldvalue_in($context,$colname,$context->{record}->{$colname});
 
-
         # save on next eCRF or visit or section or section index:
         if (defined $last_ecrf and (
                 $last_ecrf->{id} != $context->{last_ecrf}->{id}
@@ -689,7 +680,7 @@ sub _register_proband {
         delete $record{proband_id};
     } elsif (defined $alias) {
         $result = append_probandalias_criterion($context,$alias,$ecrf_proband_department_column_name);
-        delete $record{$alias};
+        delete $record{$ecrf_proband_department_column_name};
     } elsif (scalar keys %{$context->{listentrytag_map}}) {
         # otherwise use proband list entry tags if specified:
         my $blank = 1;
@@ -978,8 +969,7 @@ sub _get_ecrffieldvalue_in {
 
     my $column;
     $column = $context->{column_map}->{$colname} if $colname;
-
-    
+   
     if ($column) {
 
         my $ecrffield = $column->{ecrffield};
@@ -1179,8 +1169,6 @@ sub _set_listentrytag_values {
 
     _save_listentrytag_values($context);
 
-    #return $result;
-
 }
 
 sub _append_listentrytagvalue_in {
@@ -1315,7 +1303,7 @@ sub _save_listentrytag_values {
     eval {
         $out = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValues::set_probandlistentrytagvalues($context->{in},undef,$timezone);
     };
-    my $stats = _get_values_stats($context,$out,sub {
+    my $stats = get_values_stats($context,$out,sub {
             my $in_row = shift;
             return ($in_row->{listEntryId} . '-' . $in_row->{tagId});
         },sub {
