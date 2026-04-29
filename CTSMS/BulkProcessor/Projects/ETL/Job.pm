@@ -95,6 +95,7 @@ sub update_job {
     my ($status,$progress,$progress_max) = @_;
     lock %job;
     if (keys %job) {
+        $progress = $progress_max if (defined $progress and defined $progress_max and $progress > $progress_max);
         my $in = {
             id => $job{id},
             version => $job{version},

@@ -18,7 +18,7 @@ use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
     $skip_errors
     $timezone
     $ctsms_base_url
-    $inquiry_data_trial_id
+    $inquiry_trial_id
     $lockfile
     $input_path
 );
@@ -132,7 +132,7 @@ sub init {
         "task=s" => $tasks,
         "skip-errors" => \$skip_errors,
         "force" => \$force,
-        "id=i" => \$inquiry_data_trial_id,
+        "id=i" => \$inquiry_trial_id,
         "jid=i" => \$job_id,
         "auth=s" => \$auth,
         "upload" => \$upload_files,
@@ -171,7 +171,7 @@ sub main {
     my $completion = 0;
 
     update_job($PROCESSING_JOB_STATUS);
-    return 0 unless checkrunning(sprintf($lockfile,$inquiry_data_trial_id),sub {
+    return 0 unless checkrunning(sprintf($lockfile,$inquiry_trial_id),sub {
         scriptwarn(@_);
         update_job($FAILED_JOB_STATUS);
         return 0;
@@ -222,7 +222,7 @@ sub main {
     $cli = 1;
     if ($result and $completion) {
         if ($upload_files) {
-            push(@messages,"Visit $ctsms_base_url/trial/trial.jsf?trialid=$inquiry_data_trial_id to download files.");
+            push(@messages,"Visit $ctsms_base_url/trial/trial.jsf?trialid=$inquiry_trial_id to download files.");
         }
         completion(join("\n\n",@messages),\@attachmentfiles,getlogger(getscriptpath()));
         update_job($OK_JOB_STATUS);
@@ -238,9 +238,9 @@ sub main {
 }
 
 sub taskinfo {
-    my ($task,$result_ref,$inquiry_data_trial_id_required) = @_;
+    my ($task,$result_ref,$inquiry_trial_id_required) = @_;
     scriptinfo($$result_ref ? "starting task: '$task'" : "skipping task '$task' due to previous problems",getlogger(getscriptpath()));
-    if ($inquiry_data_trial_id_required and (not defined $inquiry_data_trial_id or length($inquiry_data_trial_id) == 0)) {
+    if ($inquiry_trial_id_required and (not defined $inquiry_trial_id or length($inquiry_trial_id) == 0)) {
         scripterror("trial id required",getlogger(getscriptpath()));
         $$result_ref = 0;
     }

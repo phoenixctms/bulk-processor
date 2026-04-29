@@ -23,9 +23,7 @@ use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
     $active
     $active_signup
 
-    $inquiry_data_truncate_table
-    $inquiry_data_ignore_duplicates
-    $inquiry_data_trial_id
+    $inquiry_trial_id
 
     $inquiry_data_api_probands_page_size
     $inquiry_data_api_inquiries_page_size
@@ -36,6 +34,23 @@ use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
     $col_per_selection_set_value
     $selection_set_value_separator
 
+    $skip_errors
+    $timezone
+    
+    $publish_public_file
+    $show_page_progress
+
+    get_proband_columns
+    update_job
+    
+    
+);
+
+use CTSMS::BulkProcessor::Projects::ETL::InquiryExporter::Settings qw(
+
+    $inquiry_data_truncate_table
+    $inquiry_data_ignore_duplicates
+
     $inquiry_data_export_upload_folder
     $inquiry_data_export_sqlite_filename
     $inquiry_data_export_horizontal_csv_filename
@@ -44,21 +59,16 @@ use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
 
     $inquiry_data_export_pdfs_filename
 
-    $skip_errors
-    $timezone
-    
-    $publish_public_file
-
-    get_proband_columns
-    update_job
-);
-
-use CTSMS::BulkProcessor::Projects::ETL::InquiryExporter::Settings qw(
     $inquiry_data_row_block
 );
 
 use CTSMS::BulkProcessor::Projects::ETL::Job qw(
     update_job
+);
+
+use CTSMS::BulkProcessor::Projects::ETL::Ecrf qw(
+    get_horizontal_cols
+    get_category_map
 );
 
 use CTSMS::BulkProcessor::Logging qw (
@@ -113,9 +123,6 @@ our @EXPORT_OK = qw(
     publish_inquiry_data_xls
     publish_inquiry_data_pdfs
 );
-
-my $show_page_progress = 0;
-my $max_colname_length_warn = 64;
 
 my $pdfextension = '.pdf';
 my $pdfmimetype = 'application/pdf';
@@ -188,7 +195,7 @@ sub _get_file_in {
         "active" => \0,
         "publicFile" => ($publish_public_file ? \1 : \0),
         "comment" => $system_name . ' ' . $system_version . ' (' . $system_instance_label . ') [' . $local_fqdn . ']',
-        "trialId" => $inquiry_data_trial_id,
+        "trialId" => $inquiry_trial_id,
         "module" => $CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::TRIAL_FILE_MODULE,
         "logicalPath" => $inquiry_data_export_upload_folder  . $subfolder,
         "title" => $title,
@@ -236,9 +243,9 @@ sub _init_inquiry_data_vertical_context {
     my ($context) = @_;
 
     my $result = 1;
-    $context->{inquiry_data_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($inquiry_data_trial_id);
+    $context->{inquiry_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($inquiry_trial_id);
 
-    $context->{inquirymaxselectionsetvaluecount} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_inquirymaxselectionsetvaluecount($context->{inquiry_data_trial}->{id});
+    $context->{inquirymaxselectionsetvaluecount} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_inquirymaxselectionsetvaluecount($context->{inquiry_trial}->{id});
     _info($context,"max number of selection set values: $context->{inquirymaxselectionsetvaluecount}",0);
 
     $context->{error_count} = 0;
@@ -269,7 +276,7 @@ NEXT_PROBAND:
 
             my $first = $context->{api_probands_page_num} * $inquiry_data_api_probands_page_size;
             _info($context,"fetch probands page: " . $first . '-' . ($first + $inquiry_data_api_probands_page_size) . ' of ' . (defined $context->{api_probands_page_total_count} ? $context->{api_probands_page_total_count} : '?'),not $show_page_progress);
-            $context->{api_probands_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::get_inquiry_proband_list($context->{inquiry_data_trial}->{id}, $active, $active_signup, $p, $sf);
+            $context->{api_probands_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::get_inquiry_proband_list($context->{inquiry_trial}->{id}, $active, $active_signup, $p, $sf);
             $context->{api_probands_page_total_count} = $p->{total_count};
             $context->{api_probands_page_num} += 1;
         }
@@ -290,7 +297,7 @@ NEXT_PROBAND:
             my $first = $context->{api_values_page_num} * $inquiry_data_api_values_page_size;
             _info($context,"fetch inquiry values page: " . $first . '-' . ($first + $inquiry_data_api_values_page_size) . ' of ' . (defined $context->{api_values_page_total_count} ? $context->{api_values_page_total_count} : '?'),not $show_page_progress);
             eval {
-                $context->{api_values_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::get_inquiryvalues($context->{proband}->{id},$context->{inquiry_data_trial}->{id},$active,$active_signup,1,0,$timezone,$p, $sf, { _value => 1, _selectionValueMap => 1 })->{rows};
+                $context->{api_values_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::get_inquiryvalues($context->{proband}->{id},$context->{inquiry_trial}->{id},$active,$active_signup,1,0,$timezone,$p, $sf, { _value => 1, _selectionValueMap => 1 })->{rows};
             };
             if ($@) {
                 $context->{api_values_page} = [];
@@ -396,8 +403,8 @@ sub export_inquiry_data_horizontal {
     my $result = _init_inquiry_data_horizontal_context($context);
 
     # create tables:
-    $result = CTSMS::BulkProcessor::Projects::ETL::Dao::InquiryDataHorizontal::create_table($inquiry_data_truncate_table,$context->{columns}) if $result;
-
+    $result = CTSMS::BulkProcessor::Projects::ETL::Dao::InquiryDataHorizontal::create_table($inquiry_data_truncate_table,
+        [ map { $_->{colname}; } @{$context->{columns}} ]) if $result;
 
     $result = _export_items($context) if $result;
     undef $context->{db};
@@ -410,7 +417,7 @@ sub _init_inquiry_data_pdfs_context {
     my ($context) = @_;
 
     my $result = 1;
-    $context->{inquiry_data_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($inquiry_data_trial_id);
+    $context->{inquiry_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($inquiry_trial_id);
 
     $context->{error_count} = 0;
     $context->{warning_count} = 0;
@@ -456,7 +463,7 @@ sub _init_inquiry_data_pdfs_context {
             #$sf->{fileName} = $dialysis_substitution_volume_file_pattern if defined $dialysis_substitution_volume_file_pattern;
             my $first = $context->{api_probands_page_num} * $inquiry_data_api_probands_page_size;
             _info($context,"fetch probands page: " . $first . '-' . ($first + $inquiry_data_api_probands_page_size) . ' of ' . (defined $context->{api_probands_page_total_count} ? $context->{api_probands_page_total_count} : '?'),not $show_page_progress);
-            $context->{api_probands_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::get_inquiry_proband_list($context->{inquiry_data_trial}->{id}, $active, $active_signup, $p, $sf);
+            $context->{api_probands_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::get_inquiry_proband_list($context->{inquiry_trial}->{id}, $active, $active_signup, $p, $sf);
             $context->{api_probands_page_total_count} = $p->{total_count};
             $context->{api_probands_page_num} += 1;
         }
@@ -464,7 +471,7 @@ sub _init_inquiry_data_pdfs_context {
         if (defined $context->{proband}) {
             return CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::render_inquiries(
                 $context->{proband}->{id},
-                $context->{inquiry_data_trial}->{id},
+                $context->{inquiry_trial}->{id},
                 $active,
                 $active_signup,
                 0,
@@ -481,10 +488,10 @@ sub _init_inquiry_data_horizontal_context {
     my ($context) = @_;
 
     my $result = 1;
-    $context->{inquiry_data_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($inquiry_data_trial_id);
+    $context->{inquiry_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($inquiry_trial_id);
 
-    $context->{category_map} = _get_category_map($context);
-    $context->{columns} = _get_horizontal_cols($context);
+    $context->{category_map} = get_category_map($context);
+    $context->{columns} = get_horizontal_cols($context);
 
     $context->{error_count} = 0;
     $context->{warning_count} = 0;
@@ -507,7 +514,7 @@ sub _init_inquiry_data_horizontal_context {
 
             my $first = $context->{api_probands_page_num} * $inquiry_data_api_probands_page_size;
             _info($context,"fetch probands page: " . $first . '-' . ($first + $inquiry_data_api_probands_page_size) . ' of ' . (defined $context->{api_probands_page_total_count} ? $context->{api_probands_page_total_count} : '?'),not $show_page_progress);
-            $context->{api_probands_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::get_inquiry_proband_list($context->{inquiry_data_trial}->{id}, $active, $active_signup, $p, $sf);
+            $context->{api_probands_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::get_inquiry_proband_list($context->{inquiry_trial}->{id}, $active, $active_signup, $p, $sf);
             $context->{api_probands_page_total_count} = $p->{total_count};
             $context->{api_probands_page_num} += 1;
         }
@@ -560,7 +567,7 @@ sub _inquiry_data_horizontal_items_to_row {
         }
     }
 
-    foreach my $colname (@{$context->{columns}}) {
+    foreach my $colname (map { $_->{colname}; } @{$context->{columns}}) {
         push(@row,(exists $value_map{$colname} ? $value_map{$colname} : undef));
     }
 
@@ -590,71 +597,6 @@ sub _insert_inquiry_data_horizontal_rows {
     return $result;
 }
 
-sub _get_horizontal_cols {
-    my ($context) = @_;
-    my @columns = ();
-    foreach my $category (keys %{$context->{category_map}}) {
-        foreach my $inquiry (@{$context->{category_map}->{$category}}) {
-            push(@columns,CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Inquiry::get_colnames(
-                inquiry => $inquiry,
-
-                col_per_selection_set_value => $col_per_selection_set_value,
-                %colname_abbreviation,
-            ));
-        }
-    }
-
-    my $max_colname_length = 0;
-    my %dupe_map = ();
-    foreach my $colname (@columns) {
-        my $length = length($colname);
-        _warn($context,"$colname length: $length") if $length > $max_colname_length_warn;
-        $max_colname_length = length($colname) if $length > $max_colname_length;
-        _warn($context,"duplicate column name: $colname") if exists $dupe_map{$colname};
-        $dupe_map{$colname} = 1;
-    }
-    _info($context,(scalar @columns) . " columns, max column name length: $max_colname_length",0);
-    return \@columns;
-}
-
-sub _get_category_map {
-    my ($context) = @_;
-
-        my %category_map = ();
-        tie(%category_map, 'Tie::IxHash',
-        );
-        array_to_map(_get_inquiries($context),sub {
-            my $item = shift;
-            return $item->{category};
-        },undef,'group',\%category_map);
-        return \%category_map;
-
-}
-
-sub _get_inquiries {
-    my ($context) = @_;
-    my $api_inquiries_page = [];
-    my $api_inquiries_page_num = 0;
-    my $api_inquiries_page_total_count;
-    my @inquiries;
-    while (1) {
-        if ((scalar @$api_inquiries_page) == 0) {
-            my $p = { page_size => $inquiry_data_api_inquiries_page_size , page_num => $api_inquiries_page_num + 1, total_count => undef };
-            my $sf = {};
-
-            my $first = $api_inquiries_page_num * $inquiry_data_api_inquiries_page_size;
-            _info($context,"fetch inquiries page: " . $first . '-' . ($first + $inquiry_data_api_inquiries_page_size) . ' of ' . (defined $api_inquiries_page_total_count ? $api_inquiries_page_total_count : '?'),not $show_page_progress);
-            $api_inquiries_page = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Inquiry::get_trial_list($context->{inquiry_data_trial}->{id}, $active, $active_signup, 1, $p, $sf, { _selectionSetValueMap => 1 });
-            $api_inquiries_page_total_count = $p->{total_count};
-            $api_inquiries_page_num += 1;
-        }
-        my $inquiry = shift @$api_inquiries_page;
-        last unless $inquiry;
-        push(@inquiries,$inquiry) if inquiry_data_include_inquiry($inquiry);
-    }
-    return \@inquiries;
-}
-
 sub _get_inquiryvalues {
     my ($context) = @_;
     my @values;
@@ -671,7 +613,7 @@ sub _get_inquiryvalues {
             my $first = $api_values_page_num * $inquiry_data_api_values_page_size;
             _info($context,"fetch inquiry values page: " . $first . '-' . ($first + $inquiry_data_api_values_page_size) . ' of ' . (defined $api_values_page_total_count ? $api_values_page_total_count : '?'),not $show_page_progress);
             eval {
-                $api_values_page = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::get_inquiryvalues($context->{proband}->{id},$context->{inquiry_data_trial}->{id},$active,$active_signup, 1, 0,$timezone,$p, $sf, { _value => 1, _selectionValueMap => 1 })->{rows};
+                $api_values_page = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::get_inquiryvalues($context->{proband}->{id},$context->{inquiry_trial}->{id},$active,$active_signup, 1, 0,$timezone,$p, $sf, { _value => 1, _selectionValueMap => 1 })->{rows};
             };
             if ($@) {
                $api_values_page = [];

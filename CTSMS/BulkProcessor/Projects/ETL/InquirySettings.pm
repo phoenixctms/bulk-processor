@@ -36,7 +36,7 @@ use CTSMS::BulkProcessor::ConnectorPool qw(
 
 );
 
-use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring stringtobool);
+use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring );
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 
@@ -55,16 +55,12 @@ our @EXPORT_OK = qw(
     $skip_errors
     $timezone
 
-    $inquiry_data_truncate_table
-    $inquiry_data_ignore_duplicates
-    $inquiry_data_trial_id
+
+    $inquiry_trial_id
 
     $active
     $active_signup
 
-    $inquiry_data_truncate_table
-    $inquiry_data_ignore_duplicates
-    $inquiry_data_trial_id
 
     $inquiry_data_api_probands_page_size
     $inquiry_data_api_inquiries_page_size
@@ -76,13 +72,7 @@ our @EXPORT_OK = qw(
     $col_per_selection_set_value
     $selection_set_value_separator
 
-    $inquiry_data_export_upload_folder
-    $inquiry_data_export_sqlite_filename
-    $inquiry_data_export_horizontal_csv_filename
-    $inquiry_data_export_xls_filename
-    $inquiry_data_export_xlsx
 
-    $inquiry_data_export_pdfs_filename
 
     $inquiry_proband_alias_column_name
     $inquiry_proband_category_column_name
@@ -93,7 +83,7 @@ our @EXPORT_OK = qw(
 
     $lockfile
 
-    $publish_public_file
+    $show_page_progress
 );
 
 our $input_path = $working_path . 'input/';
@@ -104,19 +94,14 @@ our $csv_dir = 'inquiry';
 
 our $skip_errors = 0;
 
-our $inquiry_data_truncate_table = 1;
-our $inquiry_data_ignore_duplicates = 0;
-our $inquiry_data_trial_id = undef;
+
+our $inquiry_trial_id = undef;
 
 our $inquiry_data_api_probands_page_size = 10;
 our $inquiry_data_api_inquiries_page_size = 10;
 our $inquiry_data_api_values_page_size = 10;
 
-our $inquiry_data_export_upload_folder = '';
-our $inquiry_data_export_sqlite_filename = '%s%s';
-our $inquiry_data_export_horizontal_csv_filename = '%s%s';
-our $inquiry_data_export_xls_filename = '%s%s';
-our $inquiry_data_export_xlsx = 0;
+
 
 our $inquiry_proband_alias_column_name = 'alias';
 our $inquiry_proband_category_column_name;
@@ -127,13 +112,14 @@ our $ctsms_base_url = undef;
 
 our $lockfile = undef;
 
-our $inquiry_data_export_pdfs_filename = '%s_%s%s';
+
 
 our $timezone = undef;
 
 #my $ecrfname_abbreviate_opts = {};
 
-our $publish_public_file = 0;
+our $show_page_progress = 0;
+
 
 my $category_abbreviate_opts = {};
 my $inputfieldname_abbreviate_opts = {};
@@ -245,16 +231,15 @@ sub update_settings {
 
         $skip_errors = $data->{skip_errors} if exists $data->{skip_errors};
 
-        $inquiry_data_truncate_table = $data->{inquiry_data_truncate_table} if exists $data->{inquiry_data_truncate_table};
-        $inquiry_data_ignore_duplicates = $data->{inquiry_data_ignore_duplicates} if exists $data->{inquiry_data_ignore_duplicates};
 
-        $inquiry_data_trial_id = $data->{inquiry_data_trial_id} if exists $data->{inquiry_data_trial_id};
-        if (defined $inquiry_data_trial_id and length($inquiry_data_trial_id) > 0) {
-            my $inquiry_data_trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($inquiry_data_trial_id);
-            if (defined $inquiry_data_trial) {
-                scriptinfo("trial '$inquiry_data_trial->{name}'",getlogger(__PACKAGE__));
+
+        $inquiry_trial_id = $data->{inquiry_trial_id} if exists $data->{inquiry_trial_id};
+        if (defined $inquiry_trial_id and length($inquiry_trial_id) > 0) {
+            my $inquiry_trial = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($inquiry_trial_id);
+            if (defined $inquiry_trial) {
+                scriptinfo("trial '$inquiry_trial->{name}'",getlogger(__PACKAGE__));
             } else {
-                scripterror("error loading trial id $inquiry_data_trial_id",getlogger(__PACKAGE__));
+                scripterror("error loading trial id $inquiry_trial_id",getlogger(__PACKAGE__));
             }
         }
 
@@ -267,12 +252,6 @@ sub update_settings {
         $inquiry_data_api_inquiries_page_size = $data->{inquiry_data_api_inquiries_page_size} if exists $data->{inquiry_data_api_inquiries_page_size};
         $inquiry_data_api_values_page_size = $data->{inquiry_data_api_values_page_size} if exists $data->{inquiry_data_api_values_page_size};
 
-        $inquiry_data_export_upload_folder = $data->{inquiry_data_export_upload_folder} if exists $data->{inquiry_data_export_upload_folder};
-
-        $inquiry_data_export_sqlite_filename = $data->{inquiry_data_export_sqlite_filename} if exists $data->{inquiry_data_export_sqlite_filename};
-        $inquiry_data_export_horizontal_csv_filename = $data->{inquiry_data_export_horizontal_csv_filename} if exists $data->{inquiry_data_export_horizontal_csv_filename};
-        $inquiry_data_export_xls_filename = $data->{inquiry_data_export_xls_filename} if exists $data->{inquiry_data_export_xls_filename};
-        $inquiry_data_export_xlsx = $data->{inquiry_data_export_xlsx} if exists $data->{inquiry_data_export_xlsx};
 
         $col_per_selection_set_value = $data->{col_per_selection_set_value} if exists $data->{col_per_selection_set_value};
         $selection_set_value_separator = $data->{selection_set_value_separator} if exists $data->{selection_set_value_separator};
@@ -293,8 +272,6 @@ sub update_settings {
 
         $lockfile = $data->{lockfile} if exists $data->{lockfile};
 
-        $inquiry_data_export_pdfs_filename = $data->{inquiry_data_export_pdfs_filename} if exists $data->{inquiry_data_export_pdfs_filename};
-
         $colname_abbreviation{ignore_external_ids} = $data->{ignore_external_ids} if exists $data->{ignore_external_ids};
         #$ecrfname_abbreviate_opts = $data->{ecrfname_abbreviate_opts} if exists $data->{ecrfname_abbreviate_opts};
         $inputfieldname_abbreviate_opts = $data->{inputfieldname_abbreviate_opts} if exists $data->{inputfieldname_abbreviate_opts};
@@ -302,7 +279,6 @@ sub update_settings {
 
         $category_abbreviate_opts = $data->{category_abbreviate_opts} if exists $data->{category_abbreviate_opts};
         
-        $publish_public_file = stringtobool($data->{publish_public_file}) if exists $data->{publish_public_file};
 
         return $result;
 
