@@ -322,14 +322,19 @@ sub _init_horizontal_record {
     my $initialized = 0;
     if ($header_rownum > 0) {
         $context->{record} = {};
-        my $i = 0;
-        foreach my $val (@$row) {
-            if (length(trim($header_row[$i]))) {
-                $context->{record}->{$header_row[$i]} = $val;
-                push(@headerrow,$header_row[$i]);
-            }
-            $i++;
+        for (my $i = 0; $i < scalar(@header_row); $i++) {
+            my $val = $row->[$i];
+            $context->{record}->{$header_row[$i]} = $val;
+            push(@headerrow,$header_row[$i]);
         }
+        #my $i = 0;
+        #foreach my $val (@$row) {
+        #    if (length(trim($header_row[$i]))) {
+        #        $context->{record}->{$header_row[$i]} = $val;
+        #        push(@headerrow,$header_row[$i]);
+        #    }
+        #    $i++;
+        #}
         $initialized = 1;
     } else {
         $context->{record} = undef;
@@ -707,7 +712,8 @@ sub _register_proband {
     #    $result = 0;
     }
 
-    unless (scalar grep { length(trim($_)) > 0; } values %record) {
+    my @vals = map { $context->{record}->{$_->{colname}} } @{$context->{columns}};
+    unless (scalar grep { defined($_) and length(trim($_)) > 0; } @vals) {
         $result = 0; #no ecrf data to save
     }
     
