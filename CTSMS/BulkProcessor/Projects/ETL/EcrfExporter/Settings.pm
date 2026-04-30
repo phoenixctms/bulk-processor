@@ -26,9 +26,7 @@ use CTSMS::BulkProcessor::LoadConfig qw(
     split_tuple
     parse_regexp
 );
-use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring);
-
-#use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
+use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring stringtobool);
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -58,6 +56,9 @@ our @EXPORT_OK = qw(
 
     $proband_list_filename
     $ecrf_data_row_block
+    
+    $publish_public_file
+
 );
 
 our $defaultconfig = 'config.cfg';
@@ -82,6 +83,8 @@ our $ecrf_data_export_pdf_filename = '%s%s';
 our $ecrf_data_export_pdfs_filename = '%s_%s%s';
 
 our $proband_list_filename = '%s_%s%s';
+
+our $publish_public_file = 0;
 
 our $ecrf_data_row_block = 100;
 
@@ -113,6 +116,8 @@ sub update_settings {
         $ecrfs_export_xls_filename = $data->{ecrfs_export_xls_filename} if exists $data->{ecrfs_export_xls_filename};
 
         $ecrf_data_row_block = $data->{ecrf_data_row_block} if exists $data->{ecrf_data_row_block};
+        
+        $publish_public_file = stringtobool($data->{publish_public_file}) if exists $data->{publish_public_file};        
 
         return $result;
 

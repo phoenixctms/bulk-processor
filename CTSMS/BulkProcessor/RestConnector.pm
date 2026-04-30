@@ -200,7 +200,6 @@ sub _get_request_uri {
         $path_query = '';
     }
     if (defined $self->{path} and length($self->{path}) > 0) {
-
         $path_query =~ s!^/!!;
         $path_query = $self->{path} . $path_query;
     }

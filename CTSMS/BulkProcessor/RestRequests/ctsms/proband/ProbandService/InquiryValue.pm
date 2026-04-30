@@ -39,13 +39,20 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::RestItem);
 our @EXPORT_OK = qw(
     get_item
     get_item_path
-
+    clear
 );
 
 my $default_restapi = \&get_ctsms_restapi;
 my $get_item_path_query = sub {
     my ($id) = @_;
     return 'inquiryvalue/' . $id;
+};
+my $get_clear_path_query = sub {
+    my ($proband_id, $trial_id, $category) = @_;
+    my %params = ();
+    #$params{visit_id} = $visit_id if defined $visit_id;
+    $params{category} = $category if defined $category;
+    return 'proband/' . $proband_id . '/inquiryvalues/' . $trial_id . get_query_string(\%params);
 };
 
 my $fieldnames = [
@@ -82,6 +89,14 @@ sub get_item {
     my ($id,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
     return builditems_fromrows($api->get(&$get_item_path_query($id),$headers),$load_recursive,$restapi);
+
+}
+
+sub clear {
+
+    my ($proband_id, $trial_id, $category, $restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return builditems_fromrows($api->delete(&$get_clear_path_query($proband_id, $trial_id, $category),$headers));
 
 }
 

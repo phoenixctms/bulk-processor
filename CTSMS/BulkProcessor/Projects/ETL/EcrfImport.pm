@@ -9,17 +9,6 @@ use threads::shared qw();
 use utf8;
 use Encode qw();
 
-use Tie::IxHash;
-use File::Basename qw();
-
-use CTSMS::BulkProcessor::Globals qw(
-    $ctsmsrestapi_username
-);
-
-use CTSMS::BulkProcessor::FileProcessors::CSVFile qw();
-use CTSMS::BulkProcessor::FileProcessors::XlsFileSimple qw();
-use CTSMS::BulkProcessor::FileProcessors::XlsxFileSimple qw();
-
 use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $skip_errors
     $timezone
@@ -57,13 +46,9 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfImporter::Settings qw(
     
     get_ecrf_columns
 );
-#$ecrf_department_nameL10nKey
-#$ecrf_proband_alias_format
-#$ecrf_proband_alias_column_index
 
 use CTSMS::BulkProcessor::Projects::ETL::Job qw(
     update_job
-    @job_file
 );
 
 use CTSMS::BulkProcessor::Logging qw (
@@ -88,13 +73,10 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListE
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::ProbandCategory qw();
-use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Department qw();
-
-use CTSMS::BulkProcessor::RestRequests::ctsms::user::UserService::User qw();
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction qw();
-use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionProperty qw();
+
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::DBModule qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::InputFieldType qw(
     $CHECKBOX
@@ -110,8 +92,6 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Inpu
     $AUTOCOMPLETE
 );
 
-use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Sex qw();
-
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job qw(
     $PROCESSING_JOB_STATUS
     $FAILED_JOB_STATUS
@@ -125,8 +105,30 @@ use CTSMS::BulkProcessor::Projects::ETL::Ecrf qw(
     get_section_blank
 );
 
+use CTSMS::BulkProcessor::Projects::ETL::Import qw(
+    get_input_filename
+    get_importer
+
+    mark_utf8
+    sanitize_decimal
+    
+    valid_excel_to_date
+    get_selection_set_value_ids
+    is_unknown_value
+    
+    append_probandalias_criterion
+    append_probandid_criterion
+    
+    get_values_stats
+    
+    get_proband_in
+    
+    init_context
+    get_log_label
+);
+
 use CTSMS::BulkProcessor::Array qw(array_to_map contains);
-use CTSMS::BulkProcessor::Utils qw(threadid stringtobool trim excel_to_date chopstring zerofill);
+use CTSMS::BulkProcessor::Utils qw( stringtobool trim chopstring );
 
 use CTSMS::BulkProcessor::ConnectorPool qw(
     get_ctsms_restapi_last_error
@@ -140,45 +142,12 @@ our @EXPORT_OK = qw(
 
 my @header_row :shared = ();
 my $header_rownum :shared = 0;
-#my $probandlistentrymaxposition :shared = 0;
+
 my $registration :shared;
 my $warning_count :shared = 0;
 my $value_count :shared = 0;
 
 my $comment_char = '#';
-my $rownum_digits = 3;
-
-my @csvxextension = ('.csv', '.txt');
-my @xlsextension = ('.xls');
-my @xlsxextension = ('.xlsx');
-#join('|',map { quotemeta($_) . '$'; } map { ($_, uc($_)); } (@csvxextension,@xlsextension,@xlsxextension))
-my $rfileextensions = '\\.[a-zA-Z0-9_.-]+$';
-
-sub _get_input_filename {
-
-    my ($filename_opt,$filename_config) = @_;
-    my $filename = $job_file[0];
-    if (length($filename_opt)) {
-        $filename = $filename_opt;
-    } elsif (length($filename_config)) {
-        $filename = $filename_config;
-    }
-    return $filename;
-
-}
-
-sub _get_importer {
-
-    my $context = shift;
-    my $file = shift;
-    rowprocessingerror($context->{tid},'no file specified',getlogger(__PACKAGE__)) unless length($file);
-    my ($filename, $filedir, $filesuffix) = File::Basename::fileparse($file, $rfileextensions);
-    return CTSMS::BulkProcessor::FileProcessors::CSVFile->new(@_) if contains($filesuffix,\@csvxextension,1); # CSVDB does not support multithread
-    return CTSMS::BulkProcessor::FileProcessors::XlsFileSimple->new(@_) if contains($filesuffix,\@xlsextension,1);
-    return CTSMS::BulkProcessor::FileProcessors::XlsxFileSimple->new(@_) if contains($filesuffix,\@xlsxextension,1);
-    rowprocessingerror($context->{tid},"unsupported input file type '$filesuffix'",getlogger(__PACKAGE__));
-
-}
 
 sub import_ecrf_data_horizontal {
 
@@ -194,10 +163,10 @@ sub import_ecrf_data_horizontal {
     my $static_context = {};
     my $result = _init_context($static_context);
 
-    $file = _get_input_filename($file,$ecrf_import_filename);
+    $file = get_input_filename($file,$ecrf_import_filename);
     
     if ($result) {
-        my $importer = _get_importer($static_context,$file,
+        my $importer = get_importer($static_context,$file,
             numofthreads => $import_ecrf_data_horizontal_numofthreads,
             blocksize => $import_ecrf_data_horizontal_blocksize);
         foreach my $sheet_name ($importer->get_sheet_names($file)) {
@@ -217,7 +186,6 @@ sub import_ecrf_data_horizontal {
                         next if substr(trim($row->[0]),0,length($comment_char)) eq $comment_char;
                         update_job($PROCESSING_JOB_STATUS,$rownum,$row_offset + $import_ecrf_data_horizontal_blocksize);
                         next unless _set_ecrf_data_horizontal_context($context,$row,$rownum);
-                        #next unless id == $context->{proband}->{id};
                         _load_ecrf_status($context);
                         next unless _clear_ecrf($context);
                         next unless _set_ecrf_values_horizontal($context);
@@ -254,9 +222,8 @@ sub _init_context {
 
     my ($context) = @_;
 
-    my $result = 1;
-
-    $context->{tid} = threadid();
+    $context->{skip_errors} = $skip_errors;
+    my $result = init_context($context);
 
     $context->{ecrf_data_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($ecrf_data_trial_id);
     if (not $context->{ecrf_data_trial}->{status}->{ecrfValueInputEnabled}) {
@@ -280,53 +247,6 @@ sub _init_context {
     if ($@ or not keys %{$context->{proband_category_map}}) {
         rowprocessingerror($context->{tid},'error loading proband categories',getlogger(__PACKAGE__));
         $result = 0; #even in skip-error mode..
-    }
-
-    eval {
-        ($context->{department_map}, $keys, $values) = array_to_map(CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Department::get_items(),
-            sub { my $item = shift; return $item->{nameL10nKey}; }, sub { my $item = shift; return $item; },'last');
-        #$context->{department} = $deparmtent_map->{$ecrf_department_nameL10nKey} if $ecrf_department_nameL10nKey;
-    };
-    if ($@ or not keys %{$context->{department_map}}) {
-        rowprocessingerror($context->{tid},'error loading departments',getlogger(__PACKAGE__));
-        $result = 0; #even in skip-error mode..
-    }
-
-    eval {
-        ($context->{criteriontie_map}, $keys, $values) = array_to_map(CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::get_items(),
-            sub { my $item = shift; return $item->{nameL10nKey}; },sub { my $item = shift; return $item->{id}; },'last');
-        ($context->{criterionrestriction_map}, $keys, $values) = array_to_map(CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::get_items(),
-            sub { my $item = shift; return $item->{nameL10nKey}; },sub { my $item = shift; return $item->{id}; },'last');
-        ($context->{criterionproperty_map}, $keys, $values) = array_to_map(CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionProperty::get_items(
-            $CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::DBModule::PROBAND_DB),
-            sub { my $item = shift; return $item->{nameL10nKey}; },sub { my $item = shift; return $item->{id}; },'last');
-    };
-    if ($@) {
-        rowprocessingerror($context->{tid},'error loading criteria building blocks',getlogger(__PACKAGE__));
-        $result = 0; #even in skip-error mode..
-    }
-
-    my $users;
-    eval {
-        (my $user_criterionproperty_map, $keys, $values) = array_to_map(CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionProperty::get_items(
-            $CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::DBModule::USER_DB),
-            sub { my $item = shift; return $item->{nameL10nKey}; },sub { my $item = shift; return $item->{id}; },'last');
-        $users = CTSMS::BulkProcessor::RestRequests::ctsms::user::UserService::User::search({
-            module => $CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::DBModule::USER_DB,
-            criterions => [{
-                position => 1,
-                #tieId => undef,
-                restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
-                propertyId => $user_criterionproperty_map->{'user.name'},
-                stringValue => $ctsmsrestapi_username,
-            }],
-        });
-    };
-    if ($@ or (scalar @$users) != 1) {
-        rowprocessingerror($context->{tid},'error loading user',getlogger(__PACKAGE__));
-        $result = 0; #even in skip-error mode..
-    } else {
-        $context->{ctsmsrestapi_user} = $users->[0];
     }
 
     $context->{all_listentrytag_map} = get_probandlistentrytag_map($context);
@@ -578,7 +498,6 @@ sub _set_ecrf_values_horizontal {
 
         $result &= _append_ecrffieldvalue_in($context,$colname,$context->{record}->{$colname});
 
-
         # save on next eCRF or visit or section or section index:
         if (defined $last_ecrf and (
                 $last_ecrf->{id} != $context->{last_ecrf}->{id}
@@ -757,11 +676,11 @@ sub _register_proband {
         and length($context->{record}->{proband_id})) {
         # use proband_id column if specified and not empty:
         $id = $context->{record}->{proband_id};
-        $result = _append_probandid_criterion($context,$id);
+        $result = append_probandid_criterion($context,$id);
         delete $record{proband_id};
     } elsif (defined $alias) {
-        $result = _append_probandalias_criterion($context,$alias);
-        delete $record{$alias};
+        $result = append_probandalias_criterion($context,$alias,$ecrf_proband_department_column_name);
+        delete $record{$ecrf_proband_department_column_name};
     } elsif (scalar keys %{$context->{listentrytag_map}}) {
         # otherwise use proband list entry tags if specified:
         my $blank = 1;
@@ -788,7 +707,8 @@ sub _register_proband {
     #    $result = 0;
     }
 
-    unless (scalar grep { length(trim($_)) > 0; } values %record) {
+    my @vals = map { $context->{record}->{$_->{colname}} } @{$context->{columns}};
+    unless (scalar grep { defined($_) and length(trim($_)) > 0; } @vals) {    
         $result = 0; #no ecrf data to save
     }
     
@@ -813,7 +733,9 @@ sub _register_proband {
                     $result = 0;
                 } elsif (defined $alias) {
                     eval {
-                         $context->{proband} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::add_item(_get_proband_in($context,$alias));
+                         my $in = get_proband_in($context,$alias,$ecrf_proband_category_column_name,$ecrf_proband_department_column_name,$ecrf_proband_gender_column_name);
+                         $in->{"person"} = ($context->{ecrf_data_trial}->{type}->{person} ? \1 : \0);
+                         $context->{proband} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::add_item($in);
                     };
                     if ($@) {
                         _warn_or_error($context,"error creating proband: " . $@);
@@ -949,60 +871,6 @@ sub _rollback_proband {
 
 }
 
-sub _get_proband_in {
-    my ($context,$alias) = @_;
-
-    my $category;
-    if (length($ecrf_proband_category_column_name)
-        and exists $context->{record}->{$ecrf_proband_category_column_name}) {
-        my $value = $context->{record}->{$ecrf_proband_category_column_name};
-        if (length($value)) {
-            if (exists $context->{proband_category_map}->{$value}) {
-                $category = $context->{proband_category_map}->{$value};
-            } else {
-                die("unknown proband category '$value'");
-            }
-        }
-    }
-    $category = shift @{[ grep { $_->{preset} and not $_->{signup}; } values %{$context->{proband_category_map}} ]} unless $category;
-
-    my $department;
-    if (length($ecrf_proband_department_column_name)
-        and exists $context->{record}->{$ecrf_proband_department_column_name}) {
-        my $value = $context->{record}->{$ecrf_proband_department_column_name};
-        if (length($value)) {
-            if (exists $context->{department_map}->{$value}) {
-                $department = $context->{department_map}->{$value};
-            } else {
-                die("unknown proband department '$value'");
-            }
-        }
-    }
-    $department = $context->{ctsmsrestapi_user}->{department} unless $department;
-
-    my $gender;
-    if (length($ecrf_proband_gender_column_name)
-        and exists $context->{record}->{$ecrf_proband_gender_column_name}) {
-        $gender = $context->{record}->{$ecrf_proband_gender_column_name};
-    }
-    $gender = $CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Sex::NOT_KNOWN unless length($gender);
-
-    my %in = (
-        "categoryId" => $category->{id},
-        "person" => ($context->{ecrf_data_trial}->{type}->{person} ? \1 : \0),
-        "blinded" => \1,
-        "departmentId" => $department->{id},
-        "gender" => $gender,
-        "alias" => $alias,
-    );
-    #if (EXPR) {
-    #    $in{comment} = xxx
-    #}
-
-    return \%in;
-
-}
-
 sub _get_probandlistentry_in {
     my ($context) = @_;
     #lock $probandlistentrymaxposition;
@@ -1102,8 +970,7 @@ sub _get_ecrffieldvalue_in {
 
     my $column;
     $column = $context->{column_map}->{$colname} if $colname;
-
-    
+   
     if ($column) {
 
         my $ecrffield = $column->{ecrffield};
@@ -1146,7 +1013,7 @@ sub _get_ecrffieldvalue_in {
             }
         }
         #return (undef, 1) unless _get_ecrffieldvalue_editable($context,$colname,$old_value);
-        $value = _mark_utf8($value);
+        $value = mark_utf8($value);
         my $field_type = $ecrffield->{field}->{fieldType}->{type};
         if ($ecrffield->{field}->is_select() and $field_type ne $SKETCH) {
             if (exists $column->{colnames}) {
@@ -1172,7 +1039,7 @@ sub _get_ecrffieldvalue_in {
                 }
             } else {
                 eval {
-                    $in{selectionValueIds} = _get_selection_set_value_ids($context,$ecrffield->{field},$value,$contains_code,$selection_set_value_separator);
+                    $in{selectionValueIds} = get_selection_set_value_ids($context,$ecrffield->{field},$value,$contains_code,$selection_set_value_separator);
                 };
                 if ($@) {
                     _warn_or_error($context,$@);
@@ -1186,16 +1053,16 @@ sub _get_ecrffieldvalue_in {
         } elsif ($field_type eq $CHECKBOX) {
             $in{booleanValue} = (stringtobool($value) ? \1 : \0);
         } elsif ($field_type eq $DATE) {
-            $in{dateValue} = _valid_excel_to_date($value);
+            $in{dateValue} = valid_excel_to_date($value);
             #$in{dateValue} = (length($value) ? $value : undef);
         } elsif ($field_type eq $TIME) {
             $in{timeValue} = (length($value) ? $value : undef);
         } elsif ($field_type eq $TIMESTAMP) {
             $in{timestampValue} = (length($value) ? $value : undef);
         } elsif ($field_type eq $INTEGER) {
-            $in{longValue} = ((length($value) and not _is_unknown_value($value)) ? $value : undef);
+            $in{longValue} = ((length($value) and not is_unknown_value($value)) ? $value : undef);
         } elsif ($field_type eq $FLOAT) {
-            $in{floatValue} = ((length($value) and not _is_unknown_value($value)) ? _sanitize_decimal($value) : undef);
+            $in{floatValue} = ((length($value) and not is_unknown_value($value)) ? sanitize_decimal($value) : undef);
         } else {
             _warn_or_error($context,"unsupported eCRF field type '$field_type' ($ecrffield->{field}->{name})");
             return (undef,0);
@@ -1257,10 +1124,10 @@ sub _get_listentrytagvalue_in {
             $in{version} = $old_value->{version};
         }
 
-        $value = _mark_utf8($value);
+        $value = mark_utf8($value);
         my $field_type = $listentrytag->{field}->{fieldType}->{type};
         if ($listentrytag->{field}->is_select() and $field_type ne $SKETCH) {
-            $in{selectionValueIds} = _get_selection_set_value_ids($context,$listentrytag->{field},$value,$contains_code);
+            $in{selectionValueIds} = get_selection_set_value_ids($context,$listentrytag->{field},$value,$contains_code,$selection_set_value_separator);
         } elsif ($field_type eq $AUTOCOMPLETE) {
             $in{textValue} = (length($value) ? $value : undef);
         } elsif ($listentrytag->{field}->is_text()) {
@@ -1268,16 +1135,16 @@ sub _get_listentrytagvalue_in {
         } elsif ($field_type eq $CHECKBOX) {
             $in{booleanValue} = (stringtobool($value) ? \1 : \0);
         } elsif ($field_type eq $DATE) {
-            $in{dateValue} = _valid_excel_to_date($value);
+            $in{dateValue} = valid_excel_to_date($value);
             #$in{dateValue} = (length($value) ? $value : undef);
         } elsif ($field_type eq $TIME) {
             $in{timeValue} = (length($value) ? $value : undef);
         } elsif ($field_type eq $TIMESTAMP) {
             $in{timestampValue} = (length($value) ? $value : undef);
         } elsif ($field_type eq $INTEGER) {
-            $in{longValue} = ((length($value) and not _is_unknown_value($value)) ? $value : undef);
+            $in{longValue} = ((length($value) and not is_unknown_value($value)) ? $value : undef);
         } elsif ($field_type eq $FLOAT) {
-            $in{floatValue} = ((length($value) and not _is_unknown_value($value)) ? _sanitize_decimal($value) : undef);
+            $in{floatValue} = ((length($value) and not is_unknown_value($value)) ? sanitize_decimal($value) : undef);
         } else {
             die("unsupported proband list attribute field type '$field_type' ($listentrytag->{field}->{name})");
         }
@@ -1303,8 +1170,6 @@ sub _set_listentrytag_values {
 
     _save_listentrytag_values($context);
 
-    #return $result;
-
 }
 
 sub _append_listentrytagvalue_in {
@@ -1315,98 +1180,6 @@ sub _append_listentrytagvalue_in {
     push(@{$context->{in}},$in) if $in;
 }
 
-sub _get_selection_set_value_ids {
-
-    my ($context,$field,$value,$contains_code,$separator) = @_;
-    $contains_code //= sub {
-        my ($selectionSetValue,$values) = @_;
-        return _contains($selectionSetValue->{value},$values);
-    };
-    $separator //= ',';
-    if (ref $value) {
-        unless ('ARRAY' eq ref $value) {
-            die((ref $value) . " value for $field->{name}");
-        }
-    } else {
-        if (length($value)) {
-            $value = [ split(quotemeta($separator),$value) ];
-        } else {
-            $value = undef;
-        }
-    }
-    $value //= [];
-    $value = [ map { trim($_); } grep { length($_) and not _is_unknown_value($_); } @$value ];
-    my $selectionValueIds = [ map { $_->{id}; } grep { &$contains_code($_,$value); } @{$field->{selectionSetValues}} ];
-    unless ((scalar @{$selectionValueIds}) == (scalar @$value)) {
-        die("unknown value(s) '" . join(',',@$value) . "' for $field->{name}");
-    }
-    return $selectionValueIds;
-
-}
-
-sub _append_probandalias_criterion {
-    my ($context,$alias) = @_;
-    if (length($alias)) {
-        push(@{$context->{criterions}},{
-            position => 1,
-            #tieId => undef,
-            restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
-            propertyId => $context->{criterionproperty_map}->{'proband.personParticulars.alias'},
-            stringValue => _mark_utf8($alias),
-        });
-        push(@{$context->{criterions}},{
-            position => 2,
-            tieId => $context->{criteriontie_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::AND},
-            restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
-            propertyId => $context->{criterionproperty_map}->{'proband.deferredDelete'},
-            booleanValue => \0,
-        });
-        # if there is a department column, search for alias by department ...
-        if (length($ecrf_proband_department_column_name)
-            and exists $context->{record}->{$ecrf_proband_department_column_name}) {
-            my $value = $context->{record}->{$ecrf_proband_department_column_name};
-            if (length($value)) {
-                if (exists $context->{department_map}->{$value}) {
-                    my $department = $context->{department_map}->{$value};
-                    push(@{$context->{criterions}},{
-                        position => 3,
-                        tieId => $context->{criteriontie_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::AND},
-                        restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
-                        propertyId => $context->{criterionproperty_map}->{'proband.department.id'},
-                        longValue => $department->{id},
-                    });
-                } else {
-                    _warn_or_error($context,"unknown proband department '$value'");
-                    return 0;
-                }
-            } else {
-                _warn_or_error($context,"empty proband site");
-                return 0;
-            }
-        }
-        return 1;
-    } else {
-        _warn_or_error($context,"empty proband alias");
-        return 0;
-    }
-}
-
-sub _append_probandid_criterion {
-    my ($context,$id) = @_;
-    if (length($id)) {
-        push(@{$context->{criterions}},{
-            position => 1,
-            #tieId => undef,
-            restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
-            propertyId => $context->{criterionproperty_map}->{'proband.id'},
-            longValue => $id,
-        });
-        return 1;
-    } else {
-        _warn_or_error($context,"empty proband id");
-        return 0;
-    }
-}
 
 sub _append_listentrytag_criterion {
 
@@ -1428,7 +1201,7 @@ sub _append_listentrytag_criterion {
         tieId => $context->{criteriontie_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::AND},
         propertyId => $context->{criterionproperty_map}->{$listentry_tag->{field}->criterion_property('proband.trialParticipations.tagValues.value.')},
     );
-    $value = _mark_utf8($value);
+    $value = mark_utf8($value);
     if ($listentry_tag->{field}->is_select_one()) {
         $criterion{restrictionId} = $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ};
         $criterion{stringValue} = $value;
@@ -1443,10 +1216,10 @@ sub _append_listentrytag_criterion {
         $criterion{dateValue} = $value;
     } elsif ($field_type eq $INTEGER) {
         $criterion{restrictionId} = $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ};
-        $criterion{longValue} = ((length($value) and not _is_unknown_value($value)) ? $value : undef);
+        $criterion{longValue} = ((length($value) and not is_unknown_value($value)) ? $value : undef);
     } elsif ($field_type eq $FLOAT) {
         $criterion{restrictionId} = $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ};
-        $criterion{floatValue} = ((length($value) and not _is_unknown_value($value)) ? _sanitize_decimal($value) : undef);
+        $criterion{floatValue} = ((length($value) and not is_unknown_value($value)) ? sanitize_decimal($value) : undef);
     } else {
         _warn_or_error($context,"unsupported proband list attribute field type '$field_type' ($listentry_tag->{field}->{name})");
         return 0;
@@ -1501,7 +1274,7 @@ sub _save_ecrf_values {
     eval {
         $out = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues::set_ecrffieldvalues($context->{in},undef,$timezone);
     };
-    my $stats = _get_values_stats($context,$out,sub {
+    my $stats = get_values_stats($context,$out,sub {
             my $in_row = shift;
             return ($in_row->{listEntryId} . '-' . $in_row->{ecrfFieldId} . '-' . ($in_row->{visitId} // '') . '-' . ($in_row->{index} // ''));
         },sub {
@@ -1522,26 +1295,6 @@ sub _save_ecrf_values {
 
 }
 
-sub _get_values_stats {
-    my ($context,$out,$get_in_hash,$get_out_hash) = @_;
-    my %stats = (
-        total => 0,
-        created => 0,
-        updated => 0,
-    );
-    if ($out) {
-        my ($in_version_map, $keys, $values) = array_to_map([ grep { exists $_->{id} and defined $_->{id}; } @{$context->{in}} ],
-            sub { my $item = shift; return $get_in_hash->($item); }, sub { my $item = shift; return $item->{version}; }, 'last');
-        foreach my $out_row (@{$out->{rows}}) {
-            my $hash = $get_out_hash->($out_row);
-            $stats{total} += 1;
-            $stats{created} += 1 if not exists $in_version_map->{$hash};
-            $stats{updated} += 1 if (exists $in_version_map->{$hash} and $out_row->{version} > $in_version_map->{$hash});
-        }
-    }
-    return \%stats;
-}
-
 sub _save_listentrytag_values {
 
     my ($context) = @_;
@@ -1551,7 +1304,7 @@ sub _save_listentrytag_values {
     eval {
         $out = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValues::set_probandlistentrytagvalues($context->{in},undef,$timezone);
     };
-    my $stats = _get_values_stats($context,$out,sub {
+    my $stats = get_values_stats($context,$out,sub {
             my $in_row = shift;
             return ($in_row->{listEntryId} . '-' . $in_row->{tagId});
         },sub {
@@ -1571,56 +1324,6 @@ sub _save_listentrytag_values {
 
 }
 
-sub _contains {
-    my ($item,$array_ptr,$case_insensitive) = @_;
-    return contains($item,$array_ptr,$case_insensitive) unless ref $item;
-    foreach (@$item) {
-        if (contains($_,$array_ptr,$case_insensitive)) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-sub _is_unknown_value {
-    my $string = shift;
-    #if ($string =~ /^[?x]+$/ or
-    if ($string eq '#VALUE!') {
-        return 1;
-    }
-    return 0;
-}
-
-sub _sanitize_decimal {
-
-    my ($decimal) = @_;
-
-    $decimal =~ s/\s+//g;
-    $decimal =~ s/[,.]/./;
-    return $decimal;
-
-}
-
-sub _valid_excel_to_date {
-    my $excel_date = trim(shift);
-    my $date;
-    eval {
-        $date = excel_to_date($excel_date) if ($excel_date =~ /^\d+$/ and $excel_date > 3);
-        $date .= ' 00:00:00' if $date;
-    };
-    return $date;
-}
-
-sub _mark_utf8 {
-    my $byte_string = shift;
-    my $ustring = $byte_string;
-    eval {
-        $ustring = Encode::decode('UTF-8',$byte_string,Encode::FB_CROAK);
-    };
-    return $ustring;
-    #or die "Could not decode string: $@";
-    #return Encode::decode("UTF-8", shift);
-}
 
 sub _warn_or_error {
     my ($context,$message) = @_;
@@ -1635,7 +1338,7 @@ sub _error {
 
     my ($context,$message) = @_;
     $context->{error_count} = $context->{error_count} + 1;
-    rowprocessingerror($context->{tid},_get_log_label($context) . $message,getlogger(__PACKAGE__));
+    rowprocessingerror($context->{tid},get_log_label($context) . $message,getlogger(__PACKAGE__));
 
 }
 
@@ -1643,7 +1346,7 @@ sub _warn {
 
     my ($context,$message) = @_;
     $context->{warning_count} = $context->{warning_count} + 1;
-    rowprocessingwarn($context->{tid},_get_log_label($context) . $message,getlogger(__PACKAGE__));
+    rowprocessingwarn($context->{tid},get_log_label($context) . $message,getlogger(__PACKAGE__));
 
 }
 
@@ -1651,20 +1354,10 @@ sub _info {
 
     my ($context,$message,$debug) = @_;
     if ($debug) {
-        processing_debug($context->{tid},_get_log_label($context) . $message,getlogger(__PACKAGE__));
+        processing_debug($context->{tid},get_log_label($context) . $message,getlogger(__PACKAGE__));
     } else {
-        processing_info($context->{tid},_get_log_label($context) . $message,getlogger(__PACKAGE__));
+        processing_info($context->{tid},get_log_label($context) . $message,getlogger(__PACKAGE__));
     }
-}
-
-sub _get_log_label {
-
-    my ($context) = @_;
-    my $label = "(line " . zerofill($context->{rownum},$rownum_digits);
-    $label .= "/proband " . $context->{proband}->alias if $context->{proband};
-    $label .= ") ";
-    return $label;
-
 }
 
 1;

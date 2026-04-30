@@ -13,11 +13,11 @@ use CTSMS::BulkProcessor::Globals qw(
     $ctsmsrestapi_username
     $ctsmsrestapi_password
 );
-use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
+use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
     $skip_errors
     $timezone
     $ctsms_base_url
-    $ecrf_data_trial_id
+    $inquiry_trial_id
     $lockfile
     $input_path
 );
@@ -27,12 +27,12 @@ use CTSMS::BulkProcessor::Projects::ETL::Job qw(
     @job_file
     update_job
 );
-use CTSMS::BulkProcessor::Projects::ETL::EcrfImporter::Settings qw(
+use CTSMS::BulkProcessor::Projects::ETL::InquiryImporter::Settings qw(
     $defaultsettings
     $defaultconfig
     $force
-    $clear_sections
-    $clear_all_sections
+    $clear_categories
+    $clear_all_categories
 );
 use CTSMS::BulkProcessor::Logging qw(
     init_log
@@ -65,7 +65,7 @@ use CTSMS::BulkProcessor::Mail qw(
 #use CTSMS::BulkProcessor::SqlConnectors::CSVDB qw(cleanupcsvdirs);
 use CTSMS::BulkProcessor::SqlConnectors::SQLiteDB qw(cleanupdbfiles);
 
-use CTSMS::BulkProcessor::Projects::ETL::EcrfConnectorPool qw(destroy_all_dbs);
+use CTSMS::BulkProcessor::Projects::ETL::InquiryConnectorPool qw(destroy_all_dbs);
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job qw(
     $PROCESSING_JOB_STATUS
@@ -73,8 +73,8 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job qw(
     $OK_JOB_STATUS
 );
 
-use CTSMS::BulkProcessor::Projects::ETL::EcrfImport qw(
-    import_ecrf_data_horizontal
+use CTSMS::BulkProcessor::Projects::ETL::InquiryImport qw(
+    import_inquiry_data_horizontal
 );
 
 my @TASK_OPTS = ();
@@ -85,8 +85,8 @@ my $file;
 my $cleanup_task_opt = 'cleanup';
 push(@TASK_OPTS,$cleanup_task_opt);
 
-my $import_ecrf_data_horizontal_task_opt = 'import_ecrf_data_horizontal';
-push(@TASK_OPTS,$import_ecrf_data_horizontal_task_opt);
+my $import_inquiry_data_horizontal_task_opt = 'import_inquiry_data_horizontal';
+push(@TASK_OPTS,$import_inquiry_data_horizontal_task_opt);
 
 if (init()) {
     main();
@@ -107,9 +107,9 @@ sub init {
         "task=s" => $tasks,
         "skip-errors" => \$skip_errors,
         "force" => \$force,
-        "clear-sections" => \$clear_sections,
-        "clear-all-sections" => \$clear_all_sections,
-        "id=i" => \$ecrf_data_trial_id,
+        "clear-categories" => \$clear_categories,
+        "clear-all-categories" => \$clear_all_categories,
+        "id=i" => \$inquiry_trial_id,
         "jid=i" => \$job_id,
         "auth=s" => \$auth,
         "file=s" => \$file,
@@ -123,8 +123,8 @@ sub init {
     }
     init_log();
     eval {
-        $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::EcrfSettings::update_settings,$YAML_CONFIG_TYPE);
-        $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::EcrfImporter::Settings::update_settings,$YAML_CONFIG_TYPE);
+        $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::InquirySettings::update_settings,$YAML_CONFIG_TYPE);
+        $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::InquiryImporter::Settings::update_settings,$YAML_CONFIG_TYPE);
         $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::Job::update_settings,$YAML_CONFIG_TYPE,undef,
             input_path => $input_path,
         );
@@ -142,13 +142,13 @@ sub init {
 
 sub main {
 
-    my @messages = ( 'Trial eCRF data import:' );
+    my @messages = ( 'Trial inquiry data import:' );
     my @attachmentfiles = ();
     my $result = 1;
     my $completion = 0;
 
     update_job($PROCESSING_JOB_STATUS);
-    return 0 unless checkrunning(sprintf($lockfile,$ecrf_data_trial_id),sub {
+    return 0 unless checkrunning(sprintf($lockfile,$inquiry_trial_id),sub {
         scriptwarn(@_);
         update_job($FAILED_JOB_STATUS);
         return 0;
@@ -160,10 +160,10 @@ sub main {
             if (lc($cleanup_task_opt) eq lc($task)) {
                 $result &= cleanup_task(\@messages) if taskinfo($cleanup_task_opt,\$result);
 
-            } elsif (lc($import_ecrf_data_horizontal_task_opt) eq lc($task)) {
-                $result &= import_ecrf_data_horizontal_task(\@messages) if taskinfo($import_ecrf_data_horizontal_task_opt,\$result,
-                    ecrf_data_trial_id_required => 1,
-                    check_clear_sections => 1,
+            } elsif (lc($import_inquiry_data_horizontal_task_opt) eq lc($task)) {
+                $result &= import_inquiry_data_horizontal_task(\@messages) if taskinfo($import_inquiry_data_horizontal_task_opt,\$result,
+                    inquiry_trial_id_required => 1,
+                    check_clear_categories => 1,
                     check_force => 1,
                     messages => \@messages,
                 );
@@ -200,30 +200,30 @@ sub main {
 
 sub taskinfo {
     my ($task,$result_ref,%params) = @_;
-    my ($ecrf_data_trial_id_required,
-        $check_clear_sections,
+    my ($inquiry_trial_id_required,
+        $check_clear_categories,
         $check_force,
         $messages) = @params{qw/
-        ecrf_data_trial_id_required
-        check_clear_sections
+        inquiry_trial_id_required
+        check_clear_categories
         check_force
         messages
     /};
     scriptinfo($$result_ref ? "starting task: '$task'" : "skipping task '$task' due to previous problems",getlogger(getscriptpath()));
-    if ($ecrf_data_trial_id_required and (not defined $ecrf_data_trial_id or length($ecrf_data_trial_id) == 0)) {
+    if ($inquiry_trial_id_required and (not defined $inquiry_trial_id or length($inquiry_trial_id) == 0)) {
         scripterror("trial id required",getlogger(getscriptpath()));
         $$result_ref = 0;
     }
-    if ($check_clear_sections) {
-        if ($clear_sections and $clear_all_sections) {
-            scripterror("update mode: either 'clear sections' or 'clear all sections' can be enabled, but not both",getlogger(getscriptpath()));
+    if ($check_clear_categories) {
+        if ($clear_categories and $clear_all_categories) {
+            scripterror("update mode: either 'clear categories' or 'clear all categories' can be enabled, but not both",getlogger(getscriptpath()));
             $$result_ref = 0;
-        } elsif ($clear_all_sections) {
-            scriptinfo("update mode: *all* sections of all eCRFs will be cleared prior to importing values",getlogger(getscriptpath()));
-        } elsif ($clear_sections) {
-            scriptinfo("update mode: sections of imported eCRF fields will be cleared prior to importing values",getlogger(getscriptpath()));
+        } elsif ($clear_all_categories) {
+            scriptinfo("update mode: *all* categories will be cleared prior to importing values",getlogger(getscriptpath()));
+        } elsif ($clear_categories) {
+            scriptinfo("update mode: categories of imported inquiries will be cleared prior to importing values",getlogger(getscriptpath()));
         } else {
-            scriptinfo("update mode: existing values will be updated (eCRF sections are not cleared)",getlogger(getscriptpath()));
+            scriptinfo("update mode: existing values will be updated (inquiry categories are not cleared)",getlogger(getscriptpath()));
         }
     }
     unless (!$check_force or $force or 'yes' eq lc(prompt("Type 'yes' to proceed: "))) {
@@ -251,18 +251,18 @@ sub cleanup_task {
     }
 }
 
-sub import_ecrf_data_horizontal_task {
+sub import_inquiry_data_horizontal_task {
     my ($messages) = @_;
     my ($result, $warning_count) = (0,0);
     eval {
-        ($result, $warning_count) = import_ecrf_data_horizontal($file);
+        ($result, $warning_count) = import_inquiry_data_horizontal($file);
     };
     my $err = $@;
     if ($err) {
-        push(@$messages,'import_ecrf_data_horizontal error: ' . $err);
+        push(@$messages,'import_inquiry_data_horizontal error: ' . $err);
         return 0;
     } else {
-        push(@$messages,'- import_ecrf_data_horizontal ok');
+        push(@$messages,'- import_inquiry_data_horizontal ok');
         return 1;
     }
 }
