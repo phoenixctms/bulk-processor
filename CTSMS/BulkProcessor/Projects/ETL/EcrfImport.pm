@@ -707,7 +707,8 @@ sub _register_proband {
     #    $result = 0;
     }
 
-    unless (scalar grep { length(trim($_)) > 0; } values %record) {
+    my @vals = map { $context->{record}->{$_->{colname}} } @{$context->{columns}};
+    unless (scalar grep { defined($_) and length(trim($_)) > 0; } @vals) {    
         $result = 0; #no ecrf data to save
     }
     
@@ -1126,7 +1127,7 @@ sub _get_listentrytagvalue_in {
         $value = mark_utf8($value);
         my $field_type = $listentrytag->{field}->{fieldType}->{type};
         if ($listentrytag->{field}->is_select() and $field_type ne $SKETCH) {
-            $in{selectionValueIds} = get_selection_set_value_ids($context,$listentrytag->{field},$value,$contains_code);
+            $in{selectionValueIds} = get_selection_set_value_ids($context,$listentrytag->{field},$value,$contains_code,$selection_set_value_separator);
         } elsif ($field_type eq $AUTOCOMPLETE) {
             $in{textValue} = (length($value) ? $value : undef);
         } elsif ($listentrytag->{field}->is_text()) {

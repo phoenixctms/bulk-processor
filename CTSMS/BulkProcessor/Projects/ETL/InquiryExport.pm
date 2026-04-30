@@ -37,7 +37,6 @@ use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
     $skip_errors
     $timezone
     
-    $publish_public_file
     $show_page_progress
 
     get_proband_columns
@@ -59,13 +58,15 @@ use CTSMS::BulkProcessor::Projects::ETL::InquiryExporter::Settings qw(
     $inquiry_data_export_pdfs_filename
 
     $inquiry_data_row_block
+    
+    $publish_public_file
 );
 
 use CTSMS::BulkProcessor::Projects::ETL::Job qw(
     update_job
 );
 
-use CTSMS::BulkProcessor::Projects::ETL::Ecrf qw(
+use CTSMS::BulkProcessor::Projects::ETL::Inquiry qw(
     get_horizontal_cols
     get_category_map
 );
