@@ -707,8 +707,7 @@ sub _register_proband {
     #    $result = 0;
     }
 
-    my @vals = map { $context->{record}->{$_->{colname}} } @{$context->{columns}};
-    unless (scalar grep { defined($_) and length(trim($_)) > 0; } @vals) {    
+    unless (scalar grep { length(trim($_)) > 0; } values %record) {
         $result = 0; #no ecrf data to save
     }
     

@@ -476,8 +476,7 @@ sub _register_proband {
         delete $record{$inquiry_proband_department_column_name};
     }
 
-    my @vals = map { $context->{record}->{$_->{colname}} } @{$context->{columns}};
-    unless (scalar grep { defined($_) and length(trim($_)) > 0; } @vals) {
+    unless (scalar grep { length(trim($_)) > 0; } values %record) {
         $result = 0; #no inquiry data to save
     }
     
