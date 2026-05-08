@@ -507,6 +507,7 @@ NEXT_VISIT:
             }
         }
 
+NEXT_VALUE:
         if (not defined $context->{api_values_page_total_count} or ($context->{api_values_page_num} * $ecrf_data_api_values_page_size < $context->{api_values_page_total_count} and (scalar @{$context->{api_values_page}}) == 0)) {
             my $p = { page_size => $ecrf_data_api_values_page_size , page_num => $context->{api_values_page_num} + 1, total_count => undef };
             my $sf = {}; #sorted by default
@@ -524,12 +525,15 @@ NEXT_VISIT:
         }
         my $value = shift @{$context->{api_values_page}};
         if (defined $value) {
-            return $value;
+            if (not defined $value->{index} or defined $value->{id}) {
+                return $value;
+            } else {
+                goto NEXT_VALUE;
+            }
         } else {
             $context->{visit} = undef;
             goto NEXT_VISIT;
-        }
-
+        }        
     };
     return $result;
 }
@@ -765,7 +769,7 @@ sub _init_ecrf_data_horizontal_context {
         }
         $context->{listentry} = shift @{$context->{api_listentries_page}};
         if (defined $context->{listentry}) {
-            #return [] unless $context->{listentry}->{proband}->{id} == id;
+            #return [] unless $context->{listentry}->{proband}->{id} == 688315; #7849798
             #tag values
             ($context->{tagvalues}, my $tag_cols, my $tag_vals) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return get_probandlistentrytag_colname($item->{tag}); },undef,$listentrytag_map_mode);
             return _get_ecrffieldvalues($context);
@@ -936,7 +940,9 @@ sub _get_ecrffieldvalues {
                     }
                     my $value = shift @$api_values_page;
                     last unless $value;
-                    push(@values,$value);
+                    if (not defined $value->{index} or defined $value->{id}) {
+                        push(@values,$value);
+                    }
                 }
             } else {
                 _info($context,'skipping unsigned - proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
