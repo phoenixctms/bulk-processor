@@ -46,6 +46,51 @@ use Dancer::SharedData qw();
     #undef $Dancer::SharedData::_sessions;  
 };
 
+use JSON;
+use Scalar::Util qw(blessed);
+
+BEGIN {
+    my $orig_session = \&Dancer::session;
+    no warnings 'redefine';
+
+    # Create a customized JSON object
+    my $json = JSON->new->allow_nonref(1)->allow_blessed(1)->convert_blessed(1);
+
+    *Dancer::session = sub {
+        return $orig_session->() if @_ == 0;
+
+        my ($key, $value) = @_;
+
+        # Reading from the session
+        if (@_ == 1) {
+            my $raw = $orig_session->($key);
+            if (defined $raw && !ref($raw) && $raw =~ /^[\[\{]/) {
+                return eval { $json->decode($raw) } || $raw;
+            }
+            return $raw;
+        }
+
+        # Writing to the session
+        if (@_ == 2) {
+            if (ref $value) {
+                my $to_serialize = $value;
+                
+                # If it's a blessed Perl object, extract the underlying raw hash
+                if (blessed($value)) {
+                    # Copy the blessed hash into a standard, unblessed hash
+                    $to_serialize = { %$value } if "$value" =~ /=HASH/;
+                }
+                
+                return $orig_session->($key, $json->encode($to_serialize));
+            } else {
+                return $orig_session->($key, $value);
+            }
+        }
+
+        return $orig_session->(@_);
+    };
+}
+
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     get_template
     get_error
