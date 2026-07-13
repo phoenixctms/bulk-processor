@@ -61,6 +61,8 @@ our @EXPORT_OK = qw(
     get_restapi
     get_ctsms_baseuri
     get_restapi_uri
+    get_rest_api_jwt
+    issue_rest_api_jwt
     $restapi
     get_site
     get_site_name
@@ -95,6 +97,7 @@ our @EXPORT_OK = qw(
 );
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::Login qw();
 
 our $restapi = \&get_restapi;
 
@@ -537,6 +540,11 @@ sub get_template {
     $js_vars->{sessionTimeout} = Dancer::config->{session_expires};
     $js_vars->{sessionTimerPattern} = Dancer::Plugin::I18N::localize('session_timer_pattern');
     $js_vars->{enableSessionTimer} = (contains($view_name,[ 'start', '404', 'runtime_error' ]) ? \0 : \1);
+    unless (contains($view_name,[ 'start', '404', 'runtime_error' ])) {
+        $js_vars->{restApiUrl} //= get_restapi_uri();
+        my $rest_api_jwt = get_rest_api_jwt();
+        $js_vars->{restApiJwt} = $rest_api_jwt if defined $rest_api_jwt;
+    }
 
     my $js_context_json = _quote_js(to_json_safe($js_vars));
 
@@ -624,6 +632,38 @@ sub get_restapi_uri {
     my $uri = $api->baseuri;
     $uri->path_query($path);
     return $uri->as_string();
+}
+
+sub _get_rest_api_jwt_session_key {
+    return get_site_name() . '|' . get_lang();
+}
+
+sub get_rest_api_jwt {
+    my $key = _get_rest_api_jwt_session_key();
+    my $cached = Dancer::session('rest_api_jwt');
+    if (defined $cached && 'HASH' eq ref $cached && ($cached->{key} // '') eq $key && defined $cached->{jwt} && length($cached->{jwt}) > 0) {
+        return $cached->{jwt};
+    }
+    return issue_rest_api_jwt();
+}
+
+sub issue_rest_api_jwt {
+    my $key = _get_rest_api_jwt_session_key();
+    eval {
+        my $jwt = CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::Login::issue_rest_api_jwt(
+            Dancer::config->{session_expires},
+            get_restapi(),
+        );
+        if (defined $jwt && !ref $jwt && length($jwt) > 0) {
+            Dancer::session('rest_api_jwt', { key => $key, jwt => $jwt });
+            return $jwt;
+        }
+    };
+    if ($@) {
+        Dancer::debug('failed to issue rest api jwt: ' . $@);
+    }
+    Dancer::session('rest_api_jwt', undef);
+    return undef;
 }
 
 sub add_error_data {
