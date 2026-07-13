@@ -53,9 +53,7 @@
   var DEFAULT_GEOLOCATION_LONGITUDE = parseFloat(context.defaultGeolocationLongitude);
 
   var REST_API_URL = context.restApiUrl;
-
-
-  //var SESSION_EXPIRED_MESSAGE =
+  var REST_API_JWT = context.restApiJwt;
   var SESSION_TIMER_PATTERN = context.sessionTimerPattern;
 
   $(document).ready(function() {

@@ -39,7 +39,6 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     get_input_timezone
 
     get_ctsms_baseuri
-    get_restapi_uri
     $id_separator_string
     sanitize_decimal
     sanitize_integer
@@ -182,7 +181,6 @@ Dancer::get('/inquiry',sub {
             probandAddressesBase64 => to_json_base64($address ? [ $address ] : Dancer::session('proband_addresses')),
 
             ctsmsBaseUri => get_ctsms_baseuri(),
-            restApiUrl => get_restapi_uri(),
             fieldsPerPage => $fields_per_page, #5,
             inquiryPage => $inquiry_page,
             noSelectionLabel => Dancer::Plugin::I18N::localize('no_selection_label'),
