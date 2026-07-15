@@ -150,11 +150,13 @@ sub init {
     #support credentials via args for jobs:
     if ($auth) {
         ($ctsmsrestapi_username,$ctsmsrestapi_password) = split("\n",decode_base64($auth),2);
-        my $api = get_ctsms_restapi();
-        $api->jwt(issue_rest_api_jwt($JWT_VALIDITY_SECS, $api));
     }
     init_log();
     eval {
+        if ($auth) {
+            my $api = get_ctsms_restapi();
+            $api->jwt(issue_rest_api_jwt($JWT_VALIDITY_SECS, $api));
+        }
         $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::InquirySettings::update_settings,$YAML_CONFIG_TYPE);
         $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::InquiryExporter::Settings::update_settings,$YAML_CONFIG_TYPE);
         $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::Job::update_settings,$YAML_CONFIG_TYPE,undef,
