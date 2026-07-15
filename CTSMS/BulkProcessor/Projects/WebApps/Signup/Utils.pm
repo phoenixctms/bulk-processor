@@ -62,7 +62,7 @@ our @EXPORT_OK = qw(
     get_ctsms_baseuri
     get_restapi_uri
     get_rest_api_jwt
-    issue_rest_api_jwt
+    issue_jwt
     $restapi
     get_site
     get_site_name
@@ -644,13 +644,13 @@ sub get_rest_api_jwt {
     if (defined $cached && 'HASH' eq ref $cached && ($cached->{key} // '') eq $key && defined $cached->{jwt} && length($cached->{jwt}) > 0) {
         return $cached->{jwt};
     }
-    return issue_rest_api_jwt();
+    return issue_jwt();
 }
 
-sub issue_rest_api_jwt {
+sub issue_jwt {
     my $key = _get_rest_api_jwt_session_key();
     eval {
-        my $jwt = CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::Login::issue_rest_api_jwt(
+        my $jwt = CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::Login::issue_jwt(
             Dancer::config->{session_expires},
             get_restapi(),
         );

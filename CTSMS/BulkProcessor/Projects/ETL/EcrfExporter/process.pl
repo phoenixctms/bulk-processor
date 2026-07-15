@@ -17,7 +17,7 @@ use CTSMS::BulkProcessor::ConnectorPool qw(
     get_ctsms_restapi
 );
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::Login qw(
-    issue_rest_api_jwt
+    issue_jwt
 );
 use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $output_path
@@ -190,7 +190,7 @@ sub init {
     eval {
         if ($auth) {
             my $api = get_ctsms_restapi();
-            $api->jwt(issue_rest_api_jwt($JWT_VALIDITY_SECS, $api));
+            $api->jwt(issue_jwt($JWT_VALIDITY_SECS, $api));
         }
         $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::EcrfSettings::update_settings,$YAML_CONFIG_TYPE);
         $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::EcrfExporter::Settings::update_settings,$YAML_CONFIG_TYPE);
