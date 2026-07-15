@@ -16,7 +16,7 @@ use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
-    issue_rest_api_jwt
+    issue_jwt
 );
 
 my $default_restapi = \&get_ctsms_restapi;
@@ -27,7 +27,7 @@ my $get_login_path_query = sub {
     return 'tools/login' . get_query_string(\%params);
 };
 
-sub issue_rest_api_jwt {
+sub issue_jwt {
 
     my ($validity_secs, $restapi, $headers) = @_;
     my $api = _get_api($restapi, $default_restapi);
