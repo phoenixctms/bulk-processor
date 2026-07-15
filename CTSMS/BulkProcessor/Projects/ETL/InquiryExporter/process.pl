@@ -13,6 +13,12 @@ use CTSMS::BulkProcessor::Globals qw(
     $ctsmsrestapi_username
     $ctsmsrestapi_password
 );
+use CTSMS::BulkProcessor::ConnectorPool qw(
+    get_ctsms_restapi
+);
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::Login qw(
+    issue_rest_api_jwt
+);
 use CTSMS::BulkProcessor::Projects::ETL::InquirySettings qw(
     $output_path
     $skip_errors
@@ -31,6 +37,7 @@ use CTSMS::BulkProcessor::Projects::ETL::InquiryExporter::Settings qw(
     $defaultsettings
     $defaultconfig
     $force
+    $JWT_VALIDITY_SECS
 );
 use CTSMS::BulkProcessor::Logging qw(
     init_log
@@ -143,6 +150,8 @@ sub init {
     #support credentials via args for jobs:
     if ($auth) {
         ($ctsmsrestapi_username,$ctsmsrestapi_password) = split("\n",decode_base64($auth),2);
+        my $api = get_ctsms_restapi();
+        $api->jwt(issue_rest_api_jwt($JWT_VALIDITY_SECS, $api));
     }
     init_log();
     eval {

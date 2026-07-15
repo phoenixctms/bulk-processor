@@ -94,11 +94,28 @@ sub setup {
 
 }
 
+sub jwt {
+
+    my $self = shift;
+    if (@_) {
+        my $jwt = shift;
+        undef $self->{ua};
+        $self->{jwt} = (defined $jwt && length($jwt) > 0) ? $jwt : undef;
+    }
+    return $self->{jwt};
+
+}
+
 sub connectidentifier {
 
     my $self = shift;
     if ($self->{uri}) {
-        return ($self->{username} ? $self->{username} . '@' : '') . $self->{uri};
+        if ($self->{username}) {
+            return $self->{username} . '@' . $self->{uri};
+        } elsif ($self->{jwt}) {
+            return 'jwt@' . $self->{uri};
+        }
+        return $self->{uri};
     } else {
         return undef;
     }
@@ -114,7 +131,9 @@ sub _setup_ua {
 		SSL_verify_mode => 0,
 	);
     $ua->timeout($timeout) if $timeout;
-    if ($self->{username}) {
+    if ($self->{jwt}) {
+        $ua->default_header('Authorization' => 'Bearer ' . $self->{jwt});
+    } elsif ($self->{username}) {
         $ua->credentials($netloc, $self->{realm}, $self->{username}, $self->{password});
     }
     restdebug($self,"ua configured",getlogger(__PACKAGE__));
