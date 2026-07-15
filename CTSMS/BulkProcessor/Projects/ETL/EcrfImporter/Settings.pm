@@ -55,6 +55,8 @@ our @EXPORT_OK = qw(
     
     $ecrf_name_column_name
     $ecrf_visit_column_name
+
+    $JWT_VALIDITY_SECS
     
     get_ecrf_columns
 
@@ -81,6 +83,8 @@ our $append_selection_set_values;
 
 our $ecrf_name_column_name = 'ecrf';
 our $ecrf_visit_column_name = 'visit';
+
+our $JWT_VALIDITY_SECS = 365 * 24 * 60 * 60;
 
 sub update_settings {
 
@@ -109,6 +113,8 @@ sub update_settings {
         
         $ecrf_name_column_name = $data->{ecrf_name_column_name} if exists $data->{ecrf_name_column_name};
         $ecrf_visit_column_name = $data->{ecrf_visit_column_name} if exists $data->{ecrf_visit_column_name};
+
+        $JWT_VALIDITY_SECS = $data->{jwt_validity_secs} if exists $data->{jwt_validity_secs};
 
         return $result;
 
