@@ -51,8 +51,6 @@ our @EXPORT_OK = qw(
     $clear_all_categories
 
     $inquiry_values_col_block
-
-    $JWT_VALIDITY_SECS
     
 );
 
@@ -72,8 +70,6 @@ our $inquiry_values_col_block = 1; # save one inquiry value after the other
 our $clear_categories;
 our $clear_all_categories;
 our $append_selection_set_values;
-
-our $JWT_VALIDITY_SECS = 365 * 24 * 60 * 60;
 
 sub update_settings {
 
@@ -98,8 +94,6 @@ sub update_settings {
         $update_listentrytag_values = $data->{update_listentrytag_values} if exists $data->{update_listentrytag_values};
 
         $inquiry_values_col_block = $data->{inquiry_values_col_block} if exists $data->{inquiry_values_col_block};
-
-        $JWT_VALIDITY_SECS = $data->{jwt_validity_secs} if exists $data->{jwt_validity_secs};
         
         return $result;
 

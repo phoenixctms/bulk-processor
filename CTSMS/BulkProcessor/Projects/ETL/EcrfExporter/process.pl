@@ -7,7 +7,6 @@ use Cwd;
 use lib Cwd::abs_path(File::Basename::dirname(__FILE__) . '/../../../../../');
 
 use Getopt::Long qw(GetOptions);
-use MIME::Base64 qw(decode_base64);
 
 use CTSMS::BulkProcessor::Globals qw(
     $ctsmsrestapi_username
@@ -16,8 +15,8 @@ use CTSMS::BulkProcessor::Globals qw(
 use CTSMS::BulkProcessor::ConnectorPool qw(
     get_ctsms_restapi
 );
-use CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::Login qw(
-    issue_jwt
+use CTSMS::BulkProcessor::RestConnector qw(
+    get_username_from_jwt
 );
 use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $output_path
@@ -38,7 +37,6 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfExporter::Settings qw(
     $defaultsettings
     $defaultconfig
     $force
-    $JWT_VALIDITY_SECS
 );
 use CTSMS::BulkProcessor::Logging qw(
     init_log
@@ -182,15 +180,15 @@ sub init {
     );
 
     my $result = load_config($configfile);
-    #support credentials via args for jobs:
+    #support jwt via args for jobs:
     if ($auth) {
-        ($ctsmsrestapi_username,$ctsmsrestapi_password) = split("\n",decode_base64($auth),2);
+        $ctsmsrestapi_username = get_username_from_jwt($auth);
     }
     init_log();
     eval {
         if ($auth) {
             my $api = get_ctsms_restapi();
-            $api->jwt(issue_jwt($JWT_VALIDITY_SECS, $api));
+            $api->jwt($auth);
         }
         $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::EcrfSettings::update_settings,$YAML_CONFIG_TYPE);
         $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::EcrfExporter::Settings::update_settings,$YAML_CONFIG_TYPE);
