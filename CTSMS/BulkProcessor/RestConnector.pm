@@ -5,6 +5,10 @@ use strict;
 
 use Scalar::Util 'blessed';
 
+use MIME::Base64 qw(decode_base64);
+
+use JSON -support_by_pp, -no_export;
+
 use URI;
 use LWP::UserAgent qw();
 
@@ -26,6 +30,7 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
     _add_headers
     convert_bools
+    get_username_from_jwt
 );
 
 sub new {
@@ -671,6 +676,29 @@ sub convert_bools {
 
     carp("Encountered an object of unrecognized type $_")
         for sort values(%unrecognized);
+}
+
+sub _decode_jwt_payload {
+    my ($jwt) = @_;
+    return undef unless defined $jwt && length($jwt) > 0;
+    my @parts = split(/\./, $jwt, 3);
+    return undef if scalar @parts < 2 || length($parts[1]) == 0;
+    my $payload = $parts[1];
+    $payload =~ tr/-_/+\//;
+    my $padding = (4 - length($payload) % 4) % 4;
+    $payload .= '=' x $padding;
+    my $decoded;
+    eval {
+        $decoded = JSON::from_json(decode_base64($payload), { allow_nonref => 1 });
+    };
+    return $@ ? undef : $decoded;
+}
+
+sub get_username_from_jwt {
+    my ($jwt) = @_;
+    my $payload = _decode_jwt_payload($jwt);
+    return undef unless defined $payload && 'HASH' eq ref $payload;
+    return $payload->{sub} // $payload->{username};
 }
 
 sub get_last_error {
