@@ -59,8 +59,6 @@ our @EXPORT_OK = qw(
     
     $publish_public_file
 
-    $JWT_VALIDITY_SECS
-
 );
 
 our $defaultconfig = 'config.cfg';
@@ -89,8 +87,6 @@ our $proband_list_filename = '%s_%s%s';
 our $publish_public_file = 0;
 
 our $ecrf_data_row_block = 100;
-
-our $JWT_VALIDITY_SECS = 365 * 24 * 60 * 60;
 
 sub update_settings {
 
@@ -121,9 +117,7 @@ sub update_settings {
 
         $ecrf_data_row_block = $data->{ecrf_data_row_block} if exists $data->{ecrf_data_row_block};
         
-        $publish_public_file = stringtobool($data->{publish_public_file}) if exists $data->{publish_public_file};
-
-        $JWT_VALIDITY_SECS = $data->{jwt_validity_secs} if exists $data->{jwt_validity_secs};        
+        $publish_public_file = stringtobool($data->{publish_public_file}) if exists $data->{publish_public_file};        
 
         return $result;
 
