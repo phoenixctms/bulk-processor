@@ -146,12 +146,10 @@ sub init {
 
     my $result = load_config($configfile);
     #support jwt via args for jobs:
-    if ($auth) {
-        $ctsmsrestapi_username = get_username_from_jwt($auth);
-    }
     init_log();
     eval {
         if ($auth) {
+            $ctsmsrestapi_username = get_username_from_jwt($auth);
             my $api = get_ctsms_restapi();
             $api->jwt($auth);
         }
