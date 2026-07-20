@@ -86,6 +86,8 @@ my $fieldnames = [
     "type",
     "probandListStatus",
     "visitScheduleItems",
+    "ecrfs",
+    "ecrfStatus",
     "trial",
     "modifiedUser",
     "deferredDelete",
