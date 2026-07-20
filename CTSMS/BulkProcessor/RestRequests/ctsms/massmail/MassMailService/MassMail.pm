@@ -51,6 +51,7 @@ my $fieldnames = [
     "description",
     "start",
     "lockAfterSending",
+    "storeMessages",
     "probandListStatusResend",
     "fromAddress",
     "fromName",
