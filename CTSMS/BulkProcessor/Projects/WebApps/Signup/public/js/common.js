@@ -133,7 +133,7 @@ function getTitleAutoCompleteConfig() {
         effect: 'fade',
         effectSpeed: 'fast',
         completeSource: function(request, response) {
-            $.ajax($.extend( true, autoCompleteAjaxSettings, {
+            $.ajax($.extend( true, {}, autoCompleteAjaxSettings, {
 
                 url: context.uriBase + '/autocomplete/title',
                 data: { title: request.query },
@@ -153,7 +153,7 @@ function getCountryNameAutoCompleteConfig() {
         effect: 'fade',
         effectSpeed: 'fast',
         completeSource: function(request, response) {
-            $.ajax($.extend( true, autoCompleteAjaxSettings, {
+            $.ajax($.extend( true, {}, autoCompleteAjaxSettings, {
 
                 url: context.uriBase + '/autocomplete/country',
                 data: { country_name: request.query },
@@ -173,7 +173,7 @@ function getProvinceAutoCompleteConfig(countryNameId) {
         effect: 'fade',
         effectSpeed: 'fast',
         completeSource: function(request, response) {
-            $.ajax($.extend( true, autoCompleteAjaxSettings, {
+            $.ajax($.extend( true, {}, autoCompleteAjaxSettings, {
 
                 url: context.uriBase + '/autocomplete/province',
                 data: { province: request.query, country_name: $('#' + countryNameId).val() },
@@ -193,7 +193,7 @@ function getCityNameAutoCompleteConfig(countryNameId,provinceId,zipCodeId) {
         effect: 'fade',
         effectSpeed: 'fast',
         completeSource: function(request, response) {
-            $.ajax($.extend( true, autoCompleteAjaxSettings, {
+            $.ajax($.extend( true, {}, autoCompleteAjaxSettings, {
 
                 url: context.uriBase + '/autocomplete/city',
                 data: { city_name: request.query, country_name: $('#' + countryNameId).val(), province: $('#' + provinceId).val(), zip_code: $('#' + zipCodeId).val() },
@@ -213,7 +213,7 @@ function getZipCodeAutoCompleteConfig(countryNameId,provinceId,cityNameId) {
         effect: 'fade',
         effectSpeed: 'fast',
         completeSource: function(request, response) {
-            $.ajax($.extend( true, autoCompleteAjaxSettings, {
+            $.ajax($.extend( true, {}, autoCompleteAjaxSettings, {
 
                 url: context.uriBase + '/autocomplete/zip',
                 data: { zip_code: request.query, country_name: $('#' + countryNameId).val(), province: $('#' + provinceId).val(), city_name: $('#' + cityNameId).val() },
@@ -233,7 +233,7 @@ function getStreetNameAutoCompleteConfig(countryNameId,provinceId,cityNameId) {
         effect: 'fade',
         effectSpeed: 'fast',
         completeSource: function(request, response) {
-            $.ajax($.extend( true, autoCompleteAjaxSettings, {
+            $.ajax($.extend( true, {}, autoCompleteAjaxSettings, {
 
                 url: context.uriBase + '/autocomplete/street',
                 data: { street_name: request.query, country_name: $('#' + countryNameId).val(), province: $('#' + provinceId).val(), city_name: $('#' + cityNameId).val() },
@@ -256,7 +256,7 @@ function getFieldValueAutoCompleteConfig(inputField) {
         forceSelection: inputField.strict,
         dropdown: inputField.strict,
         completeSource: function(request, response) {
-            $.ajax($.extend( true, autoCompleteAjaxSettings, {
+            $.ajax($.extend( true, {}, autoCompleteAjaxSettings, {
 
                 url: context.uriBase + '/autocomplete/fieldvalue',
                 data: { value: request.query, id: inputField.id },

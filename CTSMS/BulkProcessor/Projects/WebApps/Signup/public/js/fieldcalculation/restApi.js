@@ -163,7 +163,7 @@ var RestApi = RestApi || {};
 			if (debug_level >= 1) {
 				console.log('rest api request: ' + req.url);
 			}
-			jQuery.ajax(jQuery.extend(true, restApiAjaxSettings, req));
+			jQuery.ajax(jQuery.extend(true, {}, restApiAjaxSettings, req));
 		} finally {
 			refreshingJwt = false;
 		}
@@ -206,7 +206,7 @@ var RestApi = RestApi || {};
 			console.log("rest api request: " + jqueryRequest.url);
 		}
 		if (url != null && url.length > 0) {
-			return jQuery.ajax(jQuery.extend(true, restApiAjaxSettings, jqueryRequest));
+			return jQuery.ajax(jQuery.extend(true, {}, restApiAjaxSettings, jqueryRequest));
 		}
 		return null;
 	}
