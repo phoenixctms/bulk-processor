@@ -31,6 +31,8 @@ our @EXPORT_OK = qw(
     _add_headers
     convert_bools
     get_username_from_jwt
+    _decode_jwt_payload
+    jwt_needs_refresh
 );
 
 sub new {
@@ -699,6 +701,15 @@ sub get_username_from_jwt {
     my $payload = _decode_jwt_payload($jwt);
     return undef unless defined $payload && 'HASH' eq ref $payload;
     return $payload->{sub} // $payload->{username};
+}
+
+sub jwt_needs_refresh {
+    my ($jwt, $skew_secs) = @_;
+    return 0 unless defined $jwt && length($jwt) > 0;
+    my $payload = _decode_jwt_payload($jwt);
+    return 0 unless defined $payload && 'HASH' eq ref $payload && defined $payload->{exp};
+    $skew_secs = 60 unless defined $skew_secs;
+    return time() >= (int($payload->{exp}) - int($skew_secs));
 }
 
 sub get_last_error {
