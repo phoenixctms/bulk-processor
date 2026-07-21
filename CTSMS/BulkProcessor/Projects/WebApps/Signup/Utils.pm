@@ -549,7 +549,6 @@ sub get_template {
         $js_vars->{restApiUrl} //= get_restapi_uri();
         my $rest_api_jwt = get_rest_api_jwt();
         $js_vars->{restApiJwt} = $rest_api_jwt if defined $rest_api_jwt;
-        $js_vars->{jwtRefreshSkewSecs} = get_restapi()->jwt_refresh_skew_secs();
     }
 
     my $js_context_json = _quote_js(to_json_safe($js_vars));
