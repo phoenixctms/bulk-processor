@@ -150,11 +150,12 @@ sub _renew_jwt_if_required {
 
     $self->{_refreshing_jwt} = 1;
     eval {
-        my $path = 'tools/login';
-        if (defined $self->{jwt_validity_secs} && $self->{jwt_validity_secs} > 0) {
-            $path .= '?validity_secs=' . int($self->{jwt_validity_secs});
-        }
-        my $new_jwt = $self->post($path, {});
+        # Runtime require avoids a circular use with Login.pm (which uses CtsmsRestApi).
+        require CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::Login;
+        my $new_jwt = CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::Login::issue_jwt(
+            $self->{jwt_validity_secs},
+            $self,
+        );
         if (defined $new_jwt && !ref $new_jwt && length($new_jwt) > 0) {
             restinfo($self, 'rest api jwt refreshed', getlogger(__PACKAGE__));
             $self->jwt($new_jwt);
