@@ -144,6 +144,9 @@ sub _renew_jwt_if_required {
     my $self = shift;
     return unless defined $self->{jwt} && length($self->{jwt}) > 0;
     return unless defined $self->{jwt_expires};
+    if (defined $self->{jwt_refresh_cooldown_until} && time() < $self->{jwt_refresh_cooldown_until}) {
+        return;
+    }
     my $skew = $self->jwt_refresh_skew_secs();
     return if time() < ($self->{jwt_expires} - $skew);
 
@@ -157,10 +160,12 @@ sub _renew_jwt_if_required {
         );
         if (defined $new_jwt && !ref $new_jwt && length($new_jwt) > 0) {
             restinfo($self, 'rest api jwt refreshed', getlogger(__PACKAGE__));
+            undef $self->{jwt_refresh_cooldown_until};
             $self->jwt($new_jwt);
         }
     };
     if ($@) {
+        $self->{jwt_refresh_cooldown_until} = time() + $skew;
         restwarn($self, 'rest api jwt refresh failed: ' . $@, getlogger(__PACKAGE__));
     }
     $self->{_refreshing_jwt} = 0;
