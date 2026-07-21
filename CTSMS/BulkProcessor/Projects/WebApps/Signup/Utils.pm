@@ -544,6 +544,7 @@ sub get_template {
     $js_vars->{sessionTimeout} = Dancer::config->{session_expires};
     $js_vars->{sessionTimerPattern} = Dancer::Plugin::I18N::localize('session_timer_pattern');
     $js_vars->{enableSessionTimer} = (contains($view_name,[ 'start', '404', 'runtime_error' ]) ? \0 : \1);
+    $js_vars->{jwtRefreshSkewSecs} = get_restapi()->jwt_refresh_skew_secs();
     unless (contains($view_name,[ 'start', '404', 'runtime_error' ])) {
         $js_vars->{restApiUrl} //= get_restapi_uri();
         my $rest_api_jwt = get_rest_api_jwt();
