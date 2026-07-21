@@ -163,7 +163,7 @@ var RestApi = RestApi || {};
 			if (debug_level >= 1) {
 				console.log('rest api request: ' + req.url);
 			}
-			jQuery.ajax(req);
+			jQuery.ajax(jQuery.extend(true, restApiAjaxSettings, req));
 		} finally {
 			refreshingJwt = false;
 		}
