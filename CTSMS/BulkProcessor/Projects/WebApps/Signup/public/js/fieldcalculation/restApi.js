@@ -12,8 +12,6 @@ var RestApi = RestApi || {};
 		? API_JSON_DATETIME_PATTERN
 		: 'yyyy-MM-dd HH:mm:ss';
 
-	var jwtRefreshSkewSecs = typeof JWT_REFRESH_SKEW_SECS !== 'undefined' ? JWT_REFRESH_SKEW_SECS : 60;
-
 	var sessionJwt = typeof REST_API_JWT !== 'undefined' ? REST_API_JWT : null;
 	var sessionJwtExpires = null;
 	var sessionJwtValiditySecs = null;
@@ -133,7 +131,7 @@ var RestApi = RestApi || {};
 		if (sessionJwtExpires == null) {
 			return false;
 		}
-		return Date.now() >= (sessionJwtExpires - jwtRefreshSkewSecs * 1000);
+		return Date.now() >= (sessionJwtExpires - JWT_REFRESH_SKEW_SECS * 1000);
 	}
 
 	function refreshSessionJwtIfRequired() {
