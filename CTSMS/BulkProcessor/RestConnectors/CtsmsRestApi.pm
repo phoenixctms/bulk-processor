@@ -27,7 +27,11 @@ use CTSMS::BulkProcessor::LogError qw(
     restresponseerror
     $cli);
 
-use CTSMS::BulkProcessor::RestConnector qw(_add_headers convert_bools);
+use CTSMS::BulkProcessor::RestConnector qw(
+    _add_headers
+    convert_bools
+    _decode_jwt_payload
+);
 
 use CTSMS::BulkProcessor::Array qw(contains);
 
@@ -52,6 +56,8 @@ my $contenttype = 'application/json';
 
 my $request_charset = 'utf-8';
 my $response_charset = 'utf-8';
+
+my $default_jwt_refresh_skew_secs = 60;
 
 sub _get_api {
     my @get_rest_apis = @_;
@@ -101,8 +107,71 @@ sub jwt {
         my $jwt = shift;
         undef $self->{ua};
         $self->{jwt} = (defined $jwt && length($jwt) > 0) ? $jwt : undef;
+        $self->_apply_jwt_claims($self->{jwt});
     }
     return $self->{jwt};
+
+}
+
+sub jwt_refresh_skew_secs {
+
+    my $self = shift;
+    if (@_) {
+        my $skew = shift;
+        $self->{jwt_refresh_skew_secs} = (defined $skew && $skew =~ /^\d+$/) ? int($skew) : $default_jwt_refresh_skew_secs;
+    }
+    return $self->{jwt_refresh_skew_secs} // $default_jwt_refresh_skew_secs;
+
+}
+
+sub _apply_jwt_claims {
+
+    my $self = shift;
+    my ($jwt) = @_;
+    $self->{jwt_expires} = undef;
+    $self->{jwt_validity_secs} = undef;
+    return unless defined $jwt && length($jwt) > 0;
+    my $claims = _decode_jwt_payload($jwt);
+    return unless defined $claims && 'HASH' eq ref $claims && defined $claims->{exp};
+    $self->{jwt_expires} = int($claims->{exp});
+    if (defined $claims->{iat}) {
+        $self->{jwt_validity_secs} = int($claims->{exp}) - int($claims->{iat});
+    }
+
+}
+
+sub _renew_jwt_if_required {
+
+    my $self = shift;
+    return unless defined $self->{jwt} && length($self->{jwt}) > 0;
+    return unless defined $self->{jwt_expires};
+    my $skew = $self->jwt_refresh_skew_secs();
+    return if time() < ($self->{jwt_expires} - $skew);
+
+    $self->{_refreshing_jwt} = 1;
+    eval {
+        my $path = 'tools/login';
+        if (defined $self->{jwt_validity_secs} && $self->{jwt_validity_secs} > 0) {
+            $path .= '?validity_secs=' . int($self->{jwt_validity_secs});
+        }
+        my $new_jwt = $self->post($path, {});
+        if (defined $new_jwt && !ref $new_jwt && length($new_jwt) > 0) {
+            restinfo($self, 'rest api jwt refreshed', getlogger(__PACKAGE__));
+            $self->jwt($new_jwt);
+        }
+    };
+    if ($@) {
+        restwarn($self, 'rest api jwt refresh failed: ' . $@, getlogger(__PACKAGE__));
+    }
+    $self->{_refreshing_jwt} = 0;
+
+}
+
+sub _ua_request {
+
+    my $self = shift;
+    $self->_renew_jwt_if_required() unless $self->{_refreshing_jwt};
+    return $self->SUPER::_ua_request(@_);
 
 }
 

@@ -50,6 +50,10 @@ use CTSMS::BulkProcessor::Utils qw(
 
 use CTSMS::BulkProcessor::Array qw(contains);
 
+use CTSMS::BulkProcessor::RestConnector qw(
+    jwt_needs_refresh
+);
+
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
@@ -642,7 +646,8 @@ sub get_rest_api_jwt {
     my $key = _get_rest_api_jwt_session_key();
     my $cached = Dancer::session('rest_api_jwt');
     if (defined $cached && 'HASH' eq ref $cached && ($cached->{key} // '') eq $key && defined $cached->{jwt} && length($cached->{jwt}) > 0) {
-        return $cached->{jwt};
+        my $skew = get_restapi()->jwt_refresh_skew_secs();
+        return $cached->{jwt} unless jwt_needs_refresh($cached->{jwt}, $skew);
     }
     return issue_jwt();
 }
