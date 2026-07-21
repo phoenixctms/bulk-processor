@@ -33,7 +33,11 @@ our @EXPORT_OK = qw(
     get_username_from_jwt
     _decode_jwt_payload
     jwt_needs_refresh
+    $default_jwt_refresh_skew_secs
 );
+
+# Keep in sync with CTSMS web DefaultSettings.JWT_REFRESH_SKEW_SECS.
+our $default_jwt_refresh_skew_secs = 55;
 
 sub new {
 
@@ -708,7 +712,7 @@ sub jwt_needs_refresh {
     return 0 unless defined $jwt && length($jwt) > 0;
     my $payload = _decode_jwt_payload($jwt);
     return 0 unless defined $payload && 'HASH' eq ref $payload && defined $payload->{exp};
-    $skew_secs = 55 unless defined $skew_secs;
+    $skew_secs = $default_jwt_refresh_skew_secs unless defined $skew_secs;
     return time() >= (int($payload->{exp}) - int($skew_secs));
 }
 
