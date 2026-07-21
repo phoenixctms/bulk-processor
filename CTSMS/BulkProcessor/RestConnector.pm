@@ -708,7 +708,7 @@ sub jwt_needs_refresh {
     return 0 unless defined $jwt && length($jwt) > 0;
     my $payload = _decode_jwt_payload($jwt);
     return 0 unless defined $payload && 'HASH' eq ref $payload && defined $payload->{exp};
-    $skew_secs = 60 unless defined $skew_secs;
+    $skew_secs = 55 unless defined $skew_secs;
     return time() >= (int($payload->{exp}) - int($skew_secs));
 }
 

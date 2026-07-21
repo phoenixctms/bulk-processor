@@ -57,7 +57,7 @@ my $contenttype = 'application/json';
 my $request_charset = 'utf-8';
 my $response_charset = 'utf-8';
 
-my $default_jwt_refresh_skew_secs = 60;
+my $default_jwt_refresh_skew_secs = 55;
 
 sub _get_api {
     my @get_rest_apis = @_;

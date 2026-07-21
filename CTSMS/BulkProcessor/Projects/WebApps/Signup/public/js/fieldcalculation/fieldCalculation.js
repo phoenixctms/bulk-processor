@@ -1,178 +1,3 @@
-var floatEpsilon = 0.000001;
-
-function decodeBase64(base64String) {
-
-	var encoded = base64String.replace(/-/g, '+').replace(/_/g, '/');
-	while (encoded.length % 4)
-		encoded += '=';
-	return jQuery.base64Decode(encoded);
-
-}
-
-function _getElement(pickTargetField) {
-
-	if (pickTargetField != null && pickTargetField.length > 0) {
-
-		var targetField = jQuery('#' + pickTargetField);
-		if (typeof targetField !== 'undefined' && targetField != null && targetField.length) {
-			return targetField;
-		}
-	}
-	return null;
-
-}
-
-function _testFlag(args, flagName) {
-
-	if (args && flagName) {
-		if (typeof args[flagName] === 'undefined' || args[flagName] == false) {
-			return false;
-		} else {
-			return true;
-		}
-	}
-	return false;
-
-}
-
-function _testPropertyExists(args, propertyName) {
-
-	if (args && propertyName) {
-		if (typeof args[propertyName] === 'undefined' || args[propertyName] == null) {
-			return false;
-		} else {
-			return true;
-		}
-	}
-	return false;
-}
-
-function _testFunction(func) {
-	var getType = {};
-	return func && getType.toString.call(func) == '[object Function]';
-}
-
-function openInventory() {
-	//no-op
-}
-function openStaff() {
-	//no-op
-}
-function openCourse() {
-	//no-op
-}
-function openTrial() {
-	//no-op
-}
-function openProband() {
-	//no-op
-}
-function openInputField() {
-	//no-op
-}
-function openUser() {
-	//no-op
-}
-function openMassMail() {
-	//no-op
-}
-
-function showErrorMessage(error_message_id) {
-	var errorMessageDivElement = _getElement(error_message_id + '_div');
-	if (errorMessageDivElement != null) {
-		errorMessageDivElement.show();
-	}
-}
-
-function hideErrorMessage(error_message_id) {
-	var errorMessageDivElement = _getElement(error_message_id + '_div');
-	if (errorMessageDivElement != null) {
-		errorMessageDivElement.hide();
-	}
-}
-
-function setErrorMessageText(error_message_id,output) {
-	var errorMessageSpanElement = _getElement(error_message_id);
-	if (errorMessageSpanElement != null) {
-		errorMessageSpanElement.html(output);
-	}
-}
-
-function setErrorMessageTexts(error_message_id,msgs) {
-	var msgsLength = msgs.length;
-	var errorMessageDivElement;
-	var ulElement;
-	var liElement;
-	var spanId;
-	var errorMessageSpanElement;
-	var i;
-	if (msgsLength > 0) {
-		setErrorMessageText(error_message_id, msgs[0].output);
-		errorMessageDivElement = _getElement(error_message_id + '_div');
-		if (errorMessageDivElement != null) {
-			ulElement = errorMessageDivElement.find('ul').first();
-			ulElement.find('li:not(:first)').remove();
-			if (msgsLength > 1) {
-				liElement = ulElement.find('li').first();
-				errorMessageSpanElement = liElement.find('span').first();
-				spanId = errorMessageSpanElement.attr('id');
-				for (i = 1; i < msgsLength; i++) {
-					liElement = liElement.clone();
-					errorMessageSpanElement = liElement.find('span').first();
-					errorMessageSpanElement.html(msgs[i].output);
-					errorMessageSpanElement.attr('id', spanId + '_' + i);
-					ulElement.append(liElement);
-				}
-			}
-		}
-	} else {
-		setErrorMessageText(error_message_id, '');
-		errorMessageDivElement = _getElement(error_message_id + '_div');
-		if (errorMessageDivElement != null) {
-			ulElement = errorMessageDivElement.find('ul').first();
-			ulElement.find('li:not(:first)').remove();
-		}
-	}
-}
-
-
-function _getOutputId(value) {
-    return INPUT_FIELD_OUTPUT_ID_PREFIX + value.inquiry.id;
-}
-
-
-var INPUT_JSON_DATETIME_PATTERN = 'yyyy-MM-dd ' + INPUT_TIME_PATTERN;
-var VO_JSON_DATETIME_PATTERN = 'yyyy-MM-dd ' + VO_TIME_PATTERN;
-var API_JSON_DATETIME_PATTERN = 'yyyy-MM-dd HH:mm:ss';
-
-var AJAX_OPERATION_SUCCESS = 'operationSuccess';
-var AJAX_FIELD_DELTA_ERROR_MESSAGE_ID = 'fieldDeltaErrorMessageId';
-var AJAX_INPUT_FIELD_PROBAND_BASE64 = 'inputFieldProbandBase64';
-var AJAX_INPUT_FIELD_TRIAL_BASE64 = 'inputFieldTrialBase64';
-
-var AJAX_INPUT_FIELD_PROBAND_ADDRESSES_BASE64 = 'inputFieldProbandAddressesBase64';
-
-var AJAX_INPUT_FIELD_PROBAND_LIST_ENTRY_BASE64 = 'inputFieldProbandListEntryBase64';
-var AJAX_INPUT_FIELD_VISIT_SCHEDULE_ITEMS_BASE64 = 'inputFieldVisitScheduleItemsBase64';
-var AJAX_INPUT_FIELD_PROBAND_GROUPS_BASE64 = 'inputFieldProbandGroupsBase64';
-var AJAX_INPUT_FIELD_ACTIVE_USER_BASE64 = 'activeUserBase64';
-var AJAX_INPUT_FIELD_LOCALE = "inputFieldLocale";
-
-var AJAX_INPUT_FIELD_VARIABLE_VALUES_BASE64 = 'inputFieldVariableValuesBase64';
-var AJAX_INPUT_FIELD_PROBAND_LIST_ENTRY_TAG_VALUES_BASE64 = "probandListEntryTagValuesBase64";
-var AJAX_INPUT_FIELD_INQUIRY_VALUES_BASE64 = "inputFieldInquiryValuesBase64";
-
-var INPUT_FIELD_OUTPUT_ID_PREFIX = 'inputfield_output_';
-var INPUT_FIELD_OUTPUT_ID_INDEX_SEPARATOR = '_';
-
-var INPUT_FIELD_WIDGET_VAR_PREFIX = 'inputFieldWidget_';
-var INPUT_FIELD_WIDGET_VAR_INDEX_SEPARATOR = '_';
-
-var INPUT_FIELD_DELTA_SUMMARY_MAX = 100;
-var FIELD_CALCULATION_DECODE_BASE64 = true;
-
-var FIELD_CALCULATION_DEBUG_LEVEL = 0;
-
 var FieldCalculation = FieldCalculation || {};
 
 var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
@@ -192,7 +17,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	    'errorSectionIndex'      : "%s - %s (Index %d)%s%s",
 	    'errorSection'           : "%s - %s%s%s",
 	    'errorIndex'             : "%s (Index %d)%s%s",
-	    'error'                  : "%s%s%s",
+	    'error'                  : "%s%s%s",		
 	    'required'               : " erforderlich",
 	    'mustBeEmpty'            : " muss leer sein",
 	    'mustBeUnchecked'        : " darf nicht angekreuzt sein",
@@ -204,7 +29,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	    'calculatedSectionIndex' : "%s - %s (Index %d) erwartet: %s",
 	    'calculatedSection'      : "%s - %s erwartet: %s",
 	    'calculatedIndex'        : "%s (Index %d) erwartet: %s",
-	    'calculated'             : "%s erwartet: %s",
+	    'calculated'             : "%s erwartet: %s",		
 	    'enteredSectionIndex'    : "%s - %s (Index %d) eingegeben: %s",
 	    'enteredSection'         : "%s - %s eingegeben: %s",
 	    'enteredIndex'           : "%s (Index %d) eingegeben: %s",
@@ -223,7 +48,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	    'wrong time format'      : "falsches Uhrzeitformat",
 	    'hour required'          : "Stunde erforderlich",
 	    'minute required'        : "Minute erforderlich",
-		'second required'        : "Sekunde erforderlich",
+	    'second required'        : "Sekunde erforderlich",
 	    'invalid time'           : "ungültige Uhrzeit",
 
 	    'customMonthNameToNumberMap' : {
@@ -250,7 +75,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	    'errorSectionIndex'      : "%s - %s (index %d)%s%s",
 	    'errorSection'           : "%s - %s%s%s",
 	    'errorIndex'             : "%s (index %d)%s%s",
-	    'error'                  : "%s%s%s",
+	    'error'                  : "%s%s%s",		
 	    'required'               : " required",
 	    'mustBeEmpty'            : " must be empty",
 	    'mustBeUnchecked'        : " must be unchecked",
@@ -262,7 +87,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	    'calculatedSectionIndex' : "%s - %s (index %d) expected: %s",
 	    'calculatedSection'      : "%s - %s expected: %s",
 	    'calculatedIndex'        : "%s (index %d) expected: %s",
-	    'calculated'             : "%s expected: %s",
+	    'calculated'             : "%s expected: %s",		
 	    'enteredSectionIndex'    : "%s - %s (index %d) entered: %s",
 	    'enteredSection'         : "%s - %s entered: %s",
 	    'enteredIndex'           : "%s (index %d) entered: %s",
@@ -281,7 +106,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	    'wrong time format'      : "wrong time format",
 	    'hour required'          : "hour required",
 	    'minute required'        : "minute required",
-		'second required'        : "second required",
+	    'second required'        : "second required",
 	    'invalid time'           : "invalid time",
 
 	    'customMonthNameToNumberMap' : {
@@ -565,6 +390,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 				_setInputFieldVariableValue(inputFieldVariable.value, evaluation.returnValue);
 			}
 
+
 			inputFieldVariable.processed = true;
 			inputFieldVariable.delta = !_equalInputFieldVariable(inputFieldVariable);
 			_debugVariableValue("variable value updated ", inputFieldVariable);
@@ -661,7 +487,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 											if (FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES && !_empty(_getInputFieldVariableValue(argInputFieldVariable[j].enteredValue))) {
 												argValue.push(_cloneJSON(argInputFieldVariable[j].enteredValue));
 											} else {
-												argValue.push(_processInputFieldVariableValue(argInputFieldVariable[j], cycleCheckMap ? cycleCheckMap : {}));
+												argValue.push(_processInputFieldVariableValue(argInputFieldVariable[j], cycleCheckMap ? cycleCheckMap : {}));	
 											}
 										}
 									}
@@ -675,7 +501,6 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 							}
 
 							if ((!argInputFieldVariable || (argInputFieldVariable.valueErrorMessage != null && argInputFieldVariable.valueErrorMessage.length > 0))) {
-
 								errorMessage = argInputFieldVariable.valueErrorMessage;
 								returnValue = null;
 								argsOk = false;
@@ -769,7 +594,14 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		mask["$visit"] = inputFieldVariable.value.visitToken;
 
 		mask["getEnteredValue"] = _getEnteredValue;
-
+		mask["valueEquals"] = function(a, b) {
+			if (arguments.length >= 2) {
+				return _equalInputFieldValues(a, b) === true;
+			}
+			// Default: compare previous value to entered (reliable for selections/dates).
+			return _equalInputFieldValues(inputFieldVariable.oldValue, inputFieldVariable.enteredValue) === true;
+		};
+		
 		var _printSelectionSetValues = function(value, separator, selectionSetValueField) {
 			if (!(value instanceof Array)) {
 				value = [ value ];
@@ -831,7 +663,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		    	if ('date' == formatOrSeparator) {
 					return _printDateCustom(value,selectionSetValueFieldOrLocale);
 				} else if ('time' == formatOrSeparator) {
-					return _printTimeCustom(value,selectionSetValueFieldOrLocale);
+					return _printTimeCustom(value,selectionSetValueFieldOrLocale);			
 		    	} else {
 		    		return value.format(JSJoda.DateTimeFormatter.ofPattern(formatOrSeparator != null ? formatOrSeparator : INPUT_DATETIME_PATTERN));
 		    	}
@@ -847,7 +679,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		    	if ('date' == formatOrSeparator) {
 					return _printDateCustom(timestamp,selectionSetValueFieldOrLocale);
 				} else if ('time' == formatOrSeparator) {
-					return _printTimeCustom(timestamp,selectionSetValueFieldOrLocale);
+					return _printTimeCustom(timestamp,selectionSetValueFieldOrLocale);			
 		    	} else {
 		    		return timestamp.format(JSJoda.DateTimeFormatter.ofPattern(formatOrSeparator != null ? formatOrSeparator : pattern));
 		    	}
@@ -921,7 +753,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			}
 			return result;
 		};
-
+		
 		mask["findInquiryValues"] = function(condition) {
 			var result = [];
 			if (_testFunction(condition)) {
@@ -934,7 +766,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 				}
 			}
 			return result;
-		};
+		};		
 
 		var _throwError = function(message,localize,noColon) {
 		    if (noColon) {
@@ -979,13 +811,13 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 				    _throwError('required',true,true);
 			    }
 		    } else if(entered instanceof JSJoda.LocalDate) {
-
+		    	
 		    } else if(entered instanceof JSJoda.LocalTime) {
-
+		    	
 		    } else if(entered instanceof JSJoda.LocalDateTime) {
-
+		    	
 		    } else if(entered instanceof JSJoda.ZonedDateTime) {
-
+		    	
 			} else if(typeof entered === "object" && 'ids' in entered){
 				if (entered.ids.length <= 0) {
 				    _throwError('required',true,true);
@@ -1049,8 +881,6 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		mask["quoteJs"] = _quoteJs;
 
 		mask["getInputFieldSelectionSetValue"] = _getInputFieldSelectionSetValue;
-
-
 		mask["containsName"] = _testSelectionSetValueName;
 		mask["containsValue"] = _testSelectionSetValueValue;
 		mask["getSeriesValues"] = _getSeriesValues;
@@ -1060,7 +890,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		mask["parseDate"] = _parseDate;
 		mask["parseDateTime"] = _parseDateTime;
 		mask["parseTime"] = _parseTime;
-		mask["formatDecimal"] = _formatDecimal;
+		mask["formatDecimal"] = _formatDecimal;		
 		mask["parseDecimal"] = _parseDecimal;
 
 		mask["parseDateCustom"] = _parseDateCustom;
@@ -1267,7 +1097,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			return null;
 		}
 	}
-
+	
 	function _parseDateTime(input,pattern,zone) {
 		if (input == null || input.length == 0) {
 			return null;
@@ -1301,14 +1131,14 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		}
 		return input;
 	}
-
+	
 	function _formatDecimal(input) {
 		if (input != null && INPUT_DECIMAL_SEPARATOR != null && INPUT_DECIMAL_SEPARATOR.length > 0) {
 			input = (input+'').replace('.',INPUT_DECIMAL_SEPARATOR);
 		}
 		return input;
 	}
-
+	
 	function _printDateCustom(input,locale) {
 		if (input == null || input === undefined) {
 
@@ -1349,10 +1179,10 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			return null;
 		}
 		var regexp = _getLocalizedMessage('customPartialDatePartRegExp',locale);
-		if (regexp.test(ary[2])) {
-			if (regexp.test(ary[1])) {
-				if (regexp.test(ary[0])) {
-
+		if (regexp.test(ary[2])) { 
+			if (regexp.test(ary[1])) { 
+				if (regexp.test(ary[0])) { 
+					
 				} else {
 					if (_testFunction(error)) {
 						error('month required');
@@ -1367,7 +1197,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			}
 		} else if (regexp.test(ary[1])) {
 			if (regexp.test(ary[0])) {
-
+				
 			} else {
 				if (_testFunction(error)) {
 					error('month required');
@@ -1486,7 +1316,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	    if (regexp.test(ary[0])) {
 	    	if (regexp.test(ary[1])) {
 		    	if (ary.length != 3 || regexp.test(ary[2])) {
-
+			 		
 				} else {
 					if (_testFunction(error)) {
 					    error('minute required');
@@ -1501,7 +1331,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			}
 	    } else if (regexp.test(ary[1])) {
 	    	if (ary.length != 3 || regexp.test(ary[2])) {
-
+		 		
 			} else {
 				if (_testFunction(error)) {
 				    error('minute required');
@@ -1509,7 +1339,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		        return null;
 			}
 		}
-
+	    
 		var h = ary[0];
 		if (regexp.test(h)) {
 			h = '00';
@@ -1580,7 +1410,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			}
 		}
 	}
-
+	
 	function _getEnteredValue(variable,index) {
 	    var inputFieldVar = _getInputFieldVariable(variable, index);
 		if (inputFieldVar) {
@@ -1683,7 +1513,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 				} else {
 					inputFieldVariableValue.timestampValue = null;
 				}
-				break;
+				break;				
 			default:
 
 			}
@@ -1707,8 +1537,6 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 
 	function _debugVariableValue(prefix,inputFieldVariable) {
 		if (inputFieldVariable != null) {
-
-
 			if (FIELD_CALCULATION_DEBUG_LEVEL >= 3) {
 				console.log(prefix + _debugVarName(inputFieldVariable) + " = " + JSON.stringify(_getInputFieldVariableValue(inputFieldVariable.value)));
 			}
@@ -1729,7 +1557,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			case "SELECT_MANY_V":
 			    if (inputFieldSelectionSetVals && inputFieldVariableValue.selectionValueIds != null) {
 					var res = [];
-    		        for (var j = 0; j < inputFieldVariableValue.selectionValueIds.length; j++) {
+			        for (var j = 0; j < inputFieldVariableValue.selectionValueIds.length; j++) {
 			            var id = inputFieldVariableValue.selectionValueIds[j];
 			            for (var i = 0; i < inputFieldSelectionSetVals.length; i++) {
 			                if (inputFieldSelectionSetVals[i].id == id) {
@@ -1768,37 +1596,40 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 
 	function _equalInputFieldVariable(inputFieldVariable) {
 		if (inputFieldVariable != null) {
-			var value = inputFieldVariable.value;
-			var enteredValue = inputFieldVariable.enteredValue;
-			if (value != null && enteredValue != null) {
-				switch (value.inputFieldType) {
-				case "SINGLE_LINE_TEXT":
-				case "MULTI_LINE_TEXT":
-				case "AUTOCOMPLETE":
-					return value.textValue === enteredValue.textValue || ((value.textValue == null || value.textValue.length == 0) && (enteredValue.textValue == null || enteredValue.textValue.length == 0));
-				case "SELECT_ONE_DROPDOWN":
-				case "SELECT_ONE_RADIO_H":
-				case "SELECT_ONE_RADIO_V":
-				case "SELECT_MANY_H":
-				case "SELECT_MANY_V":
-					return _selectionSetValueIdsEqual(value.selectionValueIds, enteredValue.selectionValueIds);
-				case "CHECKBOX":
-					return value.booleanValue == enteredValue.booleanValue;
-				case "INTEGER":
-					return value.longValue == enteredValue.longValue;
-				case "FLOAT":
-					return Math.abs(value.floatValue - enteredValue.floatValue) <= floatEpsilon;
-				case "DATE":
-					return _dateEqual(value.dateValue, enteredValue.dateValue);
-				case "TIME":
-					return _dateEqual(value.timeValue, enteredValue.timeValue);
-				case "TIMESTAMP":
-					return _dateEqual(value.timestampValue, enteredValue.timestampValue);
-				case "SKETCH":
-					return value.inkValues == enteredValue.inkValues && _selectionSetValueIdsEqual(value.selectionValueIds, enteredValue.selectionValueIds);
-				default:
+			return _equalInputFieldValues(inputFieldVariable.value, inputFieldVariable.enteredValue);
+		}
+		return null;
+	}
 
-				}
+	function _equalInputFieldValues(value, enteredValue) {
+		if (value != null && enteredValue != null) {
+			switch (value.inputFieldType) {
+			case "SINGLE_LINE_TEXT":
+			case "MULTI_LINE_TEXT":
+			case "AUTOCOMPLETE":
+				return value.textValue === enteredValue.textValue || ((value.textValue == null || value.textValue.length == 0) && (enteredValue.textValue == null || enteredValue.textValue.length == 0));
+			case "SELECT_ONE_DROPDOWN":
+			case "SELECT_ONE_RADIO_H":
+			case "SELECT_ONE_RADIO_V":
+			case "SELECT_MANY_H":
+			case "SELECT_MANY_V":
+				return _selectionSetValueIdsEqual(value.selectionValueIds, enteredValue.selectionValueIds);
+			case "CHECKBOX":
+				return value.booleanValue == enteredValue.booleanValue;
+			case "INTEGER":
+				return value.longValue == enteredValue.longValue;
+			case "FLOAT":
+				return Math.abs(value.floatValue - enteredValue.floatValue) <= floatEpsilon;
+			case "DATE":
+				return _dateEqual(value.dateValue, enteredValue.dateValue);
+			case "TIME":
+				return _dateEqual(value.timeValue, enteredValue.timeValue);
+			case "TIMESTAMP":
+				return _dateEqual(value.timestampValue, enteredValue.timestampValue);
+			case "SKETCH":
+				return value.inkValues == enteredValue.inkValues && _selectionSetValueIdsEqual(value.selectionValueIds, enteredValue.selectionValueIds);
+			default:
+
 			}
 		}
 		return null;
@@ -1815,7 +1646,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			return true;
 		}
 	}
-
+	
 	function _selectionSetValueIdsEqual(ids1, ids2) {
 		var idMap1 = {};
 		var idCount1 = 0;
@@ -1911,7 +1742,6 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		if (_testPropertyExists(args, AJAX_INPUT_FIELD_PROBAND_ADDRESSES_BASE64)) {
 			inputFieldVars.probandAddresses = _decode(args[AJAX_INPUT_FIELD_PROBAND_ADDRESSES_BASE64]);
 		}
-
 		if (_testPropertyExists(args, AJAX_INPUT_FIELD_PROBAND_LIST_ENTRY_TAG_VALUES_BASE64)) {
 			var probandListEntryTagValues = _decode(args[AJAX_INPUT_FIELD_PROBAND_LIST_ENTRY_TAG_VALUES_BASE64]);
 			inputFieldVars.tagValues = {};
@@ -1930,7 +1760,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 					_sanitizeJsonValues(inquiryValues[i]);
 					if (!inputFieldVars.inquiryValues[inquiryValues[i].category]) {
 					    inputFieldVars.inquiryValues[inquiryValues[i].category] = {};
-					}
+					}					
 					inputFieldVars.inquiryValues[inquiryValues[i].category][inquiryValues[i].position] = inquiryValues[i];
 				}
 			}
@@ -1991,7 +1821,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		} else if (inputFieldVariableValue.dateValue instanceof Date) {
 			inputFieldVariableValue.dateValue = JSJoda.LocalDate.from(JSJoda.nativeJs(inputFieldVariableValue.dateValue));
 		}
-
+		
 		if (typeof inputFieldVariableValue.timeValue === 'string') {
 			if (inputFieldVariableValue.timeValue == null || inputFieldVariableValue.timeValue.length == 0) {
 				inputFieldVariableValue.timeValue = null;
@@ -2007,7 +1837,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		} else if (inputFieldVariableValue.timeValue instanceof Date) {
 			inputFieldVariableValue.timeValue = JSJoda.LocalTime.from(JSJoda.nativeJs(inputFieldVariableValue.timeValue));
 		}
-
+		
 		if (typeof inputFieldVariableValue.timestampValue === 'string') {
 			if (inputFieldVariableValue.timestampValue == null || inputFieldVariableValue.timestampValue.length == 0) {
 				inputFieldVariableValue.timestampValue = null;
@@ -2028,7 +1858,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 					JSJoda.ZoneId.of(SYSTEM_TIMEZONE_ID)
 			);
 		}
-
+		
 		if (typeof inputFieldVariableValue.userTimeZone === 'string') {
 			inputFieldVariableValue.userTimeZone = !!inputFieldVariableValue.userTimeZone;
 		}
@@ -2076,8 +1906,6 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 					var inputFieldVariable = {};
 					inputFieldVariableValue.jsValueExpression = cs.strip(inputFieldVariableValue.jsValueExpression);
 					inputFieldVariableValue.jsOutputExpression = cs.strip(inputFieldVariableValue.jsOutputExpression);
-
-
 					if (_testPropertyExists(inputFieldVariableValue, "inquiryId")) {
 						inputFieldVariable.outputId = INPUT_FIELD_OUTPUT_ID_PREFIX + inputFieldVariableValue.inquiryId;
 					} else if (_testPropertyExists(inputFieldVariableValue, "tagId")) {
@@ -2132,8 +1960,6 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 							}
 						} else {
 							inputFieldVariableMap[inputFieldVariableValue.jsVariableName] = [];
-
-
 							if (FIELD_CALCULATION_DEBUG_LEVEL >= 2) {
 								console.log("variable " + _debugVarName(inputFieldVariable) + " added");
 							}
@@ -2181,78 +2007,75 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 
 	}
 
-	function singleLineTextOnChange(value) {
+	function singleLineTextOnChange(variableName, index, widget, outputId) {
 
-		if (!silent) _inputFieldOnChange(value.inquiry.jsVariableName, value.index, getSingleLineTextVal(value.inquiry.id));
-
-	}
-
-	function multiLineTextOnChange(value) {
-
-		if (!silent) _inputFieldOnChange(value.inquiry.jsVariableName, value.index, getMultiLineTextVal(value.inquiry.id));
+		if (!silent) _inputFieldOnChange(variableName, index, widget.getValue());
 
 	}
 
-	function selectOneDropdownOnChange(value) {
+	function multiLineTextOnChange(variableName, index, widget, outputId) {
 
-		if (!silent) _inputFieldOnChange(value.inquiry.jsVariableName, value.index, getSelectOneDropdownVal(value.inquiry.id));
-
-	}
-
-	function selectOneRadioOnChange(value) {
-
-		if (!silent) _inputFieldOnChange(value.inquiry.jsVariableName, value.index, getSelectOneRadioVal(value.inquiry.id));
+		if (!silent) _inputFieldOnChange(variableName, index, widget.getValue());
 
 	}
 
-	function selectManyOnChange(value) {
+	function selectOneDropdownOnChange(variableName, index, widget, outputId) {
 
-		if (!silent) _inputFieldOnChange(value.inquiry.jsVariableName, value.index, getSelectManyVal(value.inquiry.id));
+		if (!silent) _inputFieldOnChange(variableName, index, [ widget.getValue() ]);
+
+	}
+	function selectOneRadioOnChange(variableName, index, widget, outputId) {
+
+		if (!silent) _inputFieldOnChange(variableName, index, [ widget.getValue() ]);
 
 	}
 
-	function autoCompleteOnChange(value) {
+	function selectManyOnChange(variableName, index, widget, outputId) {
 
-		if (!silent) _inputFieldOnChange(value.inquiry.jsVariableName, value.index, getAutocompleteVal(value.inquiry.id));
-
-	}
-
-	function checkBoxOnChange(value) {
-
-		if (!silent) _inputFieldOnChange(value.inquiry.jsVariableName, value.index, getCheckboxVal(value.inquiry.id));
+		if (!silent) _inputFieldOnChange(variableName, index, widget.getValue());
 
 	}
 
-	function integerOnChange(value) {
+	function autoCompleteOnChange(variableName, index, widget, outputId) {
 
-		if (!silent) _inputFieldOnChange(value.inquiry.jsVariableName, value.index, getSpinnerVal(value.inquiry.id));
-
-	}
-
-	function floatOnChange(value) {
-
-		if (!silent) _inputFieldOnChange(value.inquiry.jsVariableName, value.index, getDecimalVal(value.inquiry.id)); // safe for , decimal separator
+		if (!silent) _inputFieldOnChange(variableName, index, widget.getValue());
 
 	}
 
-	function dateOnChange(value) {
+	function checkBoxOnChange(variableName, index, widget, outputId) {
 
-		if (!silent) _inputFieldOnChange(value.inquiry.jsVariableName, value.index, getDatePickerVal(value.inquiry.id));
-
-	}
-
-	function timeOnChange(value) {
-
-		if (!silent) _inputFieldOnChange(value.inquiry.jsVariableName, value.index, getTimePickerVal(value.inquiry.id));
+		if (!silent) _inputFieldOnChange(variableName, index, widget.getValue());
 
 	}
 
-	function timestampOnChange(value) {
+	function integerOnChange(variableName, index, widget, outputId) {
 
+		if (!silent) _inputFieldOnChange(variableName, index, widget.getValue());
+
+	}
+
+	function floatOnChange(variableName, index, widget, outputId) {
+
+		if (!silent) _inputFieldOnChange(variableName, index, _parseDecimal(widget.getValue()));
+
+	}
+
+	function dateOnChange(variableName, index, widget, outputId) {
+
+		if (!silent) _inputFieldOnChange(variableName, index, widget.getDate());
+
+	}
+
+	function timeOnChange(variableName, index, widget, outputId) {
+
+		if (!silent) _inputFieldOnChange(variableName, index, widget.getTime());
+
+	}
+
+	function timestampOnChange(variableName, index, widget, outputId) {
+		
 		if (!silent) {
-			var variableName = value.inquiry.jsVariableName;
-			var index = value.index;
-			var timestamp = getDateTimePickerVal(value.inquiry.id);
+			var timestamp = widget.getDate();
 			if (timestamp != null) {
 				timestamp = JSJoda.LocalDateTime.from(JSJoda.nativeJs(timestamp));
 				var inputFieldVariable = _getSeriesInputFieldVariable(variableName, index, false);
@@ -2273,7 +2096,8 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 
 	}
 
-	function sketchOnChange(variableName, index, widget) {
+
+	function sketchOnChange(variableName, index, widget, outputId) {
 
 		if (!silent) {
 			var inputFieldVariable = _getSeriesInputFieldVariable(variableName, index, false);
@@ -2297,8 +2121,8 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 				}
 			}
 			_inputFieldOnChange(variableName, index, {
-				'ink' : unpackedValue.ink,
-				'ids' : ids
+			    'ink' : unpackedValue.ink,
+			    'ids' : ids
 			});
 		}
 
@@ -2329,80 +2153,122 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		return null;
 	}
 
-	function singleLineTextApplyCalculatedValue(value) {
+	function singleLineTextApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
 		silent = true;
-		setSingleLineTextVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
+		widget.setValue(newValue);
 		silent = false;
+		if (sourceId != null && sourceId.length > 0) {
+			ajaxRequest(sourceId, sourceId, null, null);
+		}
 	}
 
-	function multiLineTextApplyCalculatedValue(value) {
+	function multiLineTextApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
 		silent = true;
-		setMultiLineTextVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
+		widget.setValue(newValue);
 		silent = false;
+		if (sourceId != null && sourceId.length > 0) {
+			ajaxRequest(sourceId, sourceId, null, null);
+		}
 	}
 
-	function selectOneDropdownApplyCalculatedValue(value) {
+	function selectOneDropdownApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
 		silent = true;
-		setSelectOneDropdownVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
+		widget.setValue(newValue ? newValue[0] : null);
 		silent = false;
+		if (sourceId != null && sourceId.length > 0) {
+			ajaxRequest(sourceId, sourceId, null, null);
+		}
+	}
+	
+	function selectOneRadioApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
+		silent = true;
+		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
+		widget.setValue(newValue ? newValue[0] : null);
+		silent = false;
+		if (sourceId != null && sourceId.length > 0) {
+			ajaxRequest(sourceId, sourceId, null, null);
+		}
 	}
 
-	function selectOneRadioApplyCalculatedValue(value) {
+	function selectManyApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
 		silent = true;
-		setSelectOneRadioVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
+		widget.setValue(newValue);
 		silent = false;
+		if (sourceId != null && sourceId.length > 0) {
+			ajaxRequest(sourceId, sourceId, null, null);
+		}
 	}
-
-	function selectManyApplyCalculatedValue(value) {
+	
+	function autoCompleteApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
 		silent = true;
-		setSelectManyVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
+		widget.setValue(newValue);
 		silent = false;
+		if (sourceId != null && sourceId.length > 0) {
+			ajaxRequest(sourceId, sourceId, null, null);
+		}
 	}
-
-	function autoCompleteApplyCalculatedValue(value) {
+	
+	function checkBoxApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
 		silent = true;
-		setAutocompleteVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
+		widget.setValue(newValue);
 		silent = false;
+		if (sourceId != null && sourceId.length > 0) {
+			ajaxRequest(sourceId, sourceId, null, null);
+		}
 	}
-
-	function checkBoxApplyCalculatedValue(value) {
+	
+	function integerApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
 		silent = true;
-		setCheckboxVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
+		widget.setValue(newValue);
 		silent = false;
+		if (sourceId != null && sourceId.length > 0) {
+			ajaxRequest(sourceId, sourceId, null, null);
+		}
 	}
-
-	function integerApplyCalculatedValue(value) {
+	
+	function floatApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
 		silent = true;
-		setSpinnerVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
+		widget.setValue(_formatDecimal(newValue));
 		silent = false;
+		if (sourceId != null && sourceId.length > 0) {
+			ajaxRequest(sourceId, sourceId, null, null);
+		}
 	}
-
-	function floatApplyCalculatedValue(value) {
+	
+	function dateApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
 		silent = true;
-		setDecimalVal(value.inquiry.id, _formatDecimal(_inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index)));
+		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
+		widget.setDate(newValue != null ? JSJoda.convert(newValue).toDate() : null);
 		silent = false;
+		if (sourceId != null && sourceId.length > 0) {
+			ajaxRequest(sourceId, sourceId, null, null);
+		}
 	}
-
-	function dateApplyCalculatedValue(value) {
+	
+	function timeApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index);
-		setDatePickerVal(value.inquiry.id, newValue != null ? JSJoda.convert(newValue).toDate() : null);
+		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
+		widget.setTime(newValue != null ? JSJoda.convert(JSJoda.LocalDateTime.of(1970,1,1,newValue.hour(),newValue.minute())).toDate() : null);
 		silent = false;
+		if (sourceId != null && sourceId.length > 0) {
+			ajaxRequest(sourceId, sourceId, null, null);
+		}
 	}
-
-	function timeApplyCalculatedValue(value) {
+	
+	function timestampApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index);
-		setTimePickerVal(value.inquiry.id, newValue != null ? JSJoda.convert(JSJoda.LocalDateTime.of(1970,1,1,newValue.hour(),newValue.minute())).toDate() : null);
-		silent = false;
-	}
-
-	function timestampApplyCalculatedValue(value) {
-		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index);
+		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
 		var timestamp = null;
 		if (newValue != null) {
-			var inputFieldVariable = _getSeriesInputFieldVariable(value.inquiry.jsVariableName, value.index, false);
+			var inputFieldVariable = _getSeriesInputFieldVariable(variableName, index, false);
 			if (inputFieldVariable != null && inputFieldVariable.value.userTimeZone) {
 				timestamp = newValue.withZoneSameInstant(JSJoda.ZoneId.of(INPUT_TIMEZONE_ID));
 			} else {
@@ -2410,68 +2276,77 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			}
 			timestamp = JSJoda.convert(timestamp.toLocalDateTime()).toDate();
 		}
-		setDateTimePickerVal(value.inquiry.id, timestamp);
+		widget.setDate(timestamp);
 		silent = false;
+		if (sourceId != null && sourceId.length > 0) {
+			ajaxRequest(sourceId, sourceId, null, null);
+		}
 	}
-
-	function sketchApplyCalculatedValue(value, widget) {
+	
+	
+	function sketchApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index);
+		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
 		Sketch.setSketchValue(widget,newValue.ink);
 		silent = false;
+		if (sourceId != null && sourceId.length > 0) {
+			ajaxRequest(sourceId, sourceId, null, null);
+		}
 	}
 
 	function _applyCalculatedValue(inputFieldVar) {
 		if (inputFieldVar != null) {
-			var value = {};
-			value.inquiry = {};
-			value.inquiry.id = inputFieldVar.value.inquiryId;
-			value.inquiry.jsVariableName = inputFieldVar.value.jsVariableName;
-			value.index = inputFieldVar.value.index;
-			switch (inputFieldVar.value.inputFieldType) {
-				case "SINGLE_LINE_TEXT":
-					singleLineTextApplyCalculatedValue(value);
-					break;
-				case "MULTI_LINE_TEXT":
-					multiLineTextApplyCalculatedValue(value);
-					break;
-				case "AUTOCOMPLETE":
-					autoCompleteApplyCalculatedValue(value);
-					break;
-				case "SELECT_ONE_DROPDOWN":
-					selectOneDropdownApplyCalculatedValue(value);
-					break;
-				case "SELECT_ONE_RADIO_H":
-				case "SELECT_ONE_RADIO_V":
-					selectOneRadioApplyCalculatedValue(value);
-					break;
-				case "SELECT_MANY_H":
-				case "SELECT_MANY_V":
-					selectManyApplyCalculatedValue(value);
-					break;
-				case "CHECKBOX":
-					checkBoxApplyCalculatedValue(value);
-					break;
-				case "INTEGER":
-					integerApplyCalculatedValue(value);
-					break;
-				case "FLOAT":
-					floatApplyCalculatedValue(value);
-					break;
-				case "DATE":
-					dateApplyCalculatedValue(value);
-					break;
-				case "TIME":
-					timeApplyCalculatedValue(value);
-					break;
-				case "TIMESTAMP":
-					timestampApplyCalculatedValue(value);
-					break;
-				case "SKETCH":
-					sketchApplyCalculatedValue(value,window[inputFieldVar.widgetVarName]);
-					break;
-				default:
+			var widget = window[inputFieldVar.widgetVarName];
+			var value = inputFieldVar.value;
+			if (value != null && widget != null) {
+				var sourceId = widget.id;
+				var variableName = value.jsVariableName;
+				var index = value.index;
+				switch (value.inputFieldType) {
+					case "SINGLE_LINE_TEXT":
+						singleLineTextApplyCalculatedValue(variableName,index,widget,sourceId);
+						break;
+					case "MULTI_LINE_TEXT":
+						multiLineTextApplyCalculatedValue(variableName,index,widget,sourceId);
+						break;
+					case "AUTOCOMPLETE":
+						autoCompleteApplyCalculatedValue(variableName,index,widget,sourceId);
+						break;
+					case "SELECT_ONE_DROPDOWN":
+						selectOneDropdownApplyCalculatedValue(variableName,index,widget,sourceId);
+						break;
+					case "SELECT_ONE_RADIO_H":
+					case "SELECT_ONE_RADIO_V":
+						selectOneRadioApplyCalculatedValue(variableName,index,widget,sourceId);
+						break;
+					case "SELECT_MANY_H":
+					case "SELECT_MANY_V":
+						selectManyApplyCalculatedValue(variableName,index,widget,sourceId);
+						break;
+					case "CHECKBOX":
+						checkBoxApplyCalculatedValue(variableName,index,widget,sourceId);
+						break;
+					case "INTEGER":
+						integerApplyCalculatedValue(variableName,index,widget,sourceId);
+						break;
+					case "FLOAT":
+						floatApplyCalculatedValue(variableName,index,widget,sourceId);
+						break;
+					case "DATE":
+						dateApplyCalculatedValue(variableName,index,widget,sourceId);
+						break;
+					case "TIME":
+						timeApplyCalculatedValue(variableName,index,widget,sourceId);
+						break;
+					case "TIMESTAMP":
+						timestampApplyCalculatedValue(variableName,index,widget,sourceId);
+						break;
+					case "SKETCH":
+						sketchApplyCalculatedValue(variableName,index,widget,widget.inputId());
+						break;
+					default:
 
+				}
 			}
 		}
 	}
@@ -2484,7 +2359,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		}
 		return decodeURIComponent(str);
 	}
-
+	
 	var expressionUtilsCache = {};
 	function _loadExpressionUtils(mask, resource, fileId) {
 		var js;
@@ -2496,7 +2371,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		}
 		eval("with(mask){(\n" + js + "\n)(mask);}");
 	}
-
+	
 	function _getScriptAjax(resource, fileId) {
 		var js;
 		var error;
@@ -2513,7 +2388,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 				}
 				error = resource + ': ' + textStatus + ((errorThrown != null && errorThrown.toString().length > 0) ? ' - ' + errorThrown.toString() : '');
 		    },
-		    success: function(data, textStatus, jqXHR) {
+		    success: function(data, textStatus, jqXHR) { 
 				if (FIELD_CALCULATION_DEBUG_LEVEL >= 1) {
 					console.log(resource + ': ' + textStatus);
 				}
@@ -2568,10 +2443,3 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	}
 
 })(window.FieldCalculation);
-
-FieldCalculation.getScript = function(resource,fileId) {
-	if (fileId != null) {
-		return FieldCalculation.getScriptAjax(sprintf("/file/%d",fileId),null);
-	}
-	return FieldCalculation.getScriptAjax(resource,fileId);
-};

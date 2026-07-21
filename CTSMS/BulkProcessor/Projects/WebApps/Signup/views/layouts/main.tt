@@ -54,7 +54,7 @@
 
   var REST_API_URL = context.restApiUrl;
   var REST_API_JWT = context.restApiJwt;
-  var JWT_REFRESH_SKEW_SECS = 60;
+  var JWT_REFRESH_SKEW_SECS = (context.jwtRefreshSkewSecs != null) ? context.jwtRefreshSkewSecs : 55;
   var SESSION_TIMER_PATTERN = context.sessionTimerPattern;
 
   $(document).ready(function() {
