@@ -2153,122 +2153,80 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		return null;
 	}
 
-	function singleLineTextApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
+	function singleLineTextApplyCalculatedValue(value) {
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
-		widget.setValue(newValue);
+		setSingleLineTextVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
 		silent = false;
-		if (sourceId != null && sourceId.length > 0) {
-			ajaxRequest(sourceId, sourceId, null, null);
-		}
 	}
 
-	function multiLineTextApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
+	function multiLineTextApplyCalculatedValue(value) {
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
-		widget.setValue(newValue);
+		setMultiLineTextVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
 		silent = false;
-		if (sourceId != null && sourceId.length > 0) {
-			ajaxRequest(sourceId, sourceId, null, null);
-		}
 	}
 
-	function selectOneDropdownApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
+	function selectOneDropdownApplyCalculatedValue(value) {
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
-		widget.setValue(newValue ? newValue[0] : null);
+		setSelectOneDropdownVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
 		silent = false;
-		if (sourceId != null && sourceId.length > 0) {
-			ajaxRequest(sourceId, sourceId, null, null);
-		}
-	}
-	
-	function selectOneRadioApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
-		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
-		widget.setValue(newValue ? newValue[0] : null);
-		silent = false;
-		if (sourceId != null && sourceId.length > 0) {
-			ajaxRequest(sourceId, sourceId, null, null);
-		}
 	}
 
-	function selectManyApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
+	function selectOneRadioApplyCalculatedValue(value) {
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
-		widget.setValue(newValue);
+		setSelectOneRadioVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
 		silent = false;
-		if (sourceId != null && sourceId.length > 0) {
-			ajaxRequest(sourceId, sourceId, null, null);
-		}
 	}
-	
-	function autoCompleteApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
+
+	function selectManyApplyCalculatedValue(value) {
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
-		widget.setValue(newValue);
+		setSelectManyVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
 		silent = false;
-		if (sourceId != null && sourceId.length > 0) {
-			ajaxRequest(sourceId, sourceId, null, null);
-		}
 	}
-	
-	function checkBoxApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
+
+	function autoCompleteApplyCalculatedValue(value) {
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
-		widget.setValue(newValue);
+		setAutocompleteVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
 		silent = false;
-		if (sourceId != null && sourceId.length > 0) {
-			ajaxRequest(sourceId, sourceId, null, null);
-		}
 	}
-	
-	function integerApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
+
+	function checkBoxApplyCalculatedValue(value) {
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
-		widget.setValue(newValue);
+		setCheckboxVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
 		silent = false;
-		if (sourceId != null && sourceId.length > 0) {
-			ajaxRequest(sourceId, sourceId, null, null);
-		}
 	}
-	
-	function floatApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
+
+	function integerApplyCalculatedValue(value) {
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
-		widget.setValue(_formatDecimal(newValue));
+		setSpinnerVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
 		silent = false;
-		if (sourceId != null && sourceId.length > 0) {
-			ajaxRequest(sourceId, sourceId, null, null);
-		}
 	}
-	
-	function dateApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
+
+	function floatApplyCalculatedValue(value) {
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
-		widget.setDate(newValue != null ? JSJoda.convert(newValue).toDate() : null);
+		setDecimalVal(value.inquiry.id, _formatDecimal(_inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index)));
 		silent = false;
-		if (sourceId != null && sourceId.length > 0) {
-			ajaxRequest(sourceId, sourceId, null, null);
-		}
 	}
-	
-	function timeApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
+
+	function dateApplyCalculatedValue(value) {
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
-		widget.setTime(newValue != null ? JSJoda.convert(JSJoda.LocalDateTime.of(1970,1,1,newValue.hour(),newValue.minute())).toDate() : null);
+		var newValue = _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index);
+		setDatePickerVal(value.inquiry.id, newValue != null ? JSJoda.convert(newValue).toDate() : null);
 		silent = false;
-		if (sourceId != null && sourceId.length > 0) {
-			ajaxRequest(sourceId, sourceId, null, null);
-		}
 	}
-	
-	function timestampApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
+
+	function timeApplyCalculatedValue(value) {
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
+		var newValue = _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index);
+		setTimePickerVal(value.inquiry.id, newValue != null ? JSJoda.convert(JSJoda.LocalDateTime.of(1970,1,1,newValue.hour(),newValue.minute())).toDate() : null);
+		silent = false;
+	}
+
+	function timestampApplyCalculatedValue(value) {
+		silent = true;
+		var newValue = _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index);
 		var timestamp = null;
 		if (newValue != null) {
-			var inputFieldVariable = _getSeriesInputFieldVariable(variableName, index, false);
+			var inputFieldVariable = _getSeriesInputFieldVariable(value.inquiry.jsVariableName, value.index, false);
 			if (inputFieldVariable != null && inputFieldVariable.value.userTimeZone) {
 				timestamp = newValue.withZoneSameInstant(JSJoda.ZoneId.of(INPUT_TIMEZONE_ID));
 			} else {
@@ -2276,77 +2234,68 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			}
 			timestamp = JSJoda.convert(timestamp.toLocalDateTime()).toDate();
 		}
-		widget.setDate(timestamp);
+		setDateTimePickerVal(value.inquiry.id, timestamp);
 		silent = false;
-		if (sourceId != null && sourceId.length > 0) {
-			ajaxRequest(sourceId, sourceId, null, null);
-		}
 	}
-	
-	
-	function sketchApplyCalculatedValue(variableName, index, widget, sourceId, rowId) {
+
+	function sketchApplyCalculatedValue(value, widget) {
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(variableName, index);
+		var newValue = _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index);
 		Sketch.setSketchValue(widget,newValue.ink);
 		silent = false;
-		if (sourceId != null && sourceId.length > 0) {
-			ajaxRequest(sourceId, sourceId, null, null);
-		}
 	}
 
 	function _applyCalculatedValue(inputFieldVar) {
 		if (inputFieldVar != null) {
-			var widget = window[inputFieldVar.widgetVarName];
-			var value = inputFieldVar.value;
-			if (value != null && widget != null) {
-				var sourceId = widget.id;
-				var variableName = value.jsVariableName;
-				var index = value.index;
-				switch (value.inputFieldType) {
-					case "SINGLE_LINE_TEXT":
-						singleLineTextApplyCalculatedValue(variableName,index,widget,sourceId);
-						break;
-					case "MULTI_LINE_TEXT":
-						multiLineTextApplyCalculatedValue(variableName,index,widget,sourceId);
-						break;
-					case "AUTOCOMPLETE":
-						autoCompleteApplyCalculatedValue(variableName,index,widget,sourceId);
-						break;
-					case "SELECT_ONE_DROPDOWN":
-						selectOneDropdownApplyCalculatedValue(variableName,index,widget,sourceId);
-						break;
-					case "SELECT_ONE_RADIO_H":
-					case "SELECT_ONE_RADIO_V":
-						selectOneRadioApplyCalculatedValue(variableName,index,widget,sourceId);
-						break;
-					case "SELECT_MANY_H":
-					case "SELECT_MANY_V":
-						selectManyApplyCalculatedValue(variableName,index,widget,sourceId);
-						break;
-					case "CHECKBOX":
-						checkBoxApplyCalculatedValue(variableName,index,widget,sourceId);
-						break;
-					case "INTEGER":
-						integerApplyCalculatedValue(variableName,index,widget,sourceId);
-						break;
-					case "FLOAT":
-						floatApplyCalculatedValue(variableName,index,widget,sourceId);
-						break;
-					case "DATE":
-						dateApplyCalculatedValue(variableName,index,widget,sourceId);
-						break;
-					case "TIME":
-						timeApplyCalculatedValue(variableName,index,widget,sourceId);
-						break;
-					case "TIMESTAMP":
-						timestampApplyCalculatedValue(variableName,index,widget,sourceId);
-						break;
-					case "SKETCH":
-						sketchApplyCalculatedValue(variableName,index,widget,widget.inputId());
-						break;
-					default:
+			var value = {};
+			value.inquiry = {};
+			value.inquiry.id = inputFieldVar.value.inquiryId;
+			value.inquiry.jsVariableName = inputFieldVar.value.jsVariableName;
+			value.index = inputFieldVar.value.index;
+			switch (inputFieldVar.value.inputFieldType) {
+				case "SINGLE_LINE_TEXT":
+					singleLineTextApplyCalculatedValue(value);
+					break;
+				case "MULTI_LINE_TEXT":
+					multiLineTextApplyCalculatedValue(value);
+					break;
+				case "AUTOCOMPLETE":
+					autoCompleteApplyCalculatedValue(value);
+					break;
+				case "SELECT_ONE_DROPDOWN":
+					selectOneDropdownApplyCalculatedValue(value);
+					break;
+				case "SELECT_ONE_RADIO_H":
+				case "SELECT_ONE_RADIO_V":
+					selectOneRadioApplyCalculatedValue(value);
+					break;
+				case "SELECT_MANY_H":
+				case "SELECT_MANY_V":
+					selectManyApplyCalculatedValue(value);
+					break;
+				case "CHECKBOX":
+					checkBoxApplyCalculatedValue(value);
+					break;
+				case "INTEGER":
+					integerApplyCalculatedValue(value);
+					break;
+				case "FLOAT":
+					floatApplyCalculatedValue(value);
+					break;
+				case "DATE":
+					dateApplyCalculatedValue(value);
+					break;
+				case "TIME":
+					timeApplyCalculatedValue(value);
+					break;
+				case "TIMESTAMP":
+					timestampApplyCalculatedValue(value);
+					break;
+				case "SKETCH":
+					sketchApplyCalculatedValue(value,window[inputFieldVar.widgetVarName]);
+					break;
+				default:
 
-				}
 			}
 		}
 	}
