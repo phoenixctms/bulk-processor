@@ -889,7 +889,7 @@ function setSelectOneRadioVal(inquiryId,selectionValueIds) {
 }
 
 function getSelectOneRadioVal(inquiryId) {
-    var elems = $('[id^="' + inquiryId + '_"] input[type="radio"');
+    var elems = $('[id^="' + inquiryId + '_"] input[type="radio"]');
     var result = [];
     elems.each(function(index, elem) {
         if ($(this).puiradiobutton('isChecked')) {
