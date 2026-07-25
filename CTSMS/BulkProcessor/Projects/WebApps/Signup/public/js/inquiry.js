@@ -765,10 +765,10 @@ function _initSelectOneDropdown(context,value,content) {
 function setSelectOneDropdownVal(inquiryId,selectionValueIds) {
 
     var elem = $('#' + inquiryId + '_select_one_dropdown');
+    // apply calculated value returns selection id array; [] / null => clear
+    // option values are strings; calculated selection ids may be numbers
     if (selectionValueIds != null && selectionValueIds.length > 0) {
-        for (var i = 0; i < selectionValueIds.length; i++) {
-            elem.puidropdown('selectValue',selectionValueIds[i]);
-        }
+        elem.puidropdown('selectValue', '' + selectionValueIds[0]);
     } else {
         elem.puidropdown('selectValue','');
     }
@@ -866,12 +866,26 @@ function _initSelectOneRadio(context,value,content) {
 
 }
 function setSelectOneRadioVal(inquiryId,selectionValueIds) {
-    if (selectionValueIds != null) {
-        for (var i = 0; i < selectionValueIds.length; i++) {
-            $('#' + inquiryId + '_' + selectionValueIds[i] + '_select_one_radio').puiradiobutton('check');
-
+    // apply calculated value returns selection id array; [] / null => clear
+    // option values are strings; calculated selection ids may be numbers
+    var id = (selectionValueIds != null && selectionValueIds.length > 0)
+        ? selectionValueIds[0] : null;
+    var elems = $('[id^="' + inquiryId + '_"] input[type="radio"]');
+    elems.each(function() {
+        var input = $(this);
+        var match = (id != null && id !== '' && input.val() == id);
+        if (match) {
+            input.puiradiobutton('check');
+        } else if (input.puiradiobutton('isChecked')) {
+            // must clear other inputs; otherwise several stay checked and getValue()
+            // returns the first (wrong) id — breaks valueEquals / delta after manual change
+            // (puiradiobutton has no uncheck API)
+            input.prop('checked', false);
+            input.closest('.ui-radiobutton').children('.ui-radiobutton-box')
+                .removeClass('ui-state-active ui-state-focus ui-state-hover')
+                .children('.ui-radiobutton-icon').removeClass('fa fa-fw fa-circle');
         }
-    }
+    });
 }
 
 function getSelectOneRadioVal(inquiryId) {
@@ -956,13 +970,18 @@ function _initSelectMany(context,value,content) {
 function setSelectManyVal(inquiryId,selectionValueIds) {
 
     var elems = $('[id^="' + inquiryId + '_"] input[type="checkbox"]');
+    // apply calculated value may pass null; treat as clear
+    if (selectionValueIds == null) {
+        selectionValueIds = [];
+    }
     var ids = {};
-    if (selectionValueIds != null && selectionValueIds instanceof Array) {
+    if (selectionValueIds instanceof Array) {
         for (var i = 0; i < selectionValueIds.length; i++) {
             if (selectionValueIds[i] instanceof Array) {
                 throw new Error('value element is an array');
             }
-            ids[selectionValueIds[i]] = 1;
+            // option values are strings; calculated selection ids may be numbers
+            ids['' + selectionValueIds[i]] = 1;
         }
     }
     elems.each(function(index, elem) {
