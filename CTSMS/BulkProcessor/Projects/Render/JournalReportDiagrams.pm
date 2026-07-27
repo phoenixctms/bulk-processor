@@ -91,7 +91,7 @@ sub create_journal_heatmap {
 
 sub create_logon_heatmap {
     _create_journalentry_24hheatmap(
-        filter => "(system_message_code in ('successful_logon','logon_successful','credentials_verified','otp_verified'))",
+        filter => "(system_message_code = 'successful_logon')",
         title => "logins per hour",
         span_days => $logon_heatmap_span_days,
         start_date => $logon_heatmap_start_date,
