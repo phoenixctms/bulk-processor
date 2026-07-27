@@ -91,7 +91,7 @@ sub create_journal_heatmap {
 
 sub create_logon_heatmap {
     _create_journalentry_24hheatmap(
-        filter => "(left(title,22)='erfolgreiche Anmeldung' or left(title,16)='successful logon')",
+        filter => "(left(title,22)='erfolgreiche Anmeldung' or left(title,16)='successful logon' or left(title,24)='Anmeldedaten verifiziert' or left(title,21)='credentials verified' or left(title,15)='OTP verifiziert' or left(title,12)='OTP verified')",
         title => "logins per hour",
         span_days => $logon_heatmap_span_days,
         start_date => $logon_heatmap_start_date,
