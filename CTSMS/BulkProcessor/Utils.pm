@@ -8,7 +8,7 @@ use threads;
 use POSIX qw(strtod locale_h floor fmod);
 setlocale(LC_NUMERIC, 'C');
 
-use Fcntl qw(LOCK_EX LOCK_NB);
+use Fcntl qw(LOCK_EX LOCK_NB LOCK_UN);
 use Data::UUID qw();
 use Net::Address::IP::Local qw();
 use Net::Domain qw(hostname hostfqdn hostdomain);
@@ -107,6 +107,7 @@ our @EXPORT_OK = qw(
     excel_to_timestamp
 
     checkrunning
+    releaselock
     unshare
 
     load_module
@@ -1185,21 +1186,45 @@ sub run {
 }
 
 #https://www.perlmonks.org/?node_id=590619
+my $_lock_fh;
+my $_lock_path;
+
 sub checkrunning {
 
     my ($lockfile,$errorcode,$logger) = @_;
-    if (not open (LOCKFILE, '>' . $lockfile)) {
+    releaselock();
+    my $fh;
+    if (not open($fh, '>', $lockfile)) {
       if (defined $errorcode and ref $errorcode eq 'CODE') {
         return &$errorcode('cannot open file ' . $lockfile . ': ' . $!,$logger);
       }
       return 0;
     } else {
-      unless (flock(LOCKFILE, LOCK_EX|LOCK_NB)) {
+      unless (flock($fh, LOCK_EX|LOCK_NB)) {
+        close($fh);
         return &$errorcode('program already running',$logger);
       }
+      $_lock_fh = $fh;
+      $_lock_path = $lockfile;
       return 1;
     }
 
+}
+
+sub releaselock {
+    my $fh = $_lock_fh;
+    my $path = $_lock_path;
+    $_lock_fh = undef;
+    $_lock_path = undef;
+    if ($fh) {
+        flock($fh, LOCK_UN);
+        close($fh);
+    }
+    unlink($path) if defined $path and length($path);
+}
+
+END {
+    releaselock();
 }
 
 sub unshare {
