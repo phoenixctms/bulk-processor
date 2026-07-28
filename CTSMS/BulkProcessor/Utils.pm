@@ -1213,14 +1213,12 @@ sub checkrunning {
 
 sub releaselock {
     my $fh = $_lock_fh;
-    my $path = $_lock_path;
     $_lock_fh = undef;
     $_lock_path = undef;
     if ($fh) {
         flock($fh, LOCK_UN);
         close($fh);
     }
-    unlink($path) if defined $path and length($path);
 }
 
 END {
