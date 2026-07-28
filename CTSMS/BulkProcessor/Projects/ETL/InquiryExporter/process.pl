@@ -61,7 +61,7 @@ use CTSMS::BulkProcessor::LoadConfig qw(
     $ANY_CONFIG_TYPE
 );
 use CTSMS::BulkProcessor::Array qw(removeduplicates);
-use CTSMS::BulkProcessor::Utils qw(getscriptpath prompt cleanupdir checkrunning);
+use CTSMS::BulkProcessor::Utils qw(getscriptpath prompt cleanupdir checkrunning releaselock);
 use CTSMS::BulkProcessor::Mail qw(
     cleanupmsgfiles
 );
@@ -217,7 +217,9 @@ sub main {
                 scripterror("unknown task option '" . $task . "', must be one of " . join(', ',@TASK_OPTS),getlogger(getscriptpath()));
                 last;
             }
-            update_job($PROCESSING_JOB_STATUS);
+            eval {
+                update_job($PROCESSING_JOB_STATUS);
+            };
         }
         destroy_all_dbs();
     } else {
@@ -226,20 +228,27 @@ sub main {
     }
 
     push(@attachmentfiles,$attachmentlogfile);
-    $cli = 1;
-    if ($result and $completion) {
-        if ($upload_files) {
-            push(@messages,"Visit $ctsms_base_url/trial/trial.jsf?trialid=$inquiry_trial_id to download files.");
-        }
-        completion(join("\n\n",@messages),\@attachmentfiles,getlogger(getscriptpath()));
-        update_job($OK_JOB_STATUS);
-    } elsif ($result) {
-        done(join("\n\n",@messages),\@attachmentfiles,getlogger(getscriptpath()));
-        update_job($OK_JOB_STATUS);
-    } else {
-        scriptwarn(join("\n\n",@messages),getlogger(getscriptpath()),1);
-        update_job($FAILED_JOB_STATUS);
+    my $final_status = $result ? $OK_JOB_STATUS : $FAILED_JOB_STATUS;
+    eval {
+        update_job($final_status);
+    };
+    if (my $err = $@) {
+        scriptwarn('update_job failed: ' . $err,getlogger(getscriptpath()));
     }
+    $cli = 1;
+    eval {
+        if ($result and $completion) {
+            if ($upload_files) {
+                push(@messages,"Visit $ctsms_base_url/trial/trial.jsf?trialid=$inquiry_trial_id to download files.");
+            }
+            completion(join("\n\n",@messages),\@attachmentfiles,getlogger(getscriptpath()));
+        } elsif ($result) {
+            done(join("\n\n",@messages),\@attachmentfiles,getlogger(getscriptpath()));
+        } else {
+            scriptwarn(join("\n\n",@messages),getlogger(getscriptpath()),1);
+        }
+    };
+    releaselock();
 
     return $result;
 }
