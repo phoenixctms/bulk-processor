@@ -192,13 +192,6 @@ sub main {
     }
 
     push(@attachmentfiles,$attachmentlogfile);
-    my $final_status = $result ? $OK_JOB_STATUS : $FAILED_JOB_STATUS;
-    eval {
-        update_job($final_status);
-    };
-    if (my $err = $@) {
-        scriptwarn('update_job failed: ' . $err,getlogger(getscriptpath()));
-    }
     $cli = 1;
     eval {
         if ($result and $completion) {
@@ -209,6 +202,15 @@ sub main {
             scriptwarn(join("\n\n",@messages),getlogger(getscriptpath()),1);
         }
     };
+    # Keep terminate() catchable while posting final status (jobOutput includes completion log).
+    $cli = 0;
+    my $final_status = $result ? $OK_JOB_STATUS : $FAILED_JOB_STATUS;
+    eval {
+        update_job($final_status);
+    };
+    if (my $err = $@) {
+        scriptwarn('update_job failed: ' . $err,getlogger(getscriptpath()));
+    }
     releaselock();
 
     return $result;
