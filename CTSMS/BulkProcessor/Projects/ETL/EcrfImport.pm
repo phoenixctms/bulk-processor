@@ -55,10 +55,12 @@ use CTSMS::BulkProcessor::Logging qw (
     getlogger
     processing_info
     processing_debug
+    scriptinfo
 );
 use CTSMS::BulkProcessor::LogError qw(
     rowprocessingerror
     rowprocessingwarn
+    scripterror
 );
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
@@ -128,16 +130,20 @@ use CTSMS::BulkProcessor::Projects::ETL::Import qw(
 );
 
 use CTSMS::BulkProcessor::Array qw(array_to_map contains);
-use CTSMS::BulkProcessor::Utils qw( stringtobool trim chopstring );
+use CTSMS::BulkProcessor::Utils qw( stringtobool trim chopstring getscriptpath );
 
 use CTSMS::BulkProcessor::ConnectorPool qw(
     get_ctsms_restapi_last_error
 );
 
+use File::Basename qw();
+use Cwd qw();
+
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
     import_ecrf_data_horizontal
+    convert_ecrf_data
 );
 
 my @header_row :shared = ();
@@ -148,6 +154,44 @@ my $warning_count :shared = 0;
 my $value_count :shared = 0;
 
 my $comment_char = '#';
+
+sub convert_ecrf_data {
+    my ($file,$converter) = @_;
+
+    my $convert_code = _load_converter($converter);
+    my $infile = get_input_filename($file,$ecrf_import_filename);
+    my $outfile = &$convert_code($infile);
+    if (length($outfile)) {
+        scriptinfo("converter '$converter' wrote intermediate file $outfile",getlogger(__PACKAGE__));
+    }
+    return $outfile;
+}
+
+sub _load_converter {
+    my ($spec) = @_;
+    scripterror('converter module required (e.g. --converter=Converter::Interfast3LabData)',getlogger(getscriptpath()))
+        unless length($spec);
+
+    # Converters live next to process.pl: EcrfImporter/Converter/*.pm
+    my $importer_dir = Cwd::abs_path(File::Basename::dirname(__FILE__) . '/EcrfImporter');
+    (my $rel_path = $spec) =~ s|::|/|g;
+    my $module_file = $importer_dir . '/' . $rel_path . '.pm';
+    scripterror("converter module not found: $module_file",getlogger(getscriptpath()))
+        unless -f $module_file;
+
+    unshift(@INC,$importer_dir) unless grep { $_ eq $importer_dir } @INC;
+    eval {
+        require $rel_path . '.pm';
+        1;
+    } or do {
+        scripterror("failed to load converter '$spec': " . ($@ // 'unknown error'),getlogger(getscriptpath()));
+    };
+
+    my $convert_code = $spec->can('convert') || $spec->can('process');
+    scripterror("converter '$spec' must expose convert() or process()",getlogger(getscriptpath()))
+        unless $convert_code;
+    return $convert_code;
+}
 
 sub import_ecrf_data_horizontal {
 

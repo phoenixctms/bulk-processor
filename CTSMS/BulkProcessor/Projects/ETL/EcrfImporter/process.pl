@@ -80,15 +80,20 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job qw(
 
 use CTSMS::BulkProcessor::Projects::ETL::EcrfImport qw(
     import_ecrf_data_horizontal
+    convert_ecrf_data
 );
 
 my @TASK_OPTS = ();
 
 my $tasks = [];
 my $file;
+my $converter;
 
 my $cleanup_task_opt = 'cleanup';
 push(@TASK_OPTS,$cleanup_task_opt);
+
+my $convert_task_opt = 'convert';
+push(@TASK_OPTS,$convert_task_opt);
 
 my $import_ecrf_data_horizontal_task_opt = 'import_ecrf_data_horizontal';
 push(@TASK_OPTS,$import_ecrf_data_horizontal_task_opt);
@@ -118,6 +123,7 @@ sub init {
         "jid=i" => \$job_id,
         "auth=s" => \$auth,
         "file=s" => \$file,
+        "converter=s" => \$converter,
         "tz=s" => \$timezone,
     );
 
@@ -166,6 +172,12 @@ sub main {
 
             if (lc($cleanup_task_opt) eq lc($task)) {
                 $result &= cleanup_task(\@messages) if taskinfo($cleanup_task_opt,\$result);
+
+            } elsif (lc($convert_task_opt) eq lc($task)) {
+                $result &= convert_task(\@messages) if taskinfo($convert_task_opt,\$result,
+                    check_force => 1,
+                    messages => \@messages,
+                );
 
             } elsif (lc($import_ecrf_data_horizontal_task_opt) eq lc($task)) {
                 $result &= import_ecrf_data_horizontal_task(\@messages) if taskinfo($import_ecrf_data_horizontal_task_opt,\$result,
@@ -265,6 +277,31 @@ sub cleanup_task {
         return 0;
     } else {
         push(@$messages,'- working directory folders cleaned up');
+        return 1;
+    }
+}
+
+sub convert_task {
+    my ($messages) = @_;
+    my $result = 0;
+    my $outfile;
+    eval {
+        $outfile = convert_ecrf_data($file,$converter);
+        $result = length($outfile) ? 1 : 0;
+        if ($result) {
+            # subsequent import_ecrf_data_horizontal uses the converted intermediate file
+            $file = $outfile;
+        }
+    };
+    my $err = $@;
+    if ($err) {
+        push(@$messages,'convert error: ' . $err);
+        return 0;
+    } elsif (!$result) {
+        push(@$messages,'convert error: no intermediate file produced');
+        return 0;
+    } else {
+        push(@$messages,"- convert ok ($converter → $outfile)");
         return 1;
     }
 }
