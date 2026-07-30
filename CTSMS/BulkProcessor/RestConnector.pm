@@ -704,7 +704,7 @@ sub get_username_from_jwt {
     my ($jwt) = @_;
     my $payload = _decode_jwt_payload($jwt);
     return undef unless defined $payload && 'HASH' eq ref $payload;
-    return $payload->{sub} // $payload->{username};
+    return $payload->{username}; # // $payload->{sub};
 }
 
 sub jwt_needs_refresh {
