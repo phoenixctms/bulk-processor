@@ -287,7 +287,7 @@ sub convert_task {
     my @uploaded;
     eval {
         ($outfile,@uploaded) = convert_ecrf_data($file,$converter);
-        $result = length($outfile) ? 1 : 0;
+        $result = (length($outfile) and -f $outfile and -r $outfile and -s $outfile) ? 1 : 0;
         if ($result) {
             # subsequent import_ecrf_data_horizontal uses the converted intermediate file
             $file = $outfile;

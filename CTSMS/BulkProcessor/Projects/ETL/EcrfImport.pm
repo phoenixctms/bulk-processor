@@ -234,6 +234,8 @@ sub _load_converter {
     my ($spec) = @_;
     scripterror('converter module required (e.g. --converter=Converter::MyConverter)',getlogger(getscriptpath()))
         unless length($spec);
+    scripterror("invalid converter module name '$spec'",getlogger(getscriptpath()))
+        unless $spec =~ /\A[A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*\z/;
 
     # Converters live next to process.pl: EcrfImporter/Converter/*.pm
     my $importer_dir = Cwd::abs_path(File::Basename::dirname(__FILE__) . '/EcrfImporter');
@@ -241,10 +243,12 @@ sub _load_converter {
     my $module_file = $importer_dir . '/' . $rel_path . '.pm';
     scripterror("converter module not found: $module_file",getlogger(getscriptpath()))
         unless -f $module_file;
+    $module_file = Cwd::abs_path($module_file);
+    scripterror("converter module not found: $spec",getlogger(getscriptpath()))
+        unless (defined $module_file and length($module_file) and -f $module_file);
 
-    unshift(@INC,$importer_dir) unless grep { $_ eq $importer_dir } @INC;
     eval {
-        require $rel_path . '.pm';
+        require $module_file;
         1;
     } or do {
         scripterror("failed to load converter '$spec': " . ($@ // 'unknown error'),getlogger(getscriptpath()));
