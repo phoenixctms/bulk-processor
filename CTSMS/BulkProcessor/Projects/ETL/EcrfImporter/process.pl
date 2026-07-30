@@ -174,7 +174,9 @@ sub main {
                 $result &= cleanup_task(\@messages) if taskinfo($cleanup_task_opt,\$result);
 
             } elsif (lc($convert_task_opt) eq lc($task)) {
-                $result &= convert_task(\@messages) if taskinfo($convert_task_opt,\$result);
+                $result &= convert_task(\@messages) if taskinfo($convert_task_opt,\$result,
+                    ecrf_data_trial_id_required => 1,
+                );
 
             } elsif (lc($import_ecrf_data_horizontal_task_opt) eq lc($task)) {
                 $result &= import_ecrf_data_horizontal_task(\@messages) if taskinfo($import_ecrf_data_horizontal_task_opt,\$result,
@@ -282,8 +284,9 @@ sub convert_task {
     my ($messages) = @_;
     my $result = 0;
     my $outfile;
+    my @uploaded;
     eval {
-        $outfile = convert_ecrf_data($file,$converter);
+        ($outfile,@uploaded) = convert_ecrf_data($file,$converter);
         $result = length($outfile) ? 1 : 0;
         if ($result) {
             # subsequent import_ecrf_data_horizontal uses the converted intermediate file
@@ -299,6 +302,9 @@ sub convert_task {
         return 0;
     } else {
         push(@$messages,"- convert ok ($converter → $outfile)");
+        foreach my $uploaded (@uploaded) {
+            push(@$messages,"- file '$uploaded->{title}' (file ID $uploaded->{id}) added to the '$uploaded->{trial}->{name}' trial");
+        }
         return 1;
     }
 }

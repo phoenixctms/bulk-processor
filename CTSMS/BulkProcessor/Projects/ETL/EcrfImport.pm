@@ -9,6 +9,13 @@ use threads::shared qw();
 use utf8;
 use Encode qw();
 
+use CTSMS::BulkProcessor::Globals qw(
+    $system_name
+    $system_version
+    $system_instance_label
+    $local_fqdn
+);
+
 use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $skip_errors
     $timezone
@@ -75,6 +82,7 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListE
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::ProbandCategory qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File qw();
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction qw();
@@ -144,6 +152,7 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
     import_ecrf_data_horizontal
     convert_ecrf_data
+    publish_converted_intermediate_file
 );
 
 my @header_row :shared = ();
@@ -160,11 +169,65 @@ sub convert_ecrf_data {
 
     my $convert_code = _load_converter($converter);
     my $infile = get_input_filename($file,$ecrf_import_filename);
-    my $outfile = &$convert_code($infile);
+    # convert() returns $outfile (no upload), or ($outfile, $file_in) to upload both
+    # the original job/input file and the intermediate outfile with the same File %in scaffold.
+    my ($outfile,$file_in) = &$convert_code($infile);
+    my @uploaded;
     if (length($outfile)) {
         scriptinfo("converter '$converter' wrote intermediate file $outfile",getlogger(__PACKAGE__));
+        if (ref($file_in) eq 'HASH') {
+            push(@uploaded,publish_converted_intermediate_file($infile,$file_in));
+            push(@uploaded,publish_converted_intermediate_file($outfile,$file_in));
+        }
     }
-    return $outfile;
+    return ($outfile,@uploaded);
+}
+
+sub publish_converted_intermediate_file {
+    my ($outfile,$file_in) = @_;
+
+    scripterror('no intermediate file to publish',getlogger(getscriptpath()))
+        unless length($outfile);
+    scripterror("intermediate file not found: $outfile",getlogger(getscriptpath()))
+        unless -f $outfile;
+    scripterror('File %in scaffold required to publish intermediate file',getlogger(getscriptpath()))
+        unless (ref($file_in) eq 'HASH');
+    my $logical_path = $file_in->{logicalPath};
+    scripterror('logicalPath required to publish intermediate file',getlogger(getscriptpath()))
+        unless length($logical_path);
+    scripterror('trial id required to publish intermediate file',getlogger(getscriptpath()))
+        unless (defined $ecrf_data_trial_id and length($ecrf_data_trial_id));
+
+    my $filename = File::Basename::basename($outfile);
+    my $mimetype = _converted_file_mimetype($outfile);
+    my $in = {
+        "active" => \0,
+        "publicFile" => (exists $file_in->{publicFile} ? $file_in->{publicFile} : \0),
+        "comment" => $system_name . ' ' . $system_version . ' (' . $system_instance_label . ') [' . $local_fqdn . ']',
+        "trialId" => $ecrf_data_trial_id,
+        "module" => $CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::TRIAL_FILE_MODULE,
+        "logicalPath" => $logical_path,
+        "title" => $filename,
+    };
+    my $out = CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(
+        $in,
+        $outfile,
+        $filename,
+        $mimetype,
+    );
+    scripterror("failed to upload intermediate file '$filename'",getlogger(getscriptpath()))
+        unless $out;
+    scriptinfo("uploaded intermediate file '$filename' (file ID $out->{id}) to trial id $ecrf_data_trial_id path '$logical_path'",getlogger(__PACKAGE__));
+    return $out;
+}
+
+sub _converted_file_mimetype {
+    my ($outfile) = @_;
+    return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' if $outfile =~ /\.xlsx$/i;
+    return 'application/vnd.ms-excel' if $outfile =~ /\.xls$/i;
+    return 'text/csv' if $outfile =~ /\.csv$/i;
+    return 'text/plain' if $outfile =~ /\.txt$/i;
+    return 'application/octet-stream';
 }
 
 sub _load_converter {
