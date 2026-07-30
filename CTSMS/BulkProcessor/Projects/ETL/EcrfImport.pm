@@ -169,7 +169,7 @@ sub convert_ecrf_data {
 
 sub _load_converter {
     my ($spec) = @_;
-    scripterror('converter module required (e.g. --converter=Converter::Interfast3LabData)',getlogger(getscriptpath()))
+    scripterror('converter module required (e.g. --converter=Converter::MyConverter)',getlogger(getscriptpath()))
         unless length($spec);
 
     # Converters live next to process.pl: EcrfImporter/Converter/*.pm
