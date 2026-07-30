@@ -96,6 +96,13 @@ sub init_reader_context {
 
 }
 
+sub get_sheet_names {
+    # CSV and other single-stream formats have no worksheets;
+    # return one undef entry so callers can foreach once.
+    my ($self,$file) = @_;
+    return (undef);
+}
+
 sub _extractlines {
     my ($context,$buffer_ref,$lines) = @_;
     my $separator = $context->{instance}->{line_separator};

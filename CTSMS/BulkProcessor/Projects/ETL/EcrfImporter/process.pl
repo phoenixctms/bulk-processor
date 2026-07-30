@@ -174,10 +174,7 @@ sub main {
                 $result &= cleanup_task(\@messages) if taskinfo($cleanup_task_opt,\$result);
 
             } elsif (lc($convert_task_opt) eq lc($task)) {
-                $result &= convert_task(\@messages) if taskinfo($convert_task_opt,\$result,
-                    check_force => 1,
-                    messages => \@messages,
-                );
+                $result &= convert_task(\@messages) if taskinfo($convert_task_opt,\$result);
 
             } elsif (lc($import_ecrf_data_horizontal_task_opt) eq lc($task)) {
                 $result &= import_ecrf_data_horizontal_task(\@messages) if taskinfo($import_ecrf_data_horizontal_task_opt,\$result,
