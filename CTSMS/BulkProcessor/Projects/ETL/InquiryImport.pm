@@ -170,7 +170,7 @@ sub import_inquiry_data_horizontal {
                         next unless (scalar @$row);
                         next unless (scalar grep { length(trim($_)) > 0; } @$row);
                         next if substr(trim($row->[0]),0,length($comment_char)) eq $comment_char;
-                        update_job($PROCESSING_JOB_STATUS,$rownum,$row_offset + $import_inquiry_data_horizontal_blocksize);
+                        update_job($PROCESSING_JOB_STATUS,$rownum,$row_offset + scalar(@$rows));
                         next unless _set_inquiry_data_horizontal_context($context,$row,$rownum);
                         next unless _clear_inquiries($context);
                         next unless _set_inquiry_values_horizontal($context);
