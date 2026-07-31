@@ -301,7 +301,7 @@ sub convert_task {
         push(@$messages,'convert error: no intermediate file produced');
         return 0;
     } else {
-        push(@$messages,"- convert ok ($converter → $outfile)");
+        push(@$messages,"- convert ok ($converter -> $outfile)");
         foreach my $uploaded (@uploaded) {
             push(@$messages,"- file '$uploaded->{title}' (file ID $uploaded->{id}) added to the '$uploaded->{trial}->{name}' trial");
         }
