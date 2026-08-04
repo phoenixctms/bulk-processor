@@ -58,7 +58,7 @@ function initPrimeUI(context) {
                 _initInquiryField(context,inquiryField.value,inquiryField.content);
             }
             if (typeof disableBrowserAutofill === 'function') {
-                disableBrowserAutofill();
+                disableBrowserAutofill(null, true);
             }
         }
     });
