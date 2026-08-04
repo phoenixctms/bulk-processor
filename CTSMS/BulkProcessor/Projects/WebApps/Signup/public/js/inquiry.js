@@ -57,6 +57,9 @@ function initPrimeUI(context) {
                 var inquiryField = context.inquiryStatusVar.fieldsToInit.shift();
                 _initInquiryField(context,inquiryField.value,inquiryField.content);
             }
+            if (typeof disableBrowserAutofill === 'function') {
+                disableBrowserAutofill();
+            }
         }
     });
 
