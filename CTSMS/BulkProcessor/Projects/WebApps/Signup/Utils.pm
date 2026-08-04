@@ -524,6 +524,23 @@ sub apply_lwp_file_response {
     return $response;
 }
 
+# Complex session values are JSON-encoded by the Dancer::session wrapper in app.pl.
+# Templates receive a decoded hash so nested access like session.trial.name works.
+sub _session_for_template {
+    my $session_obj = Dancer::session();
+    return {} unless defined $session_obj;
+
+    my @keys = eval { keys %$session_obj };
+    return {} if $@;
+
+    my %decoded;
+    foreach my $key (@keys) {
+        # Read via wrapped Dancer::session($key) so JSON values are decoded.
+        $decoded{$key} = Dancer::session($key);
+    }
+    return \%decoded;
+}
+
 sub get_template {
 
     my $view_name = shift @_;
@@ -586,7 +603,7 @@ sub get_template {
             join("\n", map { '<script type="text/javascript" src="'. Dancer::request->uri_base .'/js/'._get_minified($_,'.js').'"></script>'; } @$scripts) . "\n" .
             join("\n", map { '<link rel="stylesheet" href="'. Dancer::request->uri_base .'/css/'._get_minified($_,'.css').'" />'; } @$styles) . "\n" .
             (($google_maps_api_url and $js_vars->{enableGeolocationServices}) ? '<script type="text/javascript" src="' . $google_maps_api_url . '"></script>' : ''),
-        session => Dancer::session,
+        session => _session_for_template(),
         ts => time(),
         js_context_json => $js_context_json,
         lang_options => _get_lang_options(),
