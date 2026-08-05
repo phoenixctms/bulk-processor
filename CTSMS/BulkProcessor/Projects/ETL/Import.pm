@@ -202,9 +202,10 @@ sub append_probandalias_criterion {
             booleanValue => \0,
         });
         # if there is a department column, search for alias by department ...
-        if (length($proband_department_column_name)
-            and exists $context->{record}->{$proband_department_column_name}) {
-            my $value = $context->{record}->{$proband_department_column_name};
+        my $department_col = length($proband_department_column_name) ? lc($proband_department_column_name) : '';
+        if (length($department_col)
+            and exists $context->{record}->{$department_col}) {
+            my $value = $context->{record}->{$department_col};
             if (length($value)) {
                 if (exists $context->{department_map}->{$value}) {
                     my $department = $context->{department_map}->{$value};
@@ -272,9 +273,10 @@ sub get_proband_in {
     my ($context,$alias,$proband_category_column_name,$proband_department_column_name,$proband_gender_column_name) = @_;
 
     my $category;
-    if (length($proband_category_column_name)
-        and exists $context->{record}->{$proband_category_column_name}) {
-        my $value = $context->{record}->{$proband_category_column_name};
+    my $category_col = length($proband_category_column_name) ? lc($proband_category_column_name) : '';
+    if (length($category_col)
+        and exists $context->{record}->{$category_col}) {
+        my $value = $context->{record}->{$category_col};
         if (length($value)) {
             if (exists $context->{proband_category_map}->{$value}) {
                 $category = $context->{proband_category_map}->{$value};
@@ -286,9 +288,10 @@ sub get_proband_in {
     $category = shift @{[ grep { $_->{preset} and not $_->{signup}; } values %{$context->{proband_category_map}} ]} unless $category;
 
     my $department;
-    if (length($proband_department_column_name)
-        and exists $context->{record}->{$proband_department_column_name}) {
-        my $value = $context->{record}->{$proband_department_column_name};
+    my $department_col = length($proband_department_column_name) ? lc($proband_department_column_name) : '';
+    if (length($department_col)
+        and exists $context->{record}->{$department_col}) {
+        my $value = $context->{record}->{$department_col};
         if (length($value)) {
             if (exists $context->{department_map}->{$value}) {
                 $department = $context->{department_map}->{$value};
@@ -300,9 +303,10 @@ sub get_proband_in {
     $department = $context->{ctsmsrestapi_user}->{department} unless $department;
 
     my $gender;
-    if (length($proband_gender_column_name)
-        and exists $context->{record}->{$proband_gender_column_name}) {
-        $gender = $context->{record}->{$proband_gender_column_name};
+    my $gender_col = length($proband_gender_column_name) ? lc($proband_gender_column_name) : '';
+    if (length($gender_col)
+        and exists $context->{record}->{$gender_col}) {
+        $gender = $context->{record}->{$gender_col};
     }
     $gender = $CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Sex::NOT_KNOWN unless length($gender);
 

@@ -295,15 +295,20 @@ sub _init_horizontal_record {
         $context->{record} = undef;
         foreach my $colname (@$row) {
             if (length(trim($colname))) {
-                if (exists $header{$colname}) {
+                # normalize to lowercase for case-insensitive column matching
+                # (field colnames from get_colnames are already lowercase)
+                my $canonical = lc($colname);
+                if (exists $header{$canonical}) {
                     #alias/list entry tag/ecrf column name conflict
                     _error($context,"column '$colname' specified more than once in header row");
                 } else {
-                    $header{$colname} = 1;
-                    push(@headerrow,$colname);
+                    $header{$canonical} = 1;
+                    push(@headerrow,$canonical);
                 }
+                push(@header_row,$canonical);
+            } else {
+                push(@header_row,$colname);
             }
-            push(@header_row,$colname);
         }
         _info($context,"header row with " . (scalar @headerrow) . " columns - " . chopstring(join(', ', @headerrow)));
         lock $header_rownum;
@@ -465,10 +470,12 @@ sub _register_proband {
     my $alias;
     my $id;
     my %record = %{$context->{record}};
-    if (length($inquiry_proband_alias_column_name) 
-        and exists $context->{record}->{$inquiry_proband_alias_column_name}
-        and length($context->{record}->{$inquiry_proband_alias_column_name})) {
-        $alias = $context->{record}->{$inquiry_proband_alias_column_name};
+    my $alias_col = length($inquiry_proband_alias_column_name) ? lc($inquiry_proband_alias_column_name) : '';
+    my $department_col = length($inquiry_proband_department_column_name) ? lc($inquiry_proband_department_column_name) : '';
+    if (length($alias_col)
+        and exists $context->{record}->{$alias_col}
+        and length($context->{record}->{$alias_col})) {
+        $alias = $context->{record}->{$alias_col};
     }
     if (exists $context->{record}->{proband_id}
         and length($context->{record}->{proband_id})) {
@@ -478,7 +485,7 @@ sub _register_proband {
         delete $record{proband_id};
     } elsif (defined $alias) {
         $result = append_probandalias_criterion($context,$alias,$inquiry_proband_department_column_name);
-        delete $record{$inquiry_proband_department_column_name};
+        delete $record{$department_col};
     }
 
     my @vals = map { $context->{record}->{$_->{colname}} } @{$context->{columns}};

@@ -451,15 +451,20 @@ sub _init_horizontal_record {
         $context->{record} = undef;
         foreach my $colname (@$row) {
             if (length(trim($colname))) {
-                if (exists $header{$colname}) {
+                # normalize to lowercase for case-insensitive column matching
+                # (field colnames from get_colnames are already lowercase)
+                my $canonical = lc($colname);
+                if (exists $header{$canonical}) {
                     #alias/list entry tag/ecrf column name conflict
                     _error($context,"column '$colname' specified more than once in header row");
                 } else {
-                    $header{$colname} = 1;
-                    push(@headerrow,$colname);
+                    $header{$canonical} = 1;
+                    push(@headerrow,$canonical);
                 }
+                push(@header_row,$canonical);
+            } else {
+                push(@header_row,$colname);
             }
-            push(@header_row,$colname);
         }
         _info($context,"header row with " . (scalar @headerrow) . " columns - " . chopstring(join(', ', @headerrow)));
         lock $header_rownum;
@@ -470,12 +475,13 @@ sub _init_horizontal_record {
         my ($keys, $values);
         my $columns_changed = 0;
         my @ecrfvisit = ();
-        if (length($ecrf_name_column_name)
-            and exists $context->{record}->{$ecrf_name_column_name}) {
-            _error($context,"empty ecrf name") unless length($context->{record}->{$ecrf_name_column_name});
-            my @ecrfs = grep { $_->{id} eq $context->{record}->{$ecrf_name_column_name}
-                   or $_->{name} eq $context->{record}->{$ecrf_name_column_name}; } map { $_->{ecrf}; } values %{$context->{ecrf_map}};
-            _error($context,"unknown ecrf name/id '" . $context->{record}->{$ecrf_name_column_name} . "'") unless scalar @ecrfs;
+        my $ecrf_name_col = length($ecrf_name_column_name) ? lc($ecrf_name_column_name) : '';
+        if (length($ecrf_name_col)
+            and exists $context->{record}->{$ecrf_name_col}) {
+            _error($context,"empty ecrf name") unless length($context->{record}->{$ecrf_name_col});
+            my @ecrfs = grep { $_->{id} eq $context->{record}->{$ecrf_name_col}
+                   or $_->{name} eq $context->{record}->{$ecrf_name_col}; } map { $_->{ecrf}; } values %{$context->{ecrf_map}};
+            _error($context,"unknown ecrf name/id '" . $context->{record}->{$ecrf_name_col} . "'") unless scalar @ecrfs;
             my $ecrf = shift @ecrfs;
             unless (defined $context->{ecrf} and $ecrf->{id} == $context->{ecrf}->{id}) {
                 $columns_changed = 1;
@@ -486,12 +492,13 @@ sub _init_horizontal_record {
             $columns_changed = 1 if defined $context->{ecrf};
             undef $context->{ecrf};
         }
-        if (length($ecrf_visit_column_name)
-            and exists $context->{record}->{$ecrf_visit_column_name}
-            and length($context->{record}->{$ecrf_visit_column_name})) {
-            my @visits = grep { $_->{id} eq $context->{record}->{$ecrf_visit_column_name}
-                   or $_->{token} eq $context->{record}->{$ecrf_visit_column_name}; } (defined $context->{ecrf} ? @{$context->{ecrf}->{visits}} : (values %{$context->{visit_map}}));
-            _error($context,"unknown visit token/id '" . $context->{record}->{$ecrf_visit_column_name} . "'" .
+        my $ecrf_visit_col = length($ecrf_visit_column_name) ? lc($ecrf_visit_column_name) : '';
+        if (length($ecrf_visit_col)
+            and exists $context->{record}->{$ecrf_visit_col}
+            and length($context->{record}->{$ecrf_visit_col})) {
+            my @visits = grep { $_->{id} eq $context->{record}->{$ecrf_visit_col}
+                   or $_->{token} eq $context->{record}->{$ecrf_visit_col}; } (defined $context->{ecrf} ? @{$context->{ecrf}->{visits}} : (values %{$context->{visit_map}}));
+            _error($context,"unknown visit token/id '" . $context->{record}->{$ecrf_visit_col} . "'" .
                 (defined $context->{ecrf} ? " for eCRF '$context->{ecrf}->{name}'" : '')) unless scalar @visits;
             my $visit = shift @visits;
             unless (defined $context->{visit} and $visit->{id} == $context->{visit}->{id}) {
@@ -783,10 +790,12 @@ sub _register_proband {
     my $alias;
     my $id;
     my %record = %{$context->{record}};
-    if (length($ecrf_proband_alias_column_name) 
-        and exists $context->{record}->{$ecrf_proband_alias_column_name}
-        and length($context->{record}->{$ecrf_proband_alias_column_name})) {
-        $alias = $context->{record}->{$ecrf_proband_alias_column_name};
+    my $alias_col = length($ecrf_proband_alias_column_name) ? lc($ecrf_proband_alias_column_name) : '';
+    my $department_col = length($ecrf_proband_department_column_name) ? lc($ecrf_proband_department_column_name) : '';
+    if (length($alias_col)
+        and exists $context->{record}->{$alias_col}
+        and length($context->{record}->{$alias_col})) {
+        $alias = $context->{record}->{$alias_col};
     }
     if (exists $context->{record}->{proband_id}
         and length($context->{record}->{proband_id})) {
@@ -796,7 +805,7 @@ sub _register_proband {
         delete $record{proband_id};
     } elsif (defined $alias) {
         $result = append_probandalias_criterion($context,$alias,$ecrf_proband_department_column_name);
-        delete $record{$ecrf_proband_department_column_name};
+        delete $record{$department_col};
     } elsif (scalar keys %{$context->{listentrytag_map}}) {
         # otherwise use proband list entry tags if specified:
         my $blank = 1;
