@@ -524,29 +524,23 @@ sub apply_lwp_file_response {
     return $response;
 }
 
-# Complex session values are JSON-encoded by the Dancer::session wrapper in app.pl.
-# Templates need a decoded hash so nested access like session.trial.name works.
-sub _session_for_template {
-    my $session_obj = Dancer::session();
-    return {} unless defined $session_obj;
-
-    my @keys = eval { keys %$session_obj };
-    return {} if $@;
-
-    my %decoded;
-    foreach my $key (@keys) {
-        # Read via wrapped Dancer::session($key) so JSON values are decoded.
-        $decoded{$key} = Dancer::session($key);
-    }
-    return \%decoded;
-}
-
 # Dancer::Template::Abstract::_prepare_tokens_options always overwrites any
-# session token with Dancer::Session->get (raw object). Re-inject a decoded
-# hash afterwards via before_template_render.
+# session token with Dancer::Session->get (raw object). Complex values are
+# JSON-encoded by the Dancer::session wrapper in app.pl; re-inject a decoded
+# hash so nested TT access like session.trial.name works.
 Dancer::hook(before_template_render => sub {
     my $tokens = shift;
-    $tokens->{session} = _session_for_template();
+    my $session_obj = Dancer::session();
+    my %decoded;
+    if (defined $session_obj) {
+        my @keys = eval { keys %$session_obj };
+        unless ($@) {
+            foreach my $key (@keys) {
+                $decoded{$key} = Dancer::session($key);
+            }
+        }
+    }
+    $tokens->{session} = \%decoded;
 });
 
 sub get_template {
