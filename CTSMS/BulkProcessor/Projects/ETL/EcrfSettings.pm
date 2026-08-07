@@ -84,6 +84,9 @@ our @EXPORT_OK = qw(
     $ecrf_proband_alias_column_name
     $ecrf_proband_category_column_name
     $ecrf_proband_department_column_name
+    $ecrf_proband_first_name_column_name
+    $ecrf_proband_last_name_column_name
+    $ecrf_proband_date_of_birth_column_name
     $ecrf_proband_gender_column_name
 
     $ecrf_probandlistentry_group_column_name
@@ -118,6 +121,9 @@ our $timezone = undef;
 our $ecrf_proband_alias_column_name = 'alias';
 our $ecrf_proband_category_column_name;
 our $ecrf_proband_department_column_name;
+our $ecrf_proband_first_name_column_name;
+our $ecrf_proband_last_name_column_name;
+our $ecrf_proband_date_of_birth_column_name;
 our $ecrf_proband_gender_column_name;
 
 our $ecrf_probandlistentry_group_column_name; #subject_group
@@ -270,6 +276,9 @@ sub update_settings {
         $ecrf_proband_alias_column_name = $data->{ecrf_proband_alias_column_name} if exists $data->{ecrf_proband_alias_column_name};
         $ecrf_proband_category_column_name = $data->{ecrf_proband_category_column_name} if exists $data->{ecrf_proband_category_column_name};
         $ecrf_proband_department_column_name = $data->{ecrf_proband_department_column_name} if exists $data->{ecrf_proband_department_column_name};
+        $ecrf_proband_first_name_column_name = $data->{ecrf_proband_first_name_column_name} if exists $data->{ecrf_proband_first_name_column_name};
+        $ecrf_proband_last_name_column_name = $data->{ecrf_proband_last_name_column_name} if exists $data->{ecrf_proband_last_name_column_name};
+        $ecrf_proband_date_of_birth_column_name = $data->{ecrf_proband_date_of_birth_column_name} if exists $data->{ecrf_proband_date_of_birth_column_name};
         $ecrf_proband_gender_column_name = $data->{ecrf_proband_gender_column_name} if exists $data->{ecrf_proband_gender_column_name};
 
         $ecrf_probandlistentry_group_column_name = $data->{ecrf_probandlistentry_group_column_name} if exists $data->{ecrf_probandlistentry_group_column_name};
@@ -325,11 +334,17 @@ sub get_proband_columns {
         push(@columns,$proband->{alias}) if length($ecrf_proband_alias_column_name);
         push(@columns,$proband->{category}->{nameL10nKey}) if length($ecrf_proband_category_column_name);
         push(@columns,$proband->{department}->{nameL10nKey}) if length($ecrf_proband_department_column_name);
+        push(@columns,$proband->{firstName}) if length($ecrf_proband_first_name_column_name);
+        push(@columns,$proband->{lastName}) if length($ecrf_proband_last_name_column_name);
+        push(@columns,$proband->{dateOfBirth}) if length($ecrf_proband_date_of_birth_column_name);
         push(@columns,$proband->{gender}->{sex}) if length($ecrf_proband_gender_column_name);
     } else {
         push(@columns,lc($ecrf_proband_alias_column_name)) if length($ecrf_proband_alias_column_name);
         push(@columns,lc($ecrf_proband_category_column_name)) if length($ecrf_proband_category_column_name);
         push(@columns,lc($ecrf_proband_department_column_name)) if length($ecrf_proband_department_column_name);
+        push(@columns,lc($ecrf_proband_first_name_column_name)) if length($ecrf_proband_first_name_column_name);
+        push(@columns,lc($ecrf_proband_last_name_column_name)) if length($ecrf_proband_last_name_column_name);
+        push(@columns,lc($ecrf_proband_date_of_birth_column_name)) if length($ecrf_proband_date_of_birth_column_name);
         push(@columns,lc($ecrf_proband_gender_column_name)) if length($ecrf_proband_gender_column_name);
     }
     return @columns;
