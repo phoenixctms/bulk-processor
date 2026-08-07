@@ -199,6 +199,9 @@ sub _renew_jwt {
             undef $self->{jwt_refresh_cooldown_until};
             $self->jwt($new_jwt);
             $renewed = 1;
+        } else {
+            $self->{jwt_refresh_cooldown_until} = time() + $skew;
+            restwarn($self, 'rest api jwt refresh returned no token', getlogger(__PACKAGE__));
         }
     };
     if ($@) {
