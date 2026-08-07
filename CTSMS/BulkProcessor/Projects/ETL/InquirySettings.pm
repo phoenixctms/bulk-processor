@@ -76,6 +76,9 @@ our @EXPORT_OK = qw(
     $inquiry_proband_alias_column_name
     $inquiry_proband_category_column_name
     $inquiry_proband_department_column_name
+    $inquiry_proband_first_name_column_name
+    $inquiry_proband_last_name_column_name
+    $inquiry_proband_date_of_birth_column_name
     $inquiry_proband_gender_column_name
 
     $ctsms_base_url
@@ -102,6 +105,9 @@ our $inquiry_data_api_values_page_size = 10;
 our $inquiry_proband_alias_column_name = 'alias';
 our $inquiry_proband_category_column_name;
 our $inquiry_proband_department_column_name;
+our $inquiry_proband_first_name_column_name;
+our $inquiry_proband_last_name_column_name;
+our $inquiry_proband_date_of_birth_column_name;
 our $inquiry_proband_gender_column_name;
 
 our $ctsms_base_url = undef;
@@ -234,6 +240,9 @@ sub update_settings {
         $inquiry_proband_alias_column_name = $data->{inquiry_proband_alias_column_name} if exists $data->{inquiry_proband_alias_column_name};
         $inquiry_proband_category_column_name = $data->{inquiry_proband_category_column_name} if exists $data->{inquiry_proband_category_column_name};
         $inquiry_proband_department_column_name = $data->{inquiry_proband_department_column_name} if exists $data->{inquiry_proband_department_column_name};
+        $inquiry_proband_first_name_column_name = $data->{inquiry_proband_first_name_column_name} if exists $data->{inquiry_proband_first_name_column_name};
+        $inquiry_proband_last_name_column_name = $data->{inquiry_proband_last_name_column_name} if exists $data->{inquiry_proband_last_name_column_name};
+        $inquiry_proband_date_of_birth_column_name = $data->{inquiry_proband_date_of_birth_column_name} if exists $data->{inquiry_proband_date_of_birth_column_name};
         $inquiry_proband_gender_column_name = $data->{inquiry_proband_gender_column_name} if exists $data->{inquiry_proband_gender_column_name};
 
         $inquiry_data_api_probands_page_size = $data->{inquiry_data_api_probands_page_size} if exists $data->{inquiry_data_api_probands_page_size};
@@ -279,11 +288,17 @@ sub get_proband_columns {
         push(@columns,$proband->{alias}) if length($inquiry_proband_alias_column_name);
         push(@columns,$proband->{category}->{nameL10nKey}) if length($inquiry_proband_category_column_name);
         push(@columns,$proband->{department}->{nameL10nKey}) if length($inquiry_proband_department_column_name);
+        push(@columns,$proband->{firstName}) if length($inquiry_proband_first_name_column_name);
+        push(@columns,$proband->{lastName}) if length($inquiry_proband_last_name_column_name);
+        push(@columns,$proband->{dateOfBirth}) if length($inquiry_proband_date_of_birth_column_name);
         push(@columns,$proband->{gender}->{sex}) if length($inquiry_proband_gender_column_name);
     } else {
         push(@columns,lc($inquiry_proband_alias_column_name)) if length($inquiry_proband_alias_column_name);
         push(@columns,lc($inquiry_proband_category_column_name)) if length($inquiry_proband_category_column_name);
         push(@columns,lc($inquiry_proband_department_column_name)) if length($inquiry_proband_department_column_name);
+        push(@columns,lc($inquiry_proband_first_name_column_name)) if length($inquiry_proband_first_name_column_name);
+        push(@columns,lc($inquiry_proband_last_name_column_name)) if length($inquiry_proband_last_name_column_name);
+        push(@columns,lc($inquiry_proband_date_of_birth_column_name)) if length($inquiry_proband_date_of_birth_column_name);
         push(@columns,lc($inquiry_proband_gender_column_name)) if length($inquiry_proband_gender_column_name);
     }
     return @columns;
