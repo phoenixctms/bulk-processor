@@ -139,17 +139,53 @@ sub _apply_jwt_claims {
 
 }
 
+sub _snapshot_request_state {
+    my $self = shift;
+    return {
+        req => $self->{req},
+        res => $self->{res},
+        requestdata => $self->{requestdata},
+        responsedata => $self->{responsedata},
+    };
+}
+
+sub _restore_request_state {
+    my ($self,$state) = @_;
+    return unless $state;
+    $self->{req} = $state->{req};
+    $self->{res} = $state->{res};
+    $self->{requestdata} = $state->{requestdata};
+    $self->{responsedata} = $state->{responsedata};
+}
+
 sub _renew_jwt_if_required {
 
     my $self = shift;
-    return unless defined $self->{jwt} && length($self->{jwt}) > 0;
-    return unless defined $self->{jwt_expires};
+    return 0 unless defined $self->{jwt} && length($self->{jwt}) > 0;
+    return 0 unless defined $self->{jwt_expires};
     if (defined $self->{jwt_refresh_cooldown_until} && time() < $self->{jwt_refresh_cooldown_until}) {
-        return;
+        return 0;
     }
     my $skew = $self->jwt_refresh_skew_secs();
-    return if time() < ($self->{jwt_expires} - $skew);
+    return 0 if time() < ($self->{jwt_expires} - $skew);
+    return $self->_renew_jwt();
 
+}
+
+sub _force_renew_jwt {
+
+    my $self = shift;
+    return 0 unless defined $self->{jwt} && length($self->{jwt}) > 0;
+    undef $self->{jwt_refresh_cooldown_until};
+    return $self->_renew_jwt();
+
+}
+
+sub _renew_jwt {
+
+    my $self = shift;
+    my $skew = $self->jwt_refresh_skew_secs();
+    my $renewed = 0;
     $self->{_refreshing_jwt} = 1;
     eval {
         # Runtime require avoids a circular use with Login.pm (which uses CtsmsRestApi).
@@ -162,6 +198,7 @@ sub _renew_jwt_if_required {
             restinfo($self, 'rest api jwt refreshed', getlogger(__PACKAGE__));
             undef $self->{jwt_refresh_cooldown_until};
             $self->jwt($new_jwt);
+            $renewed = 1;
         }
     };
     if ($@) {
@@ -169,14 +206,44 @@ sub _renew_jwt_if_required {
         restwarn($self, 'rest api jwt refresh failed: ' . $@, getlogger(__PACKAGE__));
     }
     $self->{_refreshing_jwt} = 0;
+    return $renewed;
 
 }
 
 sub _ua_request {
 
     my $self = shift;
-    $self->_renew_jwt_if_required() unless $self->{_refreshing_jwt};
-    return $self->SUPER::_ua_request(@_);
+    my ($req) = @_;
+
+    # Nested issue_jwt uses the same connector and would otherwise clobber the
+    # in-flight request's req/res/responsedata (visible as undef->{rows} after refresh).
+    unless ($self->{_refreshing_jwt}) {
+        my $state = $self->_snapshot_request_state();
+        $self->_renew_jwt_if_required();
+        $self->_restore_request_state($state);
+    }
+
+    my $res = $self->SUPER::_ua_request($req);
+
+    # Reactive single retry: expired/rejected bearer → refresh once, repeat request once.
+    if ($res
+        and $res->code() == HTTP_UNAUTHORIZED
+        and not $self->{_refreshing_jwt}
+        and not $self->{_jwt_auth_retry}
+        and defined $self->{jwt}
+        and length($self->{jwt})) {
+        $self->{_jwt_auth_retry} = 1;
+        my $state = $self->_snapshot_request_state();
+        my $renewed = $self->_force_renew_jwt();
+        $self->_restore_request_state($state);
+        if ($renewed) {
+            restinfo($self, 'rest api retrying request after jwt refresh', getlogger(__PACKAGE__));
+            $res = $self->SUPER::_ua_request($req);
+        }
+        $self->{_jwt_auth_retry} = 0;
+    }
+
+    return $res;
 
 }
 
