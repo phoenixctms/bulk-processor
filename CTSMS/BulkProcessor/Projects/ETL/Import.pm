@@ -442,8 +442,17 @@ sub _normalize_proband_date_of_birth {
     if ($v =~ /^(\d{4}-\d{2}-\d{2})(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?/) {
         return $1 . ' 00:00:00';
     }
-    if ($v =~ m{^(\d{1,2})[./](\d{1,2})[./](\d{4})}) {
+    # Excel serial (Spreadsheet parses dates as day counts).
+    if (my $excel_date = valid_excel_to_date($v)) {
+        return $excel_date;
+    }
+    # Dot-separated: day.month.year
+    if ($v =~ m{^(\d{1,2})\.(\d{1,2})\.(\d{4})$}) {
         return sprintf('%04d-%02d-%02d 00:00:00',$3,$2,$1);
+    }
+    # Slash-separated: month/day/year (US); do not share the DMY dot rule.
+    if ($v =~ m{^(\d{1,2})/(\d{1,2})/(\d{4})$}) {
+        return sprintf('%04d-%02d-%02d 00:00:00',$3,$1,$2);
     }
     return $v;
 }
