@@ -108,7 +108,6 @@ use CTSMS::BulkProcessor::Projects::ETL::Import qw(
     
     append_probandalias_criterion
     append_probandid_criterion
-    find_probands_by_particulars
     
     get_values_stats
     
@@ -538,35 +537,18 @@ sub _register_proband {
                         $context->{proband_created} = 1;
                     }
                 } elsif (proband_particulars_complete($particulars)) {
-                    my $matched;
                     eval {
-                        my $by_particulars = find_probands_by_particulars($context,$particulars);
-                        if ((scalar @{$by_particulars // []}) > 1) {
-                            die("more than one proband found for name/date of birth");
-                        } elsif ((scalar @{$by_particulars // []}) == 1) {
-                            $matched = $by_particulars->[0];
-                        }
+                         my $in = get_proband_in($context,undef,$inquiry_proband_category_column_name,$inquiry_proband_department_column_name,$inquiry_proband_gender_column_name,
+                             $inquiry_proband_first_name_column_name,$inquiry_proband_last_name_column_name,$inquiry_proband_date_of_birth_column_name);
+                         $in->{"person"} = ($context->{inquiry_trial}->{type}->{person} ? \1 : \0);
+                         $context->{proband} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::add_item($in);
                     };
                     if ($@) {
-                        _warn_or_error($context,"error loading unblinded proband: " . $@);
+                        _warn_or_error($context,"error creating unblinded proband: " . $@);
                         $result = 0;
-                    } elsif ($matched) {
-                        $context->{proband} = $matched;
-                        _info($context,"unblinded proband " . ($context->{proband}->alias // $context->{proband}->{id}) . " found");
                     } else {
-                        eval {
-                             my $in = get_proband_in($context,undef,$inquiry_proband_category_column_name,$inquiry_proband_department_column_name,$inquiry_proband_gender_column_name,
-                                 $inquiry_proband_first_name_column_name,$inquiry_proband_last_name_column_name,$inquiry_proband_date_of_birth_column_name);
-                             $in->{"person"} = ($context->{inquiry_trial}->{type}->{person} ? \1 : \0);
-                             $context->{proband} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::add_item($in);
-                        };
-                        if ($@) {
-                            _warn_or_error($context,"error creating unblinded proband: " . $@);
-                            $result = 0;
-                        } else {
-                            _info($context,"unblinded proband " . ($context->{proband}->alias // $context->{proband}->{id}) . " created");
-                            $context->{proband_created} = 1;
-                        }
+                        _info($context,"unblinded proband " . ($context->{proband}->alias // $context->{proband}->{id}) . " created");
+                        $context->{proband_created} = 1;
                     }
                 } else {
                     _warn_or_error($context,"alias required to create proband");
@@ -612,35 +594,18 @@ sub _register_proband {
                 $inquiry_proband_date_of_birth_column_name,$inquiry_proband_gender_column_name);
             if (proband_particulars_complete($particulars)) {
                 lock $registration;
-                my $matched;
                 eval {
-                    my $by_particulars = find_probands_by_particulars($context,$particulars);
-                    if ((scalar @{$by_particulars // []}) > 1) {
-                        die("more than one proband found for name/date of birth");
-                    } elsif ((scalar @{$by_particulars // []}) == 1) {
-                        $matched = $by_particulars->[0];
-                    }
+                     my $in = get_proband_in($context,undef,$inquiry_proband_category_column_name,$inquiry_proband_department_column_name,$inquiry_proband_gender_column_name,
+                         $inquiry_proband_first_name_column_name,$inquiry_proband_last_name_column_name,$inquiry_proband_date_of_birth_column_name);
+                     $in->{"person"} = ($context->{inquiry_trial}->{type}->{person} ? \1 : \0);
+                     $context->{proband} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::add_item($in);
                 };
                 if ($@) {
-                    _warn_or_error($context,"error loading unblinded proband: " . $@);
+                    _warn_or_error($context,"error creating unblinded proband: " . $@);
                     $result = 0;
-                } elsif ($matched) {
-                    $context->{proband} = $matched;
-                    _info($context,"unblinded proband " . ($context->{proband}->alias // $context->{proband}->{id}) . " found");
                 } else {
-                    eval {
-                         my $in = get_proband_in($context,undef,$inquiry_proband_category_column_name,$inquiry_proband_department_column_name,$inquiry_proband_gender_column_name,
-                             $inquiry_proband_first_name_column_name,$inquiry_proband_last_name_column_name,$inquiry_proband_date_of_birth_column_name);
-                         $in->{"person"} = ($context->{inquiry_trial}->{type}->{person} ? \1 : \0);
-                         $context->{proband} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::add_item($in);
-                    };
-                    if ($@) {
-                        _warn_or_error($context,"error creating unblinded proband: " . $@);
-                        $result = 0;
-                    } else {
-                        _info($context,"unblinded proband " . ($context->{proband}->alias // $context->{proband}->{id}) . " created");
-                        $context->{proband_created} = 1;
-                    }
+                    _info($context,"unblinded proband " . ($context->{proband}->alias // $context->{proband}->{id}) . " created");
+                    $context->{proband_created} = 1;
                 }
                 if ($context->{proband} and $context->{proband}->locked) {
                     _info($context,"proband is locked");
