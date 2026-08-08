@@ -168,6 +168,8 @@ my $header_rownum :shared = 0;
 my $registration :shared;
 my $warning_count :shared = 0;
 my $value_count :shared = 0;
+# listentry ids already cleared this import run (shared across sheets/threads)
+my %ecrf_cleared_listentries :shared = ();
 
 my $comment_char = '#';
 
@@ -276,6 +278,8 @@ sub import_ecrf_data_horizontal {
         $warning_count = 0;
         lock $value_count;
         $value_count = 0;
+        lock %ecrf_cleared_listentries;
+        %ecrf_cleared_listentries = ();
     }
 
     my $static_context = {};
@@ -671,56 +675,83 @@ sub _clear_ecrf {
     my $result = 1;
     my $listentry_id = $context->{probandlistentry}->{id};
 
-    $context->{clear_map} = {};
+    $context->{clear_map} //= {};
 
-    if (not $context->{listentry_created}
-        and ($clear_sections or $clear_all_sections)
-        and not exists $context->{clear_map}->{$listentry_id}) {
-        my $columns = [];
-        $columns = $context->{all_columns} if $clear_all_sections;
-        $columns = $context->{columns} if $clear_sections;
-        my $removed_value_count = 0;
+    return $result unless (not $context->{listentry_created}
+        and ($clear_sections or $clear_all_sections));
 
-        $context->{clear_map}->{$listentry_id} = {};
-        foreach my $column (@$columns) {
-            #$context->{clear_map}->{$listentry_id} //= {};
-
-            next unless _get_ecrffieldvalue_editable($context,$column->{colname});
-
-            my $ecrf_id = $column->{ecrffield}->{ecrf}->{id};
-            $context->{clear_map}->{$listentry_id}->{$ecrf_id} //= {};
-            my $section_map = $context->{clear_map}->{$listentry_id}->{$ecrf_id};
-
-            my $visit_id = undef;
-            $visit_id = $column->{visit}->{id} if $column->{visit};
-            if (defined $visit_id) {
-                $context->{clear_map}->{$listentry_id}->{$ecrf_id}->{$visit_id} //= {};
-                $section_map = $context->{clear_map}->{$listentry_id}->{$ecrf_id}->{$visit_id};
-                next if ($context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id}->{$visit_id}->{status}
-                    and $context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id}->{$visit_id}->{status}->{valueLockdown});
-            } else {
-                next if ($context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id}->{status}
-                    and $context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id}->{status}->{valueLockdown});
+    # clear_all_sections: wipe once per listentry for the whole import (all sheets/threads).
+    # clear_sections: clear each eCRF/visit/section the first time it is seen for that listentry.
+    if ($clear_all_sections) {
+        {
+            lock %ecrf_cleared_listentries;
+            if (exists $ecrf_cleared_listentries{$listentry_id}
+                or exists $context->{clear_map}->{$listentry_id}) {
+                return $result;
             }
-
-            my $section = ($column->{ecrffield}->{section} // '');
-            unless (exists $section_map->{$section}) {
-                my $values;
-                my $section_label = "eCRF '$column->{ecrffield}->{ecrf}->{name}" . (defined $column->{visit} ? '@' . $column->{visit}->{token} : '') . "' section '" . $section . "'";
-                eval {
-                    $values = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValue::clear($listentry_id, $ecrf_id, $visit_id, $section);
-                };
-                if ($@) {
-                    _warn_or_error($context,"error deleting $section_label values: " . $@);
-                    $result = 0;
-                } else {
-                    _info($context,"$section_label values deleted",1);
-                }
-                $section_map->{$section} = $values;
-                $removed_value_count += scalar @$values;
-            }
+            $ecrf_cleared_listentries{$listentry_id} = 1;
+            $context->{clear_map}->{$listentry_id} = 1;
         }
-        _info($context,"$removed_value_count eCRF values deleted");
+    } else {
+        $context->{clear_map}->{$listentry_id} //= {};
+    }
+
+    my $columns = [];
+    $columns = $context->{all_columns} if $clear_all_sections;
+    $columns = $context->{columns} if $clear_sections;
+    my $removed_value_count = 0;
+    my %section_done = ();
+
+    foreach my $column (@$columns) {
+        next unless _get_ecrffieldvalue_editable($context,$column->{colname});
+
+        my $ecrf_id = $column->{ecrffield}->{ecrf}->{id};
+        my $visit_id = undef;
+        $visit_id = $column->{visit}->{id} if $column->{visit};
+        if (defined $visit_id) {
+            next if ($context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id}->{$visit_id}->{status}
+                and $context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id}->{$visit_id}->{status}->{valueLockdown});
+        } else {
+            next if ($context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id}->{status}
+                and $context->{ecrfstatus_map}->{$listentry_id}->{$ecrf_id}->{status}->{valueLockdown});
+        }
+
+        my $section = ($column->{ecrffield}->{section} // '');
+        my $section_key = join("\t", $ecrf_id, ($visit_id // ''), $section);
+        if ($clear_all_sections) {
+            next if exists $section_done{$section_key};
+        } else {
+            my $section_map = $context->{clear_map}->{$listentry_id};
+            $section_map->{$ecrf_id} //= {};
+            $section_map = $section_map->{$ecrf_id};
+            if (defined $visit_id) {
+                $section_map->{$visit_id} //= {};
+                $section_map = $section_map->{$visit_id};
+            }
+            next if exists $section_map->{$section};
+            $section_map->{$section} = 1;
+        }
+
+        my $values;
+        my $section_label = "eCRF '$column->{ecrffield}->{ecrf}->{name}" . (defined $column->{visit} ? '@' . $column->{visit}->{token} : '') . "' section '" . $section . "'";
+        eval {
+            $values = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValue::clear($listentry_id, $ecrf_id, $visit_id, $section);
+        };
+        if ($@) {
+            _warn_or_error($context,"error deleting $section_label values: " . $@);
+            $result = 0;
+        } else {
+            _info($context,"$section_label values deleted",1);
+            $removed_value_count += scalar @{$values // []};
+        }
+        $section_done{$section_key} = 1 if $clear_all_sections;
+    }
+    _info($context,"$removed_value_count eCRF values deleted");
+
+    if ($clear_all_sections and not $result) {
+        lock %ecrf_cleared_listentries;
+        delete $ecrf_cleared_listentries{$listentry_id};
+        delete $context->{clear_map}->{$listentry_id};
     }
     return $result;
 
@@ -732,7 +763,7 @@ sub _load_ecrf_status {
 
     my $listentry_id = $context->{probandlistentry}->{id};
 
-    $context->{ecrfstatus_map} = {};
+    $context->{ecrfstatus_map} //= {};
 
     if (not exists $context->{ecrfstatus_map}->{$listentry_id}) {
         my $columns = $context->{columns};

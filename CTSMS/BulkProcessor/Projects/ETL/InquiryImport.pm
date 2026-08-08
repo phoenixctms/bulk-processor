@@ -139,6 +139,8 @@ my $header_rownum :shared = 0;
 my $registration :shared;
 my $warning_count :shared = 0;
 my $value_count :shared = 0;
+# proband ids already cleared this import run (shared across sheets/threads)
+my %inquiry_cleared_probands :shared = ();
 
 my $comment_char = '#';
 
@@ -151,6 +153,8 @@ sub import_inquiry_data_horizontal {
         $warning_count = 0;
         lock $value_count;
         $value_count = 0;
+        lock %inquiry_cleared_probands;
+        %inquiry_cleared_probands = ();
     }
 
     my $static_context = {};
@@ -429,38 +433,64 @@ sub _clear_inquiries {
     my $proband_id = $context->{proband}->{id};
     my $trial_id = $context->{inquiry_trial}->{id};
 
-    $context->{clear_map} = {};
+    $context->{clear_map} //= {};
 
-    if (not $context->{proband_created}
-        and ($clear_categories or $clear_all_categories)
-        and not exists $context->{clear_map}->{$proband_id}) {
-        my $columns = [];
-        $columns = $context->{all_columns} if $clear_all_categories;
-        $columns = $context->{columns} if $clear_categories;
-        my $removed_value_count = 0;
+    return $result unless (not $context->{proband_created}
+        and ($clear_categories or $clear_all_categories));
 
-        $context->{clear_map}->{$proband_id} = {};
-        foreach my $column (@$columns) {
-            my $category_map = $context->{clear_map}->{$proband_id};
-
-            my $category = ($column->{inquiry}->{category} // '');
-            unless (exists $category_map->{$category}) {
-                my $values;
-                my $category_label = "inquiry category '" . $category . "'";
-                eval {
-                    $values = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValue::clear($proband_id, $trial_id, $category);
-                };
-                if ($@) {
-                    _warn_or_error($context,"error deleting $category_label values: " . $@);
-                    $result = 0;
-                } else {
-                    _info($context,"$category_label values deleted",1);
-                }
-                $category_map->{$category} = $values;
-                $removed_value_count += scalar @$values;
+    # clear_all_categories: wipe once per proband for the whole import (all sheets/threads).
+    if ($clear_all_categories) {
+        {
+            lock %inquiry_cleared_probands;
+            if (exists $inquiry_cleared_probands{$proband_id}
+                or exists $context->{clear_map}->{$proband_id}) {
+                return $result;
             }
+            $inquiry_cleared_probands{$proband_id} = 1;
+            $context->{clear_map}->{$proband_id} = 1;
         }
-        _info($context,"$removed_value_count inquiry values deleted");
+    } elsif (exists $context->{clear_map}->{$proband_id}) {
+        return $result;
+    } else {
+        $context->{clear_map}->{$proband_id} = {};
+    }
+
+    my $columns = [];
+    $columns = $context->{all_columns} if $clear_all_categories;
+    $columns = $context->{columns} if $clear_categories;
+    my $removed_value_count = 0;
+    my %category_done = ();
+
+    foreach my $column (@$columns) {
+        my $category = ($column->{inquiry}->{category} // '');
+        if ($clear_all_categories) {
+            next if exists $category_done{$category};
+        } else {
+            my $category_map = $context->{clear_map}->{$proband_id};
+            next if exists $category_map->{$category};
+            $category_map->{$category} = 1;
+        }
+
+        my $values;
+        my $category_label = "inquiry category '" . $category . "'";
+        eval {
+            $values = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValue::clear($proband_id, $trial_id, $category);
+        };
+        if ($@) {
+            _warn_or_error($context,"error deleting $category_label values: " . $@);
+            $result = 0;
+        } else {
+            _info($context,"$category_label values deleted",1);
+            $removed_value_count += scalar @{$values // []};
+        }
+        $category_done{$category} = 1 if $clear_all_categories;
+    }
+    _info($context,"$removed_value_count inquiry values deleted");
+
+    if ($clear_all_categories and not $result) {
+        lock %inquiry_cleared_probands;
+        delete $inquiry_cleared_probands{$proband_id};
+        delete $context->{clear_map}->{$proband_id};
     }
     return $result;
 

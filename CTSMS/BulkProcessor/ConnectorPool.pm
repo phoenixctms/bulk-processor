@@ -100,6 +100,17 @@ sub get_ctsms_restapi {
     if (!defined $ctsms_restapis->{$name}) {
         $ctsms_restapis->{$name} = CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi->new($instance_name);
         $ctsms_restapis->{$name}->setup($uri // $ctsmsrestapi_uri,$username // $ctsmsrestapi_username,$password // $ctsmsrestapi_password,$realm // $ctsmsrestapi_realm);
+        # Worker threads get a fresh connector keyed by tid. Inherit JWT from any
+        # already-configured connector in this interpreter (ithreads clone the
+        # root connector that received --auth before workers were spawned).
+        foreach my $api (values %$ctsms_restapis) {
+            next unless defined $api and $api != $ctsms_restapis->{$name};
+            my $jwt = $api->jwt();
+            if (defined $jwt and length($jwt)) {
+                $ctsms_restapis->{$name}->jwt($jwt);
+                last;
+            }
+        }
     }
     return $ctsms_restapis->{$name};
 
