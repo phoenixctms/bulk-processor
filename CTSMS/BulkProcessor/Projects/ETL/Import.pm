@@ -22,8 +22,6 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Crit
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::user::UserService::User qw();
 
-use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband qw();
-
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Sex qw();
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Department qw();
@@ -62,7 +60,6 @@ our @EXPORT_OK = qw(
     
     append_probandalias_criterion
     append_probandid_criterion
-    find_probands_by_particulars
     
     get_values_stats
     
@@ -254,42 +251,6 @@ sub append_probandid_criterion {
         _warn_or_error($context,"empty proband id");
         return 0;
     }
-}
-
-sub find_probands_by_particulars {
-    my ($context,$particulars) = @_;
-    return [] unless $context and proband_particulars_complete($particulars);
-
-    my $dob = $particulars->{dateOfBirth};
-    $dob .= ' 00:00:00' unless $dob =~ /\s/;
-
-    return CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::search({
-        module => $CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::DBModule::PROBAND_DB,
-        criterions => [{
-            position => 1,
-            restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
-            propertyId => $context->{criterionproperty_map}->{'proband.personParticulars.firstNameNormalizedHash'},
-            stringValue => mark_utf8($particulars->{firstName}),
-        },{
-            position => 2,
-            tieId => $context->{criteriontie_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::AND},
-            restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
-            propertyId => $context->{criterionproperty_map}->{'proband.personParticulars.lastNameNormalizedHash'},
-            stringValue => mark_utf8($particulars->{lastName}),
-        },{
-            position => 3,
-            tieId => $context->{criteriontie_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::AND},
-            restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
-            propertyId => $context->{criterionproperty_map}->{'proband.personParticulars.dateOfBirthHash'},
-            dateValue => $dob,
-        },{
-            position => 4,
-            tieId => $context->{criteriontie_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionTie::AND},
-            restrictionId => $context->{criterionrestriction_map}->{$CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::CriterionRestriction::EQ},
-            propertyId => $context->{criterionproperty_map}->{'proband.deferredDelete'},
-            booleanValue => \0,
-        }],
-    });
 }
 
 sub get_values_stats {
