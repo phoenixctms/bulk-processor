@@ -409,8 +409,9 @@ sub build_proband_particulars_update {
     my $gender = length($particulars->{gender}) ? $particulars->{gender} : $existing_gender;
     $gender = $CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Sex::NOT_KNOWN unless length($gender);
 
-    # CTSMS rejects dateOfBirth "" (ParseException). Need a real DOB from sheet or existing record.
-    return undef unless length($dob);
+    # Need a complete merged identity before unblinding (CTSMS rejects empty DOB;
+    # names must be present too).
+    return undef unless length($first) and length($last) and length($dob);
 
     my $changed = $was_blinded;
     $changed = 1 if $first ne $existing_first;
