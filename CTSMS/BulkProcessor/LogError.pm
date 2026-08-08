@@ -481,7 +481,7 @@ sub rowprocessingerror {
 
     my ($tid, $message, $logger) = @_;
     if (defined $logger) {
-        $logger->error(($enablemultithreading ? '[' . $tid . '] ' : '') . $message);
+        $logger->error((($enablemultithreading and defined $tid) ? '[' . $tid . '] ' : '') . $message);
     }
     terminate($message, $logger);
 
@@ -491,7 +491,7 @@ sub rowprocessingwarn {
 
     my ($tid, $message, $logger) = @_;
     if (defined $logger) {
-        $logger->warn(($enablemultithreading ? '[' . $tid . '] ' : '') . $message);
+        $logger->warn((($enablemultithreading and defined $tid) ? '[' . $tid . '] ' : '') . $message);
     }
     warning($message, $logger);
 
