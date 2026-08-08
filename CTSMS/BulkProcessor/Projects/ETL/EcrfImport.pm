@@ -28,6 +28,9 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
     $ecrf_proband_alias_column_name
     $ecrf_proband_category_column_name
     $ecrf_proband_department_column_name
+    $ecrf_proband_first_name_column_name
+    $ecrf_proband_last_name_column_name
+    $ecrf_proband_date_of_birth_column_name
     $ecrf_proband_gender_column_name
 
     get_proband_columns
@@ -132,6 +135,10 @@ use CTSMS::BulkProcessor::Projects::ETL::Import qw(
     get_values_stats
     
     get_proband_in
+    read_proband_particulars
+    proband_particulars_complete
+    any_proband_particular_present
+    build_proband_particulars_update
     
     init_context
     get_log_label
@@ -853,12 +860,16 @@ sub _register_proband {
                 _warn_or_error($context,"error loading proband: " . $@);
                 $result = 0;
             } elsif ((scalar @$probands) == 0) {
+                my $particulars = read_proband_particulars($context,
+                    $ecrf_proband_first_name_column_name,$ecrf_proband_last_name_column_name,
+                    $ecrf_proband_date_of_birth_column_name,$ecrf_proband_gender_column_name);
                 if (defined $id) {
                     _warn_or_error($context,"cannot find proband id " . $id);
                     $result = 0;
                 } elsif (defined $alias) {
                     eval {
-                         my $in = get_proband_in($context,$alias,$ecrf_proband_category_column_name,$ecrf_proband_department_column_name,$ecrf_proband_gender_column_name);
+                         my $in = get_proband_in($context,$alias,$ecrf_proband_category_column_name,$ecrf_proband_department_column_name,$ecrf_proband_gender_column_name,
+                             $ecrf_proband_first_name_column_name,$ecrf_proband_last_name_column_name,$ecrf_proband_date_of_birth_column_name);
                          $in->{"person"} = ($context->{ecrf_data_trial}->{type}->{person} ? \1 : \0);
                          $context->{proband} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::add_item($in);
                     };
@@ -867,6 +878,20 @@ sub _register_proband {
                         $result = 0;
                     } else {
                         _info($context,"proband " . $context->{proband}->alias . " created");
+                        $proband_created = 1;
+                    }
+                } elsif (proband_particulars_complete($particulars)) {
+                    eval {
+                         my $in = get_proband_in($context,undef,$ecrf_proband_category_column_name,$ecrf_proband_department_column_name,$ecrf_proband_gender_column_name,
+                             $ecrf_proband_first_name_column_name,$ecrf_proband_last_name_column_name,$ecrf_proband_date_of_birth_column_name);
+                         $in->{"person"} = ($context->{ecrf_data_trial}->{type}->{person} ? \1 : \0);
+                         $context->{proband} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::add_item($in);
+                    };
+                    if ($@) {
+                        _warn_or_error($context,"error creating unblinded proband: " . $@);
+                        $result = 0;
+                    } else {
+                        _info($context,"unblinded proband " . ($context->{proband}->alias // $context->{proband}->{id}) . " created");
                         $proband_created = 1;
                     }
                 } else {
@@ -906,6 +931,22 @@ sub _register_proband {
                     _info($context,"proband " . $context->{proband}->alias . " found");
                 }
                 $set_listentrytag_values = $update_listentrytag_values if (defined $id or defined $alias);
+
+                my $particulars = read_proband_particulars($context,
+                    $ecrf_proband_first_name_column_name,$ecrf_proband_last_name_column_name,
+                    $ecrf_proband_date_of_birth_column_name,$ecrf_proband_gender_column_name);
+                my $update_in = build_proband_particulars_update($context->{proband},$particulars);
+                if ($update_in) {
+                    eval {
+                        $context->{proband} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::update_item($update_in);
+                    };
+                    if ($@) {
+                        _warn_or_error($context,"error updating proband particulars: " . $@);
+                        $result = 0;
+                    } else {
+                        _info($context,"proband " . ($context->{proband}->alias // $context->{proband}->{id}) . " particulars updated");
+                    }
+                }
             }
 
             if ($context->{proband} and $context->{proband}->locked) {

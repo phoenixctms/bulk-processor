@@ -64,6 +64,10 @@ our @EXPORT_OK = qw(
     get_values_stats
     
     get_proband_in
+    read_proband_particulars
+    proband_particulars_complete
+    any_proband_particular_present
+    build_proband_particulars_update
     
     init_context
     get_log_label
@@ -270,7 +274,8 @@ sub get_values_stats {
 }
 
 sub get_proband_in {
-    my ($context,$alias,$proband_category_column_name,$proband_department_column_name,$proband_gender_column_name) = @_;
+    my ($context,$alias,$proband_category_column_name,$proband_department_column_name,$proband_gender_column_name,
+        $proband_first_name_column_name,$proband_last_name_column_name,$proband_date_of_birth_column_name) = @_;
 
     my $category;
     my $category_col = length($proband_category_column_name) ? lc($proband_category_column_name) : '';
@@ -302,12 +307,11 @@ sub get_proband_in {
     }
     $department = $context->{ctsmsrestapi_user}->{department} unless $department;
 
-    my $gender;
-    my $gender_col = length($proband_gender_column_name) ? lc($proband_gender_column_name) : '';
-    if (length($gender_col)
-        and exists $context->{record}->{$gender_col}) {
-        $gender = $context->{record}->{$gender_col};
-    }
+    my $particulars = read_proband_particulars($context,
+        $proband_first_name_column_name,$proband_last_name_column_name,
+        $proband_date_of_birth_column_name,$proband_gender_column_name);
+
+    my $gender = $particulars->{gender};
     $gender = $CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Sex::NOT_KNOWN unless length($gender);
 
     my %in = (
@@ -318,12 +322,165 @@ sub get_proband_in {
         "gender" => $gender,
         "alias" => $alias,
     );
+    if (proband_particulars_complete($particulars)) {
+        $in{blinded} = \0;
+        $in{firstName} = $particulars->{firstName};
+        $in{lastName} = $particulars->{lastName};
+        $in{dateOfBirth} = $particulars->{dateOfBirth};
+        $in{gender} = $particulars->{gender};
+    }
     #if (EXPR) {
     #    $in{comment} = xxx
     #}
 
     return \%in;
 
+}
+
+sub read_proband_particulars {
+    my ($context,$proband_first_name_column_name,$proband_last_name_column_name,
+        $proband_date_of_birth_column_name,$proband_gender_column_name) = @_;
+
+    my %particulars = (
+        firstName => '',
+        lastName => '',
+        dateOfBirth => '',
+        gender => '',
+    );
+
+    my $first_col = length($proband_first_name_column_name) ? lc($proband_first_name_column_name) : '';
+    if (length($first_col) and exists $context->{record}->{$first_col}) {
+        $particulars{firstName} = trim($context->{record}->{$first_col} // '');
+    }
+
+    my $last_col = length($proband_last_name_column_name) ? lc($proband_last_name_column_name) : '';
+    if (length($last_col) and exists $context->{record}->{$last_col}) {
+        $particulars{lastName} = trim($context->{record}->{$last_col} // '');
+    }
+
+    my $dob_col = length($proband_date_of_birth_column_name) ? lc($proband_date_of_birth_column_name) : '';
+    if (length($dob_col) and exists $context->{record}->{$dob_col}) {
+        $particulars{dateOfBirth} = _normalize_proband_date_of_birth($context->{record}->{$dob_col});
+    }
+
+    my $gender_col = length($proband_gender_column_name) ? lc($proband_gender_column_name) : '';
+    if (length($gender_col) and exists $context->{record}->{$gender_col}) {
+        $particulars{gender} = trim($context->{record}->{$gender_col} // '');
+    }
+
+    return \%particulars;
+}
+
+sub proband_particulars_complete {
+    my ($particulars) = @_;
+    return 0 unless $particulars;
+    return (
+        length($particulars->{firstName} // '')
+        and length($particulars->{lastName} // '')
+        and length($particulars->{dateOfBirth} // '')
+        and length($particulars->{gender} // '')
+    ) ? 1 : 0;
+}
+
+sub any_proband_particular_present {
+    my ($particulars) = @_;
+    return 0 unless $particulars;
+    return (
+        length($particulars->{firstName} // '')
+        or length($particulars->{lastName} // '')
+        or length($particulars->{dateOfBirth} // '')
+        or length($particulars->{gender} // '')
+    ) ? 1 : 0;
+}
+
+sub build_proband_particulars_update {
+    my ($proband,$particulars) = @_;
+    return undef unless $proband and any_proband_particular_present($particulars);
+
+    my $existing_first = trim($proband->{firstName} // '');
+    my $existing_last = trim($proband->{lastName} // '');
+    my $existing_dob = _normalize_proband_date_of_birth($proband->{dateOfBirth});
+    my $existing_gender = _proband_gender_sex($proband);
+    my $was_blinded = _proband_blinded($proband);
+
+    my $first = length($particulars->{firstName}) ? $particulars->{firstName} : $existing_first;
+    my $last = length($particulars->{lastName}) ? $particulars->{lastName} : $existing_last;
+    my $dob = length($particulars->{dateOfBirth}) ? $particulars->{dateOfBirth} : $existing_dob;
+    my $gender = length($particulars->{gender}) ? $particulars->{gender} : $existing_gender;
+    $gender = $CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Sex::NOT_KNOWN unless length($gender);
+
+    # Need a complete merged identity before unblinding (CTSMS rejects empty DOB;
+    # names must be present too).
+    return undef unless length($first) and length($last) and length($dob);
+
+    my $changed = $was_blinded;
+    $changed = 1 if $first ne $existing_first;
+    $changed = 1 if $last ne $existing_last;
+    $changed = 1 if _proband_dob_date_only($dob) ne _proband_dob_date_only($existing_dob);
+    $changed = 1 if $gender ne $existing_gender;
+    return undef unless $changed;
+
+    return {
+        "id" => $proband->{id},
+        "version" => $proband->{version},
+        "categoryId" => $proband->{category}->{id},
+        "departmentId" => $proband->{department}->{id},
+        "person" => ($proband->{person} ? \1 : \0),
+        "blinded" => \0,
+        "alias" => $proband->{alias},
+        "firstName" => $first,
+        "lastName" => $last,
+        "dateOfBirth" => $dob,
+        "gender" => $gender,
+    };
+}
+
+sub _normalize_proband_date_of_birth {
+    my ($v) = @_;
+    $v = trim($v // '');
+    return '' unless length($v);
+    if ($v =~ /^(\d{4}-\d{2}-\d{2})(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?/) {
+        return $1 . ' 00:00:00';
+    }
+    # Excel serial (Spreadsheet parses dates as day counts).
+    if (my $excel_date = valid_excel_to_date($v)) {
+        return $excel_date;
+    }
+    # Dot-separated: day.month.year
+    if ($v =~ m{^(\d{1,2})\.(\d{1,2})\.(\d{4})$}) {
+        return sprintf('%04d-%02d-%02d 00:00:00',$3,$2,$1);
+    }
+    # Slash-separated: month/day/year (US); do not share the DMY dot rule.
+    if ($v =~ m{^(\d{1,2})/(\d{1,2})/(\d{4})$}) {
+        return sprintf('%04d-%02d-%02d 00:00:00',$3,$1,$2);
+    }
+    return $v;
+}
+
+sub _proband_dob_date_only {
+    my ($v) = @_;
+    $v = trim($v // '');
+    return $1 if $v =~ /^(\d{4}-\d{2}-\d{2})/;
+    return $v;
+}
+
+sub _proband_gender_sex {
+    my ($proband) = @_;
+    my $g = $proband->{gender};
+    return '' unless defined $g;
+    return trim($g) unless ref $g;
+    return trim($g->{sex} // '');
+}
+
+sub _proband_blinded {
+    my ($proband) = @_;
+    my $b = $proband->{blinded};
+    return 0 unless defined $b;
+    if (ref $b) {
+        return $$b ? 1 : 0 if ref $b eq 'SCALAR';
+        return $b ? 1 : 0;
+    }
+    return $b ? 1 : 0;
 }
 
 sub init_context {

@@ -186,7 +186,7 @@ sub init_log {
                "log4perl.appender.ScreenApp           = Log::Log4perl::Appender::Screen\n" .
                "log4perl.appender.ScreenApp.utf8      = 1\n" .
                'log4perl.appender.ScreenApp.Threshold = ' . $screenloglevel . "\n" .
-               "log4perl.appender.ScreenApp.stderr    = ' . $screenlogstderr . \n" .
+               'log4perl.appender.ScreenApp.stderr    = ' . $screenlogstderr . "\n" .
                "log4perl.appender.ScreenApp.layout    = Log::Log4perl::Layout::SimpleLayout\n" .
                'log4perl.appender.ScreenApp.layout.ConversionPattern = %d> %m%n';
 

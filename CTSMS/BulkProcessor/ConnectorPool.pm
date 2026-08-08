@@ -98,11 +98,36 @@ sub get_ctsms_restapi {
     my ($instance_name,$uri,$username,$password,$realm) = @_;
     my $name = get_connectorinstancename($instance_name);
     if (!defined $ctsms_restapis->{$name}) {
-        $ctsms_restapis->{$name} = CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi->new($instance_name);
-        $ctsms_restapis->{$name}->setup($uri // $ctsmsrestapi_uri,$username // $ctsmsrestapi_username,$password // $ctsmsrestapi_password,$realm // $ctsmsrestapi_realm);
+        my $api = CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi->new($instance_name);
+        $api->setup($uri // $ctsmsrestapi_uri,$username // $ctsmsrestapi_username,$password // $ctsmsrestapi_password,$realm // $ctsmsrestapi_realm);
+        $ctsms_restapis->{$name} = $api;
+        # Worker threads get a fresh connector keyed by tid. Inherit JWT only from
+        # a connector already configured with the same auth context (ithreads clone
+        # the root connector that received --auth before workers were spawned).
+        # Do not copy JWT across site/lang credentials (get_ctsms_site_lang_restapi).
+        foreach my $other (values %$ctsms_restapis) {
+            next unless defined $other and $other != $api;
+            next unless _ctsms_restapi_auth_matches($api,$other);
+            my $jwt = $other->jwt();
+            if (defined $jwt and length($jwt)) {
+                $api->jwt($jwt);
+                last;
+            }
+        }
     }
     return $ctsms_restapis->{$name};
 
+}
+
+sub _ctsms_restapi_auth_matches {
+    my ($a,$b) = @_;
+    return 0 unless defined $a and defined $b;
+    return 0 unless ($a->{username} // '') eq ($b->{username} // '');
+    return 0 unless ($a->{password} // '') eq ($b->{password} // '');
+    return 0 unless ($a->{realm} // '') eq ($b->{realm} // '');
+    my $a_uri = defined $a->{uri} ? "$a->{uri}" : '';
+    my $b_uri = defined $b->{uri} ? "$b->{uri}" : '';
+    return $a_uri eq $b_uri;
 }
 
 sub get_ctsms_restapi_last_error {
