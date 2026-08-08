@@ -429,39 +429,40 @@ sub _clear_inquiries {
     my $proband_id = $context->{proband}->{id};
     my $trial_id = $context->{inquiry_trial}->{id};
 
-    $context->{clear_map} = {};
+    $context->{clear_map} //= {};
 
-    if (not $context->{proband_created}
-        and ($clear_categories or $clear_all_categories)
-        and not exists $context->{clear_map}->{$proband_id}) {
-        my $columns = [];
-        $columns = $context->{all_columns} if $clear_all_categories;
-        $columns = $context->{columns} if $clear_categories;
-        my $removed_value_count = 0;
+    return $result unless (not $context->{proband_created}
+        and ($clear_categories or $clear_all_categories));
 
-        $context->{clear_map}->{$proband_id} = {};
-        foreach my $column (@$columns) {
-            my $category_map = $context->{clear_map}->{$proband_id};
+    # Persist per-proband category clears across rows/sheets; do not bail if the
+    # map entry already exists (later sheets may introduce new categories).
+    $context->{clear_map}->{$proband_id} //= {};
 
-            my $category = ($column->{inquiry}->{category} // '');
-            unless (exists $category_map->{$category}) {
-                my $values;
-                my $category_label = "inquiry category '" . $category . "'";
-                eval {
-                    $values = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValue::clear($proband_id, $trial_id, $category);
-                };
-                if ($@) {
-                    _warn_or_error($context,"error deleting $category_label values: " . $@);
-                    $result = 0;
-                } else {
-                    _info($context,"$category_label values deleted",1);
-                }
-                $category_map->{$category} = $values;
-                $removed_value_count += scalar @$values;
-            }
+    my $columns = [];
+    $columns = $context->{all_columns} if $clear_all_categories;
+    $columns = $context->{columns} if $clear_categories;
+    my $removed_value_count = 0;
+    my $category_map = $context->{clear_map}->{$proband_id};
+
+    foreach my $column (@$columns) {
+        my $category = ($column->{inquiry}->{category} // '');
+        next if exists $category_map->{$category};
+
+        my $values;
+        my $category_label = "inquiry category '" . $category . "'";
+        eval {
+            $values = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValue::clear($proband_id, $trial_id, $category);
+        };
+        if ($@) {
+            _warn_or_error($context,"error deleting $category_label values: " . $@);
+            $result = 0;
+        } else {
+            _info($context,"$category_label values deleted",1);
+            $removed_value_count += scalar @{$values // []};
         }
-        _info($context,"$removed_value_count inquiry values deleted");
+        $category_map->{$category} = $values;
     }
+    _info($context,"$removed_value_count inquiry values deleted");
     return $result;
 
 }
