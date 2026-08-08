@@ -159,8 +159,12 @@ sub init {
             input_path => $input_path,
         );
     };
-    if ($@) {
+    if (my $err = $@) {
         $result = 0;
+        # terminate()/scripterror croak inside the eval above; re-surface so the
+        # console still shows the failure (e.g. invalid --id / trial id).
+        chomp($err);
+        warn($err . "\n");
         eval {
             update_job($FAILED_JOB_STATUS);
         };
