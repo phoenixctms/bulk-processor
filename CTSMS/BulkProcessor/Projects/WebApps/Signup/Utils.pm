@@ -322,6 +322,12 @@ sub json_response {
     my $data = shift;
     Dancer::content_type('application/json');
     Dancer::headers('Cache-Control', 'no-cache,no-store');
+    # Renew-if-needed (cached otherwise) and push to browser so RestApi JWT
+    # tracks Dancer session activity the same way the UI session timer does.
+    my $rest_api_jwt = get_rest_api_jwt();
+    if (defined $rest_api_jwt && length($rest_api_jwt) > 0) {
+        Dancer::headers('X-Rest-Api-Jwt', $rest_api_jwt);
+    }
     return Dancer::to_json($data,{ allow_blessed => 1, convert_blessed => 1 });
 }
 
@@ -566,7 +572,8 @@ sub get_template {
     $js_vars->{jwtRefreshSkewSecs} = get_restapi()->jwt_refresh_skew_secs();
     unless (contains($view_name,[ 'start', '404', 'runtime_error' ])) {
         $js_vars->{restApiUrl} //= get_restapi_uri();
-        my $rest_api_jwt = get_rest_api_jwt();
+        # Always re-issue so page JWT lifetime matches the restarted UI session timer.
+        my $rest_api_jwt = issue_jwt();
         $js_vars->{restApiJwt} = $rest_api_jwt if defined $rest_api_jwt;
     }
 

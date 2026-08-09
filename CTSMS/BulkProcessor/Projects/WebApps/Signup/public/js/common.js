@@ -64,6 +64,22 @@ function resetSessionTimers() {
 	}
 }
 
+function applyRestApiJwtFromResponse(jqXHR) {
+	if (jqXHR == null || typeof jqXHR.getResponseHeader !== 'function') {
+		return;
+	}
+	var jwt = jqXHR.getResponseHeader('X-Rest-Api-Jwt');
+	if (jwt == null || jwt.length === 0) {
+		return;
+	}
+	if (typeof REST_API_JWT !== 'undefined') {
+		REST_API_JWT = jwt;
+	}
+	if (typeof RestApi !== 'undefined' && typeof RestApi.applySessionJwt === 'function') {
+		RestApi.applySessionJwt(jwt);
+	}
+}
+
 $.ajaxSettings = $.extend( true, {}, $.ajaxSettings );
 $.ajaxSettings.crossDomain = false;
 $.ajaxSettings.type = "POST";
@@ -95,6 +111,7 @@ $.ajaxSettings.beforeSend = function(jqXHR, settings) {
 };
 $.ajaxSettings.complete = function(jqXHR, textStatus) {
     resetSessionTimers();
+    applyRestApiJwtFromResponse(jqXHR);
 };
 
 var autoCompleteAjaxSettings = $.extend( true, {}, $.ajaxSettings );
@@ -111,6 +128,7 @@ autoCompleteAjaxSettings.beforeSend = function(jqXHR, settings) {
 };
 autoCompleteAjaxSettings.complete = function(jqXHR, textStatus) {
     resetSessionTimers();
+    applyRestApiJwtFromResponse(jqXHR);
 };
 
 var restApiAjaxSettings = $.extend( true, {}, $.ajaxSettings );
