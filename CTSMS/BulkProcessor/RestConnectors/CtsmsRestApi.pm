@@ -175,15 +175,36 @@ sub _renew_jwt_if_required {
 sub _force_renew_jwt {
 
     my $self = shift;
+    my ($validity_secs) = @_;
     return 0 unless defined $self->{jwt} && length($self->{jwt}) > 0;
     undef $self->{jwt_refresh_cooldown_until};
-    return $self->_renew_jwt();
+    return $self->_renew_jwt($validity_secs);
+
+}
+
+# Re-issue the current Bearer JWT with an explicit lifetime (used by ETL --auth startup).
+# Croaks on failure so jobs do not continue with a short-lived token.
+sub extend_jwt_validity {
+
+    my $self = shift;
+    my ($validity_secs) = @_;
+    unless (defined $self->{jwt} && length($self->{jwt}) > 0) {
+        resterror($self, 'rest api jwt extend requires a jwt', getlogger(__PACKAGE__));
+    }
+    my $renewed = $self->_force_renew_jwt($validity_secs);
+    unless ($renewed) {
+        resterror($self, 'rest api jwt extend failed', getlogger(__PACKAGE__));
+    }
+    restinfo($self, 'rest api jwt validity extended to ' . ($self->{jwt_validity_secs} // '?') . 's', getlogger(__PACKAGE__));
+    return 1;
 
 }
 
 sub _renew_jwt {
 
     my $self = shift;
+    my ($validity_secs) = @_;
+    $validity_secs = $self->{jwt_validity_secs} unless defined $validity_secs;
     my $skew = $self->jwt_refresh_skew_secs();
     my $renewed = 0;
     $self->{_refreshing_jwt} = 1;
@@ -191,7 +212,7 @@ sub _renew_jwt {
         # Runtime require avoids a circular use with Login.pm (which uses CtsmsRestApi).
         require CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::Login;
         my $new_jwt = CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::Login::issue_jwt(
-            $self->{jwt_validity_secs},
+            $validity_secs,
             $self,
         );
         if (defined $new_jwt && !ref $new_jwt && length($new_jwt) > 0) {

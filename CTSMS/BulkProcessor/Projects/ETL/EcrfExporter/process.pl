@@ -11,6 +11,7 @@ use Getopt::Long qw(GetOptions);
 use CTSMS::BulkProcessor::Globals qw(
     $ctsmsrestapi_username
     $ctsmsrestapi_password
+    $ctsmsrestapi_jwt_validity_secs
 );
 use CTSMS::BulkProcessor::ConnectorPool qw(
     get_ctsms_restapi
@@ -187,6 +188,7 @@ sub init {
             $ctsmsrestapi_username = get_username_from_jwt($auth);
             my $api = get_ctsms_restapi();
             $api->jwt($auth);
+            $api->extend_jwt_validity($ctsmsrestapi_jwt_validity_secs);
         }
         $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::EcrfSettings::update_settings,$YAML_CONFIG_TYPE);
         $result &= load_config($settingsfile,\&CTSMS::BulkProcessor::Projects::ETL::EcrfExporter::Settings::update_settings,$YAML_CONFIG_TYPE);
