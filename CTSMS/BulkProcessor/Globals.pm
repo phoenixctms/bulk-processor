@@ -66,6 +66,7 @@ our @EXPORT_OK = qw(
     $ctsmsrestapi_password
     $ctsmsrestapi_realm
     $ctsmsrestapi_path
+    $ctsmsrestapi_jwt_validity_secs
 
 	$csv_path
 
@@ -171,6 +172,8 @@ our $ctsmsrestapi_username = 'user_9qxs_1_1';
 our $ctsmsrestapi_password = 'user_9qxs_1_1';
 our $ctsmsrestapi_realm = 'api';
 our $ctsmsrestapi_path = 'rest';
+# JWT lifetime requested when ETL jobs re-issue --auth tokens at startup (24h).
+our $ctsmsrestapi_jwt_validity_secs = 24 * 60 * 60;
 
 our $working_path = tempdir(CLEANUP => 0) . '/'; #'/var/xy/';
 
@@ -284,6 +287,7 @@ sub update_masterconfig {
         $ctsmsrestapi_username = $data->{ctsmsrestapi_username} if exists $data->{ctsmsrestapi_username};
         $ctsmsrestapi_password = $data->{ctsmsrestapi_password} if exists $data->{ctsmsrestapi_password};
         $ctsmsrestapi_realm = $data->{ctsmsrestapi_realm} if exists $data->{ctsmsrestapi_realm};
+        $ctsmsrestapi_jwt_validity_secs = $data->{ctsmsrestapi_jwt_validity_secs} if exists $data->{ctsmsrestapi_jwt_validity_secs};
 
         $cpucount = $data->{cpucount} if exists $data->{cpucount};
         $enablemultithreading = $data->{enablemultithreading} if exists $data->{enablemultithreading};
