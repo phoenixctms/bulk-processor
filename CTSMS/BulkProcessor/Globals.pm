@@ -287,7 +287,14 @@ sub update_masterconfig {
         $ctsmsrestapi_username = $data->{ctsmsrestapi_username} if exists $data->{ctsmsrestapi_username};
         $ctsmsrestapi_password = $data->{ctsmsrestapi_password} if exists $data->{ctsmsrestapi_password};
         $ctsmsrestapi_realm = $data->{ctsmsrestapi_realm} if exists $data->{ctsmsrestapi_realm};
-        $ctsmsrestapi_jwt_validity_secs = $data->{ctsmsrestapi_jwt_validity_secs} if exists $data->{ctsmsrestapi_jwt_validity_secs};
+        if (exists $data->{ctsmsrestapi_jwt_validity_secs}) {
+            my $v = $data->{ctsmsrestapi_jwt_validity_secs};
+            if (defined $v && !ref($v) && $v =~ /^\d+$/ && int($v) > 0) {
+                $ctsmsrestapi_jwt_validity_secs = int($v);
+            } else {
+                $ctsmsrestapi_jwt_validity_secs = 24 * 60 * 60;
+            }
+        }
 
         $cpucount = $data->{cpucount} if exists $data->{cpucount};
         $enablemultithreading = $data->{enablemultithreading} if exists $data->{enablemultithreading};

@@ -14,7 +14,10 @@ use HTTP::Request::Common qw();
 
 use JSON -support_by_pp, -no_export;
 
-use CTSMS::BulkProcessor::Globals qw($LongReadLen_limit);
+use CTSMS::BulkProcessor::Globals qw(
+    $LongReadLen_limit
+    $ctsmsrestapi_jwt_validity_secs
+);
 use CTSMS::BulkProcessor::Logging qw(
     getlogger
     restdebug
@@ -175,10 +178,24 @@ sub _renew_jwt_if_required {
 sub _force_renew_jwt {
 
     my $self = shift;
-    my ($validity_secs) = @_;
     return 0 unless defined $self->{jwt} && length($self->{jwt}) > 0;
     undef $self->{jwt_refresh_cooldown_until};
-    return $self->_renew_jwt($validity_secs);
+    return $self->_renew_jwt(@_);
+
+}
+
+# Accept only a positive integer lifetime; otherwise use the configured/default 24h.
+sub _normalize_explicit_jwt_validity_secs {
+
+    my ($validity_secs) = @_;
+    if (defined $validity_secs && !ref($validity_secs) && $validity_secs =~ /^\d+$/ && int($validity_secs) > 0) {
+        return int($validity_secs);
+    }
+    my $fallback = $ctsmsrestapi_jwt_validity_secs;
+    if (defined $fallback && !ref($fallback) && $fallback =~ /^\d+$/ && int($fallback) > 0) {
+        return int($fallback);
+    }
+    return 24 * 60 * 60;
 
 }
 
@@ -191,6 +208,7 @@ sub extend_jwt_validity {
     unless (defined $self->{jwt} && length($self->{jwt}) > 0) {
         resterror($self, 'rest api jwt extend requires a jwt', getlogger(__PACKAGE__));
     }
+    $validity_secs = _normalize_explicit_jwt_validity_secs($validity_secs);
     my $renewed = $self->_force_renew_jwt($validity_secs);
     unless ($renewed) {
         resterror($self, 'rest api jwt extend failed', getlogger(__PACKAGE__));
@@ -203,8 +221,13 @@ sub extend_jwt_validity {
 sub _renew_jwt {
 
     my $self = shift;
-    my ($validity_secs) = @_;
-    $validity_secs = $self->{jwt_validity_secs} unless defined $validity_secs;
+    my $validity_secs;
+    if (@_) {
+        # Explicit lifetime from extend_jwt_validity / direct callers — never pass through invalid values.
+        $validity_secs = _normalize_explicit_jwt_validity_secs($_[0]);
+    } else {
+        $validity_secs = $self->{jwt_validity_secs};
+    }
     my $skew = $self->jwt_refresh_skew_secs();
     my $renewed = 0;
     $self->{_refreshing_jwt} = 1;
