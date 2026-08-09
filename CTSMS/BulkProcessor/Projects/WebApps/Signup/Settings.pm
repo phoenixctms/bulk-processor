@@ -84,6 +84,8 @@ our @EXPORT_OK = qw(
 
     $google_site_verification
     $favicon
+
+    $rest_api_jwt_reissue_on_ajax
 );
 
 our $defaultconfig = 'config.cfg';
@@ -124,6 +126,10 @@ our $ctsms_base_uri = undef;
 our $google_site_verification = undef;
 our $favicon = undef;
 
+# When set, every Dancer JSON response re-issues RestApi JWT (tools/login).
+# Default off: renew only near expiry (CTSMS-like get_rest_api_jwt).
+our $rest_api_jwt_reissue_on_ajax = 0;
+
 sub update_settings {
 
     my ($data,$configfile) = @_;
@@ -156,6 +162,7 @@ sub update_settings {
 
         $google_site_verification = $data->{google_site_verification} if exists $data->{google_site_verification};
         $favicon = $data->{favicon} if exists $data->{favicon};
+        $rest_api_jwt_reissue_on_ajax = stringtobool($data->{rest_api_jwt_reissue_on_ajax}) if exists $data->{rest_api_jwt_reissue_on_ajax};
 
         $ctsms_sites = $data->{ctsms_sites} if exists $data->{ctsms_sites};
         $default_site = undef;

@@ -35,6 +35,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $ctsms_base_uri
     $google_site_verification
     $favicon
+    $rest_api_jwt_reissue_on_ajax
 );
 use CTSMS::BulkProcessor::Calendar qw(
     split_datetime
@@ -322,9 +323,9 @@ sub json_response {
     my $data = shift;
     Dancer::content_type('application/json');
     Dancer::headers('Cache-Control', 'no-cache,no-store');
-    # Renew-if-needed (cached otherwise) and push to browser so RestApi JWT
-    # tracks Dancer session activity the same way the UI session timer does.
-    my $rest_api_jwt = get_rest_api_jwt();
+    # Push RestApi JWT to the browser with session-extending AJAX. Default:
+    # renew only near expiry (CTSMS-like). Opt-in: re-issue every time.
+    my $rest_api_jwt = $rest_api_jwt_reissue_on_ajax ? issue_jwt() : get_rest_api_jwt();
     if (defined $rest_api_jwt && length($rest_api_jwt) > 0) {
         Dancer::headers('X-Rest-Api-Jwt', $rest_api_jwt);
     }
