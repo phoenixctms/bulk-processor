@@ -1281,7 +1281,7 @@ function _loadPage(context,ajaxContext,callback,ui,updateUi) {
                     data: { rows: ui.rows, first: ui.first, load_all_js_values: (context.init ? 1 : 0) },
 
                     context: ajaxContext,
-                    success: function(data) {
+                    success: function(data, textStatus, jqXHR) {
                         context.trial = data.trial;
                         context.inquiryStatusVar = {
                             i: 0,
@@ -1304,6 +1304,9 @@ function _loadPage(context,ajaxContext,callback,ui,updateUi) {
                         if (context.apiError != null) {
                             setMessages('warn', context.apiError );
                         }
+                        // Apply JWT before FieldCalculation (complete runs after success).
+                        // Pass restApiJwt in args like CTSMS PrimeFaces field-init callbacks.
+                        applyRestApiJwtFromResponse(jqXHR);
                         var fieldCalculationArgs = {};
                         fieldCalculationArgs[AJAX_OPERATION_SUCCESS] = true;
                         fieldCalculationArgs[AJAX_INPUT_FIELD_VARIABLE_VALUES_BASE64] = data.js_rows_base64;
@@ -1312,6 +1315,9 @@ function _loadPage(context,ajaxContext,callback,ui,updateUi) {
                         fieldCalculationArgs[AJAX_INPUT_FIELD_TRIAL_BASE64] = context.trialBase64;
                         fieldCalculationArgs[AJAX_INPUT_FIELD_PROBAND_ADDRESSES_BASE64] = context.probandAddressesBase64;
                         fieldCalculationArgs[AJAX_INPUT_FIELD_LOCALE] = context.lang;
+                        if (typeof REST_API_JWT !== 'undefined' && REST_API_JWT != null && REST_API_JWT.length > 0) {
+                            fieldCalculationArgs[AJAX_REST_API_JWT] = REST_API_JWT;
+                        }
 
                         if (context.init) {
                             FieldCalculation.handleInitInputFieldVariables(null,null,fieldCalculationArgs);
