@@ -26,6 +26,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     add_error_data
     get_paginated_response
     get_page_index
+    issue_jwt
 
     date_ui_to_iso
     date_iso_to_ui
@@ -252,6 +253,8 @@ Dancer::post('/inquiries',sub {
 
         $values->{trial} = $trial;
         Dancer::session('inquiry_page',get_page_index($params));
+        # Fresh RestApi JWT on FieldCalculation handleInit (load_all_js_values), like CTSMS field-init.
+        issue_jwt() if stringtobool($params->{load_all_js_values});
         return $values;
     });
 });
