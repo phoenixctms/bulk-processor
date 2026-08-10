@@ -126,8 +126,9 @@ our $ctsms_base_uri = undef;
 our $google_site_verification = undef;
 our $favicon = undef;
 
-# When set, every Dancer JSON response re-issues RestApi JWT (tools/login).
-# Default off: renew only near expiry (CTSMS-like get_rest_api_jwt).
+# When set, every Dancer JSON AJAX response re-issues RestApi JWT (tools/login).
+# FieldCalculation handleInit (inquiry load_all_js_values) and full page render always re-issue regardless.
+# Default off: AJAX renew only near expiry (get_rest_api_jwt).
 our $rest_api_jwt_reissue_on_ajax = 0;
 
 sub update_settings {

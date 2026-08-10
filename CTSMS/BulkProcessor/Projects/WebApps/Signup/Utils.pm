@@ -323,8 +323,8 @@ sub json_response {
     my $data = shift;
     Dancer::content_type('application/json');
     Dancer::headers('Cache-Control', 'no-cache,no-store');
-    # Push RestApi JWT to the browser with session-extending AJAX. Default:
-    # renew only near expiry (CTSMS-like). Opt-in: re-issue every time.
+    # Push RestApi JWT with session-extending AJAX. Opt-in always-reissue (rest_api_jwt_reissue_on_ajax);
+    # default: renew near expiry only. Page render + FieldCalculation handleInit always issue_jwt separately.
     my $rest_api_jwt = $rest_api_jwt_reissue_on_ajax ? issue_jwt() : get_rest_api_jwt();
     if (defined $rest_api_jwt && length($rest_api_jwt) > 0) {
         Dancer::headers('X-Rest-Api-Jwt', $rest_api_jwt);
@@ -573,7 +573,8 @@ sub get_template {
     $js_vars->{jwtRefreshSkewSecs} = get_restapi()->jwt_refresh_skew_secs();
     unless (contains($view_name,[ 'start', '404', 'runtime_error' ])) {
         $js_vars->{restApiUrl} //= get_restapi_uri();
-        # Always re-issue so page JWT lifetime matches the restarted UI session timer.
+        # Always re-issue so page JWT lifetime matches the restarted UI session timer
+        # (CTSMS JSValues REST_API_JWT / reissueRestApiJwt parity).
         my $rest_api_jwt = issue_jwt();
         $js_vars->{restApiJwt} = $rest_api_jwt if defined $rest_api_jwt;
     }
