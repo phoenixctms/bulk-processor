@@ -38,7 +38,7 @@ use CTSMS::BulkProcessor::ConnectorPool qw(
 
 );
 
-use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring );
+use CTSMS::BulkProcessor::Utils qw(format_number prompt chopstring stringtobool);
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 
@@ -67,6 +67,7 @@ our @EXPORT_OK = qw(
     $ecrf_data_api_probandlistentrytagvalues_page_size
     $ecrf_data_api_probandlistentrytags_page_size
     $ecrf_data_api_ecrffields_page_size
+    $ecrf_data_include_undef_ecrf_status
 
     %colname_abbreviation
     $col_per_selection_set_value
@@ -111,6 +112,7 @@ our $ecrf_data_api_values_page_size = 10;
 our $ecrf_data_api_probandlistentrytagvalues_page_size = 10;
 our $ecrf_data_api_probandlistentrytags_page_size = 10;
 our $ecrf_data_api_ecrffields_page_size = 100;
+our $ecrf_data_include_undef_ecrf_status = 1;
 
 our $ctsms_base_url = undef;
 our $dbtool = undef;
@@ -291,6 +293,7 @@ sub update_settings {
         $ecrf_data_api_probandlistentrytagvalues_page_size = $data->{ecrf_data_api_probandlistentrytagvalues_page_size} if exists $data->{ecrf_data_api_probandlistentrytagvalues_page_size};
         $ecrf_data_api_probandlistentrytags_page_size = $data->{ecrf_data_api_probandlistentrytags_page_size} if exists $data->{ecrf_data_api_probandlistentrytags_page_size};
         $ecrf_data_api_ecrffields_page_size = $data->{ecrf_data_api_ecrffields_page_size} if exists $data->{ecrf_data_api_ecrffields_page_size};
+        $ecrf_data_include_undef_ecrf_status = stringtobool($data->{ecrf_data_include_undef_ecrf_status}) if exists $data->{ecrf_data_include_undef_ecrf_status};
 
         $col_per_selection_set_value = $data->{col_per_selection_set_value} if exists $data->{col_per_selection_set_value};
         $selection_set_value_separator = $data->{selection_set_value_separator} if exists $data->{selection_set_value_separator};
