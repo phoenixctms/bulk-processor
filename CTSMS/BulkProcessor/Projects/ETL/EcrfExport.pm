@@ -25,6 +25,7 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
 
     $ecrf_data_api_ecrffields_page_size
     $ecrf_data_api_probandlistentrytagvalues_page_size
+    $ecrf_data_include_undef_ecrf_status
 
     %colname_abbreviation
     ecrf_data_include_ecrffield
@@ -490,11 +491,12 @@ NEXT_VISIT:
                 $context->{api_values_page_total_count} = undef;
                 $context->{api_values_page_num} = 0; #roll over
                 $context->{ecrf_status} = eval { CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::get_item($context->{listentry}->{id},$context->{ecrf}->{id},$context->{visit}->{id}) };
-                if (not $context->{signed} or ($context->{ecrf_status} and $context->{ecrf_status}->{status}->{done})) {
+                if ($context->{signed} ? ($context->{ecrf_status} and $context->{ecrf_status}->{status}->{done})
+                        : ($ecrf_data_include_undef_ecrf_status or $context->{ecrf_status})) {
                     _info($context,'proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
                           (defined $context->{visit}->{id} ? '@' . $context->{visit}->{token} : '') . "': " . ($context->{ecrf_status} ? $context->{ecrf_status}->{status}->{name} : '<new>'));                    
                 } else {
-                    _info($context,'skipping unsigned - proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
+                    _info($context,($context->{signed} ? 'skipping unsigned' : 'skipping <new>') . ' - proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
                           (defined $context->{visit}->{id} ? '@' . $context->{visit}->{token} : '') . "': " . ($context->{ecrf_status} ? $context->{ecrf_status}->{status}->{name} : '<new>'),1);                    
                     $context->{ecrf} = undef;
                     $context->{ecrf_status} = undef;
@@ -918,7 +920,8 @@ sub _get_ecrffieldvalues {
                 $context->{visit} = undef;
             }
             $context->{ecrf_status} = eval { CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::get_item($context->{listentry}->{id},$ecrfid,$visit->{id}) };
-            if (not $context->{signed} or ($context->{ecrf_status} and $context->{ecrf_status}->{status}->{done})) {
+            if ($context->{signed} ? ($context->{ecrf_status} and $context->{ecrf_status}->{status}->{done})
+                    : ($ecrf_data_include_undef_ecrf_status or $context->{ecrf_status})) {
                 $context->{ecrf_count} += 1;
                 _info($context,'proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
                       (defined $visit->{id} ? '@' . $visit->{token} : '') . "': " . ($context->{ecrf_status} ? $context->{ecrf_status}->{status}->{name} : '<new>'));
@@ -945,7 +948,7 @@ sub _get_ecrffieldvalues {
                     }
                 }
             } else {
-                _info($context,'skipping unsigned - proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
+                _info($context,($context->{signed} ? 'skipping unsigned' : 'skipping <new>') . ' - proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
                       (defined $visit->{id} ? '@' . $visit->{token} : '') . "': " . ($context->{ecrf_status} ? $context->{ecrf_status}->{status}->{name} : '<new>'),1);
             }
         }
