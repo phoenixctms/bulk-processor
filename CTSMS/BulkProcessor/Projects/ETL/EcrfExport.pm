@@ -498,9 +498,9 @@ NEXT_VISIT:
                 } else {
                     _info($context,($context->{signed} ? 'skipping unsigned' : 'skipping <new>') . ' - proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
                           (defined $context->{visit}->{id} ? '@' . $context->{visit}->{token} : '') . "': " . ($context->{ecrf_status} ? $context->{ecrf_status}->{status}->{name} : '<new>'),1);                    
-                    $context->{ecrf} = undef;
+                    $context->{visit} = undef;
                     $context->{ecrf_status} = undef;
-                    goto NEXT_ECRF;
+                    goto NEXT_VISIT;
                 }
             } else {
                 $context->{ecrf} = undef;
