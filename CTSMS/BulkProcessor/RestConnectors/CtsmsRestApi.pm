@@ -51,7 +51,8 @@ my $defaulturi = 'http://127.0.0.1:8080/ctsms-web/rest/';
 my $defaultusername = 'user_9qxs_1_1';
 my $defaultpassword = 'user_9qxs_1_1';
 my $defaultrealm = 'api';
-my $timeout = 5*60;
+# Large ETL job output uploads (e.g. ~400MB+ SQLite) need more than a few minutes.
+my $timeout = 30*60;
 
 my $default_collection_page_size = 10;
 my $first_collection_page_num = 1;
