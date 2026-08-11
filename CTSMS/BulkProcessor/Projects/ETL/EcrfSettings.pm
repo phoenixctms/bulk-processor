@@ -112,7 +112,7 @@ our $ecrf_data_api_values_page_size = 10;
 our $ecrf_data_api_probandlistentrytagvalues_page_size = 10;
 our $ecrf_data_api_probandlistentrytags_page_size = 10;
 our $ecrf_data_api_ecrffields_page_size = 100;
-our $ecrf_data_include_undef_ecrf_status = 1;
+our $ecrf_data_include_undef_ecrf_status = 0;
 
 our $ctsms_base_url = undef;
 our $dbtool = undef;
