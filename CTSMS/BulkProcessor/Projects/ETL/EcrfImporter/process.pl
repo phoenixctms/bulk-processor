@@ -82,6 +82,7 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::JobService::Job qw(
 use CTSMS::BulkProcessor::Projects::ETL::EcrfImport qw(
     import_ecrf_data_horizontal
     convert_ecrf_data
+    publish_converted_intermediate_file
 );
 
 my @TASK_OPTS = ();
@@ -89,6 +90,7 @@ my @TASK_OPTS = ();
 my $tasks = [];
 my $file;
 my $converter;
+my $convert_file_in;
 
 my $cleanup_task_opt = 'cleanup';
 push(@TASK_OPTS,$cleanup_task_opt);
@@ -208,6 +210,16 @@ sub main {
         scripterror('at least one task option is required. supported tasks: ' . join(', ',@TASK_OPTS),getlogger(getscriptpath()));
     }
 
+    if (ref($convert_file_in) eq 'HASH' and length($attachmentlogfile) and -f $attachmentlogfile) {
+        eval {
+            my $uploaded = publish_converted_intermediate_file($attachmentlogfile,$convert_file_in);
+            push(@messages,"- file '$uploaded->{title}' (file ID $uploaded->{id}) added to the '$uploaded->{trial}->{name}' trial");
+        };
+        if (my $err = $@) {
+            scriptwarn('attachment logfile upload failed: ' . $err,getlogger(getscriptpath()));
+        }
+    }
+
     push(@attachmentfiles,$attachmentlogfile);
     $cli = 1;
     eval {
@@ -290,13 +302,15 @@ sub convert_task {
     my ($messages) = @_;
     my $result = 0;
     my $outfile;
+    my $file_in;
     my @uploaded;
     eval {
-        ($outfile,@uploaded) = convert_ecrf_data($file,$converter);
+        ($outfile,$file_in,@uploaded) = convert_ecrf_data($file,$converter);
         $result = (length($outfile) and -f $outfile and -r $outfile and -s $outfile) ? 1 : 0;
         if ($result) {
             # subsequent import_ecrf_data_horizontal uses the converted intermediate file
             $file = $outfile;
+            $convert_file_in = $file_in if ref($file_in) eq 'HASH';
         }
     };
     my $err = $@;

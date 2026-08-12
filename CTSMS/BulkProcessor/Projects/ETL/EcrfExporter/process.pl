@@ -93,6 +93,7 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfExport qw(
     publish_ecrf_journal_xls
     publish_ecrfs_xls
     publish_proband_list
+    publish_attachment_logfile
 );
 
 my @TASK_OPTS = ();
@@ -301,6 +302,15 @@ sub main {
     eval {
         if ($result and $completion) {
             if ($upload_files) {
+                if (length($attachmentlogfile) and -f $attachmentlogfile) {
+                    eval {
+                        my $uploaded = publish_attachment_logfile();
+                        push(@messages,"- file '$uploaded->{title}' (file ID $uploaded->{id}) added to the '$uploaded->{trial}->{name}' trial");
+                    };
+                    if (my $err = $@) {
+                        scriptwarn('attachment logfile upload failed: ' . $err,getlogger(getscriptpath()));
+                    }
+                }
                 push(@messages,"Visit $ctsms_base_url/trial/trial.jsf?trialid=$ecrf_data_trial_id to download files.");
             }
             completion(join("\n\n",@messages),\@attachmentfiles,getlogger(getscriptpath()));
