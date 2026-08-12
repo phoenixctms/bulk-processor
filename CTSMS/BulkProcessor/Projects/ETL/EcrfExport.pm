@@ -78,12 +78,16 @@ use CTSMS::BulkProcessor::Logging qw (
     getlogger
     processing_info
     processing_debug
+    scriptinfo
+    $attachmentlogfile
 );
 use CTSMS::BulkProcessor::LogError qw(
     rowprocessingwarn
     rowprocessingerror
     runerror
 );
+
+use File::Basename qw();
 
 use CTSMS::BulkProcessor::SqlConnectors::SQLiteDB qw();
 use CTSMS::BulkProcessor::SqlConnectors::CSVDB qw();
@@ -142,6 +146,7 @@ our @EXPORT_OK = qw(
     publish_ecrfs_xls
 
     publish_proband_list
+    publish_attachment_logfile
 );
 
 my $pdfextension = '.pdf';
@@ -351,6 +356,25 @@ sub _get_file_in {
         "logicalPath" => $ecrf_data_export_upload_folder  . $subfolder,
         "title" => $title,
     };
+}
+
+sub publish_attachment_logfile {
+    runerror('no attachment logfile to publish',getlogger(__PACKAGE__))
+        unless length($attachmentlogfile);
+    runerror("attachment logfile not found: $attachmentlogfile",getlogger(__PACKAGE__))
+        unless -f $attachmentlogfile;
+
+    my $filename = File::Basename::basename($attachmentlogfile);
+    my $out = CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(
+        _get_file_in($filename,'Log/'),
+        $attachmentlogfile,
+        $filename,
+        'text/plain',
+    );
+    runerror("failed to upload attachment logfile '$filename'",getlogger(__PACKAGE__))
+        unless $out;
+    scriptinfo("uploaded attachment logfile '$filename' (file ID $out->{id}) to trial id $ecrf_data_trial_id path '" . $ecrf_data_export_upload_folder . "Log/'",getlogger(__PACKAGE__));
+    return $out;
 }
 
 sub export_ecrf_data_vertical {

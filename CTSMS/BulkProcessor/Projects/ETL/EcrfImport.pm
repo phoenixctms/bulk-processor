@@ -187,7 +187,7 @@ sub convert_ecrf_data {
             push(@uploaded,publish_converted_intermediate_file($outfile,$file_in));
         }
     }
-    return ($outfile,@uploaded);
+    return ($outfile,$file_in,@uploaded);
 }
 
 sub publish_converted_intermediate_file {
@@ -233,7 +233,7 @@ sub _converted_file_mimetype {
     return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' if $outfile =~ /\.xlsx$/i;
     return 'application/vnd.ms-excel' if $outfile =~ /\.xls$/i;
     return 'text/csv' if $outfile =~ /\.csv$/i;
-    return 'text/plain' if $outfile =~ /\.txt$/i;
+    return 'text/plain' if $outfile =~ /\.(?:txt|log)$/i;
     return 'application/octet-stream';
 }
 
