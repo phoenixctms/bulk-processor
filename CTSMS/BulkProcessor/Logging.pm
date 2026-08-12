@@ -235,15 +235,29 @@ sub cleanuplogfiles {
 
 sub flush_logfiles {
     # Force Log4perl file appenders to disk before reading/uploading log files.
+    # Log::Log4perl::Appender::File has no file_handle(); the real FH is {fh}
+    # on the wrapped appender. Close+reopen is the reliable flush.
     return unless $loginitialized;
     foreach my $name (qw(FileApp MailAttApp)) {
-        my $appender = Log::Log4perl->appender_by_name($name);
-        next unless $appender;
-        my $fh = eval { $appender->file_handle };
+        my $wrapper = Log::Log4perl->appender_by_name($name);
+        next unless $wrapper;
+        my $app = $wrapper->{appender} // $wrapper;
+        next unless ref($app);
+        if ($app->can('file_close') and $app->can('file_open')) {
+            eval {
+                $app->file_close() if $app->{fh};
+                $app->file_open();
+                1;
+            };
+            next;
+        }
+        my $fh = $app->{fh};
         next unless $fh;
         eval {
-            $fh->flush();
-            $fh->sync() if $fh->can('sync');
+            my $oldfh = select($fh);
+            $| = 1;
+            select($oldfh);
+            $fh->flush() if $fh->can('flush');
             1;
         };
     }
