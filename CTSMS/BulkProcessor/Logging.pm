@@ -27,6 +27,7 @@ our @EXPORT_OK = qw(
     getlogger
 
     cleanuplogfiles
+    flush_logfiles
 
     emailinfo
     emaildebug
@@ -163,7 +164,8 @@ sub init_log {
 
                "log4perl.appender.FileApp             = Log::Log4perl::Appender::File\n" .
                "log4perl.appender.FileApp.umask       = 0\n" .
-               "log4perl.appender.FileApp.syswite     = 1\n" .
+               "log4perl.appender.FileApp.syswrite    = 1\n" .
+               "log4perl.appender.FileApp.autoflush   = 1\n" .
                "log4perl.appender.FileApp.utf8        = 1\n" .
                'log4perl.appender.FileApp.Threshold   = ' . $fileloglevel . "\n" .
                "log4perl.appender.FileApp.mode        = append\n" .
@@ -174,7 +176,8 @@ sub init_log {
 
                "log4perl.appender.MailAttApp             = Log::Log4perl::Appender::File\n" .
                "log4perl.appender.MailAttApp.umask          = 0\n" .
-               "log4perl.appender.MailAttApp.syswite        = 1\n" .
+               "log4perl.appender.MailAttApp.syswrite       = 1\n" .
+               "log4perl.appender.MailAttApp.autoflush      = 1\n" .
                "log4perl.appender.MailAttApp.utf8           = 1\n" .
                'log4perl.appender.MailAttApp.Threshold   = ' . $emailloglevel . "\n" .
                "log4perl.appender.MailAttApp.mode        = append\n" .
@@ -230,6 +233,22 @@ sub cleanuplogfiles {
         }
     }
 
+}
+
+sub flush_logfiles {
+    # Force Log4perl file appenders to disk before reading/uploading log files.
+    return unless $loginitialized;
+    foreach my $name (qw(FileApp MailAttApp)) {
+        my $appender = Log::Log4perl->appender_by_name($name);
+        next unless $appender;
+        my $fh = eval { $appender->file_handle };
+        next unless $fh;
+        eval {
+            $fh->flush();
+            $fh->sync() if $fh->can('sync');
+            1;
+        };
+    }
 }
 
 sub emailinfo {

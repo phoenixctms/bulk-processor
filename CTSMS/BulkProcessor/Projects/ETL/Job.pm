@@ -19,6 +19,7 @@ use CTSMS::BulkProcessor::Logging qw(
     getlogger
     scriptinfo
     configurationinfo
+    flush_logfiles
     $attachmentlogfile
 );
 
@@ -103,7 +104,7 @@ sub update_job {
             id => $job{id},
             version => $job{version},
             status => $status,
-            jobOutput => cat_file($attachmentlogfile,\&fileerror,getlogger(__PACKAGE__)),
+            jobOutput => do { flush_logfiles(); cat_file($attachmentlogfile,\&fileerror,getlogger(__PACKAGE__)); },
             progress => $effective_progress,
             progressMax => $effective_progress_max,
         };
