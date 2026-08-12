@@ -164,7 +164,6 @@ sub init_log {
 
                "log4perl.appender.FileApp             = Log::Log4perl::Appender::File\n" .
                "log4perl.appender.FileApp.umask       = 0\n" .
-               "log4perl.appender.FileApp.syswrite    = 1\n" .
                "log4perl.appender.FileApp.autoflush   = 1\n" .
                "log4perl.appender.FileApp.utf8        = 1\n" .
                'log4perl.appender.FileApp.Threshold   = ' . $fileloglevel . "\n" .
@@ -176,7 +175,6 @@ sub init_log {
 
                "log4perl.appender.MailAttApp             = Log::Log4perl::Appender::File\n" .
                "log4perl.appender.MailAttApp.umask          = 0\n" .
-               "log4perl.appender.MailAttApp.syswrite       = 1\n" .
                "log4perl.appender.MailAttApp.autoflush      = 1\n" .
                "log4perl.appender.MailAttApp.utf8           = 1\n" .
                'log4perl.appender.MailAttApp.Threshold   = ' . $emailloglevel . "\n" .
