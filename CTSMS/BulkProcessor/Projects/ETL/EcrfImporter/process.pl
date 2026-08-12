@@ -211,17 +211,6 @@ sub main {
         scripterror('at least one task option is required. supported tasks: ' . join(', ',@TASK_OPTS),getlogger(getscriptpath()));
     }
 
-    if (ref($convert_file_in) eq 'HASH' and length($attachmentlogfile) and -f $attachmentlogfile) {
-        eval {
-            flush_logfiles();
-            my $uploaded = publish_converted_intermediate_file($attachmentlogfile,$convert_file_in);
-            push(@messages,"- file '$uploaded->{title}' (file ID $uploaded->{id}) added to the '$uploaded->{trial}->{name}' trial");
-        };
-        if (my $err = $@) {
-            scriptwarn('attachment logfile upload failed: ' . $err,getlogger(getscriptpath()));
-        }
-    }
-
     push(@attachmentfiles,$attachmentlogfile);
     $cli = 1;
     eval {
@@ -235,6 +224,20 @@ sub main {
     };
     # Keep terminate() catchable while posting final status (jobOutput includes completion log).
     $cli = 0;
+
+    # Upload after completion/done so the trial file includes the final summary
+    # (same content as the email attachment), with appenders fully flushed.
+    if (ref($convert_file_in) eq 'HASH' and length($attachmentlogfile) and -f $attachmentlogfile) {
+        eval {
+            flush_logfiles();
+            my $uploaded = publish_converted_intermediate_file($attachmentlogfile,$convert_file_in);
+            scriptinfo("attachment logfile uploaded (file ID $uploaded->{id})",getlogger(getscriptpath()));
+        };
+        if (my $err = $@) {
+            scriptwarn('attachment logfile upload failed: ' . $err,getlogger(getscriptpath()));
+        }
+    }
+
     my $final_status = $result ? $OK_JOB_STATUS : $FAILED_JOB_STATUS;
     eval {
         update_job($final_status);

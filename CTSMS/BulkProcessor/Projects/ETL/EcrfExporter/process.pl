@@ -302,15 +302,6 @@ sub main {
     eval {
         if ($result and $completion) {
             if ($upload_files) {
-                if (length($attachmentlogfile) and -f $attachmentlogfile) {
-                    eval {
-                        my $uploaded = publish_attachment_logfile();
-                        push(@messages,"- file '$uploaded->{title}' (file ID $uploaded->{id}) added to the '$uploaded->{trial}->{name}' trial");
-                    };
-                    if (my $err = $@) {
-                        scriptwarn('attachment logfile upload failed: ' . $err,getlogger(getscriptpath()));
-                    }
-                }
                 push(@messages,"Visit $ctsms_base_url/trial/trial.jsf?trialid=$ecrf_data_trial_id to download files.");
             }
             completion(join("\n\n",@messages),\@attachmentfiles,getlogger(getscriptpath()));
@@ -322,6 +313,19 @@ sub main {
     };
     # Keep terminate() catchable while posting final status (jobOutput includes completion log).
     $cli = 0;
+
+    # Upload after completion/done so the trial file includes the final summary,
+    # with appenders fully flushed.
+    if ($upload_files and length($attachmentlogfile) and -f $attachmentlogfile) {
+        eval {
+            my $uploaded = publish_attachment_logfile();
+            scriptinfo("attachment logfile uploaded (file ID $uploaded->{id})",getlogger(getscriptpath()));
+        };
+        if (my $err = $@) {
+            scriptwarn('attachment logfile upload failed: ' . $err,getlogger(getscriptpath()));
+        }
+    }
+
     my $final_status = $result ? $OK_JOB_STATUS : $FAILED_JOB_STATUS;
     eval {
         update_job($final_status);
