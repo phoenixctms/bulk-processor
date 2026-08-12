@@ -46,6 +46,7 @@ use CTSMS::BulkProcessor::Logging qw(
     $attachmentlogfile
     scriptinfo
     cleanuplogfiles
+    flush_logfiles
     $currentlogfile
 );
 use CTSMS::BulkProcessor::LogError qw (
@@ -212,6 +213,7 @@ sub main {
 
     if (ref($convert_file_in) eq 'HASH' and length($attachmentlogfile) and -f $attachmentlogfile) {
         eval {
+            flush_logfiles();
             my $uploaded = publish_converted_intermediate_file($attachmentlogfile,$convert_file_in);
             push(@messages,"- file '$uploaded->{title}' (file ID $uploaded->{id}) added to the '$uploaded->{trial}->{name}' trial");
         };

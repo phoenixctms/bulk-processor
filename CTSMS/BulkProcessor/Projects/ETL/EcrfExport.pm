@@ -79,6 +79,7 @@ use CTSMS::BulkProcessor::Logging qw (
     processing_info
     processing_debug
     scriptinfo
+    flush_logfiles
     $attachmentlogfile
 );
 use CTSMS::BulkProcessor::LogError qw(
@@ -364,6 +365,7 @@ sub publish_attachment_logfile {
     runerror("attachment logfile not found: $attachmentlogfile",getlogger(__PACKAGE__))
         unless -f $attachmentlogfile;
 
+    flush_logfiles();
     my $filename = File::Basename::basename($attachmentlogfile);
     my $out = CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::upload(
         _get_file_in($filename,'Log/'),
