@@ -270,14 +270,14 @@ sub _init_inquiry_data_vertical_context {
 
 NEXT_PROBAND:
         if (not defined $context->{api_probands_page_total_count} or ($context->{api_probands_page_num} * $inquiry_data_api_probands_page_size < $context->{api_probands_page_total_count} and (scalar @{$context->{api_probands_page}}) == 0)) {
-            my $p = { page_size => $inquiry_data_api_probands_page_size, page_num => $context->{api_probands_page_num} + 1, total_count => undef };
+            my $p = { page_size => $inquiry_data_api_probands_page_size, page_num => $context->{api_probands_page_num} + 1, total_count => undef, total_count_expected => not defined $context->{api_probands_page_total_count} };
             my $sf = { sort_by => 'id', sort_dir => 'asc',
                        'deferredDelete' => booltostring(0), };
 
             my $first = $context->{api_probands_page_num} * $inquiry_data_api_probands_page_size;
             _info($context,"fetch probands page: " . $first . '-' . ($first + $inquiry_data_api_probands_page_size) . ' of ' . (defined $context->{api_probands_page_total_count} ? $context->{api_probands_page_total_count} : '?'),not $show_page_progress);
             $context->{api_probands_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::get_inquiry_proband_list($context->{inquiry_trial}->{id}, $active, $active_signup, $p, $sf);
-            $context->{api_probands_page_total_count} = $p->{total_count};
+            $context->{api_probands_page_total_count} = $p->{total_count} if defined $p->{total_count};
             $context->{api_probands_page_num} += 1;
         }
         if (not defined $context->{proband}) {
@@ -291,7 +291,7 @@ NEXT_PROBAND:
         }
 
         if (not defined $context->{api_values_page_total_count} or ($context->{api_values_page_num} * $inquiry_data_api_values_page_size < $context->{api_values_page_total_count} and (scalar @{$context->{api_values_page}}) == 0)) {
-            my $p = { page_size => $inquiry_data_api_values_page_size , page_num => $context->{api_values_page_num} + 1, total_count => undef };
+            my $p = { page_size => $inquiry_data_api_values_page_size , page_num => $context->{api_values_page_num} + 1, total_count => undef, total_count_expected => not defined $context->{api_values_page_total_count} };
             my $sf = {}; #sorted by default
 
             my $first = $context->{api_values_page_num} * $inquiry_data_api_values_page_size;
@@ -302,7 +302,7 @@ NEXT_PROBAND:
             if ($@) {
                 $context->{api_values_page} = [];
             }
-            $context->{api_values_page_total_count} = $p->{total_count};
+            $context->{api_values_page_total_count} = $p->{total_count} if defined $p->{total_count};
             $context->{api_values_page_num} += 1;
         }
         my $value = shift @{$context->{api_values_page}};
@@ -457,14 +457,14 @@ sub _init_inquiry_data_pdfs_context {
         my ($context) = @_;
 
         if ((scalar @{$context->{api_probands_page}}) == 0) {
-            my $p = { page_size => $inquiry_data_api_probands_page_size , page_num => $context->{api_probands_page_num} + 1, total_count => undef };
+            my $p = { page_size => $inquiry_data_api_probands_page_size , page_num => $context->{api_probands_page_num} + 1, total_count => undef, total_count_expected => not defined $context->{api_probands_page_total_count} };
             my $sf = { sort_by => 'id', sort_dir => 'asc',
                        'deferredDelete' => booltostring(0), };
             #$sf->{fileName} = $dialysis_substitution_volume_file_pattern if defined $dialysis_substitution_volume_file_pattern;
             my $first = $context->{api_probands_page_num} * $inquiry_data_api_probands_page_size;
             _info($context,"fetch probands page: " . $first . '-' . ($first + $inquiry_data_api_probands_page_size) . ' of ' . (defined $context->{api_probands_page_total_count} ? $context->{api_probands_page_total_count} : '?'),not $show_page_progress);
             $context->{api_probands_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::get_inquiry_proband_list($context->{inquiry_trial}->{id}, $active, $active_signup, $p, $sf);
-            $context->{api_probands_page_total_count} = $p->{total_count};
+            $context->{api_probands_page_total_count} = $p->{total_count} if defined $p->{total_count};
             $context->{api_probands_page_num} += 1;
         }
         $context->{proband} = shift @{$context->{api_probands_page}};
@@ -508,14 +508,14 @@ sub _init_inquiry_data_horizontal_context {
         my ($context) = @_;
 
         if ((scalar @{$context->{api_probands_page}}) == 0) {
-            my $p = { page_size => $inquiry_data_api_probands_page_size , page_num => $context->{api_probands_page_num} + 1, total_count => undef };
+            my $p = { page_size => $inquiry_data_api_probands_page_size , page_num => $context->{api_probands_page_num} + 1, total_count => undef, total_count_expected => not defined $context->{api_probands_page_total_count} };
             my $sf = { sort_by => 'id', sort_dir => 'asc',
                        'deferredDelete' => booltostring(0), };
 
             my $first = $context->{api_probands_page_num} * $inquiry_data_api_probands_page_size;
             _info($context,"fetch probands page: " . $first . '-' . ($first + $inquiry_data_api_probands_page_size) . ' of ' . (defined $context->{api_probands_page_total_count} ? $context->{api_probands_page_total_count} : '?'),not $show_page_progress);
             $context->{api_probands_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::get_inquiry_proband_list($context->{inquiry_trial}->{id}, $active, $active_signup, $p, $sf);
-            $context->{api_probands_page_total_count} = $p->{total_count};
+            $context->{api_probands_page_total_count} = $p->{total_count} if defined $p->{total_count};
             $context->{api_probands_page_num} += 1;
         }
         $context->{proband} = shift @{$context->{api_probands_page}};
@@ -607,7 +607,7 @@ sub _get_inquiryvalues {
 
     while (1) {
         if ((scalar @$api_values_page) == 0) {
-            my $p = { page_size => $inquiry_data_api_values_page_size , page_num => $api_values_page_num + 1, total_count => undef };
+            my $p = { page_size => $inquiry_data_api_values_page_size , page_num => $api_values_page_num + 1, total_count => undef, total_count_expected => not defined $api_values_page_total_count };
             my $sf = {}; #sorted by default
 
             my $first = $api_values_page_num * $inquiry_data_api_values_page_size;
@@ -618,7 +618,7 @@ sub _get_inquiryvalues {
             if ($@) {
                $api_values_page = [];
             }
-            $api_values_page_total_count = $p->{total_count};
+            $api_values_page_total_count = $p->{total_count} if defined $p->{total_count};
             $api_values_page_num += 1;
         }
         my $value = shift @$api_values_page;

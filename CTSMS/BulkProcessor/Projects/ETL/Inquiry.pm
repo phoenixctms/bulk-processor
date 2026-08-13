@@ -119,13 +119,13 @@ sub _get_inquiries {
     my @inquiries;
     while (1) {
         if ((scalar @$api_inquiries_page) == 0) {
-            my $p = { page_size => $inquiry_data_api_inquiries_page_size , page_num => $api_inquiries_page_num + 1, total_count => undef };
+            my $p = { page_size => $inquiry_data_api_inquiries_page_size , page_num => $api_inquiries_page_num + 1, total_count => undef, total_count_expected => not defined $api_inquiries_page_total_count };
             my $sf = {};
 
             my $first = $api_inquiries_page_num * $inquiry_data_api_inquiries_page_size;
             _info($context,"fetch inquiries page: " . $first . '-' . ($first + $inquiry_data_api_inquiries_page_size) . ' of ' . (defined $api_inquiries_page_total_count ? $api_inquiries_page_total_count : '?'),not $show_page_progress);
             $api_inquiries_page = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Inquiry::get_trial_list($context->{inquiry_trial}->{id}, $active, $active_signup, 1, $p, $sf, { _selectionSetValueMap => 1 });
-            $api_inquiries_page_total_count = $p->{total_count};
+            $api_inquiries_page_total_count = $p->{total_count} if defined $p->{total_count};
             $api_inquiries_page_num += 1;
         }
         my $inquiry = shift @$api_inquiries_page;
