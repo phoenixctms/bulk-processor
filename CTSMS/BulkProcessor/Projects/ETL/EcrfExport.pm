@@ -1000,7 +1000,11 @@ sub _get_ecrffieldvalues_parallel {
     my $error;
     foreach my $thread (@threads) {
         my $part = $thread->join();
-        if (defined $part and 'HASH' eq ref $part and $part->{error}) {
+        if (not defined $part) {
+            $error ||= $thread->error() || 'eCRF field-value worker returned no result';
+            next;
+        }
+        if ('HASH' eq ref $part and $part->{error}) {
             $error ||= $part->{error};
             next;
         }
