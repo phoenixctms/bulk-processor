@@ -581,7 +581,7 @@ sub get_collection_page_query_uri {
         my $p = shift;
         $page_size = $p->{page_size};
         $page_num = $p->{page_num};
-        $total_count_expected = 1;
+        $total_count_expected = exists $p->{total_count_expected} ? $p->{total_count_expected} : 1;
         $sf = shift;
     } else {
         ($page_size,$page_num) = @_;
