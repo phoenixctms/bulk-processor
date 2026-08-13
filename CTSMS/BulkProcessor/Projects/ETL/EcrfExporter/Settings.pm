@@ -56,7 +56,10 @@ our @EXPORT_OK = qw(
 
     $proband_list_filename
     $ecrf_data_row_block
-    
+
+    $export_ecrf_fieldvalues_multithreading
+    $export_ecrf_fieldvalues_numofthreads
+
     $publish_public_file
 
 );
@@ -88,6 +91,9 @@ our $publish_public_file = 0;
 
 our $ecrf_data_row_block = 100;
 
+our $export_ecrf_fieldvalues_multithreading = $enablemultithreading;
+our $export_ecrf_fieldvalues_numofthreads = $cpucount;
+
 sub update_settings {
 
     my ($data,$configfile) = @_;
@@ -116,7 +122,11 @@ sub update_settings {
         $ecrfs_export_xls_filename = $data->{ecrfs_export_xls_filename} if exists $data->{ecrfs_export_xls_filename};
 
         $ecrf_data_row_block = $data->{ecrf_data_row_block} if exists $data->{ecrf_data_row_block};
-        
+
+        $export_ecrf_fieldvalues_multithreading = stringtobool($data->{export_ecrf_fieldvalues_multithreading}) if exists $data->{export_ecrf_fieldvalues_multithreading};
+        $export_ecrf_fieldvalues_multithreading = 0 unless $enablemultithreading;
+        $export_ecrf_fieldvalues_numofthreads = _get_numofthreads($cpucount,$data,'export_ecrf_fieldvalues_numofthreads');
+
         $publish_public_file = stringtobool($data->{publish_public_file}) if exists $data->{publish_public_file};        
 
         return $result;
@@ -124,6 +134,14 @@ sub update_settings {
     }
     return 0;
 
+}
+
+sub _get_numofthreads {
+    my ($default_value,$data,$key) = @_;
+    my $numofthreads = $default_value;
+    $numofthreads = $data->{$key} if exists $data->{$key};
+    $numofthreads = $cpucount if $numofthreads > $cpucount;
+    return $numofthreads;
 }
 
 1;

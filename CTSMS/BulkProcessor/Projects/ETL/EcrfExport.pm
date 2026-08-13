@@ -12,6 +12,9 @@ use CTSMS::BulkProcessor::Globals qw(
 
     $ctsmsrestapi_username
     $ctsmsrestapi_password
+
+    $enablemultithreading
+    $cpucount
 );
 
 use CTSMS::BulkProcessor::Projects::ETL::EcrfSettings qw(
@@ -66,7 +69,10 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfExporter::Settings qw(
 
     $proband_list_filename
     $ecrf_data_row_block
-    
+
+    $export_ecrf_fieldvalues_multithreading
+    $export_ecrf_fieldvalues_numofthreads
+
     $publish_public_file
 );
 
@@ -89,6 +95,8 @@ use CTSMS::BulkProcessor::LogError qw(
 );
 
 use File::Basename qw();
+
+use threads qw();
 
 use CTSMS::BulkProcessor::SqlConnectors::SQLiteDB qw();
 use CTSMS::BulkProcessor::SqlConnectors::CSVDB qw();
@@ -128,7 +136,7 @@ use CTSMS::BulkProcessor::Projects::ETL::ExcelExport qw();
 
 use CTSMS::BulkProcessor::Array qw(array_to_map);
 
-use CTSMS::BulkProcessor::Utils qw(booltostring timestampdigits run shell_args zerofill);
+use CTSMS::BulkProcessor::Utils qw(booltostring timestampdigits run shell_args zerofill threadid);
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -930,56 +938,143 @@ sub _get_probandlistentrytagvalues {
 
 sub _get_ecrffieldvalues {
     my ($context) = @_;
-    my @values;
-    $context->{ecrf_count} = 0;
+    my @jobs;
     foreach my $ecrfid (keys %{$context->{ecrf_map}}) {
-        $context->{ecrf} = $context->{ecrf_map}->{$ecrfid}->{ecrf};
-        my @visits = @{$context->{ecrf}->{visits} // []};
+        my $ecrf = $context->{ecrf_map}->{$ecrfid}->{ecrf};
+        my @visits = @{$ecrf->{visits} // []};
         push(@visits,{ id => undef, }) unless scalar @visits;
         foreach my $visit (@visits) {
-            my $api_values_page = [];
-            my $api_values_page_num = 0;
-            my $api_values_page_total_count;
-            if ($visit->{id}) {
-                $context->{visit} = $visit;
-            } else {
-                $context->{visit} = undef;
-            }
-            $context->{ecrf_status} = eval { CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::get_item($context->{listentry}->{id},$ecrfid,$visit->{id}) };
-            if ($context->{signed} ? ($context->{ecrf_status} and $context->{ecrf_status}->{status}->{done})
-                    : ($ecrf_data_include_undef_ecrf_status or $context->{ecrf_status})) {
-                $context->{ecrf_count} += 1;
-                _info($context,'proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
-                      (defined $visit->{id} ? '@' . $visit->{token} : '') . "': " . ($context->{ecrf_status} ? $context->{ecrf_status}->{status}->{name} : '<new>'));
-                while (1) {
-                    if ((scalar @$api_values_page) == 0) {
-                        my $p = { page_size => $ecrf_data_api_values_page_size , page_num => $api_values_page_num + 1, total_count => undef, total_count_expected => not defined $api_values_page_total_count };
-                        my $sf = {}; #sorted by default
-
-                        my $first = $api_values_page_num * $ecrf_data_api_values_page_size;
-                        _info($context,"fetch eCRF values page: " . $first . '-' . ($first + $ecrf_data_api_values_page_size) . ' of ' . (defined $api_values_page_total_count ? $api_values_page_total_count : '?'),not $show_page_progress);
-                        eval {
-                            $api_values_page = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues::get_ecrffieldvalues($context->{listentry}->{id},$ecrfid,$visit->{id},0, $timezone, $p, $sf, { _value => 1, _selectionValueMap => 1 })->{rows};
-                        };
-                        if ($@) {
-                            $api_values_page = [];
-                        }
-                        $api_values_page_total_count = $p->{total_count} if defined $p->{total_count};
-                        $api_values_page_num += 1;
-                    }
-                    my $value = shift @$api_values_page;
-                    last unless $value;
-                    if (not defined $value->{index} or defined $value->{id}) {
-                        push(@values,$value);
-                    }
-                }
-            } else {
-                _info($context,($context->{signed} ? 'skipping unsigned' : 'skipping <new>') . ' - proband ' . $context->{listentry}->{proband}->alias() . ": eCRF '$context->{ecrf}->{name}" .
-                      (defined $visit->{id} ? '@' . $visit->{token} : '') . "': " . ($context->{ecrf_status} ? $context->{ecrf_status}->{status}->{name} : '<new>'),1);
-            }
+            push(@jobs,{
+                listentry_id => $context->{listentry}->{id},
+                alias => $context->{listentry}->{proband}->alias(),
+                ecrfid => $ecrfid,
+                ecrf_name => $ecrf->{name},
+                visit_id => $visit->{id},
+                visit_token => $visit->{token},
+                signed => $context->{signed},
+            });
         }
     }
+
+    my $use_threads = ($enablemultithreading
+        && $export_ecrf_fieldvalues_multithreading
+        && $cpucount > 1
+        && $export_ecrf_fieldvalues_numofthreads > 1
+        && (scalar @jobs) > 1);
+
+    my $results = $use_threads
+        ? _get_ecrffieldvalues_parallel(\@jobs)
+        : [ map { _fetch_ecrf_visit_fieldvalues($_); } @jobs ];
+
+    my @values;
+    $context->{ecrf_count} = 0;
+    foreach my $result (@$results) {
+        $context->{ecrf_count} += $result->{included} ? 1 : 0;
+        foreach my $log (@{$result->{logs} // []}) {
+            _info($context,$log->{text},$log->{debug},$use_threads ? $log->{tid} : undef);
+        }
+        push(@values,@{$result->{values} // []});
+    }
     return \@values;
+}
+
+sub _get_ecrffieldvalues_parallel {
+    my ($jobs) = @_;
+    my $numofthreads = $export_ecrf_fieldvalues_numofthreads;
+    $numofthreads = scalar @$jobs if $numofthreads > scalar @$jobs;
+    $numofthreads = 1 if $numofthreads < 1;
+
+    my @buckets;
+    my $i = 0;
+    foreach my $job (@$jobs) {
+        push(@{$buckets[$i % $numofthreads]},$job);
+        $i++;
+    }
+
+    my @threads;
+    foreach my $bucket (@buckets) {
+        push(@threads,threads->create(\&_get_ecrffieldvalues_worker,$bucket));
+    }
+
+    my @results;
+    my $error;
+    foreach my $thread (@threads) {
+        my $part = $thread->join();
+        if (defined $part and 'HASH' eq ref $part and $part->{error}) {
+            $error ||= $part->{error};
+            next;
+        }
+        push(@results,@{$part->{results} // []});
+    }
+    die $error if $error;
+    return \@results;
+}
+
+sub _get_ecrffieldvalues_worker {
+    my ($jobs) = @_;
+    my @out;
+    eval {
+        foreach my $job (@$jobs) {
+            push(@out,_fetch_ecrf_visit_fieldvalues($job));
+        }
+    };
+    if ($@) {
+        return { error => $@ };
+    }
+    return { results => \@out };
+}
+
+sub _fetch_ecrf_visit_fieldvalues {
+    my ($job) = @_;
+    my $listentry_id = $job->{listentry_id};
+    my $ecrfid = $job->{ecrfid};
+    my $visit_id = $job->{visit_id};
+    my $visit_label = defined $visit_id ? '@' . ($job->{visit_token} // '') : '';
+    my $alias = $job->{alias};
+    my $ecrf_name = $job->{ecrf_name};
+    my $signed = $job->{signed};
+
+    my @logs;
+    my @values;
+    my $included = 0;
+    my $tid = threadid();
+
+    my $ecrf_status = eval { CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry::get_item($listentry_id,$ecrfid,$visit_id) };
+    my $status_name = $ecrf_status ? $ecrf_status->{status}->{name} : '<new>';
+
+    if ($signed ? ($ecrf_status and $ecrf_status->{status}->{done})
+            : ($ecrf_data_include_undef_ecrf_status or $ecrf_status)) {
+        $included = 1;
+        push(@logs,{ text => "proband $alias: eCRF '$ecrf_name$visit_label': $status_name", debug => 0, tid => $tid });
+        my $api_values_page = [];
+        my $api_values_page_num = 0;
+        my $api_values_page_total_count;
+        while (1) {
+            if ((scalar @$api_values_page) == 0) {
+                my $p = { page_size => $ecrf_data_api_values_page_size , page_num => $api_values_page_num + 1, total_count => undef, total_count_expected => not defined $api_values_page_total_count };
+                my $sf = {}; #sorted by default
+
+                my $first = $api_values_page_num * $ecrf_data_api_values_page_size;
+                push(@logs,{ text => "fetch eCRF values page: " . $first . '-' . ($first + $ecrf_data_api_values_page_size) . ' of ' . (defined $api_values_page_total_count ? $api_values_page_total_count : '?'), debug => !$show_page_progress, tid => $tid });
+                eval {
+                    $api_values_page = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues::get_ecrffieldvalues($listentry_id,$ecrfid,$visit_id,0, $timezone, $p, $sf, { _value => 1, _selectionValueMap => 1 })->{rows};
+                };
+                if ($@) {
+                    $api_values_page = [];
+                }
+                $api_values_page_total_count = $p->{total_count} if defined $p->{total_count};
+                $api_values_page_num += 1;
+            }
+            my $value = shift @$api_values_page;
+            last unless $value;
+            if (not defined $value->{index} or defined $value->{id}) {
+                push(@values,$value);
+            }
+        }
+    } else {
+        push(@logs,{ text => ($signed ? 'skipping unsigned' : 'skipping <new>') . " - proband $alias: eCRF '$ecrf_name$visit_label': $status_name", debug => 1, tid => $tid });
+    }
+    return { values => \@values, included => $included, logs => \@logs };
 }
 
 sub _run_dbtool {
@@ -1018,11 +1113,11 @@ sub _warn {
 
 sub _info {
 
-    my ($context,$message,$debug) = @_;
+    my ($context,$message,$debug,$tid) = @_;
     if ($debug) {
-        processing_debug(undef,$message,getlogger(__PACKAGE__));
+        processing_debug($tid,$message,getlogger(__PACKAGE__));
     } else {
-        processing_info(undef,$message,getlogger(__PACKAGE__));
+        processing_info($tid,$message,getlogger(__PACKAGE__));
     }
 }
 
