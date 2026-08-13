@@ -140,9 +140,9 @@ sub _apply_jwt_claims {
     if (defined $claims->{iat}) {
         $self->{jwt_validity_secs} = int($claims->{exp}) - int($claims->{iat});
     } else {
-        # Phoenix sets exp XOR iat; remaining lifetime is still a usable duration.
-        my $remaining = int($claims->{exp}) - time();
-        $self->{jwt_validity_secs} = $remaining if $remaining > 0;
+        # Phoenix sets exp XOR iat. Remaining exp duration shrinks and can be
+        # non-positive; renewals should use the configured lifetime.
+        $self->{jwt_validity_secs} = _normalize_explicit_jwt_validity_secs();
     }
 
 }
