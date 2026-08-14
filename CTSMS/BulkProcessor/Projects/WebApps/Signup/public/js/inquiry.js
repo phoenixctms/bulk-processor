@@ -1153,25 +1153,39 @@ function _createSpinner(context,value) {
     var spinnerHiddenId = value.inquiry.id + '_spinner_hidden';
     var spinnerHidden = $('<input type="hidden" name="' + spinnerName + '" id="' + spinnerHiddenId + '" value="' + (value.longValue != null ? value.longValue : '') + '"' + (!value.inquiry.disabled ? ' disabled' : '') + '/>');
 
-    var spinner = $('<input type="text" class="ctsms-spinner" name="' + spinnerName + '" id="' + spinnerId + '" value="' + (value.longValue != null ? value.longValue : '') + '"/>');
+    var spinnerClass = context.inputFieldIntegerText ? 'ctsms-control-integer' : 'ctsms-spinner';
+    var spinner = $('<input type="text" class="' + spinnerClass + '" name="' + spinnerName + '" id="' + spinnerId + '" value="' + (value.longValue != null ? value.longValue : '') + '"/>');
+    if (context.inputFieldIntegerText) {
+        spinner.puiinputtext({
+
+        });
+    }
 
     return [ spinnerHidden, spinner ];
 }
 function _initSpinner(context,value,content) {
     var spinnerId = value.inquiry.id + '_spinner';
-    $('#' + spinnerId).puispinner({
+    var $spinner = $('#' + spinnerId);
+    if (context.inputFieldIntegerText) {
+        if (value.inquiry.disabled) {
+            $spinner.puiinputtext('disable');
+        }
+    } else {
+        $spinner.puispinner({
 
-    });
-    if (value.inquiry.disabled) {
-        $('#' + spinnerId).puispinner('disable');
-    } else if (value.hasJsVar) {
-        $('#' + spinnerId).on('change', function(event) {
+        });
+        if (value.inquiry.disabled) {
+            $spinner.puispinner('disable');
+        }
+    }
+    if (!value.inquiry.disabled && value.hasJsVar) {
+        $spinner.on('change', function(event) {
             FieldCalculation.integerOnChange(value);
         }).on('keyup', function(event) {
             FieldCalculation.integerOnChange(value);
         });
     }
-    $('#' + spinnerId).puitooltip({
+    $spinner.puitooltip({
         my: 'left bottom',
         at: 'left top',
         content: _getTooltipText(context,value)

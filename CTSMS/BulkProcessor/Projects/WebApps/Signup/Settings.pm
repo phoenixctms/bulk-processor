@@ -86,6 +86,7 @@ our @EXPORT_OK = qw(
     $favicon
 
     $rest_api_jwt_reissue_on_ajax
+    $input_field_integer_text
 );
 
 our $defaultconfig = 'config.cfg';
@@ -131,6 +132,10 @@ our $favicon = undef;
 # Default off: AJAX renew only near expiry (get_rest_api_jwt).
 our $rest_api_jwt_reissue_on_ajax = 0;
 
+# When true, INTEGER inquiry fields use a text box (like FLOAT/decimal) instead of puispinner.
+# Set input_field_integer_text: false in settings.yml to restore the spinner.
+our $input_field_integer_text = 1;
+
 sub update_settings {
 
     my ($data,$configfile) = @_;
@@ -164,6 +169,7 @@ sub update_settings {
         $google_site_verification = $data->{google_site_verification} if exists $data->{google_site_verification};
         $favicon = $data->{favicon} if exists $data->{favicon};
         $rest_api_jwt_reissue_on_ajax = stringtobool($data->{rest_api_jwt_reissue_on_ajax}) if exists $data->{rest_api_jwt_reissue_on_ajax};
+        $input_field_integer_text = stringtobool($data->{input_field_integer_text}) if exists $data->{input_field_integer_text};
 
         $ctsms_sites = $data->{ctsms_sites} if exists $data->{ctsms_sites};
         $default_site = undef;

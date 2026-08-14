@@ -55,6 +55,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $system_timezone
     $convert_timezone
     $ctsms_sites
+    $input_field_integer_text
 );
 
 
@@ -172,6 +173,7 @@ Dancer::get('/inquiry',sub {
         js_model => {
             enableGeolocationServices => ($enable_geolocation_services ? \1 : \0),
             forceDefaultGeolocation => ($force_default_geolocation ? \1 : \0),
+            inputFieldIntegerText => ($input_field_integer_text ? \1 : \0),
             defaultGeolocationLatitude => $site->{default_geolocation_latitude},
             defaultGeolocationLongitude => $site->{default_geolocation_longitude},
             apiError => get_error(1),

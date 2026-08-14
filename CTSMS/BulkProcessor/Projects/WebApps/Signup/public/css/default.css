@@ -425,6 +425,14 @@ visibility:hidden;
 	width: inherit !important;
 }
 
+.ctsms-control-integer {
+	width: 133px !important;
+}
+
+.ctsms-control-integer .ui-inputfield {
+	width: inherit !important;
+}
+
 .ctsms-multilinetext {
     white-space: pre-wrap;       /* Since CSS 2.1 */
     white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
