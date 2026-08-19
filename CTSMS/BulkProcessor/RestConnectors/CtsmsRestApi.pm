@@ -139,6 +139,10 @@ sub _apply_jwt_claims {
     $self->{jwt_expires} = int($claims->{exp});
     if (defined $claims->{iat}) {
         $self->{jwt_validity_secs} = int($claims->{exp}) - int($claims->{iat});
+    } else {
+        # Phoenix sets exp XOR iat. Remaining exp duration shrinks and can be
+        # non-positive; renewals should use the configured lifetime.
+        $self->{jwt_validity_secs} = _normalize_explicit_jwt_validity_secs();
     }
 
 }
@@ -214,7 +218,8 @@ sub extend_jwt_validity {
     unless ($renewed) {
         resterror($self, 'rest api jwt extend failed', getlogger(__PACKAGE__));
     }
-    restinfo($self, 'rest api jwt validity extended to ' . ($self->{jwt_validity_secs} // '?') . 's', getlogger(__PACKAGE__));
+    $self->{jwt_validity_secs} = $validity_secs;
+    restinfo($self, 'rest api jwt validity extended to ' . $validity_secs . 's', getlogger(__PACKAGE__));
     return 1;
 
 }
@@ -450,7 +455,9 @@ sub extract_collection_items {
 
     my $result = undef;
     if (defined $data and 'HASH' eq ref $data) {
-        if (defined $p and defined $data->{psf} and 'HASH' eq ref $data->{psf}) {
+        if (defined $p and defined $data->{psf} and 'HASH' eq ref $data->{psf}
+                and defined $data->{psf}->{totalCount}
+                and ($p->{total_count_expected} // 1)) {
             $p->{total_count} = $data->{psf}->{totalCount};
         }
         if (defined $data->{rows} and 'ARRAY' eq ref $data->{rows}) {

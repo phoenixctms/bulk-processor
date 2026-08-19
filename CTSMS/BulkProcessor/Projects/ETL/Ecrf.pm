@@ -185,13 +185,13 @@ sub _get_ecrffields {
     my @ecrffields;
     while (1) {
         if ((scalar @$api_ecrffields_page) == 0) {
-            my $p = { page_size => $ecrf_data_api_ecrffields_page_size , page_num => $api_ecrffields_page_num + 1, total_count => undef };
+            my $p = { page_size => $ecrf_data_api_ecrffields_page_size , page_num => $api_ecrffields_page_num + 1, total_count => undef, total_count_expected => not defined $api_ecrffields_page_total_count };
             my $sf = {};
 
             my $first = $api_ecrffields_page_num * $ecrf_data_api_ecrffields_page_size;
             _info($context,"fetch eCRF fields page: " . $first . '-' . ($first + $ecrf_data_api_ecrffields_page_size) . ' of ' . (defined $api_ecrffields_page_total_count ? $api_ecrffields_page_total_count : '?'),not $show_page_progress);
             $api_ecrffields_page = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_trial_list($context->{ecrf_data_trial}->{id}, undef,1, $p, $sf, { _selectionSetValueMap => 1 });
-            $api_ecrffields_page_total_count = $p->{total_count};
+            $api_ecrffields_page_total_count = $p->{total_count} if defined $p->{total_count};
             $api_ecrffields_page_num += 1;
         }
         my $ecrffield = shift @$api_ecrffields_page;
@@ -209,13 +209,13 @@ sub _get_probandlistentrytags {
     my @listentrytags;
     while (1) {
         if ((scalar @$api_listentrytags_page) == 0) {
-            my $p = { page_size => $ecrf_data_api_probandlistentrytags_page_size , page_num => $api_listentrytags_page_num + 1, total_count => undef };
+            my $p = { page_size => $ecrf_data_api_probandlistentrytags_page_size , page_num => $api_listentrytags_page_num + 1, total_count => undef, total_count_expected => not defined $api_listentrytags_page_total_count };
             my $sf = { sort_by => 'position', sort_dir => 'asc', };
 
             my $first = $api_listentrytags_page_num * $ecrf_data_api_probandlistentrytags_page_size;
             _info($context,"fetch proband list attribute page: " . $first . '-' . ($first + $ecrf_data_api_probandlistentrytags_page_size) . ' of ' . (defined $api_listentrytags_page_total_count ? $api_listentrytags_page_total_count : '?'),not $show_page_progress);
             $api_listentrytags_page = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTag::get_trial_list($context->{ecrf_data_trial}->{id}, undef, $p, $sf, { _selectionSetValueMap => 1 });
-            $api_listentrytags_page_total_count = $p->{total_count};
+            $api_listentrytags_page_total_count = $p->{total_count} if defined $p->{total_count};
             $api_listentrytags_page_num += 1;
         }
         my $listentrytag = shift @$api_listentrytags_page;
