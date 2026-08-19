@@ -496,10 +496,33 @@ function disableBrowserAutofill(root, reinit) {
         if (!useReadonly) {
             return;
         }
+        var bindUnlock = function($field) {
+            $field.off('focus.ctsmsAutofill mousedown.ctsmsAutofill')
+                .on('mousedown.ctsmsAutofill focus.ctsmsAutofill', function() {
+                    jQuery(this)
+                        .prop('readonly', false)
+                        .removeData('ctsmsAutofillGuard')
+                        .data('ctsmsAutofillUnlocked', true)
+                        .off('focus.ctsmsAutofill mousedown.ctsmsAutofill');
+                });
+        };
         if (reinit) {
-            $el.removeData('ctsmsAutofillGuard');
             $el.removeData('ctsmsAutofillUnlocked');
-            $el.off('focus.ctsmsAutofill');
+            $el.off('focus.ctsmsAutofill mousedown.ctsmsAutofill');
+            // Keep the guard when we still own readonly: a later reinit used to
+            // drop the unlock handler and then skip rebinding because the field
+            // was already readonly (inquiry datagrid inits one field at a time).
+            if ($el.data('ctsmsAutofillGuard') && $el.prop('readonly')) {
+                if ($el[0] === document.activeElement) {
+                    $el.prop('readonly', false)
+                        .removeData('ctsmsAutofillGuard')
+                        .data('ctsmsAutofillUnlocked', true);
+                    return;
+                }
+                bindUnlock($el);
+                return;
+            }
+            $el.removeData('ctsmsAutofillGuard');
         }
         // User already unlocked this field; keep editable across AJAX (e.g. autocomplete).
         if ($el.data('ctsmsAutofillUnlocked')) {
@@ -508,20 +531,23 @@ function disableBrowserAutofill(root, reinit) {
         // Stale guard: marked protected but editable again without unlock (reused/reinit).
         if ($el.data('ctsmsAutofillGuard') && !$el.prop('readonly')) {
             $el.removeData('ctsmsAutofillGuard');
-            $el.off('focus.ctsmsAutofill');
+            $el.off('focus.ctsmsAutofill mousedown.ctsmsAutofill');
         }
         if ($el.data('ctsmsAutofillGuard')) {
             return;
         }
         $el.data('ctsmsAutofillGuard', true);
-        if (!$el.prop('readonly') && $el[0] !== document.activeElement) {
+        if ($el[0] === document.activeElement) {
+            $el.prop('readonly', false)
+                .removeData('ctsmsAutofillGuard')
+                .data('ctsmsAutofillUnlocked', true);
+            return;
+        }
+        if (!$el.prop('readonly')) {
             $el.prop('readonly', true);
-            $el.one('focus.ctsmsAutofill', function() {
-                jQuery(this)
-                    .prop('readonly', false)
-                    .removeData('ctsmsAutofillGuard')
-                    .data('ctsmsAutofillUnlocked', true);
-            });
+            bindUnlock($el);
+        } else {
+            $el.removeData('ctsmsAutofillGuard');
         }
     });
 }

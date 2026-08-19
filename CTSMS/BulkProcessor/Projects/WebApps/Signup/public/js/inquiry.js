@@ -57,7 +57,9 @@ function initPrimeUI(context) {
                 var inquiryField = context.inquiryStatusVar.fieldsToInit.shift();
                 _initInquiryField(context,inquiryField.value,inquiryField.content);
             }
-            if (typeof disableBrowserAutofill === 'function') {
+            // Datagrid calls initContent per item; only re-guard after the last
+            // field so earlier inputs keep their autofill unlock handler.
+            if (context.inquiryStatusVar.last && typeof disableBrowserAutofill === 'function') {
                 disableBrowserAutofill(null, true);
             }
         }
@@ -1167,6 +1169,9 @@ function _initSpinner(context,value,content) {
     var spinnerId = value.inquiry.id + '_spinner';
     var $spinner = $('#' + spinnerId);
     if (context.inputFieldIntegerText) {
+        $spinner.puiinputtext({
+
+        });
         if (value.inquiry.disabled) {
             $spinner.puiinputtext('disable');
         }
