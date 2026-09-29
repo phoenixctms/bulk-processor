@@ -854,7 +854,7 @@ sub _register_proband {
                 $probands = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::search({
                     module => $CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::DBModule::PROBAND_DB,
                     criterions => $context->{criterions},
-                });
+                },{},{ any_department => 'true' });
             };
             if ($@) {
                 _warn_or_error($context,"error loading proband: " . $@);
@@ -958,26 +958,34 @@ sub _register_proband {
 
                 my $probandlistentries = undef;
                 eval {
+                    my $list_sf = { any_department => 'true' };
+                    my $dept_id = (($context->{ecrf_data_trial} // {})->{department} // {})->{id};
+                    $list_sf->{departmentId} = $dept_id if defined $dept_id and length($dept_id);
                     $probandlistentries = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::get_trial_list($ecrf_data_trial_id,
-                        undef,$context->{proband}->{id},1);
+                        undef,$context->{proband}->{id},1,{},$list_sf);
                 };
                 if (my $err = $@) {
                     _rollback_proband($context) if $proband_created;
                     _warn_or_error($context,"error loading proband list entry: " . $err);
                     $result = 0;
                 } elsif ((scalar @$probandlistentries) == 0) {
-                    eval {
-                        #lock $probandlistentrymaxposition;
-                        $context->{probandlistentry} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::add_item(
-                            _get_probandlistentry_in($context));
-                    };
-                    if (my $err = $@) {
-                        _rollback_proband($context) if $proband_created;
-                        _warn_or_error($context,"error creating proband list entry: " . $err);
+                    if (defined $id) {
+                        _warn_or_error($context,"cannot load proband list entry for proband id " . $id);
                         $result = 0;
                     } else {
-                        _info($context,"proband list entry (position $context->{probandlistentry}->{position}) created");
-                        $context->{listentry_created} = 1;
+                        eval {
+                            #lock $probandlistentrymaxposition;
+                            $context->{probandlistentry} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::add_item(
+                                _get_probandlistentry_in($context));
+                        };
+                        if (my $err = $@) {
+                            _rollback_proband($context) if $proband_created;
+                            _warn_or_error($context,"error creating proband list entry: " . $err);
+                            $result = 0;
+                        } else {
+                            _info($context,"proband list entry (position $context->{probandlistentry}->{position}) created");
+                            $context->{listentry_created} = 1;
+                        }
                     }
                 } elsif ((scalar @$probandlistentries) > 1) {
                     _rollback_proband($context) if $proband_created;
