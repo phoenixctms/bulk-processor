@@ -308,11 +308,18 @@ sub update_settings {
 sub get_ctsms_site_lang_restapi {
     my ($site_name,$lang) = @_;
     my $site = $ctsms_sites->{$site_name};
+    my $login;
+    if (ref $site eq 'HASH'
+        and ref $site->{credentials} eq 'HASH'
+        and exists $site->{credentials}->{$lang}
+        and ref $site->{credentials}->{$lang} eq 'HASH') {
+        $login = $site->{credentials}->{$lang};
+    }
     return get_ctsms_restapi($site_name . '_' . $lang,
-        $site->{uri},
-        $site->{credentials}->{$lang}->{username},
-        $site->{credentials}->{$lang}->{password},
-        $site->{realm});
+        (ref $site eq 'HASH' ? $site->{uri} : undef),
+        ($login ? $login->{username} : undef),
+        ($login ? $login->{password} : undef),
+        (ref $site eq 'HASH' ? $site->{realm} : undef));
 }
 
 sub _prepare_working_paths {

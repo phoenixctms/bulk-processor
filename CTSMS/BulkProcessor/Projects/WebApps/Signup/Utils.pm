@@ -443,6 +443,12 @@ sub get_site_options {
     return \@result;
 }
 
+sub _existing_value {
+    my ($hash, $key) = @_;
+    return undef unless ref $hash eq 'HASH' and defined $key and exists $hash->{$key};
+    return $hash->{$key};
+}
+
 sub get_site_option {
     my $site_name = shift;
 
@@ -454,15 +460,17 @@ sub get_site_option {
     my $site_label = Dancer::Plugin::I18N::localize($site->{label}) || $site_name;
     my $description;
     $description = Dancer::Plugin::I18N::localize($site->{description}) if $site->{description};
-    my $department_label = $site->{department}->{name}->{$lang} || $site->{department}->{nameL10nKey};
-    my $trial_department_label = $site->{trial_department}
-        ? ($site->{trial_department}->{name}->{$lang} || $site->{trial_department}->{nameL10nKey})
-        : undef;
+    my $department = _existing_value($site, 'department');
+    my $department_name = _existing_value($department, 'name');
+    my $department_label = _existing_value($department_name, $lang) || _existing_value($department, 'nameL10nKey');
+    my $trial_department = _existing_value($site, 'trial_department');
+    my $trial_department_name = _existing_value($trial_department, 'name');
+    my $trial_department_label = _existing_value($trial_department_name, $lang) || _existing_value($trial_department, 'nameL10nKey');
     my $trial_count;
     eval {
         my $p = { page_size => 0, };
         my $trials = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_signup_list(
-            $site->{trial_department} ? $site->{trial_department}->{id} : undef,
+            _existing_value($trial_department, 'id'),
             $p,
             undef,
             undef,$restapi);
@@ -475,7 +483,7 @@ sub get_site_option {
         label => $site_label,
         description => $description,
         departmentLabel => $department_label,
-        departmentId => $site->{department}->{id},
+        departmentId => _existing_value($department, 'id'),
         trialDepartmentLabel => $trial_department_label,
         trialCount => $trial_count,
         latitude => $site->{default_geolocation_latitude},
