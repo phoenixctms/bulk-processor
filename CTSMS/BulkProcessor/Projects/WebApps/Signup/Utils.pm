@@ -455,7 +455,9 @@ sub get_site_option {
     my $description;
     $description = Dancer::Plugin::I18N::localize($site->{description}) if $site->{description};
     my $department_label = $site->{department}->{name}->{$lang} || $site->{department}->{nameL10nKey};
-    my $trial_department_label = $site->{trial_department}->{name}->{$lang} || $site->{trial_department}->{nameL10nKey};
+    my $trial_department_label = $site->{trial_department}
+        ? ($site->{trial_department}->{name}->{$lang} || $site->{trial_department}->{nameL10nKey})
+        : undef;
     my $trial_count;
     eval {
         my $p = { page_size => 0, };
