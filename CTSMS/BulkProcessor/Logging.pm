@@ -206,6 +206,12 @@ sub getlogger {
 
 }
 
+sub _can_log {
+    my ($logger) = @_;
+    return 0 if ${^GLOBAL_PHASE} eq 'DESTRUCT';
+    return defined $logger;
+}
+
 sub cleanuplogfiles {
 
     my ($fileerrorcode,$filewarncode,@remaininglogfiles) = @_;
@@ -266,7 +272,7 @@ sub flush_logfiles {
 sub emailinfo {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info($message);
     }
 
@@ -275,7 +281,7 @@ sub emailinfo {
 sub emaildebug {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug($message);
     }
 
@@ -284,7 +290,7 @@ sub emaildebug {
 sub dbdebug {
 
     my ($db, $message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug(_getsqlconnectorinstanceprefix($db) . _getsqlconnectidentifiermessage($db,$message));
     }
 
@@ -295,7 +301,7 @@ sub dbdebug {
 sub dbinfo {
 
     my ($db, $message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getsqlconnectorinstanceprefix($db) . _getsqlconnectidentifiermessage($db,$message));
     }
 
@@ -306,7 +312,7 @@ sub dbinfo {
 sub nosqldebug {
 
     my ($connector, $message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug(_getnosqlconnectorinstanceprefix($connector) . _getnosqlconnectidentifiermessage($connector,$message));
     }
 
@@ -315,7 +321,7 @@ sub nosqldebug {
 sub nosqlinfo {
 
     my ($connector, $message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getnosqlconnectorinstanceprefix($connector) . _getnosqlconnectidentifiermessage($connector,$message));
     }
 
@@ -324,7 +330,7 @@ sub nosqlinfo {
 sub restdebug {
 
     my ($restapi, $message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug(_getrestconnectorinstanceprefix($restapi) . _getrestconnectidentifiermessage($restapi,$message));
     }
 
@@ -335,7 +341,7 @@ sub restdebug {
 sub restinfo {
 
     my ($restapi, $message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getrestconnectorinstanceprefix($restapi) . _getrestconnectidentifiermessage($restapi,$message));
     }
 
@@ -346,7 +352,7 @@ sub restinfo {
 sub attachmentdownloaderdebug {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug($message);
     }
 
@@ -355,7 +361,7 @@ sub attachmentdownloaderdebug {
 sub attachmentdownloaderinfo {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info($message);
     }
 
@@ -364,7 +370,7 @@ sub attachmentdownloaderinfo {
 sub xls2csvinfo {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info($message);
     }
 
@@ -373,7 +379,7 @@ sub xls2csvinfo {
 sub fieldnamesaquired {
 
     my ($db,$tablename,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug(_getsqlconnectorinstanceprefix($db) . 'fieldnames aquired and OK: [' . $db->connectidentifier() . '].' . $tablename);
     }
 
@@ -382,7 +388,7 @@ sub fieldnamesaquired {
 sub primarykeycolsaquired {
 
     my ($db,$tablename,$keycols,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug(_getsqlconnectorinstanceprefix($db) . 'primary key columns aquired for [' . $db->connectidentifier() . '].' . $tablename . ': ' . ((defined $keycols and scalar @$keycols > 0) ? join(', ',@$keycols) : '<no primary key columns>'));
     }
 
@@ -391,7 +397,7 @@ sub primarykeycolsaquired {
 sub tableinfoscleared {
 
     my ($db,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug(_getsqlconnectorinstanceprefix($db) . 'table infos cleared for ' . $db->connectidentifier());
     }
 
@@ -400,7 +406,7 @@ sub tableinfoscleared {
 sub tabletransferstarted {
 
     my ($db,$tablename,$target_db,$targettablename,$numofrows,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getsqlconnectorinstanceprefix($db) . 'table transfer started: [' . $db->connectidentifier() . '].' . $tablename . ' > ' . $targettablename . ': ' . $numofrows . ' row(s)');
     }
 
@@ -409,7 +415,7 @@ sub tabletransferstarted {
 sub tableprocessingstarted {
 
     my ($db,$tablename,$numofrows,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info('table processing started: [' . $db->connectidentifier() . '].' . $tablename . ': ' . $numofrows . ' row(s)');
     }
 
@@ -418,7 +424,7 @@ sub tableprocessingstarted {
 sub tablethreadingdebug {
 
     my ($message,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug($message);
     }
 
@@ -427,7 +433,7 @@ sub tablethreadingdebug {
 sub rowtransferstarted {
 
     my ($db,$tablename,$target_db,$targettablename,$numofrows,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getsqlconnectorinstanceprefix($db) . 'row transfer started: [' . $db->connectidentifier() . '].' . $tablename . ' > ' . $targettablename . ': ' . $numofrows . ' row(s)');
     }
 
@@ -436,7 +442,7 @@ sub rowtransferstarted {
 sub texttablecreated {
 
     my ($db,$tablename,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getsqlconnectorinstanceprefix($db) . 'text table created: ' . $tablename);
     }
 
@@ -445,7 +451,7 @@ sub texttablecreated {
 sub indexcreated {
 
     my ($db,$tablename,$indexname,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getsqlconnectorinstanceprefix($db) . 'index created: ' . $indexname . ' on ' . $tablename);
     }
 
@@ -454,7 +460,7 @@ sub indexcreated {
 sub primarykeycreated {
 
     my ($db,$tablename,$keycols,$logger) = @_;
-    if (defined $logger and (defined $keycols and scalar @$keycols > 0)) {
+    if (_can_log($logger) and (defined $keycols and scalar @$keycols > 0)) {
         $logger->info(_getsqlconnectorinstanceprefix($db) . 'primary key created: ' . join(', ',@$keycols) . ' on ' . $tablename);
     }
 
@@ -463,7 +469,7 @@ sub primarykeycreated {
 sub temptablecreated {
 
     my ($db,$tablename,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getsqlconnectorinstanceprefix($db) . 'temporary table created: ' . $tablename);
     }
 
@@ -472,7 +478,7 @@ sub temptablecreated {
 sub tabletruncated {
 
     my ($db,$tablename,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getsqlconnectorinstanceprefix($db) . 'table truncated: ' . $tablename);
     }
 
@@ -481,7 +487,7 @@ sub tabletruncated {
 sub tabledropped {
 
     my ($db,$tablename,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getsqlconnectorinstanceprefix($db) . 'table dropped: ' . $tablename);
     }
 
@@ -490,7 +496,7 @@ sub tabledropped {
 sub rowtransferred {
 
     my ($db,$tablename,$target_db,$targettablename,$i,$numofrows,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug(_getsqlconnectorinstanceprefix($db) . 'row ' . $i . '/' . $numofrows . ' transferred');
     }
 
@@ -508,7 +514,7 @@ sub rowtransferred {
 sub rowinserted {
 
     my ($db,$tablename,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug(_getsqlconnectorinstanceprefix($db) . 'row inserted');
     }
 
@@ -517,7 +523,7 @@ sub rowinserted {
 sub rowupdated {
 
     my ($db,$tablename,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug(_getsqlconnectorinstanceprefix($db) . 'row updated');
     }
 
@@ -526,7 +532,7 @@ sub rowupdated {
 sub rowsdeleted {
 
     my ($db,$tablename,$rowcount,$initial_rowcount,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
     if (defined $initial_rowcount) {
         $logger->debug(_getsqlconnectorinstanceprefix($db) . $rowcount . ' of ' . $initial_rowcount . ' row(s) deleted');
     } else {
@@ -539,7 +545,7 @@ sub rowsdeleted {
 sub totalrowsdeleted {
 
     my ($db,$tablename,$rowcount_total,$initial_rowcount,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getsqlconnectorinstanceprefix($db) . $rowcount_total . ' of ' . $initial_rowcount . ' row(s) deleted from [' . $db->connectidentifier() . '].' . $tablename);
     }
 
@@ -548,7 +554,7 @@ sub totalrowsdeleted {
 sub rowinsertskipped {
 
     my ($db,$tablename,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug(_getsqlconnectorinstanceprefix($db) . 'row insert skipped');
     }
 
@@ -557,7 +563,7 @@ sub rowinsertskipped {
 sub rowupdateskipped {
 
     my ($db,$tablename,$matched,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug(_getsqlconnectorinstanceprefix($db) . "row update skipped, $matched matching rows");
     }
 
@@ -566,7 +572,7 @@ sub rowupdateskipped {
 sub tabletransferdone {
 
     my ($db,$tablename,$target_db,$targettablename,$numofrows,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getsqlconnectorinstanceprefix($db) . 'table transfer done: [' . $db->connectidentifier() . '].' . $tablename . ' > ' . $targettablename . ': ' . $numofrows . ' row(s)');
     }
 
@@ -575,7 +581,7 @@ sub tabletransferdone {
 sub tablefixed {
 
     my ($target_db,$targettablename,$statement,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getsqlconnectorinstanceprefix($target_db) . 'table fix applied to ' . $targettablename . ': ' . chopstring(trim($statement),90));
     }
 
@@ -584,7 +590,7 @@ sub tablefixed {
 sub tableprocessingdone {
 
     my ($db,$tablename,$numofrows,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info('table processing done: [' . $db->connectidentifier() . '].' . $tablename . ': ' . $numofrows . ' row(s)');
     }
 
@@ -593,7 +599,7 @@ sub tableprocessingdone {
 sub rowtransferdone {
 
     my ($db,$tablename,$target_db,$targettablename,$numofrows,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getsqlconnectorinstanceprefix($db) . 'row transfer done: [' . $db->connectidentifier() . '].' . $tablename . ' > ' . $targettablename . ': ' . $numofrows . ' row(s)');
     }
 
@@ -602,7 +608,7 @@ sub rowtransferdone {
 sub fetching_rows {
 
     my ($db,$tablename,$start,$blocksize,$totalnumofrows,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getsqlconnectorinstanceprefix($db) . 'fetching rows from [' . $db->connectidentifier() . '].' . $tablename . ': ' . ($start + 1) . '-' . ($start + $blocksize) . ' of ' . $totalnumofrows);
     }
 
@@ -611,7 +617,7 @@ sub fetching_rows {
 sub writing_rows {
 
     my ($db,$tablename,$start,$blocksize,$totalnumofrows,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getsqlconnectorinstanceprefix($db) . 'writing rows to ' . $tablename . ': ' . ($start + 1) . '-' . ($start + $blocksize) . ' of ' . $totalnumofrows);
     }
 
@@ -620,7 +626,7 @@ sub writing_rows {
 sub processing_rows {
 
     my ($tid, $start,$blocksize,$totalnumofrows,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(($enablemultithreading ? '[' . $tid . '] ' : '') . 'processing rows: ' . ($start + 1) . '-' . ($start + $blocksize) . ' of ' . $totalnumofrows);
     }
 
@@ -630,7 +636,7 @@ sub processing_rows {
 sub filethreadingdebug {
 
     my ($message,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug($message);
     }
 
@@ -639,7 +645,7 @@ sub filethreadingdebug {
 sub fileprocessingstarted {
 
     my ($file,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info('file processing started: ' . basename($file) . ' (' . kbytes2gigs(int((-s $file)/ 1024)) . ')');
     }
 
@@ -648,7 +654,7 @@ sub fileprocessingstarted {
 sub fileprocessingdone {
 
     my ($file,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info('file processing done: ' . basename($file));
     }
 
@@ -657,7 +663,7 @@ sub fileprocessingdone {
 sub lines_read {
 
     my ($file,$start,$blocksize,$block_n,$exact,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         if (defined $block_n) {
             if ($block_n > 0) {
                 $logger->info(basename($file) . ': ' . kbytes2gigs(int($block_n / 1024)) . ' read');
@@ -672,7 +678,7 @@ sub lines_read {
 sub processing_lines {
 
     my ($tid, $start,$blocksize,$block_n,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         if (defined $block_n) {
             if ($block_n > 0) {
                 $logger->info(($enablemultithreading ? '[' . $tid . '] ' : '') . 'processing lines: ' . kbytes2gigs(int($block_n / 1024)));
@@ -687,7 +693,7 @@ sub processing_lines {
 sub processing_info {
 
     my ($tid, $message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info((($enablemultithreading and defined $tid) ? '[' . $tid . '] ' : '') . $message);
     }
 
@@ -696,7 +702,7 @@ sub processing_info {
 sub processing_debug {
 
     my ($tid, $message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug((($enablemultithreading and defined $tid) ? '[' . $tid . '] ' : '') . $message);
     }
 
@@ -706,7 +712,7 @@ sub processing_debug {
 sub restthreadingdebug {
 
     my ($message,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug($message);
     }
 
@@ -715,7 +721,7 @@ sub restthreadingdebug {
 sub fetching_items {
 
     my ($restapi,$path_query,$start,$blocksize,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getrestconnectorinstanceprefix($restapi) . _getrestconnectidentifiermessage($restapi,'fetching ' . $path_query . ' collection page: ' . ($start + 1) . '-' . ($start + $blocksize)));
     }
 
@@ -724,7 +730,7 @@ sub fetching_items {
 sub processing_items {
 
     my ($tid, $start,$blocksize,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(($enablemultithreading ? '[' . $tid . '] ' : '') . 'processing items: ' . ($start + 1) . '-' . ($start + $blocksize));
     }
 
@@ -733,7 +739,7 @@ sub processing_items {
 sub restprocessingstarted {
 
     my ($restapi,$path_query,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info('collection processing started: [' . $restapi->connectidentifier() . '] ' . $path_query);
     }
 
@@ -742,7 +748,7 @@ sub restprocessingstarted {
 sub restprocessingdone {
 
     my ($restapi,$path_query,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info('collection processing done: [' . $restapi->connectidentifier() . '] ' . $path_query);
     }
 
@@ -753,7 +759,7 @@ sub restprocessingdone {
 sub nosqlthreadingdebug {
 
     my ($message,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug($message);
     }
 
@@ -762,7 +768,7 @@ sub nosqlthreadingdebug {
 sub fetching_entries {
 
     my ($store,$scan_pattern,$start,$blocksize,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info(_getnosqlconnectorinstanceprefix($store) . _getnosqlconnectidentifiermessage($store,'fetching ' . ($scan_pattern ? "$scan_pattern " : '') . 'entries: ' . ($start + 1) . '-' . ($start + $blocksize)));
     }
 
@@ -771,7 +777,7 @@ sub fetching_entries {
 sub processing_entries {
 
     my ($tid, $start, $blocksize, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         if ($blocksize) {
             $logger->info(($enablemultithreading ? '[' . $tid . '] ' : '') . 'processing entries: ' . ($start + 1) . '-' . ($start + $blocksize));
         } else {
@@ -784,7 +790,7 @@ sub processing_entries {
 sub nosqlprocessingstarted {
 
     my ($store,$scan_pattern,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         my $msg = 'keystore processing started: ';
         my $connectidentifier = $store->connectidentifier();
         if ($connectidentifier) {
@@ -800,7 +806,7 @@ sub nosqlprocessingstarted {
 sub nosqlprocessingdone {
 
     my ($store,$scan_pattern,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         my $msg = 'keystore processing done: ';
         my $connectidentifier = $store->connectidentifier();
         if ($connectidentifier) {
@@ -817,7 +823,7 @@ sub nosqlprocessingdone {
 sub configurationinfo {
 
     my ($message,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info($message);
     }
 
@@ -826,7 +832,7 @@ sub configurationinfo {
 sub faketimeinfo {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info($message);
     }
 
@@ -835,7 +841,7 @@ sub faketimeinfo {
 sub faketimedebug {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug($message);
     }
 
@@ -844,7 +850,7 @@ sub faketimedebug {
 sub runinfo {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info($message);
     }
 
@@ -853,7 +859,7 @@ sub runinfo {
 sub rundebug {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->debug($message);
     }
 
@@ -861,7 +867,7 @@ sub rundebug {
 sub scriptinfo {
 
     my ($message,$logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->info($message);
     }
 
@@ -870,7 +876,7 @@ sub scriptinfo {
 sub servicedebug {
 
     my ($service, $message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $message = '[' . $service->{tid} . '] ' . $service->identifier() . ' - ' . $message;
         $logger->debug($message);
     }
@@ -882,7 +888,7 @@ sub servicedebug {
 sub serviceinfo {
 
     my ($service, $message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $message = '[' . $service->{tid} . '] ' . $service->identifier() . ' - ' . $message;
         $logger->info($message);
     }
