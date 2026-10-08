@@ -109,6 +109,12 @@ my $warnemailsubject = 'warning: module ';
 my $donemailsubject = 'done: module ';
 my $completionmailsubject = 'completed: module ';
 
+sub _can_log {
+    my ($logger) = @_;
+    return 0 if ${^GLOBAL_PHASE} eq 'DESTRUCT';
+    return defined $logger;
+}
+
 sub done {
 
     my ($message,$attachments,$logger) = @_;
@@ -122,12 +128,12 @@ sub done {
 
         $message .= "\n\n" . 'time elapsed: ' . secs_to_years(ceil($appexitsecs - $appstartsecs));
 
-        if (defined $logger) {
+        if (_can_log($logger)) {
             $logger->info($message);
         }
 
         if (threadid() == $root_threadid) {
-            if (length($doneemailrecipient) > 0 and defined $logger) {
+            if (length($doneemailrecipient) > 0 and _can_log($logger)) {
                 my $email = {
                     to          => $doneemailrecipient,
 
@@ -146,7 +152,7 @@ sub done {
 
         }
     } else {
-        if (defined $logger) {
+        if (_can_log($logger)) {
             $logger->info($message);
         }
     }
@@ -166,12 +172,12 @@ sub completion {
 
         $message .= "\n\n" . 'time elapsed: ' . secs_to_years(ceil($appexitsecs - $appstartsecs));
 
-        if (defined $logger) {
+        if (_can_log($logger)) {
             $logger->info($message);
         }
 
         if (threadid() == $root_threadid) {
-            if (length($completionemailrecipient) > 0 and defined $logger) {
+            if (length($completionemailrecipient) > 0 and _can_log($logger)) {
                 my $email = {
                     to          => $completionemailrecipient,
 
@@ -191,7 +197,7 @@ sub completion {
 
         }
     } else {
-        if (defined $logger) {
+        if (_can_log($logger)) {
             $logger->info($message);
         }
     }
@@ -203,7 +209,7 @@ sub warning {
     my ($message,$logger,$sendemail) = @_;
 
     if (threadid() == $root_threadid and ($cli or $sendemail)) {
-        if ($sendemail and length($warnemailrecipient) > 0 and defined $logger) {
+        if ($sendemail and length($warnemailrecipient) > 0 and _can_log($logger)) {
             my ($mailresult,$mailresultmessage) = send_message($warnemailrecipient,$warnemailsubject . $logger->{category},getscriptpath() . ":\n\n" . wrap_mailbody($message) . "\n\n" . $signature,\&fileerror,\&emailwarn);
         }
         #carp($message);
@@ -235,7 +241,7 @@ sub terminate {
 
         $message .= "\n\n" . 'time elapsed: ' . secs_to_years(ceil($appexitsecs - $appstartsecs));
 
-        if (length($erroremailrecipient) > 0 and defined $logger) {
+        if (length($erroremailrecipient) > 0 and _can_log($logger)) {
             my ($mailresult,$mailresultmessage) = send_message($erroremailrecipient,$erroremailsubject . $logger->{category},getscriptpath() . ":\n\n" . wrap_mailbody($message) . "\n\n" . $signature,\&fileerror,\&emailwarn);
         }
         #croak($message);
@@ -260,7 +266,7 @@ sub terminate {
 sub notimplementederror {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -271,7 +277,7 @@ sub notimplementederror {
 sub faketimeerror {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -282,7 +288,7 @@ sub faketimeerror {
 sub runerror {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -294,7 +300,7 @@ sub dberror {
 
     my ($db, $message, $logger) = @_;
     $message = _getsqlconnectorinstanceprefix($db) . _getsqlconnectidentifiermessage($db,$message) if $cli;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -306,7 +312,7 @@ sub dbwarn {
 
     my ($db, $message, $logger) = @_;
     $message = _getsqlconnectorinstanceprefix($db) . _getsqlconnectidentifiermessage($db,$message) if $cli;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->warn($message);
     }
 
@@ -319,7 +325,7 @@ sub nosqlerror {
 
     my ($connector, $message, $logger) = @_;
     $message = _getnosqlconnectorinstanceprefix($connector) . _getnosqlconnectidentifiermessage($connector,$message);
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -331,7 +337,7 @@ sub nosqlwarn {
 
     my ($connector, $message, $logger) = @_;
     $message = _getnosqlconnectorinstanceprefix($connector) . _getnosqlconnectidentifiermessage($connector,$message);
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->warn($message);
     }
 
@@ -348,7 +354,7 @@ sub nosqlprocessingfailed {
         $msg .= '[' . $connectidentifier . '] ';
     }
     $msg .= $scan_pattern;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($msg);
     }
     terminate($msg, $logger);
@@ -359,7 +365,7 @@ sub resterror {
 
     my ($restapi, $message, $logger) = @_;
     $message = _getrestconnectorinstanceprefix($restapi) . _getrestconnectidentifiermessage($restapi,$message) if $cli;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -373,7 +379,7 @@ sub restwarn {
 
     my ($restapi, $message, $logger) = @_;
     $message = _getrestconnectorinstanceprefix($restapi) . _getrestconnectidentifiermessage($restapi,$message) if $cli;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->warn($message);
     }
 
@@ -386,7 +392,7 @@ sub restrequesterror {
 
     my ($restapi, $message, $request, $data, $logger) = @_;
     $message = _getrestconnectorinstanceprefix($restapi) . _getrestconnectidentifiermessage($restapi,$message) if $cli;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -400,7 +406,7 @@ sub restresponseerror {
 
     my ($restapi, $message, $response, $logger) = @_;
     $message = _getrestconnectorinstanceprefix($restapi) . _getrestconnectidentifiermessage($restapi,$message) if $cli;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -414,7 +420,7 @@ sub fieldnamesdiffer {
 
     my ($db,$tablename,$expectedfieldnames,$fieldnamesfound,$logger) = @_;
     my $message = _getsqlconnectorinstanceprefix($db) . 'wrong table fieldnames (v ' . $system_version . '): [' . $db->connectidentifier() . '].' . $tablename . ":\nexpected: " . ((defined $expectedfieldnames) ? join(', ',@$expectedfieldnames) : '<none>') . "\nfound:    " . ((defined $fieldnamesfound) ? join(', ',@$fieldnamesfound) : '<none>');
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -428,7 +434,7 @@ sub dbclustererror {
 
     my ($clustername,$message,$logger) = @_;
     $message = 'database cluster ' . $clustername . ': ' . $message;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -440,7 +446,7 @@ sub dbclusterwarn {
 
     my ($clustername,$message,$logger) = @_;
     $message = 'database cluster ' . $clustername . ': ' . $message;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->warn($message);
     }
 
@@ -453,7 +459,7 @@ sub transferzerorowcount {
 
     my ($db,$tablename,$target_db,$targettablename,$numofrows,$logger) = @_;
     my $message = _getsqlconnectorinstanceprefix($db) . '[' . $db->connectidentifier() . '].' . $tablename . ' has 0 rows';
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -467,7 +473,7 @@ sub processzerorowcount {
 
     my ($db,$tablename,$numofrows,$logger) = @_;
     my $message = '[' . $db->connectidentifier() . '].' . $tablename . ' has 0 rows';
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -480,7 +486,7 @@ sub processzerorowcount {
 sub rowprocessingerror {
 
     my ($tid, $message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error((($enablemultithreading and defined $tid) ? '[' . $tid . '] ' : '') . $message);
     }
     terminate($message, $logger);
@@ -490,7 +496,7 @@ sub rowprocessingerror {
 sub rowprocessingwarn {
 
     my ($tid, $message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->warn((($enablemultithreading and defined $tid) ? '[' . $tid . '] ' : '') . $message);
     }
     warning($message, $logger);
@@ -501,7 +507,7 @@ sub tabletransferfailed {
 
     my ($db,$tablename,$target_db,$targettablename,$numofrows,$logger) = @_;
     my $message = _getsqlconnectorinstanceprefix($db) . 'table transfer failed: [' . $db->connectidentifier() . '].' . $tablename . ' > ' . $targettablename;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
     terminate($message, $logger);
@@ -512,7 +518,7 @@ sub tableprocessingfailed {
 
     my ($db,$tablename,$numofrows,$logger) = @_;
     my $message = 'table processing failed: [' . $db->connectidentifier() . '].' . $tablename;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
     terminate($message, $logger);
@@ -523,7 +529,7 @@ sub deleterowserror {
 
     my ($db,$tablename,$message,$logger) = @_;
     $message = _getsqlconnectorinstanceprefix($db) . '[' . $db->connectidentifier() . '].' . $tablename . ' - ' . $message;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -534,7 +540,7 @@ sub deleterowserror {
 sub fileerror {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -549,7 +555,7 @@ sub processzerofilesize {
 
     my ($file,$logger) = @_;
     my $message = basename($file) . ' ' . (-e $file ? 'has 0 bytes' : 'not found');
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -563,7 +569,7 @@ sub fileprocessingfailed {
 
     my ($file,$logger) = @_;
     my $message = 'file processing failed: ' . basename($file);
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
     terminate($message, $logger);
@@ -574,7 +580,7 @@ sub fileprocessingerror {
 
     my ($file,$message,$logger) = @_;
     $message = basename($file) . ': ' . $message;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
     terminate($message, $logger);
@@ -585,7 +591,7 @@ sub fileprocessingwarn {
 
     my ($file,$message,$logger) = @_;
     $message = basename($file) . ': ' . $message;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->warn($message);
     }
     warning($message, $logger);
@@ -596,7 +602,7 @@ sub restprocessingfailed {
 
     my ($restapi,$path_query,$logger) = @_;
     my $message = 'collection processing failed: [' . $restapi->connectidentifier() . '] ' . $path_query;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
     terminate($message, $logger);
@@ -606,7 +612,7 @@ sub restprocessingfailed {
 sub xls2csverror {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -619,7 +625,7 @@ sub xls2csverror {
 sub webarchivexls2csverror {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -632,7 +638,7 @@ sub webarchivexls2csverror {
 sub filewarn {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->warn($message);
     }
 
@@ -644,7 +650,7 @@ sub filewarn {
 sub xls2csvwarn {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->warn($message);
     }
 
@@ -654,7 +660,7 @@ sub xls2csvwarn {
 sub webarchivexls2csvwarn {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->warn($message);
     }
 
@@ -665,7 +671,7 @@ sub webarchivexls2csvwarn {
 sub emailwarn {
 
     my ($message, $errormsg, $response, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         if (length($response) > 0) {
             $logger->warn($message . ': ' . $errormsg . ' \'' . $response . '\'');
         } else {
@@ -681,7 +687,7 @@ sub configurationwarn {
 
     my ($configfile,$message,$logger) = @_;
     $message = 'configuration file ' . $configfile . ': ' . $message;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->warn($message);
     }
     warning($message, $logger, 0);
@@ -692,7 +698,7 @@ sub configurationerror {
 
     my ($configfile,$message,$logger) = @_;
     $message = 'configuration file ' . $configfile . ': ' . $message;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -709,7 +715,7 @@ sub sortconfigerror {
     } else {
         $message = 'sort configuration: ' . $message;
     }
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -721,7 +727,7 @@ sub serviceerror {
 
     my ($service, $message, $logger) = @_;
     $message = '[' . $service->{tid} . '] ' . $service->identifier() . ' - ' . $message;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -733,7 +739,7 @@ sub servicewarn {
 
     my ($service, $message, $logger) = @_;
     $message = '[' . $service->{tid} . '] ' . $service->identifier() . ' - ' . $message;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->warn($message);
     }
 
@@ -760,7 +766,7 @@ sub _getsqlconnectorinstanceprefix {
 sub scripterror {
 
     my ($message, $logger) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->error($message);
     }
 
@@ -771,7 +777,7 @@ sub scripterror {
 sub scriptwarn {
 
     my ($message, $logger , $sendemail) = @_;
-    if (defined $logger) {
+    if (_can_log($logger)) {
         $logger->warn($message);
     }
 
