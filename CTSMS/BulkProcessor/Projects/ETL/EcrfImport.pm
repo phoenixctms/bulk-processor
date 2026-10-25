@@ -959,8 +959,6 @@ sub _register_proband {
                 my $probandlistentries = undef;
                 eval {
                     my $list_sf = { any_department => 'true' };
-                    my $dept_id = (($context->{ecrf_data_trial} // {})->{department} // {})->{id};
-                    $list_sf->{departmentId} = $dept_id if defined $dept_id and length($dept_id);
                     $probandlistentries = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::get_trial_list($ecrf_data_trial_id,
                         undef,$context->{proband}->{id},1,{},$list_sf);
                 };
