@@ -55,9 +55,6 @@ my $get_ecrfpdfvo_path_query = sub {
 
 my $fieldnames = [
     "ecrf",
-    "exportResponseMsg",
-    "exportStatus",
-    "exportTimestamp",
     "id",
     "listEntry",
     "modifiedTimestamp",

@@ -57,6 +57,7 @@ my $fieldnames = [
     "relevantForCourseAppointments",
     "userInitial",
     "userSelfRegistrationInitial",
+    "fileRequired",
 ];
 
 sub new {

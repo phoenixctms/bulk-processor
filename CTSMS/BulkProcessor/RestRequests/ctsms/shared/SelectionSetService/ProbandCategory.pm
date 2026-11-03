@@ -61,6 +61,7 @@ my $fieldnames = [
     "privacyConsentControl",
     "person",
     "animal",
+    "delete",
 ];
 
 sub new {

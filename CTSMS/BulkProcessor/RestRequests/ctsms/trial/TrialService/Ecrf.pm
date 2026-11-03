@@ -70,6 +70,7 @@ my $fieldnames = [
     "visits",
     "deferredDelete",
     "deferredDeleteReason",
+    "charge",
 ];
 
 sub new {

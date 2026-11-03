@@ -104,6 +104,8 @@ my $fieldnames = [
     "attachMassMailFilesOptional",
     "phoneToEmailFormat",
     "html",
+    "attachVisitPlans",
+    "ecrfStatusResend",
 ];
 
 sub new {

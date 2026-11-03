@@ -72,6 +72,8 @@ my $fieldnames = [
     "title",
     "trial",
     "version",
+    "departments",
+    "massMail",
 ];
 
 our $TRIAL_FILE_MODULE = 'TRIAL_DOCUMENT';

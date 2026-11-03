@@ -68,9 +68,6 @@ my $get_add_path_query = sub {
 
 
 my $fieldnames = [
-    "exportResponseMsg",
-    "exportStatus",
-    "exportTimestamp",
     "group",
     "id",
     "lastStatus",
@@ -81,7 +78,9 @@ my $fieldnames = [
     "trial",
     "version",
     "beacon",
-    "trialSignupUrl"
+    "inquirySignupUrl",
+    "rating",
+    "ratingMax",
 ];
 
 sub new {

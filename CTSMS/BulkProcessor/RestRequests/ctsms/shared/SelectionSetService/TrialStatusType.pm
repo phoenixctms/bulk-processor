@@ -52,6 +52,7 @@ my $fieldnames = [
     "name",
     "nameL10nKey",
     "nodeStyleClass",
+    "relevantForCourses",
 ];
 
 sub new {

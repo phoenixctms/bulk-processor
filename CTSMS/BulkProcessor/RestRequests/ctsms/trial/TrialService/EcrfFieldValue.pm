@@ -65,7 +65,7 @@ my $fieldnames = [
     "id",
     "index",
     "inkValues",
-    "lastFieldStatus",
+    "lastFieldStatuses",
     "lastUnresolvedFieldStatusEntry",
     "listEntry",
     "longValue",

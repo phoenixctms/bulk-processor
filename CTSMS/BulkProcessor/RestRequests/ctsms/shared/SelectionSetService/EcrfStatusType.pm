@@ -48,11 +48,15 @@ my $fieldnames = [
     "done",
     "id",
     "initial",
-    "lockdown",
     "name",
     "nameL10nKey",
     "nodeStyleClass",
     "reasonForChangeRequired",
+    "fieldStatusLockdown",
+    "valueLockdown",
+    "review",
+    "validated",
+    "verified",
 ];
 
 sub new {
