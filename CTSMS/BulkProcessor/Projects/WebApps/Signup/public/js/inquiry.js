@@ -1230,6 +1230,17 @@ function _setFileInputFile(context,value,file) {
     if (context.fileSizeLimit != null && file.size > context.fileSizeLimit) {
         $('#' + inquiryId + '_file_input').val('');
         setMessages('warn',[ { messageId: inquiryId, summary: context.fileSizeLimitExceededMessage } ]);
+        if ($('#' + inquiryId + '_file_state').val() == 'new') {
+            // the previously selected upload is gone with the cleared input, fall back to the server-known state
+            var restoredFileValue = (value.fileValue != null && (value._filePending || value.fileValue.id != null)) ? value.fileValue : null;
+            var state = '';
+            if (restoredFileValue != null) {
+                state = (value._filePending ? 'pending' : '' + restoredFileValue.id);
+            }
+            $('#' + inquiryId + '_file_state').val(state);
+            _showFileInfo(context,value,restoredFileValue,value._filePending);
+            _fileOnChange(value,restoredFileValue);
+        }
         return;
     }
     $('#' + inquiryId + '_file_state').val('new');
@@ -1313,6 +1324,8 @@ function _toggleFileCamera(context,value) {
         return;
     }
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }).then(function(stream) {
+        // a repeated click while the permission prompt was open may have stored another stream meanwhile
+        _stopFileCamera(inquiryId);
         var camera = $('#' + inquiryId + '_file_camera');
         var video = $('<video autoplay playsinline muted class="ctsms-file-camera-video"/>');
         video[0].srcObject = stream;
