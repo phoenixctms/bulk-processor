@@ -20,6 +20,7 @@ use CTSMS::BulkProcessor::RestItem qw();
 use CTSMS::BulkProcessor::Array qw(array_to_map);
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputFieldSelectionSetValue qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::MimeType qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::InputFieldType qw(
     $SINGLE_LINE_TEXT
     $MULTI_LINE_TEXT
@@ -42,6 +43,8 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Inpu
     $INTEGER
 
     $FLOAT
+
+    $FILE
 );
 
 require Exporter;
@@ -59,6 +62,7 @@ my $get_item_path_query = sub {
 };
 
 my $fieldnames = [
+    "allowedMimeTypes",
     "booleanPreset",
     "category",
     "topComment",
@@ -91,6 +95,7 @@ my $fieldnames = [
     "modifiedUser",
     "name",
     "nameL10nKey",
+    "photo",
     "regExp",
     "selectionSetValues",
     "strict",
@@ -157,6 +162,7 @@ sub builditems_fromrows {
 sub transformitem {
     my ($item,$load_recursive,$restapi) = @_;
     $item->{selectionSetValues} = CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputFieldSelectionSetValue::builditems_fromrows($item->{selectionSetValues},$load_recursive,$restapi);
+    $item->{allowedMimeTypes} = CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::MimeType::builditems_fromrows($item->{allowedMimeTypes},$load_recursive,$restapi);
     if ($load_recursive) {
         $load_recursive = {} unless ref $load_recursive;
         my $field = "_selectionSetValueMap";
@@ -196,6 +202,15 @@ sub is_text {
     my $self = shift;
     my $fieldtype = $self->{fieldType}->{nameL10nKey};
     if ($SINGLE_LINE_TEXT eq $fieldtype or $MULTI_LINE_TEXT eq $fieldtype or $AUTOCOMPLETE eq $fieldtype) {
+        return 1;
+    }
+    return 0;
+}
+
+sub is_file {
+    my $self = shift;
+    my $fieldtype = $self->{fieldType}->{nameL10nKey};
+    if ($FILE eq $fieldtype) {
         return 1;
     }
     return 0;

@@ -37,6 +37,7 @@ our @EXPORT_OK = qw(
     $INTEGER
     $SKETCH
     $FLOAT
+    $FILE
 );
 
 our $SINGLE_LINE_TEXT = 'SINGLE_LINE_TEXT';
@@ -54,6 +55,7 @@ our $SELECT_MANY_V = 'SELECT_MANY_V';
 our $INTEGER = 'INTEGER';
 our $SKETCH = 'SKETCH';
 our $FLOAT = 'FLOAT';
+our $FILE = 'FILE';
 
 my $default_restapi = \&get_ctsms_restapi;
 my $get_items_path_query = sub {

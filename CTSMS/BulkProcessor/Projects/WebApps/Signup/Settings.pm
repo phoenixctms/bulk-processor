@@ -87,12 +87,16 @@ our @EXPORT_OK = qw(
 
     $rest_api_jwt_reissue_on_ajax
     $input_field_integer_text
+
+    $file_uploads_path
+    $input_field_file_size_limit
 );
 
 our $defaultconfig = 'config.cfg';
 our $defaultsettings = 'settings.yml';
 
 our $dancer_sessions_path = $working_path . 'sessions/';
+our $file_uploads_path = $working_path . 'uploads/';
 our $dancer_environment = 'development';
 our $default_language_code = 'en';
 our $dancer_maketext_options = { Style => 'gettext' };
@@ -136,6 +140,10 @@ our $rest_api_jwt_reissue_on_ajax = 0;
 # Set input_field_integer_text: false in settings.yml to restore the spinner.
 our $input_field_integer_text = 1;
 
+# Max. size (bytes) of a FILE inquiry upload, checked before it is kept for saving.
+# undef: no limit here (the server still enforces its external file content size limit).
+our $input_field_file_size_limit = undef;
+
 sub update_settings {
 
     my ($data,$configfile) = @_;
@@ -170,6 +178,7 @@ sub update_settings {
         $favicon = $data->{favicon} if exists $data->{favicon};
         $rest_api_jwt_reissue_on_ajax = stringtobool($data->{rest_api_jwt_reissue_on_ajax}) if exists $data->{rest_api_jwt_reissue_on_ajax};
         $input_field_integer_text = stringtobool($data->{input_field_integer_text}) if exists $data->{input_field_integer_text};
+        $input_field_file_size_limit = $data->{input_field_file_size_limit} if exists $data->{input_field_file_size_limit};
 
         $ctsms_sites = $data->{ctsms_sites} if exists $data->{ctsms_sites};
         $default_site = undef;
@@ -329,6 +338,8 @@ sub _prepare_working_paths {
     my $path_result;
 
     ($path_result,$dancer_sessions_path) = create_path($working_path . 'sessions',$dancer_sessions_path,$create,\&fileerror,getlogger(__PACKAGE__));
+    $result &= $path_result;
+    ($path_result,$file_uploads_path) = create_path($working_path . 'uploads',$file_uploads_path,$create,\&fileerror,getlogger(__PACKAGE__));
     $result &= $path_result;
 
 

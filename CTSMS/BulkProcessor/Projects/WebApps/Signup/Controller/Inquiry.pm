@@ -9,6 +9,8 @@ use Dancer qw();
 use HTTP::Status qw();
 
 use POSIX qw(ceil);
+use File::Basename qw();
+use File::Spec qw();
 
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     json_response
@@ -56,6 +58,8 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $convert_timezone
     $ctsms_sites
     $input_field_integer_text
+    $file_uploads_path
+    $input_field_file_size_limit
 );
 
 
@@ -63,6 +67,8 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListE
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::ProbandAddress qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValue qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::MimeType qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::InputFieldType qw(
     $SINGLE_LINE_TEXT
     $MULTI_LINE_TEXT
@@ -79,9 +85,10 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Inpu
     $INTEGER
     $SKETCH
     $FLOAT
+    $FILE
 );
 
-use CTSMS::BulkProcessor::Utils qw(trim stringtobool string_to_utf8bytes utf8bytes_to_string);
+use CTSMS::BulkProcessor::Utils qw(trim stringtobool string_to_utf8bytes utf8bytes_to_string tempfilename human_readable_byte_count);
 use CTSMS::BulkProcessor::Array qw(removeduplicates array_to_map);
 
 my $listentry_load_all_existing_inquiryvalues = 1;
@@ -104,7 +111,12 @@ my %field_to_param_type_map = (
     $INTEGER => [ 'long' ],
     $SKETCH => [ 'ink' ],
     $FLOAT => [ 'float' ],
+    $FILE => [ 'file' ],
 );
+# the file_<inquiry id> param holds the FILE value state:
+# '' = clear, '<file id>' = keep the saved file, 'new' = upload in fileupload_<inquiry id>, 'pending' = keep the not yet saved upload
+my $file_upload_param_prefix = 'fileupload_';
+my %mime_types_cache = ();
 my $param_value_types = removeduplicates([ map { @{$_}; } values %field_to_param_type_map ]);
 my $param_value_types_re = '^(' . join('|',@$param_value_types) . ')_(\\d+)$';
 $param_value_types_re = qr/$param_value_types_re/;
@@ -216,9 +228,45 @@ Dancer::get('/inquiry',sub {
             sketchPenOpacity1Tooltip => Dancer::Plugin::I18N::localize('sketch_pen_opacity_1_tooltip'),
             sketchPenOpacity2Tooltip => Dancer::Plugin::I18N::localize('sketch_pen_opacity_2_tooltip'),
 
+            fileUploadLabel => Dancer::Plugin::I18N::localize('file_upload_label'),
+            fileClearLabel => Dancer::Plugin::I18N::localize('file_clear_label'),
+            fileTakePhotoLabel => Dancer::Plugin::I18N::localize('file_take_photo_label'),
+            fileLinkLabel => Dancer::Plugin::I18N::localize('file_link_label'),
+            fileSizeLimit => $input_field_file_size_limit,
+            fileSizeLimitExceededMessage => (defined $input_field_file_size_limit ? Dancer::Plugin::I18N::localize('file_size_limit_exceeded',human_readable_byte_count($input_field_file_size_limit)) : undef),
+            fileMimeTypes => _get_file_mime_types(),
+
         },
 
     );
+});
+
+Dancer::get('/inquiry/file/:inquiry_id',sub {
+
+    my $params = Dancer::params();
+
+    # only values of the session's proband are reachable: the value id is looked up in the session, never taken from the request
+    my $trial = Dancer::session('trial');
+    my $trial_inquiries_saved_map = Dancer::session('trial_inquiries_saved_map') // {};
+    my $saved = ($trial ? $trial_inquiries_saved_map->{$trial->{id}} : undef) // {};
+    my $saved_value = $saved->{$params->{inquiry_id}};
+    my $inquiry_value_id = ($saved_value ? $saved_value->{id} : undef);
+
+    my $file_response;
+    if (CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::created() and $inquiry_value_id) {
+        eval {
+            $file_response = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValue::download_file(
+                $inquiry_value_id,
+                $restapi,
+            );
+        };
+    }
+    if ($@ or not $file_response) {
+        Dancer::status(HTTP::Status::HTTP_NOT_FOUND);
+    } else {
+        return apply_lwp_file_response($file_response,$saved_value->{file_name},0);
+    }
+
 });
 
 Dancer::post('/inquiries',sub {
@@ -580,7 +628,7 @@ sub _load_inquiryvalues {
         foreach my $selection_set_value (@{$inquiry_value->{inquiry}->{field}->{selectionSetValues}}) {
             $strokes_id_map->{$selection_set_value->{strokesId}} = $selection_set_value->{id} if (defined $selection_set_value->{strokesId} and length($selection_set_value->{strokesId}) > 0);
         }
-        $inquiries_saved_map->{$inquiry_value->{inquiry}->{id}} = { id => $inquiry_value->{id}, version => $inquiry_value->{version}, user_timezone => $inquiry_value->{inquiry}->{field}->{userTimeZone}, };
+        $inquiries_saved_map->{$inquiry_value->{inquiry}->{id}} = _get_saved_value($inquiry_value);
     }
     $trial_inquiries_saved_map->{$trial->{id}} = $inquiries_saved_map;
     Dancer::session('trial_inquiries_saved_map', $trial_inquiries_saved_map);
@@ -596,11 +644,12 @@ sub _save_page {
     my ($trial,$posted_inquiries_map) = @_;
     my $trial_inquiries_saved_map = Dancer::session('trial_inquiries_saved_map') // {};
     my $inquiries_saved_map = $trial_inquiries_saved_map->{$trial->{id}} // {};
-    my $in = _get_inquiryvalues_in($posted_inquiries_map,$inquiries_saved_map);
+    my ($in,$files) = _get_inquiryvalues_in($posted_inquiries_map,$inquiries_saved_map);
     my $out = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues::set_inquiryvalues($in,0,
-        ($convert_timezone ? undef : get_input_timezone()),0,$restapi);
+        ($convert_timezone ? undef : get_input_timezone()),0,$restapi,undef,$files);
+    _delete_posted_uploads($posted_inquiries_map);
     foreach my $inquiry_value (@{$out->{rows}}) {
-       $inquiries_saved_map->{$inquiry_value->{inquiry}->{id}} = { id => $inquiry_value->{id}, version => $inquiry_value->{version}, user_timezone => $inquiry_value->{inquiry}->{field}->{userTimeZone}, };
+       $inquiries_saved_map->{$inquiry_value->{inquiry}->{id}} = _get_saved_value($inquiry_value);
        Dancer::debug('inquiry value ' . $inquiry_value->{id} . ' set');
     }
     $trial_inquiries_saved_map->{$trial->{id}} = $inquiries_saved_map;
@@ -682,6 +731,24 @@ sub _restore_from_session {
                     $override_value = $session_value->[0]->{value};
                     (undef,$inquiry_value->{selectionValues}) = _unpack_inkvalue($override_value,$inquiry_value->{inquiry}->{field}->{selectionSetValues});
                 }
+            } elsif ('file' eq $type) {
+                my $file_value = _get_file_session_value($session_value);
+                my $state = ($file_value ? $file_value->{value} : undef) // '';
+                $inquiry_value->{_savedFileValue} = $original_value unless $is_js;
+                if ($file_value and $file_value->{upload}) {
+                    my $upload = $file_value->{upload};
+                    my $image = ((defined $upload->{mimeType} and $upload->{mimeType} =~ m!^image/!i) ? \1 : \0);
+                    if ($is_js) {
+                        $override_value = { fileName => $upload->{fileName}, mimeType => $upload->{mimeType}, image => $image, size => $upload->{size}, };
+                    } else {
+                        $override_value = { fileName => $upload->{fileName}, size => $upload->{size}, contentType => { mimeType => $upload->{mimeType}, image => $image, }, };
+                        $inquiry_value->{_filePending} = \1;
+                    }
+                } elsif ($state =~ /^\d+$/ and $original_value and $original_value->{id} and $original_value->{id} == $state) {
+                    $override_value = $original_value;
+                } else {
+                    $override_value = undef;
+                }
             } else {
                 $override_value = $session_value->[-1]->{value};
             }
@@ -695,6 +762,98 @@ sub _restore_from_session {
     }
     return @original_values;
 
+}
+
+sub _get_saved_value {
+    my ($inquiry_value) = @_;
+    # a pending upload overrides fileValue for display, keep the name of the saved file for the download
+    my $file = (exists $inquiry_value->{_savedFileValue} ? $inquiry_value->{_savedFileValue} : $inquiry_value->{fileValue});
+    return {
+        id => $inquiry_value->{id},
+        version => $inquiry_value->{version},
+        user_timezone => $inquiry_value->{inquiry}->{field}->{userTimeZone},
+        file_name => (($file and $file->{id}) ? $file->{fileName} : undef),
+    };
+}
+
+sub _get_file_mime_types {
+    # the INPUT_FIELD_VALUE_FILE mime types, for FILE fields without allowedMimeTypes
+    my $site_name = get_site_name() // '';
+    unless (exists $mime_types_cache{$site_name}) {
+        my $mime_types;
+        eval {
+            $mime_types = CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::MimeType::get_items(
+                $CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::MimeType::INPUT_FIELD_VALUE_FILE_MODULE,
+                0,$restapi);
+        };
+        if ($@ or not $mime_types) {
+            Dancer::error('failed to load file mime types: ' . ($@ // ''));
+            return [];
+        }
+        $mime_types_cache{$site_name} = [ map { { mimeType => $_->{mimeType}, fileNameExtensions => $_->{fileNameExtensions}, image => $_->{image}, }; } @$mime_types ];
+    }
+    return $mime_types_cache{$site_name};
+}
+
+sub _is_upload_path {
+    my ($path) = @_;
+    return 0 unless (defined $path and length($path) > 0 and -f $path);
+    my ($name,$dir) = File::Basename::fileparse($path);
+    return (File::Spec->canonpath($dir) eq File::Spec->canonpath($file_uploads_path) and $name =~ /^upload_\w+$/) ? 1 : 0;
+}
+
+sub _store_upload {
+    my ($upload) = @_;
+    my %stored = (
+        fileName => $upload->filename,
+        mimeType => $upload->type,
+        size => $upload->size,
+    );
+    if (not defined $input_field_file_size_limit or $upload->size <= $input_field_file_size_limit) {
+        # keep the upload until the page is saved, only the path goes to the session
+        my $path = tempfilename('upload_XXXXXXXXXX',$file_uploads_path);
+        if ($upload->copy_to($path)) {
+            $stored{path} = $path;
+        } else {
+            Dancer::error('failed to store upload ' . $upload->filename . ': ' . $!);
+            unlink $path;
+        }
+    }
+    return \%stored;
+}
+
+sub _delete_upload {
+    my ($upload) = @_;
+    if ($upload and _is_upload_path($upload->{path})) {
+        unlink $upload->{path} or Dancer::error('failed to delete upload ' . $upload->{path} . ': ' . $!);
+    }
+}
+
+sub _get_file_session_value {
+    my ($session_values) = @_;
+    foreach my $session_value (@{$session_values // []}) {
+        return $session_value if 'file' eq $session_value->{type};
+    }
+    return undef;
+}
+
+sub _delete_posted_uploads {
+    my ($posted_inquiries_map,$keep_paths) = @_;
+    $keep_paths //= {};
+    foreach my $session_values (values %{$posted_inquiries_map // {}}) {
+        my $file_value = _get_file_session_value($session_values);
+        _delete_upload($file_value->{upload}) if ($file_value and $file_value->{upload} and not exists $keep_paths->{$file_value->{upload}->{path} // ''});
+    }
+}
+
+sub delete_pending_uploads {
+    # called before the session is destroyed
+    my $session = Dancer::session();
+    return unless defined $session;
+    my @keys = eval { keys %$session };
+    foreach my $key (grep { /^posted_inquiries_map_/; } @keys) {
+        _delete_posted_uploads(Dancer::session($key));
+    }
 }
 
 sub _pack_inkvalue {
@@ -744,6 +903,7 @@ sub _unpack_inkvalue {
 
 sub _save_page_params {
     my ($trial,$all_pages) = @_;
+    my $previous_posted_inquiries_map = Dancer::session('posted_inquiries_map_' . $trial->{id}) // {};
     my $posted_inquiries_map;
     if ($all_pages) {
         $posted_inquiries_map = Dancer::session('posted_inquiries_map_' . $trial->{id});
@@ -775,6 +935,36 @@ sub _save_page_params {
             },
         }
     );
+    foreach my $inquiry_id (keys %seen_inquiry_ids) {
+        my $file_value = _get_file_session_value($posted_inquiries_map->{$inquiry_id});
+        next unless $file_value;
+        my $state = $file_value->{value} // '';
+        if ('new' eq $state) {
+            my $upload = Dancer::upload($file_upload_param_prefix . $inquiry_id);
+            $upload = $upload->[0] if 'ARRAY' eq ref $upload;
+            if ($upload and $upload->size > 0) {
+                $file_value->{upload} = _store_upload($upload);
+                Dancer::debug('upload saved: ', $file_value->{upload}->{fileName}, $file_value->{upload}->{size});
+            } else {
+                $state = 'pending';
+            }
+        }
+        if ('pending' eq $state) {
+            my $previous_file_value = _get_file_session_value($previous_posted_inquiries_map->{$inquiry_id});
+            if ($previous_file_value and $previous_file_value->{upload}) {
+                $file_value->{upload} = $previous_file_value->{upload};
+            } else {
+                # nothing to keep: leave the value unchanged
+                delete $posted_inquiries_map->{$inquiry_id};
+            }
+        }
+    }
+    my %keep_paths = ();
+    foreach my $session_values (values %$posted_inquiries_map) {
+        my $file_value = _get_file_session_value($session_values);
+        $keep_paths{$file_value->{upload}->{path}} = 1 if ($file_value and $file_value->{upload} and defined $file_value->{upload}->{path});
+    }
+    _delete_posted_uploads($previous_posted_inquiries_map,\%keep_paths);
     Dancer::session('posted_inquiries_map_' . $trial->{id},$posted_inquiries_map);
     return $posted_inquiries_map;
 }
@@ -785,6 +975,7 @@ sub _get_inquiryvalues_in {
     my $proband_id = Dancer::session('proband_id');
     my $strokes_id_map = Dancer::session('strokes_id_map') // {};
     my @result = ();
+    my @files = ();
     foreach my $inquiry_id (keys %$posted_inquiries_map) {
         my $session_values = $posted_inquiries_map->{$inquiry_id};
         my %in = ();
@@ -823,6 +1014,21 @@ sub _get_inquiryvalues_in {
             } elsif ('ink' eq $type) {
                 ($in{inkValues},$in{selectionValueIds}) = _unpack_inkvalue($session_value->{value},$strokes_id_map);
                 $in{inkValues} = string_to_utf8bytes($in{inkValues});
+            } elsif ('file' eq $type) {
+                my $state = $session_value->{value} // '';
+                $in{fileValueId} = undef;
+                $in{fileValue} = undef;
+                if (my $upload = $session_value->{upload}) {
+                    if (defined $input_field_file_size_limit and $upload->{size} > $input_field_file_size_limit) {
+                        &$error_code(undef,Dancer::Plugin::I18N::localize('file_size_limit_exceeded',human_readable_byte_count($input_field_file_size_limit)));
+                    } elsif (not _is_upload_path($upload->{path})) {
+                        &$error_code(undef,"file upload $upload->{fileName} not available");
+                    }
+                    # multipart part data_<n> for the n-th element of the value list
+                    push(@files,{ name => 'data_' . (scalar @result), file => $upload->{path}, filename => $upload->{fileName}, content_type => $upload->{mimeType}, });
+                } elsif ($state =~ /^\d+$/) {
+                    $in{fileValueId} = $state;
+                }
             } else {
                 $in{$field_name} = $session_value->{value};
             }
@@ -832,7 +1038,7 @@ sub _get_inquiryvalues_in {
         push(@result,\%in);
     }
 
-    return \@result;
+    return (\@result,\@files);
 }
 
 1;

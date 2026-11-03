@@ -78,6 +78,7 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Inpu
     $FLOAT
 
     $SKETCH
+    $FILE
 
     $AUTOCOMPLETE
 );
@@ -342,17 +343,22 @@ sub _init_horizontal_record {
     
             my %disabled_inquiry_map = ();
             my %sketch_inputfield_map = ();
+            my %file_inputfield_map = ();
             $context->{columns} = [];
             my $message;
             foreach my $column (@columns) {
                 next if exists $disabled_inquiry_map{$column->{inquiry}->{id}};
                 next if exists $sketch_inputfield_map{$column->{inquiry}->{field}->{id}};
+                next if exists $file_inputfield_map{$column->{inquiry}->{field}->{id}};
                 if ($column->{inquiry}->{disabled}) {
                     $message = "skipping disabled inquiry: $column->{inquiry}->{uniqueName}";
                     $disabled_inquiry_map{$column->{inquiry}->{id}} = $column->{inquiry};
                 } elsif ($column->{inquiry}->{field}->{fieldType}->{type} eq $SKETCH) {
                     $message = "skipping sketch input field: $column->{inquiry}->{field}->{name}";
                     $sketch_inputfield_map{$column->{inquiry}->{field}->{id}} = $column->{inquiry}->{field};
+                } elsif ($column->{inquiry}->{field}->{fieldType}->{type} eq $FILE) {
+                    $message = "skipping file input field: $column->{inquiry}->{field}->{name}";
+                    $file_inputfield_map{$column->{inquiry}->{field}->{id}} = $column->{inquiry}->{field};
                 } else {
                     $message = "column '$column->{colname}' mapped to $column->{inquiry}->{uniqueName}";
                     push(@{$context->{columns}},$column);

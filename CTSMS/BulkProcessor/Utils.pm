@@ -61,6 +61,7 @@ our @EXPORT_OK = qw(
     urldecode
     utf8bytes_to_string
     string_to_utf8bytes
+    human_readable_byte_count
     timestamp
     datestamp
     timestamp_fromepochsecs
@@ -404,6 +405,19 @@ sub string_to_utf8bytes {
     if (defined $string) {
         return [ map { ord($_); } split(//, encode_utf8($string)) ];
     }
+}
+
+sub human_readable_byte_count {
+    # same format as CommonUtil.humanReadableByteCount (binary units, e.g. "1.5 MiB")
+    my ($bytes,$decimal_separator) = @_;
+    return undef unless defined $bytes;
+    my $unit = 1024;
+    return $bytes . ' B' if $bytes < $unit;
+    my $exp = int(log($bytes) / log($unit));
+    $exp = 6 if $exp > 6;
+    my $result = sprintf('%.1f %siB', $bytes / ($unit ** $exp), substr('KMGTPE', $exp - 1, 1));
+    $result =~ s/\./$decimal_separator/ if defined $decimal_separator and length($decimal_separator);
+    return $result;
 }
 
 sub timestamp {

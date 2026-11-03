@@ -101,6 +101,7 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Inpu
     $FLOAT
 
     $SKETCH
+    $FILE
 
     $AUTOCOMPLETE
 );
@@ -368,6 +369,13 @@ sub _init_context {
     }
 
     $context->{all_listentrytag_map} = get_probandlistentrytag_map($context);
+    foreach my $tag_col (keys %{$context->{all_listentrytag_map}}) {
+        my $listentrytag = $context->{all_listentrytag_map}->{$tag_col};
+        if ($listentrytag->{field}->{fieldType}->{type} eq $FILE) {
+            processing_debug($context->{tid},"skipping file proband list attribute: $listentrytag->{field}->{name}",getlogger(__PACKAGE__));
+            delete $context->{all_listentrytag_map}->{$tag_col};
+        }
+    }
     $context->{listentrytag_map} = { %{$context->{all_listentrytag_map}} };
 
     $context->{ecrf_map} = get_ecrf_map($context,1);
@@ -536,12 +544,14 @@ sub _init_horizontal_record {
             my %disabled_ecrf_map = ();
             my %disabled_ecrffield_map = ();
             my %sketch_inputfield_map = ();
+            my %file_inputfield_map = ();
             $context->{columns} = [];
             my $message;
             foreach my $column (@columns) {
                 next if exists $disabled_ecrf_map{$column->{ecrffield}->{ecrf}->{id}};
                 next if exists $disabled_ecrffield_map{$column->{ecrffield}->{id}};
                 next if exists $sketch_inputfield_map{$column->{ecrffield}->{field}->{id}};
+                next if exists $file_inputfield_map{$column->{ecrffield}->{field}->{id}};
                 if ($column->{ecrffield}->{ecrf}->{disabled}) {
                     $message = "skipping disabled eCRF: $column->{ecrffield}->{ecrf}->{uniqueName}";
                     $disabled_ecrf_map{$column->{ecrffield}->{ecrf}->{id}} = $column->{ecrffield}->{ecrf};
@@ -551,6 +561,9 @@ sub _init_horizontal_record {
                 } elsif ($column->{ecrffield}->{field}->{fieldType}->{type} eq $SKETCH) {
                     $message = "skipping sketch input field: $column->{ecrffield}->{field}->{name}";
                     $sketch_inputfield_map{$column->{ecrffield}->{field}->{id}} = $column->{ecrffield}->{field};
+                } elsif ($column->{ecrffield}->{field}->{fieldType}->{type} eq $FILE) {
+                    $message = "skipping file input field: $column->{ecrffield}->{field}->{name}";
+                    $file_inputfield_map{$column->{ecrffield}->{field}->{id}} = $column->{ecrffield}->{field};
                 } else {
                     $message = "column '$column->{colname}' mapped to $column->{ecrffield}->{uniqueName}";
                     push(@{$context->{columns}},$column);
