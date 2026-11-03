@@ -22,6 +22,7 @@ use CTSMS::BulkProcessor::Array qw(array_to_map);
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTag qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputFieldSelectionSetValue qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File qw();
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::InputFieldType qw(
     $CHECKBOX
@@ -32,6 +33,7 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Inpu
     $INTEGER
     $FLOAT
 
+    $FILE
 );
 
 require Exporter;
@@ -40,6 +42,8 @@ our @EXPORT_OK = qw(
     get_item
     get_item_path
 
+    get_file
+    download_file
 );
 
 
@@ -48,11 +52,20 @@ my $get_item_path_query = sub {
     my ($id) = @_;
     return 'probandlistentrytagvalue/' . $id;
 };
+my $get_file_path_query = sub {
+    my ($id) = @_;
+    return 'probandlistentrytagvalue/' . $id . '/file/head';
+};
+my $download_file_path_query = sub {
+    my ($id) = @_;
+    return 'probandlistentrytagvalue/' . $id . '/file';
+};
 
 
 my $fieldnames = [
     "booleanValue",
     "dateValue",
+    "fileValue",
     "floatValue",
     "id",
     "inkValues",
@@ -84,6 +97,22 @@ sub get_item {
     my ($id,$load_recursive,$restapi,$headers) = @_;
     my $api = _get_api($restapi,$default_restapi);
     return builditems_fromrows($api->get(&$get_item_path_query($id),$headers),$load_recursive,$restapi);
+
+}
+
+sub get_file {
+
+    my ($id,$load_recursive,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::builditems_fromrows($api->get(&$get_file_path_query($id),$headers),$load_recursive,$restapi);
+
+}
+
+sub download_file {
+
+    my ($id,$restapi,$headers) = @_;
+    my $api = _get_api($restapi,$default_restapi);
+    return $api->get_file(&$download_file_path_query($id),$headers);
 
 }
 
@@ -119,6 +148,7 @@ sub transformitem {
     $item->{listEntry} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::builditems_fromrows($item->{listEntry},$load_recursive,$restapi);
     $item->{tag} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTag::builditems_fromrows($item->{tag},$load_recursive,$restapi);
     $item->{inkValues} = utf8bytes_to_string($item->{inkValues});
+    $item->{fileValue} = CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::builditems_fromrows($item->{fileValue},$load_recursive,$restapi);
     $item->{selectionValues} = CTSMS::BulkProcessor::RestRequests::ctsms::shared::InputFieldService::InputFieldSelectionSetValue::builditems_fromrows($item->{selectionValues},$load_recursive,$restapi);
     if ($load_recursive) {
         $load_recursive = {} unless ref $load_recursive;
@@ -155,6 +185,8 @@ sub _get_item_value {
         return ($item->{floatValue} // '');
     } elsif ($INTEGER eq $fieldtype) {
         return ($item->{longValue} // '');
+    } elsif ($FILE eq $fieldtype) {
+        return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::get_file_label($item->{fileValue}) // '');
     } elsif ($item->{tag}->{field}->is_text()) {
         return ($item->{textValue} // '');
     } elsif ($item->{tag}->{field}->is_select()) {

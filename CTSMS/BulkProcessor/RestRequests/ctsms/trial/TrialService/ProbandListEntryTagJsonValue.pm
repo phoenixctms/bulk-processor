@@ -25,6 +25,7 @@ my $fieldnames = [
     "booleanValue",
     "dateValue",
     "disabled",
+    "fileValue",
     "floatValue",
     "id",
     "inkValues",

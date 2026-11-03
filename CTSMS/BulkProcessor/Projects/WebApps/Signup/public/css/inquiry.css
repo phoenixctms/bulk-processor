@@ -52,3 +52,22 @@
 .ctsms-inputfield-output-disabled {
     display: none;
 }
+
+.ctsms-file-info {
+    margin-bottom: 5px;
+    word-break: break-all;
+}
+
+.ctsms-file-buttons > button {
+    margin-right: 3px;
+}
+
+.ctsms-file-camera {
+    margin-top: 5px;
+}
+
+.ctsms-file-camera-video {
+    display: block;
+    max-width: 100%;
+    margin-bottom: 3px;
+}

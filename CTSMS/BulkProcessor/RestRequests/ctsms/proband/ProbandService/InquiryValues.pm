@@ -106,8 +106,12 @@ sub get_inquiryvalues {
 
 sub set_inquiryvalues {
 
-    my ($in,$force,$tz,$load_recursive,$restapi,$headers) = @_;
+    # $files: optional multipart file parts for FILE values, named 'data_<n>' for $in->[n] (see put_files)
+    my ($in,$force,$tz,$load_recursive,$restapi,$headers,$files) = @_;
     my $api = _get_api($restapi,$default_restapi);
+    if ($files and scalar @$files) {
+        return builditems_fromrows($api->put_files(&$get_setinquiryvalues_path_query($force,$tz),$in,$files,$headers),$load_recursive,$restapi);
+    }
     return builditems_fromrows($api->put(&$get_setinquiryvalues_path_query($force,$tz),$in,$headers),$load_recursive,$restapi);
 
 }

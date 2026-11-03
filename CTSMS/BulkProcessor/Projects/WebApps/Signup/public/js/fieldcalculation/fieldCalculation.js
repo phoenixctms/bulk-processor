@@ -200,6 +200,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	    'mustBeUnselected'       : " darf nicht gesetzt sein",
 	    'mustBeUnmarked'         : " darf nicht markiert sein",
 	    'selectOneMultipleSelectionIds' : "darf höchstens eine Auswahl-ID liefern (erhalten: %d)",
+	    'fileValueNotSettable'   : "Dateiwerte können nicht durch Ausdrücke gesetzt werden",
 
 	    'true'                   : "angekreuzt",
 	    'false'                  : "nicht angekreuzt",
@@ -259,6 +260,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	    'mustBeUnselected'       : " must not be selected",
 	    'mustBeUnmarked'         : " must not be marked",
 	    'selectOneMultipleSelectionIds' : "must return at most one selection id (got %d)",
+	    'fileValueNotSettable'   : "file values cannot be set by expressions",
 
 	    'true'                   : "checked",
 	    'false'                  : "unchecked",
@@ -565,7 +567,10 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			if (evaluation != null) {
 				inputFieldVariable.oldValue = _cloneJSON(inputFieldVariable.value);
 				inputFieldVariable.valueErrorMessage = evaluation.errorMessage;
-				if (evaluation.errorMessage == null || evaluation.errorMessage.length == 0) {
+				if (inputFieldVariable.value.inputFieldType == "FILE") {
+					var locale = (inputFieldVars.locale != null && (inputFieldVars.locale in localizedMessages)) ? inputFieldVars.locale : defaultLocale;
+					inputFieldVariable.valueErrorMessage = "value expression " + inputFieldVariable.value.jsVariableName + ": " + localizedMessages[locale]['fileValueNotSettable'];
+				} else if (evaluation.errorMessage == null || evaluation.errorMessage.length == 0) {
 					try {
 						_setInputFieldVariableValue(inputFieldVariable.value, evaluation.returnValue);
 					} catch (e) {
@@ -880,6 +885,8 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 					return localizedMessages[inputFieldVars.locale].noSelectionLabel;
 			    }
 				return _printSelectionSetValues(value.ids,formatOrSeparator, selectionSetValueFieldOrLocale);
+			} else if(typeof value === "object" && 'fileName' in value){
+				return value.fileName != null ? value.fileName : '';
 			} else {
 
 			}
@@ -1592,6 +1599,10 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	function _setVariable(variable, value, apply) {
 	    var inputFieldVar = _getInputFieldVariable(variable);
 		if (inputFieldVar) {
+			if (inputFieldVar.value.inputFieldType == "FILE") {
+				var locale = (inputFieldVars.locale != null && (inputFieldVars.locale in localizedMessages)) ? inputFieldVars.locale : defaultLocale;
+				throw { msg: "setVariable " + inputFieldVar.value.jsVariableName + ": " + localizedMessages[locale]['fileValueNotSettable'] };
+			}
 		    inputFieldVar.oldValue = _cloneJSON(inputFieldVar.value);
 			_setInputFieldVariableValue(inputFieldVar.value, value);
 			if (FIELD_CALCULATION_DEBUG_LEVEL >= 1) {
@@ -1632,6 +1643,9 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			case "MULTI_LINE_TEXT":
 			case "AUTOCOMPLETE":
 				inputFieldVariableValue.textValue = (newValue == null ? null : ('' + newValue));
+				break;
+			case "FILE":
+				inputFieldVariableValue.fileValue = _getFileJsonValue(newValue);
 				break;
 			case "SKETCH":
 				inputFieldVariableValue.inkValues = newValue.ink;
@@ -1792,6 +1806,8 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 				result.ink = inputFieldVariableValue.inkValues;
 				result.ids = inputFieldVariableValue.selectionValueIds;
 				return result;
+			case "FILE":
+				return _getFileJsonValue(inputFieldVariableValue.fileValue);
 			default:
 
 			}
@@ -1833,6 +1849,8 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 				return _dateEqual(value.timestampValue, enteredValue.timestampValue);
 			case "SKETCH":
 				return value.inkValues == enteredValue.inkValues && _selectionSetValueIdsEqual(value.selectionValueIds, enteredValue.selectionValueIds);
+			case "FILE":
+				return _fileValuesEqual(value.fileValue, enteredValue.fileValue);
 			default:
 
 			}
@@ -1858,6 +1876,9 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		if (typeof a === 'object' && typeof b === 'object' && (('ids' in a) || ('ink' in a)) && (('ids' in b) || ('ink' in b))) {
 			return a.ink == b.ink && _selectionSetValueIdsEqual(a.ids, b.ids);
 		}
+		if (typeof a === 'object' && typeof b === 'object' && ('fileName' in a) && ('fileName' in b)) {
+			return _fileValuesEqual(a, b);
+		}
 		if (typeof a.equals === 'function' && typeof b.equals === 'function') {
 			return a.equals(b);
 		}
@@ -1871,6 +1892,43 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			return a === b;
 		}
 		return false;
+	}
+
+	// FILE values are FileJsonVO objects { id, fileName, mimeType, image, size, md5 } (or null).
+	// id is omitted for not yet saved uploads; size and md5 are compared only if both sides carry them.
+	function _getFileJsonValue(fileValue) {
+		if (fileValue == null || typeof fileValue !== 'object') {
+			return null;
+		}
+		var result = {};
+		if (fileValue.id) {
+			result.id = fileValue.id;
+		}
+		result.fileName = (fileValue.fileName != null ? fileValue.fileName : null);
+		result.mimeType = (fileValue.mimeType != null ? fileValue.mimeType : null);
+		result.image = !!fileValue.image;
+		if (fileValue.size != null) {
+			result.size = fileValue.size;
+		}
+		if (fileValue.md5 != null) {
+			result.md5 = fileValue.md5;
+		}
+		return result;
+	}
+
+	function _fileValuesEqual(file1, file2) {
+		if (file1 == null && file2 == null) {
+			return true;
+		} else if (file1 == null || file2 == null) {
+			return false;
+		}
+		if (file1.md5 != null && file2.md5 != null && file1.md5 != file2.md5) {
+			return false;
+		}
+		if (file1.size != null && file2.size != null && file1.size != file2.size) {
+			return false;
+		}
+		return file1.fileName == file2.fileName && file1.mimeType == file2.mimeType;
 	}
 
 	function _dateEqual(date1, date2) {
@@ -2403,6 +2461,14 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 
 	}
 
+	function fileOnChange(variableName, index, fileJsonValue) {
+
+		if (!silent) {
+			_inputFieldOnChange(variableName, index, _getFileJsonValue(fileJsonValue));
+		}
+
+	}
+
 	function _inputFieldOnChange(variableName, index, newValue) {
 		var inputFieldVariable = _getSeriesInputFieldVariable(variableName, index, false);
 		if (inputFieldVariable) {
@@ -2569,6 +2635,9 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 				case "SKETCH":
 					sketchApplyCalculatedValue(value,window[inputFieldVar.widgetVarName]);
 					break;
+				case "FILE":
+					// file values are never calculated (no value expressions on FILE fields)
+					break;
 				default:
 
 			}
@@ -2642,6 +2711,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	FieldCalculation.timestampOnChange = timestampOnChange;
 	FieldCalculation.timeOnChange = timeOnChange;
 	FieldCalculation.sketchOnChange = sketchOnChange;
+	FieldCalculation.fileOnChange = fileOnChange;
 
 	FieldCalculation.singleLineTextApplyCalculatedValue = singleLineTextApplyCalculatedValue;
 	FieldCalculation.multiLineTextApplyCalculatedValue = multiLineTextApplyCalculatedValue;

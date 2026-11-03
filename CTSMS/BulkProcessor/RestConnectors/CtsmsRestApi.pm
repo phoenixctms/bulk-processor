@@ -634,6 +634,41 @@ sub put_file {
     }
 }
 
+sub put_files {
+    my $self = shift;
+    # $files: [ { name => 'data_0', file => $path or \$content, filename => .., content_type => .. }, .. ]
+    my ($path_query,$data,$files,$headers) = @_;
+
+    my $json;
+	eval {
+        $json = $self->_encode_put_content($data);
+    };
+    if ($@) {
+        restrequesterror($self,'error encoding PUT request content: ' . $@,undef,$data,getlogger(__PACKAGE__));
+    }
+
+    my @content = ( json => $json );
+    foreach my $part (@{$files // []}) {
+        my %file_part_headers = ();
+        $file_part_headers{'Content-Type'} = $part->{content_type} if defined $part->{content_type};
+        $file_part_headers{'Content-Encoding'} = $part->{content_encoding} if defined $part->{content_encoding};
+        push(@content, $part->{name} => ('SCALAR' eq ref $part->{file} ? [ undef, $part->{filename}, 'Content' => ${$part->{file}}, %file_part_headers, ] :
+                       [ $part->{file}, $part->{filename}, %file_part_headers, ] ));
+    }
+    my $req = HTTP::Request::Common::PUT($self->_get_request_uri($path_query),
+        Content_Type    => 'form-data',
+        Content         => \@content,
+    );
+    _add_headers($req,$headers);
+
+    if ($self->_put_raw($req,undef,undef)->code() != HTTP_OK) {
+        $self->_request_error();
+        return undef;
+    } else {
+        return $self->responsedata();
+    }
+}
+
 sub delete {
     my $self = shift;
     if ($self->_delete(@_)->code() != HTTP_OK) {

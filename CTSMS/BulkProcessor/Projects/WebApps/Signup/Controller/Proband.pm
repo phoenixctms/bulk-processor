@@ -151,7 +151,8 @@ sub clear_session {
     my $lang = Dancer::session('lang');
     my $last_created = Dancer::session("proband_created_timestamp");
     my $error = Dancer::session('api_error');
-    
+
+    CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Inquiry::delete_pending_uploads();
     Dancer::session->destroy();
     Dancer::SharedData::reset_sessions();
     Dancer::debug('session destroyed');
