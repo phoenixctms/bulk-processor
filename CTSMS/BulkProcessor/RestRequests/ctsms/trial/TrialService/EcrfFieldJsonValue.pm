@@ -48,6 +48,7 @@ my $fieldnames = [
     "probandGroupTokens",
     "visitTokens",
     "visitId",
+    "visitToken",
 ];
 
 sub new {

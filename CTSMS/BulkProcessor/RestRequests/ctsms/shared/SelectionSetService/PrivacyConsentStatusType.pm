@@ -47,6 +47,7 @@ my $fieldnames = [
     "initial",
     "name",
     "nameL10nKey",
+    "confirm",
 ];
 
 sub new {

@@ -74,9 +74,11 @@ my $fieldnames = [
    "parent",
    "children",
    "tabOrientation",
-   "dutyRosterTurnCalendarFilters",
+   "dutyRosterCalendarFilters",
    "inventoryBookingCalendarFilters",
-   "inheritedPropertyList",
+   "inheritedProperties",
+   "childrenCount",
+   "inheritedPermissionProfileGroups",
 ];
 
 sub new {

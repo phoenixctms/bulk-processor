@@ -65,7 +65,7 @@ my $fieldnames = [
     "completeMethodName",
     "converter",
     "entityName",
-    "filterItemsName",
+    "filterItemsMethodName",
     "getNameMethodName",
     "getValueMethodName",
     "id",

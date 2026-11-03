@@ -117,6 +117,10 @@ my $fieldnames = [
     "beacon",
     "deferredDelete",
     "deferredDeleteReason",
+    "animalName",
+    "nameSortable",
+    "rating",
+    "ratingMax",
 ];
 
 sub new {

@@ -70,6 +70,8 @@ my $fieldnames = [
     "stopTag",
     "offsetSeconds",
     "duration",
+    "description",
+    "internal",
 ];
 
 sub new {

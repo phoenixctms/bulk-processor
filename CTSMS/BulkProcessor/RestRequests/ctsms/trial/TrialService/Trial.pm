@@ -81,17 +81,18 @@ my $fieldnames = [
     "signupDescription",
     "signupInquiries",
     "signupProbandList",
-    "signupRanomize",
+    "signupRandomize",
     "sponsoring",
     "status",
     "surveyStatus",
     "title",
     "type",
     "randomization",
-    "randomizationList",
     "version",
     "deferredDelete",
     "deferredDeleteReason",
+    "probandAliasFormat",
+    "visitScheduleAppointmentVOs",
 ];
 
 sub new {

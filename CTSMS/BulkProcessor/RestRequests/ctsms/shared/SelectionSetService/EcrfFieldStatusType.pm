@@ -53,7 +53,13 @@ my $fieldnames = [
     "name",
     "nameL10nKey",
     "resolved",
-    "system",
+    "proposed",
+    "queue",
+    "unlockValue",
+    "updated",
+    "validationError",
+    "validationFailed",
+    "validationSuccess",
 ];
 
 our $ANNOTATION_QUEUE = 'ANNOTATION';
