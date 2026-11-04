@@ -264,7 +264,8 @@ Dancer::get('/inquiry/file/:inquiry_id',sub {
     if ($@ or not $file_response) {
         Dancer::status(HTTP::Status::HTTP_NOT_FOUND);
     } else {
-        return apply_lwp_file_response($file_response,$saved_value->{file_name},0);
+        # uploads may be html/svg/js: never serve them inline under the signup origin
+        return apply_lwp_file_response($file_response,$saved_value->{file_name},1);
     }
 
 });
