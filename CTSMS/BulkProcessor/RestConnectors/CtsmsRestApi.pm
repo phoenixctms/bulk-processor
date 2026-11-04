@@ -11,6 +11,7 @@ use URI::Escape qw();
 
 use HTTP::Status qw(:constants :is status_message);
 use HTTP::Request::Common qw();
+use File::Basename qw();
 
 use JSON -support_by_pp, -no_export;
 
@@ -652,8 +653,12 @@ sub put_files {
         my %file_part_headers = ();
         $file_part_headers{'Content-Type'} = $part->{content_type} if defined $part->{content_type};
         $file_part_headers{'Content-Encoding'} = $part->{content_encoding} if defined $part->{content_encoding};
-        push(@content, $part->{name} => ('SCALAR' eq ref $part->{file} ? [ undef, $part->{filename}, 'Content' => ${$part->{file}}, %file_part_headers, ] :
-                       [ $part->{file}, $part->{filename}, %file_part_headers, ] ));
+        # the server rejects file parts without a file name in the content disposition
+        my $filename = $part->{filename};
+        $filename = File::Basename::basename($part->{file}) if ((not defined $filename or length($filename) == 0) and defined $part->{file} and 'SCALAR' ne ref $part->{file});
+        restrequesterror($self,'missing file name for multipart part ' . $part->{name},undef,$data,getlogger(__PACKAGE__)) unless (defined $filename and length($filename) > 0);
+        push(@content, $part->{name} => ('SCALAR' eq ref $part->{file} ? [ undef, $filename, 'Content' => ${$part->{file}}, %file_part_headers, ] :
+                       [ $part->{file}, $filename, %file_part_headers, ] ));
     }
     my $req = HTTP::Request::Common::PUT($self->_get_request_uri($path_query),
         Content_Type    => 'form-data',
