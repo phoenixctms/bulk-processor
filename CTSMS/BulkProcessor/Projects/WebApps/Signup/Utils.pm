@@ -532,9 +532,13 @@ sub apply_lwp_file_response {
 
     my $content_disposition = ($for_download ? 'attachment' : 'inline');
     if (defined $filename and length($filename) > 0) {
-        $content_disposition .= '; filename="' . $filename . '"';
+        # ASCII filename plus the UTF-8 filename* (RFC 6266), like the ctsms file download endpoints
+        (my $ascii_filename = $filename) =~ s/[^\x20\x21\x23-\x5b\x5d-\x7e]/_/g;
+        $content_disposition .= '; filename="' . $ascii_filename . '"';
+        $content_disposition .= "; filename*=UTF-8''" . join('', map { /[A-Za-z0-9!#\$&+.^_`|~-]/ ? $_ : sprintf('%%%02X', ord($_)); } split(//, encode_utf8($filename)));
     }
     $response->header("Content-Disposition", $content_disposition);
+    $response->header("X-Content-Type-Options", 'nosniff');
     return $response;
 }
 
