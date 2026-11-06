@@ -103,24 +103,58 @@
     border: 1px solid #cccccc;
 }
 
+/* camera live view next to the current image and as wide as its preview (ctsms-input-file-image-preview incl. border),
+   with the camera selector and the rest of the content area below: */
+.ctsms-upload-control-camera .fileupload-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    column-gap: 8px;
+}
+
+.ctsms-upload-control-camera .fileupload-content > * {
+    flex: 0 0 100%;
+    order: 3;
+}
+
+.ctsms-upload-control-camera .fileupload-content > .ctsms-input-file-current {
+    flex: 0 0 auto;
+    order: 1;
+}
+
 .ctsms-photocam {
     display: block;
-    width: 640px;
+    width: 322px;
     max-width: 100%;
-    margin: 0.2em auto;
+    margin: 0.2em 0;
     text-align: center;
+}
+
+.ctsms-upload-control-camera .fileupload-content > .ctsms-photocam {
+    flex: 0 0 auto;
+    order: 2;
 }
 
 .ctsms-photocam-devices {
     display: block;
     max-width: 100%;
-    margin: 4px auto 0 auto;
+    margin: 0 0 0.2em 0;
+}
+
+.ctsms-upload-control-camera .fileupload-content > .ctsms-photocam-devices {
+    flex: 0 0 auto;
+}
+
+.ctsms-upload-control:not(.ctsms-upload-control-camera) .fileupload-content > .ctsms-photocam-devices {
+    display: none !important;
 }
 
 .ctsms-photocam-viewport {
     position: relative;
+    box-sizing: border-box;
     width: 100%;
-    margin: 0 auto;
+    margin: 4px 0;
+    border: 1px solid #cccccc;
     background-color: #000000;
     overflow: hidden;
 }
@@ -146,6 +180,9 @@
 
 .ctsms-field-icon {
     background-repeat: no-repeat;
+    /* centered on the (larger) text line: below the padding-top, and the visual center of the text is a bit below the middle of the line */
+    /* (- -2px: yuicompressor drops the spaces around +, which calc requires) */
+    background-position: left calc(50% - -2px);
     padding-left: 20px;
     padding-top: 2px;
     min-height: 16px;
