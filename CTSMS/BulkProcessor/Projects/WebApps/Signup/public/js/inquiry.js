@@ -225,7 +225,10 @@ function _createInquiryField(context,value) {
             inputContent.append(_createSketchpad(context,value));
             break;
         case 'FILE':
-            inputContent.append(_createFileInput(context,value));
+            var fileInput = _createFileInput(context,value);
+            inputContent.append(fileInput.input);
+            // like ctsms, the upload panel spans the full width below the label
+            $('<div class="ui-grid-row"/>').append($('<div class="ui-grid-col-12 ctsms-input-file-panel"/>').append(fileInput.panel)).appendTo(grid);
             break;
         case 'INTEGER':
             inputContent.append(_createSpinner(context,value));
@@ -1174,6 +1177,7 @@ function _createFileInput(context,value) {
     var stateInput = $('<input type="hidden" name="file_' + inquiryId + '" id="' + inquiryId + '_file_state"/>').val(state);
     var content = $('<div class="ctsms-input-file"/>');
     content.append($('<div id="' + inquiryId + '_file_label" class="ctsms-input-file-label"/>'));
+    var panel;
     var current = $('<div id="' + inquiryId + '_file_current" class="ctsms-input-file-current" style="display:none;"/>');
     if (!value.inquiry.disabled) {
         var fileInput = $('<input type="file" name="fileupload_' + inquiryId + '" id="' + inquiryId + '_file_input" class="ui-helper-hidden-accessible"/>');
@@ -1199,15 +1203,17 @@ function _createFileInput(context,value) {
             viewport.append($('<video id="' + inquiryId + '_file_camera_video" class="ctsms-photocam-video" autoplay playsinline muted/>'));
             viewport.append($('<div id="' + inquiryId + '_file_camera_status" class="ctsms-photocam-status" style="display:none;"/>'));
             camera.append(viewport);
-            camera.append($('<select id="' + inquiryId + '_file_camera_devices" class="ctsms-photocam-devices" style="display:none;"/>'));
             uploadContent.append(camera);
+            // like ctsms, the live view goes next to the current image, the camera selector on its own below
+            uploadContent.append($('<select id="' + inquiryId + '_file_camera_devices" class="ctsms-photocam-devices" style="display:none;"/>'));
         }
         upload.append(uploadContent);
-        content.append(upload);
+        panel = upload;
     } else {
-        content.append(current);
+        panel = current;
     }
-    return [ stateInput, content ];
+    // the label line goes next to the field label, the panel below
+    return { input: [ stateInput, content ], panel: panel };
 }
 
 function _initFileInput(context,value,content) {
