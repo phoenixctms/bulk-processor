@@ -67,6 +67,9 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfExporter::Settings qw(
     $ecrf_data_export_pdf_filename
     $ecrf_data_export_pdfs_filename
 
+    $ecrf_data_export_files_filename
+    $ecrf_data_export_files_zip
+
     $proband_list_filename
     $ecrf_data_row_block
 
@@ -106,6 +109,8 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField qw
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValues qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValues qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValue qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValue qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfStatusEntry qw();
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File qw();
@@ -133,6 +138,10 @@ use CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataVertical qw();
 use CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataHorizontal qw();
 
 use CTSMS::BulkProcessor::Projects::ETL::ExcelExport qw();
+use CTSMS::BulkProcessor::Projects::ETL::ExportFiles qw(
+    get_export_file_value
+    publish_export_files
+);
 
 use CTSMS::BulkProcessor::Array qw(array_to_map);
 
@@ -149,6 +158,7 @@ our @EXPORT_OK = qw(
     publish_ecrf_data_xls
     publish_ecrf_data_pdf
     publish_ecrf_data_pdfs
+    publish_ecrf_data_files
 
     publish_audit_trail_xls
     publish_ecrf_journal_xls
@@ -197,6 +207,21 @@ sub publish_ecrf_data_pdfs {
     $result = _export_items($context) if $result;
 
     return ($result,$context->{warning_count},$context->{uploads});
+
+}
+
+sub publish_ecrf_data_files {
+
+    my ($upload_files,$signed) = @_;
+    return publish_export_files(
+        output_path => $output_path,
+        upload_files => $upload_files,
+        zip => $ecrf_data_export_files_zip,
+        zip_filename => $ecrf_data_export_files_filename,
+        timestamp_suffix => ($signed ? '_signed' : ''),
+        subfolder => 'Files/',
+        get_file_in_code => \&_get_file_in,
+    );
 
 }
 
@@ -582,7 +607,7 @@ sub _ecrf_data_vertical_items_to_row {
     push(@row,get_proband_columns($context->{listentry}->{proband}));
 
     foreach my $tag_col (keys %{$context->{listentrytag_map}}) {
-        push(@row, $context->{tagvalues}->{$tag_col}->{_value});
+        push(@row, _get_probandlistentrytagvalue_value($context,$tag_col));
     }
 
     push(@row,get_probandlistentry_columns($context->{listentry}));
@@ -629,6 +654,8 @@ sub _ecrf_data_vertical_items_to_row {
     push(@row,$item->{modifiedTimestamp});
     if ($item->created and $item->{ecrfField}->{field}->is_select()) {
         push(@row,join($selection_set_value_separator,map { local $_ = $_; $_->{value}; } @{$item->{selectionValues}}));
+    } elsif ($item->{ecrfField}->{field}->is_file()) {
+        push(@row,_get_ecrffieldvalue_file_value($context,$item));
     } else {
         push(@row,$item->{_value});
     }
@@ -825,7 +852,7 @@ sub _ecrf_data_horizontal_items_to_row {
     push(@row,$context->{listentry}->{proband}->{id});
     push(@row,get_proband_columns($context->{listentry}->{proband}));
     foreach my $tag_col (keys %{$context->{listentrytag_map}}) {
-        push(@row, $context->{tagvalues}->{$tag_col}->{_value});
+        push(@row, _get_probandlistentrytagvalue_value($context,$tag_col));
     }
 
     push(@row,get_probandlistentry_columns($context->{listentry}));
@@ -872,7 +899,7 @@ sub _ecrf_data_horizontal_items_to_row {
             my ($colname) = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
                 ecrffield => $item->{ecrfField}, ecrf => $item->{ecrfField}->{ecrf}, visit => $item->{visit}, index => $item->{index},
                 %colname_abbreviation,);
-            $value_map{$colname} = $item->{_value};
+            $value_map{$colname} = ($item->{ecrfField}->{field}->is_file() ? _get_ecrffieldvalue_file_value($context,$item,$colname) : $item->{_value});
         }
     }
 
@@ -905,6 +932,24 @@ sub _insert_ecrf_data_horizontal_rows {
         }
     }
     return $result;
+}
+
+sub _get_ecrffieldvalue_file_value {
+    my ($context,$item,$colname) = @_;
+    ($colname) = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfField::get_colnames(
+        ecrffield => $item->{ecrfField}, ecrf => $item->{ecrfField}->{ecrf}, visit => $item->{visit}, index => $item->{index},
+        %colname_abbreviation,) unless defined $colname;
+    return get_export_file_value($item,'ecrffieldvalue',$context->{listentry}->{proband}->{id},$colname,
+        \&CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::EcrfFieldValue::download_file);
+}
+
+sub _get_probandlistentrytagvalue_value {
+    my ($context,$tag_col) = @_;
+    my $tagvalue = $context->{tagvalues}->{$tag_col};
+    return undef unless defined $tagvalue;
+    return get_export_file_value($tagvalue,'probandlistentrytagvalue',$context->{listentry}->{proband}->{id},$tag_col,
+        \&CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntryTagValue::download_file) if $tagvalue->{tag}->{field}->is_file();
+    return $tagvalue->{_value};
 }
 
 sub _get_probandlistentrytagvalues {

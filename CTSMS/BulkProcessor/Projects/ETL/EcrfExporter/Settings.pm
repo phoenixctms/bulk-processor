@@ -54,6 +54,9 @@ our @EXPORT_OK = qw(
     $ecrf_data_export_pdf_filename
     $ecrf_data_export_pdfs_filename
 
+    $ecrf_data_export_files_filename
+    $ecrf_data_export_files_zip
+
     $proband_list_filename
     $ecrf_data_row_block
 
@@ -85,6 +88,10 @@ our $ecrfs_export_xls_filename = "%s%s";
 our $ecrf_data_export_pdf_filename = '%s%s';
 our $ecrf_data_export_pdfs_filename = '%s_%s%s';
 
+# the files of exported FILE values: one zip, or individual files
+our $ecrf_data_export_files_filename = '%s%s';
+our $ecrf_data_export_files_zip = 1;
+
 our $proband_list_filename = '%s_%s%s';
 
 our $publish_public_file = 0;
@@ -114,6 +121,9 @@ sub update_settings {
 
         $ecrf_data_export_pdf_filename = $data->{ecrf_data_export_pdf_filename} if exists $data->{ecrf_data_export_pdf_filename};
         $ecrf_data_export_pdfs_filename = $data->{ecrf_data_export_pdfs_filename} if exists $data->{ecrf_data_export_pdfs_filename};
+
+        $ecrf_data_export_files_filename = $data->{ecrf_data_export_files_filename} if exists $data->{ecrf_data_export_files_filename};
+        $ecrf_data_export_files_zip = stringtobool($data->{ecrf_data_export_files_zip}) if exists $data->{ecrf_data_export_files_zip};
 
         $proband_list_filename = $data->{proband_list_filename} if exists $data->{proband_list_filename};
 

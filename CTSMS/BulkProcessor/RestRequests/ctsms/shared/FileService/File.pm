@@ -16,7 +16,7 @@ use CTSMS::BulkProcessor::RestProcessor qw(
 use CTSMS::BulkProcessor::RestConnectors::CtsmsRestApi qw(_get_api);
 use CTSMS::BulkProcessor::RestItem qw();
 
-use CTSMS::BulkProcessor::Utils qw(booltostring human_readable_byte_count);
+use CTSMS::BulkProcessor::Utils qw(booltostring);
 
 
 require Exporter;
@@ -29,8 +29,6 @@ our @EXPORT_OK = qw(
     get_trialfiles
     download
     upload
-
-    get_file_label
 
     $TRIAL_FILE_MODULE
 );
@@ -167,13 +165,6 @@ sub TO_JSON {
     my $self = shift;
     return { %{$self} };
 
-}
-
-sub get_file_label {
-    # "file name (size)" as printed for FILE input field values (InputFieldValueStringAdapterBase)
-    my ($file,$decimal_separator) = @_;
-    return undef unless defined $file and defined $file->{fileName};
-    return $file->{fileName} . (defined $file->{size} ? ' (' . human_readable_byte_count($file->{size},$decimal_separator) . ')' : '');
 }
 
 
