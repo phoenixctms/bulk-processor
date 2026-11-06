@@ -141,8 +141,9 @@ our $rest_api_jwt_reissue_on_ajax = 0;
 our $input_field_integer_text = 1;
 
 # Max. size (bytes) of a FILE inquiry upload, checked before it is kept for saving.
-# undef: no limit here (the server still enforces its external file content size limit).
-our $input_field_file_size_limit = undef;
+# Default: 5 MiB, the default of the ctsms external_file_content_size_limit the server enforces for FILE values.
+# undef: no limit here (the server still enforces its limit).
+our $input_field_file_size_limit = 5 * 1024 * 1024;
 
 sub update_settings {
 

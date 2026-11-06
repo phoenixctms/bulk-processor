@@ -1158,7 +1158,12 @@ function _initSketchpad(context,value,content) {
 }
 
 // FILE: the hidden file_<inquiry id> input holds the value state
-// ('' = clear, '<file id>' = keep the saved file, 'new' = upload in fileupload_<inquiry id>, 'pending' = keep the not yet saved upload)
+// ('' = clear, '<file id>' = keep the saved file, 'new' = upload in fileupload_<inquiry id>, 'pending' = keep the not yet saved upload).
+// The layout follows the ctsms upload control (inputFieldRow.xhtml): a label line with the file link, then a pane with a button bar
+// and a content area for the thumbnail and the camera live view.
+var _fileCameras = {};
+var _filePreviewUrls = {};
+
 function _createFileInput(context,value) {
     var inquiryId = value.inquiry.id;
     var fileValue = value.fileValue;
@@ -1167,62 +1172,127 @@ function _createFileInput(context,value) {
         state = (value._filePending ? 'pending' : (fileValue.id != null ? '' + fileValue.id : ''));
     }
     var stateInput = $('<input type="hidden" name="file_' + inquiryId + '" id="' + inquiryId + '_file_state"/>').val(state);
-    var content = $('<div class="ctsms-file"/>');
-    content.append($('<div id="' + inquiryId + '_file_info" class="ctsms-file-info"/>'));
+    var content = $('<div class="ctsms-input-file"/>');
+    content.append($('<div id="' + inquiryId + '_file_label" class="ctsms-input-file-label"/>'));
+    var current = $('<div id="' + inquiryId + '_file_current" class="ctsms-input-file-current" style="display:none;"/>');
     if (!value.inquiry.disabled) {
         var fileInput = $('<input type="file" name="fileupload_' + inquiryId + '" id="' + inquiryId + '_file_input" class="ui-helper-hidden-accessible"/>');
         var accept = _getFileAccept(context,value.inquiry.field);
         if (accept.length > 0) {
             fileInput.attr('accept',accept);
         }
-        var buttons = $('<div class="ctsms-file-buttons"/>');
+        var upload = $('<div id="' + inquiryId + '_file_upload" class="ui-widget ctsms-upload-control"/>');
+        var buttons = $('<div class="fileupload-buttonbar ui-widget-header ui-corner-top"/>');
         buttons.append(fileInput);
         buttons.append($('<button type="button" id="' + inquiryId + '_file_upload_button"/>').text(context.fileUploadLabel));
         if (value.inquiry.field.photo) {
-            buttons.append($('<button type="button" id="' + inquiryId + '_file_photo_button"/>').text(context.fileTakePhotoLabel));
+            buttons.append($('<button type="button" id="' + inquiryId + '_file_camera_button"/>').text(context.fileCameraLabel));
+            buttons.append($('<button type="button" id="' + inquiryId + '_file_capture_button"/>').text(context.fileTakePhotoLabel));
         }
         buttons.append($('<button type="button" id="' + inquiryId + '_file_clear_button"/>').text(context.fileClearLabel));
-        content.append(buttons);
-        content.append($('<div id="' + inquiryId + '_file_camera" class="ctsms-file-camera" style="display:none;"/>'));
+        upload.append(buttons);
+        var uploadContent = $('<div class="fileupload-content ui-widget-content ui-corner-bottom"/>');
+        uploadContent.append(current);
+        if (value.inquiry.field.photo) {
+            var camera = $('<div id="' + inquiryId + '_file_camera" class="ctsms-photocam" style="display:none;"/>');
+            var viewport = $('<div class="ctsms-photocam-viewport"/>');
+            viewport.append($('<video id="' + inquiryId + '_file_camera_video" class="ctsms-photocam-video" autoplay playsinline muted/>'));
+            viewport.append($('<div id="' + inquiryId + '_file_camera_status" class="ctsms-photocam-status" style="display:none;"/>'));
+            camera.append(viewport);
+            camera.append($('<select id="' + inquiryId + '_file_camera_devices" class="ctsms-photocam-devices" style="display:none;"/>'));
+            uploadContent.append(camera);
+        }
+        upload.append(uploadContent);
+        content.append(upload);
+    } else {
+        content.append(current);
     }
     return [ stateInput, content ];
 }
 
 function _initFileInput(context,value,content) {
     var inquiryId = value.inquiry.id;
-    _showFileInfo(context,value,value.fileValue,value._filePending);
-    if (value.inquiry.disabled) {
-        return;
+    if (!value.inquiry.disabled) {
+        var fileInput = $('#' + inquiryId + '_file_input');
+        fileInput.on('change', function(event) {
+            var file = (this.files != null && this.files.length > 0) ? this.files[0] : null;
+            if (file != null) {
+                _setFileInputFile(context,value,file);
+            }
+        });
+        $('#' + inquiryId + '_file_upload_button').puibutton({
+            icon: 'fa-folder-open',
+            click: function(event) {
+                fileInput.removeAttr('capture').trigger('click');
+            }
+        });
+        $('#' + inquiryId + '_file_clear_button').puibutton({
+            icon: 'fa-times',
+            click: function(event) {
+                fileInput.val('');
+                $('#' + inquiryId + '_file_state').val('');
+                _showFileInfo(context,value,null,false);
+                _fileOnChange(value,null);
+            }
+        });
+        if (value.inquiry.field.photo) {
+            if (_fileCameras[inquiryId] != null) {
+                // the field was rendered again (e.g. another grid page): release the camera of the replaced one
+                _fileCameras[inquiryId].stop();
+            }
+            var camera = new _FileCamera(context,value);
+            _fileCameras[inquiryId] = camera;
+            $('#' + inquiryId + '_file_camera_button').puibutton({
+                icon: 'fa-video-camera',
+                click: function(event) {
+                    camera.toggle();
+                }
+            });
+            $('#' + inquiryId + '_file_capture_button').puibutton({
+                icon: 'fa-camera',
+                click: function(event) {
+                    camera.capture();
+                }
+            });
+            $('#' + inquiryId + '_file_capture_button').puibutton('disable');
+        }
+        // drop a file onto the pane, also while the camera is open:
+        var upload = $('#' + inquiryId + '_file_upload');
+        upload.on('dragenter dragover', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            upload.addClass('ctsms-upload-control-dragover');
+        }).on('dragleave', function(event) {
+            if (event.target === this || !$.contains(this, event.relatedTarget)) {
+                upload.removeClass('ctsms-upload-control-dragover');
+            }
+        }).on('drop', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            upload.removeClass('ctsms-upload-control-dragover');
+            var transfer = event.originalEvent.dataTransfer;
+            if (transfer != null && transfer.files != null && transfer.files.length > 0) {
+                var file = transfer.files[0];
+                if (_setFileInputFiles(inquiryId, file)) {
+                    _setFileInputFile(context,value,file);
+                }
+            }
+        });
     }
-    var fileInput = $('#' + inquiryId + '_file_input');
-    fileInput.on('change', function(event) {
-        var file = (this.files != null && this.files.length > 0) ? this.files[0] : null;
-        if (file != null) {
-            _setFileInputFile(context,value,file);
-        }
-    });
-    $('#' + inquiryId + '_file_upload_button').puibutton({
-        icon: 'fa-upload',
-        click: function(event) {
-            fileInput.trigger('click');
-        }
-    });
-    $('#' + inquiryId + '_file_photo_button').puibutton({
-        icon: 'fa-camera',
-        click: function(event) {
-            _toggleFileCamera(context,value);
-        }
-    });
-    $('#' + inquiryId + '_file_clear_button').puibutton({
-        icon: 'fa-trash',
-        click: function(event) {
-            _stopFileCamera(inquiryId);
-            fileInput.val('');
-            $('#' + inquiryId + '_file_state').val('');
-            _showFileInfo(context,value,null,false);
-            _fileOnChange(value,null);
-        }
-    });
+    _showFileInfo(context,value,value.fileValue,value._filePending);
+}
+
+function _setFileInputFiles(inquiryId,file) {
+    // puts the (dropped or captured) file into the upload input, so it is posted with the form
+    try {
+        var transfer = new DataTransfer();
+        transfer.items.add(file);
+        $('#' + inquiryId + '_file_input')[0].files = transfer.files;
+        return true;
+    } catch (e) {
+        setMessages('warn',[ { messageId: inquiryId, summary: '' + e } ]);
+    }
+    return false;
 }
 
 function _setFileInputFile(context,value,file) {
@@ -1244,12 +1314,13 @@ function _setFileInputFile(context,value,file) {
         return;
     }
     $('#' + inquiryId + '_file_state').val('new');
+    var mimeType = _getFileMimeType(context,file.type);
     var fileValue = {
         fileName: file.name,
         size: file.size,
-        contentType: { mimeType: file.type, image: /^image\//i.test(file.type) }
+        contentType: { mimeType: file.type, image: /^image\//i.test(file.type), nodeStyleClass: (mimeType != null ? mimeType.nodeStyleClass : null) }
     };
-    _showFileInfo(context,value,fileValue,true);
+    _showFileInfo(context,value,fileValue,true,file);
     _fileOnChange(value,fileValue);
 }
 
@@ -1264,18 +1335,58 @@ function _fileOnChange(value,fileValue) {
     }
 }
 
-function _showFileInfo(context,value,fileValue,pending) {
-    var info = $('#' + value.inquiry.id + '_file_info');
-    info.empty();
-    if (fileValue == null || fileValue.fileName == null) {
-        return;
-    }
-    var template = (context.fileLinkLabel != null && context.fileLinkLabel.indexOf('%s') >= 0) ? context.fileLinkLabel : '%s (%s)';
-    var label = sprintf(template, fileValue.fileName, _formatFileSize(fileValue.size));
-    if (!pending && fileValue.id != null && value.id != null) {
-        info.append($('<a target="_blank"/>').attr('href', context.uriBase + '/inquiry/file/' + value.inquiry.id).text(label));
+function _showFileInfo(context,value,fileValue,pending,file) {
+    // file: the File of a new upload or capture, not yet on the server
+    var inquiryId = value.inquiry.id;
+    var label = $('#' + inquiryId + '_file_label');
+    label.empty();
+    var hasFile = (fileValue != null && fileValue.fileName != null);
+    if (hasFile) {
+        var template = (context.fileLinkLabel != null && context.fileLinkLabel.indexOf('%s') >= 0) ? context.fileLinkLabel : '%s (%s)';
+        var text = sprintf(template, fileValue.fileName, _formatFileSize(fileValue.size));
+        var link;
+        if (!pending && fileValue.id != null && value.id != null) {
+            link = $('<a target="_blank"/>').attr('href', context.uriBase + '/inquiry/file/' + inquiryId);
+        } else {
+            link = $('<span/>');
+        }
+        var nodeStyleClass = (fileValue.contentType != null ? fileValue.contentType.nodeStyleClass : null);
+        link.addClass('ctsms-input-file-link ctsms-field-icon ctsms-mimetype-unknown' + (nodeStyleClass != null && nodeStyleClass.length > 0 ? ' ' + nodeStyleClass : ''));
+        label.append(link.text(text));
     } else {
-        info.text(label);
+        label.append($('<span class="ctsms-input-file-link ui-state-disabled"/>').text(context.noFileLinkLabel));
+    }
+    if (!value.inquiry.disabled) {
+        $('#' + inquiryId + '_file_clear_button').puibutton(hasFile ? 'enable' : 'disable');
+    }
+    // thumbnail: re-encoded by the server for saved and pending files, a local preview of raster images for a new one,
+    // never the uploaded content itself (could be html/svg):
+    var current = $('#' + inquiryId + '_file_current');
+    current.empty().hide();
+    if (_filePreviewUrls[inquiryId] != null) {
+        URL.revokeObjectURL(_filePreviewUrls[inquiryId]);
+        delete _filePreviewUrls[inquiryId];
+    }
+    $('#' + inquiryId + '_file_upload').removeClass('ctsms-upload-control-file');
+    var src = null;
+    if (hasFile && fileValue.contentType != null && fileValue.contentType.image) {
+        if (file != null) {
+            if (/^image\/(jpeg|pjpeg|png|gif|bmp|webp)$/i.test(file.type) && typeof URL !== 'undefined' && URL.createObjectURL) {
+                src = URL.createObjectURL(file);
+                _filePreviewUrls[inquiryId] = src;
+            }
+        } else if (pending || (fileValue.id != null && value.id != null)) {
+            src = context.uriBase + '/inquiry/file/' + inquiryId + '/thumbnail?ts=' + new Date().getTime();
+        }
+    }
+    if (src != null) {
+        var image = $('<img class="ctsms-input-file-image-preview"/>').attr('alt', fileValue.fileName);
+        image.on('error', function() {
+            current.empty().hide();
+            $('#' + inquiryId + '_file_upload').removeClass('ctsms-upload-control-file');
+        });
+        current.append(image.attr('src', src)).show();
+        $('#' + inquiryId + '_file_upload').addClass('ctsms-upload-control-file');
     }
 }
 
@@ -1292,89 +1403,377 @@ function _formatFileSize(bytes) {
     return (bytes / Math.pow(unit, exp)).toFixed(1) + ' ' + 'KMGTPE'.charAt(exp - 1) + 'iB';
 }
 
+function _getFileMimeType(context,mimeType) {
+    if (mimeType != null && context.fileMimeTypes != null) {
+        for (var i = 0; i < context.fileMimeTypes.length; i++) {
+            if (context.fileMimeTypes[i].mimeType == mimeType) {
+                return context.fileMimeTypes[i];
+            }
+        }
+    }
+    return null;
+}
+
 function _getFileAccept(context,field) {
-    var mimeTypes = (field.allowedMimeTypes != null && field.allowedMimeTypes.length > 0) ? field.allowedMimeTypes : context.fileMimeTypes;
+    // the allowed file types of a photo field are ignored: it accepts all INPUT_FIELD_VALUE_FILE types
+    var mimeTypes = (!field.photo && field.allowedMimeTypes != null && field.allowedMimeTypes.length > 0) ? field.allowedMimeTypes : context.fileMimeTypes;
     var accept = [];
     if (mimeTypes != null) {
         for (var i = 0; i < mimeTypes.length; i++) {
-            if (mimeTypes[i].mimeType != null && mimeTypes[i].mimeType.length > 0) {
-                accept.push(mimeTypes[i].mimeType);
-            }
-            if (mimeTypes[i].fileNameExtensions != null) {
-                var extensions = mimeTypes[i].fileNameExtensions.split(/[\s,;]+/);
-                for (var j = 0; j < extensions.length; j++) {
-                    if (extensions[j].length > 0) {
-                        accept.push('.' + extensions[j].replace(/^\./, ''));
-                    }
+            var extensions = (mimeTypes[i].fileNameExtensions != null ? mimeTypes[i].fileNameExtensions.split(/[\s,;|]+/) : []);
+            var hasExtension = false;
+            for (var j = 0; j < extensions.length; j++) {
+                if (extensions[j].length > 0) {
+                    accept.push('.' + extensions[j].replace(/^\./, ''));
+                    hasExtension = true;
                 }
+            }
+            if (!hasExtension && mimeTypes[i].mimeType != null && mimeTypes[i].mimeType.length > 0) {
+                accept.push(mimeTypes[i].mimeType);
             }
         }
     }
     return accept.join(',');
 }
 
-function _toggleFileCamera(context,value) {
+// the camera of photo FILE fields, a port of the ctsms photoCam.js widget: opened with the camera button, the capture button
+// is enabled only while the live view plays, and the live view stays open after a capture.
+var _FILE_CAMERA_DEVICE_ID_STORAGE_KEY = 'ctsms.photoCam.deviceId';
+var _FILE_CAMERA_STATUS_TIMEOUT = 3000;
+var _FILE_CAMERA_START_RETRIES = 3;
+var _FILE_CAMERA_START_RETRY_DELAY = 1000;
+var _FILE_CAMERA_JPEG_QUALITY = 0.92;
+var _FILE_CAMERA_WIDTH = 1920;
+var _FILE_CAMERA_HEIGHT = 1080;
+
+function _stopMediaStream(stream) {
+    if (stream && stream.getTracks) {
+        var tracks = stream.getTracks();
+        for (var i = 0; i < tracks.length; i++) {
+            tracks[i].stop();
+        }
+    }
+}
+
+function _loadFileCameraDeviceId() {
+    try {
+        return window.localStorage.getItem(_FILE_CAMERA_DEVICE_ID_STORAGE_KEY);
+    } catch (e) {
+        return null;
+    }
+}
+
+function _storeFileCameraDeviceId(deviceId) {
+    try {
+        if (deviceId) {
+            window.localStorage.setItem(_FILE_CAMERA_DEVICE_ID_STORAGE_KEY, deviceId);
+        } else {
+            window.localStorage.removeItem(_FILE_CAMERA_DEVICE_ID_STORAGE_KEY);
+        }
+    } catch (e) {
+    }
+}
+
+function _FileCamera(context,value) {
     var inquiryId = value.inquiry.id;
-    if (_stopFileCamera(inquiryId)) {
-        return;
-    }
-    if (navigator.mediaDevices == null || navigator.mediaDevices.getUserMedia == null || typeof DataTransfer === 'undefined') {
-        // no webcam access (e.g. no https): let the device's file picker offer the camera
-        $('#' + inquiryId + '_file_input').attr('capture', 'environment').trigger('click');
-        return;
-    }
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }).then(function(stream) {
-        // a repeated click while the permission prompt was open may have stored another stream meanwhile
-        _stopFileCamera(inquiryId);
-        var camera = $('#' + inquiryId + '_file_camera');
-        var video = $('<video autoplay playsinline muted class="ctsms-file-camera-video"/>');
-        video[0].srcObject = stream;
-        var captureButton = $('<button type="button" id="' + inquiryId + '_file_capture_button"/>').text(context.fileTakePhotoLabel);
-        camera.empty().append(video).append($('<div/>').append(captureButton)).show();
-        camera.data('stream', stream);
-        captureButton.puibutton({
-            icon: 'fa-camera',
-            click: function(event) {
-                var videoElement = video[0];
-                var canvas = document.createElement('canvas');
-                canvas.width = videoElement.videoWidth;
-                canvas.height = videoElement.videoHeight;
-                canvas.getContext('2d').drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-                canvas.toBlob(function(blob) {
-                    _stopFileCamera(inquiryId);
-                    if (blob == null) {
-                        return;
-                    }
-                    try {
-                        var file = new File([ blob ], 'photo_' + new Date().getTime() + '.jpg', { type: 'image/jpeg' });
-                        var transfer = new DataTransfer();
-                        transfer.items.add(file);
-                        $('#' + inquiryId + '_file_input')[0].files = transfer.files;
-                        _setFileInputFile(context,value,file);
-                    } catch (e) {
-                        setMessages('warn',[ { messageId: inquiryId, summary: '' + e } ]);
-                    }
-                }, 'image/jpeg', 0.9);
-            }
-        });
-    }).catch(function(e) {
-        setMessages('warn',[ { messageId: inquiryId, summary: '' + e } ]);
+    this.context = context;
+    this.value = value;
+    this.inquiryId = inquiryId;
+    this.msgs = context.photoCamMessages || {};
+    this.jq = $('#' + inquiryId + '_file_camera');
+    this.video = $('#' + inquiryId + '_file_camera_video')[0];
+    this.devices = $('#' + inquiryId + '_file_camera_devices');
+    this.status = $('#' + inquiryId + '_file_camera_status');
+    this.requestCount = 0;
+    this.statusTimer = null;
+    this.stream = null;
+    this.pending = false;
+    this.live = false;
+    this.resume = false;
+
+    var _self = this;
+    $(this.video).on('loadedmetadata resize', function() {
+        if (this.videoWidth && this.videoHeight) {
+            this.parentNode.style.aspectRatio = this.videoWidth + ' / ' + this.videoHeight;
+        }
     });
-}
+    $(this.video).on('playing', function() {
+        if (_self.stream) {
+            _self.setLive(true);
+        }
+    });
+    this.devices.on('change', function() {
+        var deviceId = $(this).val();
+        _storeFileCameraDeviceId(deviceId);
+        _self.start(deviceId);
+    });
+    var eventNamespace = '.filecamera_' + inquiryId;
+    $(window).off('pagehide' + eventNamespace).on('pagehide' + eventNamespace, function() {
+        _self.stop();
+    });
+    $(document).off('visibilitychange' + eventNamespace).on('visibilitychange' + eventNamespace, function() {
+        if (document.hidden) {
+            if (_self.stream || _self.pending) {
+                _self.resume = true;
+                _self.stop();
+            }
+        } else if (_self.resume) {
+            _self.resume = false;
+            if (_self.isOpen() && $.contains(document.documentElement, _self.video)) {
+                _self.start(_loadFileCameraDeviceId());
+            }
+        }
+    });
 
-function _stopFileCamera(inquiryId) {
-    var camera = $('#' + inquiryId + '_file_camera');
-    var stream = camera.data('stream');
-    if (stream != null) {
-        stream.getTracks().forEach(function(track) {
-            track.stop();
-        });
-        camera.removeData('stream').empty().hide();
-        return true;
+    this.supported = false;
+    if (window.isSecureContext === false) {
+        this.showStatus(this.msgs.insecureContext);
+    } else if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof DataTransfer === 'undefined') {
+        this.showStatus(this.msgs.notSupported);
+    } else {
+        this.supported = true;
     }
-    return false;
 }
 
+_FileCamera.prototype.isOpen = function() {
+    return this.jq.css('display') !== 'none';
+};
+
+_FileCamera.prototype.setOpen = function(open) {
+    if (open) {
+        this.jq.show();
+    } else {
+        this.jq.hide();
+    }
+    $('#' + this.inquiryId + '_file_upload').toggleClass('ctsms-upload-control-camera', open);
+};
+
+_FileCamera.prototype.open = function() {
+    this.setOpen(true);
+    if (this.supported) {
+        if (!this.stream && !this.pending) {
+            this.start(_loadFileCameraDeviceId());
+        }
+    } else {
+        // no webcam access (e.g. no https): let the device's file picker offer the camera too
+        $('#' + this.inquiryId + '_file_input').attr('capture', 'environment').trigger('click');
+    }
+};
+
+_FileCamera.prototype.close = function() {
+    this.stop();
+    this.setOpen(false);
+};
+
+_FileCamera.prototype.toggle = function() {
+    if (this.isOpen()) {
+        this.close();
+    } else {
+        this.open();
+    }
+};
+
+_FileCamera.prototype.attach = function(stream, deviceId) {
+    this.stream = stream;
+    this.video.srcObject = stream;
+    var playing = this.video.play();
+    if (playing && playing.then) {
+        playing.then(null, function() {
+        });
+    }
+    var tracks = stream.getVideoTracks ? stream.getVideoTracks() : [];
+    var streamDeviceId = (tracks.length > 0 && tracks[0].getSettings ? tracks[0].getSettings().deviceId : null);
+    this.listDevices(streamDeviceId || deviceId);
+};
+
+_FileCamera.prototype.start = function(deviceId, retries) {
+    this.stop();
+    this.showStatus(null);
+    if (retries === undefined) {
+        retries = _FILE_CAMERA_START_RETRIES;
+    }
+    var constraints = {
+        width: { ideal: _FILE_CAMERA_WIDTH },
+        height: { ideal: _FILE_CAMERA_HEIGHT }
+    };
+    if (deviceId) {
+        constraints.deviceId = { exact: deviceId };
+    }
+    var _self = this;
+    var request = ++this.requestCount;
+    this.pending = true;
+    navigator.mediaDevices.getUserMedia({
+        video: constraints,
+        audio: false
+    }).then(function(stream) {
+        // a later start or stop (e.g. a repeated click while the permission prompt was open) supersedes this request
+        if (request !== _self.requestCount) {
+            _stopMediaStream(stream);
+            return;
+        }
+        _self.pending = false;
+        if (!_self.isOpen() || !$.contains(document.documentElement, _self.video)) {
+            _stopMediaStream(stream);
+            return;
+        }
+        _self.attach(stream, deviceId);
+    }, function(error) {
+        if (request !== _self.requestCount) {
+            return;
+        }
+        _self.pending = false;
+        var retrying = retries < _FILE_CAMERA_START_RETRIES;
+        if (retries > 0 && error && (error.name === 'NotReadableError' || error.name === 'TrackStartError' || error.name === 'AbortError' || (retrying && error.name === 'NotFoundError'))) {
+            _self.pending = true;
+            window.setTimeout(function() {
+                if (request === _self.requestCount) {
+                    _self.start(deviceId, retries - 1);
+                }
+            }, _FILE_CAMERA_START_RETRY_DELAY);
+        } else if (retrying && error && error.name === 'NotFoundError') {
+            _self.showStatus(_self.msgs.notReadable);
+        } else if (deviceId && error && (error.name === 'OverconstrainedError' || error.name === 'NotFoundError')) {
+            _storeFileCameraDeviceId(null);
+            _self.start(null);
+        } else {
+            _self.showError(error);
+        }
+    });
+};
+
+_FileCamera.prototype.setLive = function(live) {
+    if (this.live !== live) {
+        this.live = live;
+        $('#' + this.inquiryId + '_file_capture_button').puibutton(live ? 'enable' : 'disable');
+    }
+};
+
+_FileCamera.prototype.stop = function() {
+    this.setLive(false);
+    this.requestCount++;
+    this.pending = false;
+    if (this.stream) {
+        _stopMediaStream(this.stream);
+        this.stream = null;
+    }
+    if (this.video) {
+        this.video.srcObject = null;
+    }
+};
+
+_FileCamera.prototype.listDevices = function(currentDeviceId) {
+    if (!navigator.mediaDevices.enumerateDevices) {
+        return;
+    }
+    var _self = this;
+    navigator.mediaDevices.enumerateDevices().then(function(devices) {
+        var cameras = [];
+        for (var i = 0; i < devices.length; i++) {
+            if (devices[i].kind === 'videoinput') {
+                cameras.push(devices[i]);
+            }
+        }
+        _self.devices.empty();
+        if (cameras.length < 2) {
+            _self.devices.hide();
+            return;
+        }
+        for (var j = 0; j < cameras.length; j++) {
+            $('<option/>').val(cameras[j].deviceId).text(cameras[j].label || (_self.msgs.device + ' ' + (j + 1))).appendTo(_self.devices);
+        }
+        if (currentDeviceId) {
+            _self.devices.val(currentDeviceId);
+        }
+        _self.devices.show();
+    }, function() {
+        _self.devices.hide();
+    });
+};
+
+_FileCamera.prototype.showStatus = function(text, timeout) {
+    if (this.statusTimer) {
+        window.clearTimeout(this.statusTimer);
+        this.statusTimer = null;
+    }
+    if (text) {
+        this.status.text(text).show();
+        if (timeout) {
+            var _self = this;
+            this.statusTimer = window.setTimeout(function() {
+                _self.statusTimer = null;
+                _self.status.hide();
+            }, timeout);
+        }
+    } else {
+        this.status.hide().text('');
+    }
+};
+
+_FileCamera.prototype.showError = function(error) {
+    var name = error && error.name ? error.name : String(error);
+    switch (name) {
+        case 'NotAllowedError':
+        case 'PermissionDeniedError':
+        case 'SecurityError':
+            this.showStatus(this.msgs.permissionDenied);
+            break;
+        case 'NotFoundError':
+        case 'DevicesNotFoundError':
+        case 'OverconstrainedError':
+            this.showStatus(this.msgs.noDevice);
+            break;
+        case 'NotReadableError':
+        case 'TrackStartError':
+            this.showStatus(this.msgs.notReadable);
+            break;
+        default:
+            this.showStatus(sprintf(this.msgs.error || '%s', name));
+    }
+};
+
+_FileCamera.prototype.capture = function() {
+    if (!this.isOpen()) {
+        this.open();
+        return;
+    }
+    var video = this.video;
+    if (!this.stream || !video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) {
+        if (this.stream || !this.status.is(':visible')) {
+            this.showStatus(this.msgs.notReady, _FILE_CAMERA_STATUS_TIMEOUT);
+        }
+        return;
+    }
+    var canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    var _self = this;
+    canvas.toBlob(function(blob) {
+        if (blob == null) {
+            return;
+        }
+        try {
+            // webcam_<yyyyMMddHHmmss>.jpg, like the ctsms webcam_file_name message
+            var now = new Date();
+            var timestamp = '' + now.getFullYear() + zeroFill(now.getMonth() + 1, 2) + zeroFill(now.getDate(), 2)
+                + zeroFill(now.getHours(), 2) + zeroFill(now.getMinutes(), 2) + zeroFill(now.getSeconds(), 2);
+            var file = new File([ blob ], 'webcam_' + timestamp + '.jpg', { type: 'image/jpeg' });
+            if (_setFileInputFiles(_self.inquiryId, file)) {
+                _setFileInputFile(_self.context,_self.value,file);
+            }
+        } catch (e) {
+            setMessages('warn',[ { messageId: _self.inquiryId, summary: '' + e } ]);
+        }
+    }, 'image/jpeg', _FILE_CAMERA_JPEG_QUALITY);
+};
+
+function _stopFileCameras() {
+    for (var inquiryId in _fileCameras) {
+        if (_fileCameras.hasOwnProperty(inquiryId)) {
+            _fileCameras[inquiryId].close();
+        }
+    }
+}
 
 function _createSpinner(context,value) {
     var spinnerName = 'long_' + value.inquiry.id;
@@ -1611,9 +2010,7 @@ function _getTooltipText(context, value) {
 
 function _sanitizeForm(context) {
 
-    $('.ctsms-file-camera').each(function() {
-        _stopFileCamera(this.id.replace(/_file_camera$/, ''));
-    });
+    _stopFileCameras();
 
     if (context.checkForm) {
         if (context.trial._savedInquiryCount < context.trial._activeInquiryCount
