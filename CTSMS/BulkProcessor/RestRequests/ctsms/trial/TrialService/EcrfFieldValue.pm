@@ -207,7 +207,8 @@ sub _get_item_value {
     } elsif ($INTEGER eq $fieldtype) {
         return ($item->{longValue} // '');
     } elsif ($FILE eq $fieldtype) {
-        return (CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File::get_file_label($item->{fileValue}) // '');
+        # "<file name> (<md5>)" of the stored file
+        return (defined $item->{fileValue} ? ($item->{fileValue}->{fileName} // '') . ' (' . ($item->{fileValue}->{md5} // '') . ')' : '');
     } elsif ($item->{ecrfField}->{field}->is_text()) {
         return ($item->{textValue} // '');
     } elsif ($item->{ecrfField}->{field}->is_select()) {

@@ -88,6 +88,7 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfExport qw(
     publish_ecrf_data_xls
     publish_ecrf_data_pdf
     publish_ecrf_data_pdfs
+    publish_ecrf_data_files
 
     publish_audit_trail_xls
     publish_ecrf_journal_xls
@@ -126,6 +127,9 @@ push(@TASK_OPTS,$publish_ecrf_data_pdf_task_opt);
 
 my $publish_ecrf_data_pdfs_task_opt = 'publish_ecrf_data_pdfs';
 push(@TASK_OPTS,$publish_ecrf_data_pdfs_task_opt);
+
+my $publish_ecrf_data_files_task_opt = 'publish_ecrf_data_files';
+push(@TASK_OPTS,$publish_ecrf_data_files_task_opt);
 
 my $publish_audit_trail_xls_task_opt = 'publish_audit_trail_xls';
 push(@TASK_OPTS,$publish_audit_trail_xls_task_opt);
@@ -254,6 +258,9 @@ sub main {
                 $completion = $result;
             } elsif (lc($publish_ecrf_data_pdfs_task_opt) eq lc($task)) {
                 $result &= publish_ecrf_data_pdfs_task(\@messages,\@attachmentfiles) if taskinfo($publish_ecrf_data_pdfs_task_opt,\$result,1);
+                $completion = $result;
+            } elsif (lc($publish_ecrf_data_files_task_opt) eq lc($task)) {
+                $result &= publish_ecrf_data_files_task(\@messages,\@attachmentfiles) if taskinfo($publish_ecrf_data_files_task_opt,\$result,1);
                 $completion = $result;
 
             } elsif (lc($publish_audit_trail_xls_task_opt) eq lc($task)) {
@@ -485,6 +492,32 @@ sub publish_ecrf_data_pdfs_task {
             push(@$messages,"- file '$out->{title}' (file ID $out->{id}) added to the '$out->{trial}->{name}' trial");
         }
         push(@$messages,'- publish_ecrf_data_pdfs finished (specify --upload to store the files)') unless ('ARRAY' eq ref $uploads and (scalar @$uploads > 0));
+        return 1;
+    }
+}
+
+sub publish_ecrf_data_files_task {
+    my ($messages,$attachmentfiles) = @_;
+    my ($uploads, $errors) = (undef,undef);
+    eval {
+        ($uploads, $errors) = publish_ecrf_data_files($upload_files,$signed);
+    };
+    my $err = $@;
+    if ($err) {
+        push(@$messages,'publish_ecrf_data_files error: ' . $err);
+        return 0;
+    } else {
+        foreach my $upload (@$uploads) {
+            my ($out,$filename) = @$upload;
+            push(@$messages,"- file '$out->{title}' (file ID $out->{id}) added to the '$out->{trial}->{name}' trial");
+        }
+        # files that are too large etc. do not fail the export
+        push(@$messages,@$errors);
+        if (not $upload_files) {
+            push(@$messages,'- publish_ecrf_data_files finished (specify --upload to store the files)');
+        } elsif ((scalar @$uploads) == 0 and (scalar @$errors) == 0) {
+            push(@$messages,'- publish_ecrf_data_files finished (no files exported)');
+        }
         return 1;
     }
 }

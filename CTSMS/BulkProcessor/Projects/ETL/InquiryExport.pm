@@ -57,6 +57,9 @@ use CTSMS::BulkProcessor::Projects::ETL::InquiryExporter::Settings qw(
 
     $inquiry_data_export_pdfs_filename
 
+    $inquiry_data_export_files_filename
+    $inquiry_data_export_files_zip
+
     $inquiry_data_row_block
     
     $publish_public_file
@@ -88,6 +91,7 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Inquiry qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValues qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValue qw();
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::FileService::File qw();
 
@@ -107,6 +111,10 @@ use CTSMS::BulkProcessor::Projects::ETL::Dao::InquiryDataVertical qw();
 use CTSMS::BulkProcessor::Projects::ETL::Dao::InquiryDataHorizontal qw();
 
 use CTSMS::BulkProcessor::Projects::ETL::ExcelExport qw();
+use CTSMS::BulkProcessor::Projects::ETL::ExportFiles qw(
+    get_export_file_value
+    publish_export_files
+);
 
 use CTSMS::BulkProcessor::Array qw(array_to_map);
 
@@ -122,6 +130,7 @@ our @EXPORT_OK = qw(
     publish_inquiry_data_horizontal_csv
     publish_inquiry_data_xls
     publish_inquiry_data_pdfs
+    publish_inquiry_data_files
 );
 
 my $pdfextension = '.pdf';
@@ -136,6 +145,20 @@ sub publish_inquiry_data_pdfs {
     $result = _export_items($context) if $result;
 
     return ($result,$context->{warning_count},$context->{uploads});
+
+}
+
+sub publish_inquiry_data_files {
+
+    my ($upload_files) = @_;
+    return publish_export_files(
+        output_path => $output_path,
+        upload_files => $upload_files,
+        zip => $inquiry_data_export_files_zip,
+        zip_filename => $inquiry_data_export_files_filename,
+        subfolder => 'Files/',
+        get_file_in_code => \&_get_file_in,
+    );
 
 }
 
@@ -350,6 +373,8 @@ sub _inquiry_data_vertical_items_to_row {
     push(@row,$item->{modifiedTimestamp});
     if ($item->{inquiry}->{field}->is_select()) {
         push(@row,join($selection_set_value_separator,map { local $_ = $_; $_->{value}; } @{$item->{selectionValues}}));
+    } elsif ($item->{inquiry}->{field}->is_file()) {
+        push(@row,_get_inquiryvalue_file_value($item,$item->{proband}->{id}));
     } else {
         push(@row,$item->{_value});
     }
@@ -563,7 +588,7 @@ sub _inquiry_data_horizontal_items_to_row {
         } else {
             my ($colname) = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Inquiry::get_colnames(
                 inquiry => $item->{inquiry}, %colname_abbreviation,);
-            $value_map{$colname} = $item->{_value};
+            $value_map{$colname} = ($item->{inquiry}->{field}->is_file() ? _get_inquiryvalue_file_value($item,$context->{proband}->{id},$colname) : $item->{_value});
         }
     }
 
@@ -627,6 +652,14 @@ sub _get_inquiryvalues {
     }
 
     return \@values;
+}
+
+sub _get_inquiryvalue_file_value {
+    my ($item,$proband_id,$colname) = @_;
+    ($colname) = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Inquiry::get_colnames(
+        inquiry => $item->{inquiry}, %colname_abbreviation,) unless defined $colname;
+    return get_export_file_value($item,'inquiryvalue',$proband_id,$colname,
+        \&CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValue::download_file);
 }
 
 sub _warn_or_error {

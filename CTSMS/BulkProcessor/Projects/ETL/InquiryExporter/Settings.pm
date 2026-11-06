@@ -52,6 +52,9 @@ our @EXPORT_OK = qw(
     $inquiry_data_export_xlsx
 
     $inquiry_data_export_pdfs_filename
+
+    $inquiry_data_export_files_filename
+    $inquiry_data_export_files_zip
     
     $publish_public_file
 
@@ -72,6 +75,10 @@ our $inquiry_data_export_xls_filename = '%s%s';
 our $inquiry_data_export_xlsx = 0;
 
 our $inquiry_data_export_pdfs_filename = '%s_%s%s';
+
+# the files of exported FILE values: one zip, or individual files
+our $inquiry_data_export_files_filename = '%s%s';
+our $inquiry_data_export_files_zip = 1;
 
 our $publish_public_file = 0;
 
@@ -96,6 +103,9 @@ sub update_settings {
         $inquiry_data_export_xlsx = $data->{inquiry_data_export_xlsx} if exists $data->{inquiry_data_export_xlsx};
 
         $inquiry_data_export_pdfs_filename = $data->{inquiry_data_export_pdfs_filename} if exists $data->{inquiry_data_export_pdfs_filename};        
+
+        $inquiry_data_export_files_filename = $data->{inquiry_data_export_files_filename} if exists $data->{inquiry_data_export_files_filename};
+        $inquiry_data_export_files_zip = stringtobool($data->{inquiry_data_export_files_zip}) if exists $data->{inquiry_data_export_files_zip};
         
         $inquiry_data_row_block = $data->{inquiry_data_row_block} if exists $data->{inquiry_data_row_block};
         
