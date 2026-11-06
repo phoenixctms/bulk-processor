@@ -23,6 +23,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
     get_navigation_options
     get_template
     apply_lwp_file_response
+    create_jpeg_thumbnail
     get_error
     set_error
     add_error_data
@@ -116,6 +117,8 @@ my %field_to_param_type_map = (
 # the file_<inquiry id> param holds the FILE value state:
 # '' = clear, '<file id>' = keep the saved file, 'new' = upload in fileupload_<inquiry id>, 'pending' = keep the not yet saved upload
 my $file_upload_param_prefix = 'fileupload_';
+my $file_thumbnail_width = 320;
+my $file_thumbnail_height = 240;
 my %mime_types_cache = ();
 my $param_value_types = removeduplicates([ map { @{$_}; } values %field_to_param_type_map ]);
 my $param_value_types_re = '^(' . join('|',@$param_value_types) . ')_(\\d+)$';
@@ -230,8 +233,20 @@ Dancer::get('/inquiry',sub {
 
             fileUploadLabel => Dancer::Plugin::I18N::localize('file_upload_label'),
             fileClearLabel => Dancer::Plugin::I18N::localize('file_clear_label'),
+            fileCameraLabel => Dancer::Plugin::I18N::localize('file_camera_label'),
             fileTakePhotoLabel => Dancer::Plugin::I18N::localize('file_take_photo_label'),
             fileLinkLabel => Dancer::Plugin::I18N::localize('file_link_label'),
+            noFileLinkLabel => Dancer::Plugin::I18N::localize('no_file_link_label'),
+            photoCamMessages => {
+                notSupported => Dancer::Plugin::I18N::localize('photo_cam_not_supported'),
+                insecureContext => Dancer::Plugin::I18N::localize('photo_cam_insecure_context'),
+                permissionDenied => Dancer::Plugin::I18N::localize('photo_cam_permission_denied'),
+                noDevice => Dancer::Plugin::I18N::localize('photo_cam_no_device'),
+                notReadable => Dancer::Plugin::I18N::localize('photo_cam_not_readable'),
+                notReady => Dancer::Plugin::I18N::localize('photo_cam_not_ready'),
+                error => Dancer::Plugin::I18N::localize('photo_cam_error','%s'),
+                device => Dancer::Plugin::I18N::localize('photo_cam_device_label'),
+            },
             fileSizeLimit => $input_field_file_size_limit,
             fileSizeLimitExceededMessage => (defined $input_field_file_size_limit ? Dancer::Plugin::I18N::localize('file_size_limit_exceeded',human_readable_byte_count($input_field_file_size_limit)) : undef),
             fileMimeTypes => _get_file_mime_types(),
@@ -267,6 +282,49 @@ Dancer::get('/inquiry/file/:inquiry_id',sub {
         # uploads may be html/svg/js: never serve them inline under the signup origin
         return apply_lwp_file_response($file_response,$saved_value->{file_name},1);
     }
+
+});
+
+Dancer::get('/inquiry/file/:inquiry_id/thumbnail',sub {
+
+    my $params = Dancer::params();
+
+    # a re-encoded small jpeg of the not yet saved upload, or else of the saved file, so the original never reaches the page
+    my $trial = Dancer::session('trial');
+    my $data;
+    if ($trial and CTSMS::BulkProcessor::Projects::WebApps::Signup::Controller::Proband::created()) {
+        my $posted_inquiries_map = Dancer::session('posted_inquiries_map_' . $trial->{id}) // {};
+        my $file_value = _get_file_session_value($posted_inquiries_map->{$params->{inquiry_id}});
+        if ($file_value and $file_value->{upload}) {
+            my $path = $file_value->{upload}->{path};
+            if (_is_upload_path($path) and open(my $fh,'<:raw',$path)) {
+                local $/;
+                $data = <$fh>;
+                close $fh;
+            }
+        } else {
+            my $trial_inquiries_saved_map = Dancer::session('trial_inquiries_saved_map') // {};
+            my $saved_value = ($trial_inquiries_saved_map->{$trial->{id}} // {})->{$params->{inquiry_id}};
+            if ($saved_value and $saved_value->{id} and $saved_value->{file_name}) {
+                eval {
+                    my $file_response = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValue::download_file(
+                        $saved_value->{id},
+                        $restapi,
+                    );
+                    $data = $file_response->content if $file_response;
+                };
+            }
+        }
+    }
+    my $thumbnail = create_jpeg_thumbnail($data,$file_thumbnail_width,$file_thumbnail_height);
+    if (defined $thumbnail) {
+        Dancer::header('X-Content-Type-Options' => 'nosniff');
+        Dancer::header('Cache-Control' => 'private, no-store');
+        Dancer::content_type('image/jpeg');
+        return $thumbnail;
+    }
+    Dancer::status(HTTP::Status::HTTP_NOT_FOUND);
+    return '';
 
 });
 
@@ -742,7 +800,9 @@ sub _restore_from_session {
                     if ($is_js) {
                         $override_value = { fileName => $upload->{fileName}, mimeType => $upload->{mimeType}, image => $image, size => $upload->{size}, };
                     } else {
-                        $override_value = { fileName => $upload->{fileName}, size => $upload->{size}, contentType => { mimeType => $upload->{mimeType}, image => $image, }, };
+                        my ($mime_type) = grep { defined $upload->{mimeType} and $_->{mimeType} eq $upload->{mimeType}; } @{_get_file_mime_types()};
+                        $override_value = { fileName => $upload->{fileName}, size => $upload->{size}, contentType => { mimeType => $upload->{mimeType}, image => $image,
+                            nodeStyleClass => ($mime_type ? $mime_type->{nodeStyleClass} : undef), }, };
                         $inquiry_value->{_filePending} = \1;
                     }
                 } elsif ($state =~ /^\d+$/ and $original_value and $original_value->{id} and $original_value->{id} == $state) {
@@ -791,7 +851,7 @@ sub _get_file_mime_types {
             Dancer::error('failed to load file mime types: ' . ($@ // ''));
             return [];
         }
-        $mime_types_cache{$site_name} = [ map { { mimeType => $_->{mimeType}, fileNameExtensions => $_->{fileNameExtensions}, image => $_->{image}, }; } @$mime_types ];
+        $mime_types_cache{$site_name} = [ map { { mimeType => $_->{mimeType}, fileNameExtensions => $_->{fileNameExtensions}, image => $_->{image}, nodeStyleClass => $_->{nodeStyleClass}, }; } @$mime_types ];
     }
     return $mime_types_cache{$site_name};
 }

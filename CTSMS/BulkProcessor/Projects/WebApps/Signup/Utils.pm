@@ -75,6 +75,7 @@ our @EXPORT_OK = qw(
     get_site_option
     get_template
     apply_lwp_file_response
+    create_jpeg_thumbnail
     get_navigation_options
     set_error
     add_error_data
@@ -539,6 +540,79 @@ sub apply_lwp_file_response {
     $response->header("Content-Disposition", $content_disposition);
     $response->header("X-Content-Type-Options", 'nosniff');
     return $response;
+}
+
+# images with more pixels per side are not decoded for thumbnails, like the bounded decoding of ctsms
+my $thumbnail_max_source_dimension = 4096;
+
+sub _get_image_dimensions {
+    # format, width and height from the header of a png, gif or jpeg image, without decoding it
+    my ($data) = @_;
+    return () unless defined $data;
+    if (length($data) >= 24 and substr($data,0,8) eq "\x89PNG\r\n\x1a\n" and substr($data,12,4) eq 'IHDR') {
+        return ('png',unpack('NN',substr($data,16,8)));
+    } elsif (length($data) >= 10 and substr($data,0,6) =~ /^GIF8[79]a$/) {
+        return ('gif',unpack('vv',substr($data,6,4)));
+    } elsif (length($data) >= 4 and substr($data,0,2) eq "\xff\xd8") {
+        my $pos = 2;
+        while ($pos + 4 <= length($data)) {
+            return () unless ord(substr($data,$pos,1)) == 0xff;
+            my $marker = ord(substr($data,$pos + 1,1));
+            if ($marker == 0xff) {
+                $pos++;
+            } elsif ($marker == 0x01 or ($marker >= 0xd0 and $marker <= 0xd7)) {
+                $pos += 2;
+            } elsif ($marker == 0xd9 or $marker == 0xda) {
+                return ();
+            } else {
+                my $length = unpack('n',substr($data,$pos + 2,2));
+                if ($marker >= 0xc0 and $marker <= 0xcf and $marker != 0xc4 and $marker != 0xc8 and $marker != 0xcc) {
+                    return () if $pos + 9 > length($data);
+                    my ($height,$width) = unpack('nn',substr($data,$pos + 5,4));
+                    return ('jpeg',$width,$height);
+                }
+                $pos += 2 + $length;
+            }
+        }
+    }
+    return ();
+}
+
+sub create_jpeg_thumbnail {
+    # a re-encoded jpeg of max. $max_width x $max_height (aspect kept) from png, gif or jpeg image data, or undef.
+    # GD is optional: without it there are no thumbnails.
+    my ($data,$max_width,$max_height,$quality) = @_;
+    my ($format,$width,$height) = _get_image_dimensions($data);
+    return undef unless ($format and $width and $height
+        and $width <= $thumbnail_max_source_dimension and $height <= $thumbnail_max_source_dimension);
+    my $thumbnail;
+    eval {
+        require GD;
+        my $image;
+        if ('png' eq $format) {
+            $image = GD::Image->newFromPngData($data,1);
+        } elsif ('gif' eq $format) {
+            $image = GD::Image->newFromGifData($data);
+        } else {
+            $image = GD::Image->newFromJpegData($data,1);
+        }
+        die("cannot decode $format image\n") unless $image;
+        my $scale = $max_width / $width;
+        $scale = $max_height / $height if $max_height / $height < $scale;
+        $scale = 1 if $scale > 1;
+        my $thumbnail_width = int($width * $scale + 0.5) || 1;
+        my $thumbnail_height = int($height * $scale + 0.5) || 1;
+        my $scaled = GD::Image->new($thumbnail_width,$thumbnail_height,1);
+        # transparent areas become white
+        $scaled->filledRectangle(0,0,$thumbnail_width - 1,$thumbnail_height - 1,$scaled->colorAllocate(255,255,255));
+        $scaled->copyResampled($image,0,0,0,0,$thumbnail_width,$thumbnail_height,$image->width,$image->height);
+        $thumbnail = $scaled->jpeg($quality // 85);
+    };
+    if ($@) {
+        Dancer::debug('no thumbnail: ' . $@);
+        return undef;
+    }
+    return $thumbnail;
 }
 
 # Dancer::Template::Abstract::_prepare_tokens_options always overwrites any
