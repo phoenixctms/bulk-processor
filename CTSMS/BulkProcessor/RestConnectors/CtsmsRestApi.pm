@@ -8,6 +8,7 @@ use threads::shared 1.51 qw(shared_clone);
 
 use Encode qw();
 use URI::Escape qw();
+use MIME::Base64 qw();
 
 use HTTP::Status qw(:constants :is status_message);
 use HTTP::Request::Common qw();
@@ -326,12 +327,34 @@ sub _setup_ua {
 		SSL_verify_mode => 0,
 	);
     $ua->timeout($timeout) if $timeout;
+    my $authorization;
     if ($self->{jwt}) {
-        $ua->default_header('Authorization' => 'Bearer ' . $self->{jwt});
+        $authorization = 'Bearer ' . $self->{jwt};
     } elsif ($self->{username}) {
+        # send basic auth up front, so a request (and its body) is not sent twice to get the 401 challenge
+        $authorization = 'Basic ' . MIME::Base64::encode_base64($self->{username} . ':' . ($self->{password} // ''), '');
         $ua->credentials($netloc, $self->{realm}, $self->{username}, $self->{password});
     }
+    if (defined $authorization) {
+        # only for the api origin, also strip it from redirects to other origins
+        my $origin = _origin($self->{uri});
+        $ua->add_handler(request_prepare => sub {
+            my ($req) = @_;
+            if (_origin($req->uri) eq $origin) {
+                $req->init_header('Authorization' => $authorization);
+            } else {
+                $req->remove_header('Authorization');
+            }
+            return;
+        });
+    }
     restdebug($self,"ua configured",getlogger(__PACKAGE__));
+
+}
+
+sub _origin {
+    my ($uri) = @_;
+    return lc($uri->scheme() . '://' . $uri->host_port());
 
 }
 
