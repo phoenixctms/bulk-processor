@@ -13,6 +13,7 @@ set environment => 'production';
 my $psgi = path($RealBin, '..', 'app.pl');
 my $app = do($psgi);
 die "Unable to read startup script: $@" if $@;
-my $server = Plack::Handler::FCGI->new(nproc => 5, detach => 1);
+# processes are spawned and managed by mod_fcgid (STDIN is its socket), so no nproc or daemonize here
+my $server = Plack::Handler::FCGI->new();
 
 $server->run($app);
