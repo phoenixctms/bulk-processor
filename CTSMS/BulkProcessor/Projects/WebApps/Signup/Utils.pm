@@ -13,6 +13,7 @@ use Encode qw(encode_utf8);
 use HTTP::Status qw();
 
 use Storable qw(dclone);
+use Scalar::Util qw(reftype);
 
 use CTSMS::BulkProcessor::ConnectorPool qw(
     get_ctsms_restapi
@@ -454,12 +455,12 @@ sub get_site_option {
     my $site_label = Dancer::Plugin::I18N::localize($site->{label}) || $site_name;
     my $description;
     $description = Dancer::Plugin::I18N::localize($site->{description}) if $site->{description};
-    my $department = (ref $site->{department} eq 'HASH') ? $site->{department} : undef;
-    my $department_name = ($department and ref $department->{name} eq 'HASH') ? $department->{name} : undef;
+    my $department = ((reftype($site->{department}) // '') eq 'HASH') ? $site->{department} : undef;
+    my $department_name = ($department and (reftype($department->{name}) // '') eq 'HASH') ? $department->{name} : undef;
     my $department_label = (($department_name and exists $department_name->{$lang}) ? $department_name->{$lang} : undef)
         || (($department and exists $department->{nameL10nKey}) ? $department->{nameL10nKey} : undef);
-    my $trial_department = (ref $site->{trial_department} eq 'HASH') ? $site->{trial_department} : undef;
-    my $trial_department_name = ($trial_department and ref $trial_department->{name} eq 'HASH') ? $trial_department->{name} : undef;
+    my $trial_department = ((reftype($site->{trial_department}) // '') eq 'HASH') ? $site->{trial_department} : undef;
+    my $trial_department_name = ($trial_department and (reftype($trial_department->{name}) // '') eq 'HASH') ? $trial_department->{name} : undef;
     my $trial_department_label = (($trial_department_name and exists $trial_department_name->{$lang}) ? $trial_department_name->{$lang} : undef)
         || (($trial_department and exists $trial_department->{nameL10nKey}) ? $trial_department->{nameL10nKey} : undef);
     my $trial_count;
