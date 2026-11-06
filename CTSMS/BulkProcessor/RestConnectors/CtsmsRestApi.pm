@@ -8,6 +8,7 @@ use threads::shared 1.51 qw(shared_clone);
 
 use Encode qw();
 use URI::Escape qw();
+use MIME::Base64 qw();
 
 use HTTP::Status qw(:constants :is status_message);
 use HTTP::Request::Common qw();
@@ -328,6 +329,8 @@ sub _setup_ua {
     if ($self->{jwt}) {
         $ua->default_header('Authorization' => 'Bearer ' . $self->{jwt});
     } elsif ($self->{username}) {
+        # send basic auth up front, so a request (and its body) is not sent twice to get the 401 challenge
+        $ua->default_header('Authorization' => 'Basic ' . MIME::Base64::encode_base64($self->{username} . ':' . ($self->{password} // ''), ''));
         $ua->credentials($netloc, $self->{realm}, $self->{username}, $self->{password});
     }
     restdebug($self,"ua configured",getlogger(__PACKAGE__));
