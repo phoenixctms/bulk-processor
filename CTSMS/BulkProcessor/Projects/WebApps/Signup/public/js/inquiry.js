@@ -1296,7 +1296,7 @@ function _setFileInputFiles(inquiryId,file) {
         $('#' + inquiryId + '_file_input')[0].files = transfer.files;
         return true;
     } catch (e) {
-        setMessages('warn',[ { messageId: inquiryId, summary: '' + e } ]);
+        setMessages('warn',[ { messageId: inquiryId, summary: '' + e, detail: '' } ]);
     }
     return false;
 }
@@ -1305,7 +1305,7 @@ function _setFileInputFile(context,value,file) {
     var inquiryId = value.inquiry.id;
     if (context.fileSizeLimit != null && file.size > context.fileSizeLimit) {
         $('#' + inquiryId + '_file_input').val('');
-        setMessages('warn',[ { messageId: inquiryId, summary: context.fileSizeLimitExceededMessage } ]);
+        setMessages('warn',[ { messageId: inquiryId, summary: context.fileSizeLimitExceededMessage, detail: '' } ]);
         if ($('#' + inquiryId + '_file_state').val() == 'new') {
             // the previously selected upload is gone with the cleared input, fall back to the server-known state
             var restoredFileValue = (value.fileValue != null && (value._filePending || value.fileValue.id != null)) ? value.fileValue : null;
@@ -1319,6 +1319,8 @@ function _setFileInputFile(context,value,file) {
         }
         return;
     }
+    // drop the message of a previously rejected file
+    $('#' + inquiryId + '_message').puimessages('clear');
     $('#' + inquiryId + '_file_state').val('new');
     var mimeType = _getFileMimeType(context,file.type);
     var fileValue = {
@@ -1768,7 +1770,7 @@ _FileCamera.prototype.capture = function() {
                 _setFileInputFile(_self.context,_self.value,file);
             }
         } catch (e) {
-            setMessages('warn',[ { messageId: _self.inquiryId, summary: '' + e } ]);
+            setMessages('warn',[ { messageId: _self.inquiryId, summary: '' + e, detail: '' } ]);
         }
     }, 'image/jpeg', _FILE_CAMERA_JPEG_QUALITY);
 };
@@ -1899,6 +1901,7 @@ function _updateInquiryPbar(context) {
 function _saveEnteredData(context,ajaxContext,callback,ui,updateUi) {
     if (!context.init) {
         context.checkForm = false;
+        var uploadProgress = _createFileUploadProgress();
         if (_sanitizeForm(context)) {
             $.ajax({
                 type: "POST",
@@ -1907,6 +1910,25 @@ function _saveEnteredData(context,ajaxContext,callback,ui,updateUi) {
                 data: new FormData($('#form')[0]),
                 processData: false,
                 contentType: false,
+                xhr: function() {
+                    var xhr = $.ajaxSettings.xhr();
+                    if (uploadProgress != null && xhr.upload) {
+                        xhr.upload.addEventListener('progress', function(event) {
+                            if (event.lengthComputable && event.total > 0) {
+                                var value = Math.floor(event.loaded * 100 / event.total);
+                                if (value != uploadProgress.puiprogressbar('option', 'value')) {
+                                    uploadProgress.puiprogressbar('option', 'value', value);
+                                }
+                            }
+                        });
+                    }
+                    return xhr;
+                },
+                complete: function() {
+                    if (uploadProgress != null) {
+                        uploadProgress.remove();
+                    }
+                },
 
                 context: ajaxContext,
                 error: function(jqXHR, textStatus, errorThrown) {
@@ -1921,11 +1943,27 @@ function _saveEnteredData(context,ajaxContext,callback,ui,updateUi) {
                     _loadPage(context,ajaxContext,callback,ui,updateUi);
                 }
             });
+        } else if (uploadProgress != null) {
+            uploadProgress.remove();
         }
     } else {
         _loadPage(context,ajaxContext,callback,ui,updateUi);
 
     }
+}
+
+function _createFileUploadProgress() {
+    // like the primefaces file upload: a progress bar in the wait dialog while the page is posted with files
+    var uploading = false;
+    $('#form input[type="file"]').each(function() {
+        if (this.files != null && this.files.length > 0) {
+            uploading = true;
+        }
+    });
+    if (!uploading) {
+        return null;
+    }
+    return $('<div class="ctsms-file-upload-progress"/>').appendTo($('#wait_dlg')).puiprogressbar({ effectSpeed: 0 });
 }
 
 function _loadPage(context,ajaxContext,callback,ui,updateUi) {
