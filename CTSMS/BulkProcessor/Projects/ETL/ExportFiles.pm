@@ -72,6 +72,7 @@ sub get_export_file_count {
 sub publish_export_files {
     # downloads the registered files and stores them as one zip or individually. returns the uploads
     # ([ $out, $localfile, $filename, $mimetype ]) and the messages of files that could not be added.
+    # dies if the zip cannot be written or uploaded. the registered files are cleared.
     my %params = @_;
     my ($output_path,$upload_files,$zip,$zip_filename,$timestamp_suffix,$subfolder,$get_file_in_code) = @params{qw/
         output_path
@@ -84,6 +85,7 @@ sub publish_export_files {
     /};
     my @uploads = ();
     my @errors = ();
+    my $fatal;
     my @paths = sort keys %export_files;
     return (\@uploads,\@errors) unless scalar @paths;
 
@@ -100,7 +102,8 @@ sub publish_export_files {
             my $res = &{$export_file->{download_code}}($export_file->{value_id});
             die("no file content\n") unless ($res and defined $res->content_ref);
             my $md5 = Digest::MD5::md5_hex(${$res->content_ref});
-            push(@errors,"- file '$path': downloaded file MD5 $md5 differs from the exported MD5 " . ($export_file->{md5} // '')) if $md5 ne lc($export_file->{md5} // '');
+            push(@errors,"- file '$path': downloaded file MD5 $md5 differs from the exported MD5 $export_file->{md5}")
+                if (defined $export_file->{md5} and length($export_file->{md5}) > 0 and $md5 ne lc($export_file->{md5}));
             open(my $fh,'>',$localfile) or die("cannot create $localfile: $!\n");
             binmode($fh);
             print $fh ${$res->content_ref};
@@ -143,13 +146,13 @@ sub publish_export_files {
                     };
                     if (my $err = $@) {
                         chomp($err);
-                        push(@errors,"- file '$filename' could not be uploaded: $err");
+                        $fatal = "file '$filename' could not be uploaded: $err";
                     } elsif ($out) {
                         push(@uploads,[ $out,$outputfile,$filename,$zipmimetype ]);
                     }
                 }
             } else {
-                push(@errors,"- file '$filename' could not be written");
+                $fatal = "file '$filename' could not be written";
             }
         }
     } elsif ($upload_files) {
@@ -174,6 +177,11 @@ sub publish_export_files {
     }
     rmdir($download_dir);
 
+    # a later publication only gets the files registered after this one
+    %export_files = ();
+    %export_file_paths = ();
+
+    die($fatal . "\n") if defined $fatal;
     return (\@uploads,\@errors);
 }
 

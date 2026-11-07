@@ -1236,6 +1236,9 @@ function _initFileInput(context,value,content) {
             icon: 'fa-times',
             click: function(event) {
                 fileInput.val('');
+                // the cleared file must not be restored when a later file is rejected
+                value.fileValue = null;
+                value._filePending = false;
                 $('#' + inquiryId + '_file_state').val('');
                 _showFileInfo(context,value,null,false);
                 _fileOnChange(value,null);
