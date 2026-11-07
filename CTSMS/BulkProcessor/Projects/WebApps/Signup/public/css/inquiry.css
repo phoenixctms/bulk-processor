@@ -94,6 +94,12 @@
     padding: 0.2em 0;
 }
 
+.ctsms-file-upload-progress {
+    width: 240px;
+    max-width: 100%;
+    margin: 8px auto 0 auto;
+}
+
 .ctsms-input-file-image-preview {
     display: block;
     max-width: 320px;
