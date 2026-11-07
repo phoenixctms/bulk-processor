@@ -140,10 +140,11 @@ our $rest_api_jwt_reissue_on_ajax = 0;
 # Set input_field_integer_text: false in settings.yml to restore the spinner.
 our $input_field_integer_text = 1;
 
-# Max. size (bytes) of a FILE inquiry upload, checked before it is kept for saving.
-# Default: 5 MiB, the default of the ctsms external_file_content_size_limit the server enforces for FILE values.
-# undef: no limit here (the server still enforces its limit).
-our $input_field_file_size_limit = 5 * 1024 * 1024;
+# Max. size (bytes) of a FILE inquiry upload, checked before it is kept for saving. The limit is the ctsms
+# input_field_file_value_size_limit (tools/inputfieldvaluefileuploadsizelimit), this setting can only lower it,
+# e.g. to stay below the mod_fcgid FcgidMaxRequestLen. It is also the limit while ctsms cannot be asked.
+# Default: undef, no lower limit here.
+our $input_field_file_size_limit = undef;
 
 sub update_settings {
 

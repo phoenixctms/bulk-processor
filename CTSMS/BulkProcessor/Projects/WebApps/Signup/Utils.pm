@@ -37,6 +37,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $google_site_verification
     $favicon
     $rest_api_jwt_reissue_on_ajax
+    $input_field_file_size_limit
 );
 use CTSMS::BulkProcessor::Calendar qw(
     split_datetime
@@ -101,10 +102,12 @@ our @EXPORT_OK = qw(
     sanitize_decimal
     sanitize_integer
     get_lang
+    get_input_field_file_size_limit
 );
 
 use CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::Login qw();
+use CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::InputFieldValueFileUploadSizeLimit qw();
 
 our $restapi = \&get_restapi;
 
@@ -401,6 +404,36 @@ sub save_params {
 
 sub get_restapi {
     return get_ctsms_site_lang_restapi(get_site_name(), get_lang());
+}
+
+my %file_size_limits = (); # site name -> [ limit, retrieved at ]
+my $file_size_limit_ttl = 600;
+
+sub get_input_field_file_size_limit {
+    # the max. size (bytes) of a FILE inquiry upload: the ctsms limit for FILE values, capped by the
+    # input_field_file_size_limit setting. undef if there is no limit.
+    my $site_name = get_site_name();
+    my $cached = $file_size_limits{$site_name};
+    unless ($cached and time() - $cached->[1] < $file_size_limit_ttl) {
+        my $limit;
+        eval {
+            $limit = CTSMS::BulkProcessor::RestRequests::ctsms::shared::ToolsService::InputFieldValueFileUploadSizeLimit::get_input_field_value_file_upload_size_limit(get_restapi());
+        };
+        if ($@) {
+            # no limit but the setting, retried after a minute
+            Dancer::error('failed to retrieve the input field value file upload size limit: ' . $@);
+            $limit = undef;
+            $cached = [ $limit, time() - $file_size_limit_ttl + 60 ];
+        } else {
+            $cached = [ $limit, time() ];
+        }
+        $file_size_limits{$site_name} = $cached;
+    }
+    my $limit = $cached->[0];
+    if (defined $input_field_file_size_limit and (not defined $limit or $input_field_file_size_limit < $limit)) {
+        $limit = $input_field_file_size_limit;
+    }
+    return $limit;
 }
 
 sub get_site_name {

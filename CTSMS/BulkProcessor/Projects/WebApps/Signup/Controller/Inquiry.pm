@@ -50,6 +50,7 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Utils qw(
 
     check_done
     check_prev
+    get_input_field_file_size_limit
 );
 
 use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
@@ -60,7 +61,6 @@ use CTSMS::BulkProcessor::Projects::WebApps::Signup::Settings qw(
     $ctsms_sites
     $input_field_integer_text
     $file_uploads_path
-    $input_field_file_size_limit
 );
 
 
@@ -179,6 +179,7 @@ Dancer::get('/inquiry',sub {
     my $inquiry_page = Dancer::session('inquiry_page');
     $inquiry_page = 0 unless defined $inquiry_page;
     Dancer::debug("showing inquiry page $inquiry_page");
+    my $file_size_limit = get_input_field_file_size_limit();
 
     return get_template('inquiry',
         script_names => [ 'sketch/jquery.colorPicker', 'sketch/raphael-2.2.0', 'sketch/raphael.sketchpad', 'sketch/json2.min', 'sketch/sketch',
@@ -247,8 +248,8 @@ Dancer::get('/inquiry',sub {
                 error => Dancer::Plugin::I18N::localize('photo_cam_error','%s'),
                 device => Dancer::Plugin::I18N::localize('photo_cam_device_label'),
             },
-            fileSizeLimit => $input_field_file_size_limit,
-            fileSizeLimitExceededMessage => (defined $input_field_file_size_limit ? Dancer::Plugin::I18N::localize('file_size_limit_exceeded',human_readable_byte_count($input_field_file_size_limit)) : undef),
+            fileSizeLimit => $file_size_limit,
+            fileSizeLimitExceededMessage => (defined $file_size_limit ? Dancer::Plugin::I18N::localize('file_size_limit_exceeded',human_readable_byte_count($file_size_limit)) : undef),
             fileMimeTypes => _get_file_mime_types(),
 
         },
@@ -865,12 +866,13 @@ sub _is_upload_path {
 
 sub _store_upload {
     my ($upload) = @_;
+    my $file_size_limit = get_input_field_file_size_limit();
     my %stored = (
         fileName => $upload->filename,
         mimeType => $upload->type,
         size => $upload->size,
     );
-    if (not defined $input_field_file_size_limit or $upload->size <= $input_field_file_size_limit) {
+    if (not defined $file_size_limit or $upload->size <= $file_size_limit) {
         # keep the upload until the page is saved, only the path goes to the session
         my $path = tempfilename('upload_XXXXXXXXXX',$file_uploads_path);
         if ($upload->copy_to($path)) {
@@ -1080,8 +1082,9 @@ sub _get_inquiryvalues_in {
                 $in{fileValueId} = undef;
                 $in{fileValue} = undef;
                 if (my $upload = $session_value->{upload}) {
-                    if (defined $input_field_file_size_limit and $upload->{size} > $input_field_file_size_limit) {
-                        &$error_code(undef,Dancer::Plugin::I18N::localize('file_size_limit_exceeded',human_readable_byte_count($input_field_file_size_limit)));
+                    my $file_size_limit = get_input_field_file_size_limit();
+                    if (defined $file_size_limit and $upload->{size} > $file_size_limit) {
+                        &$error_code(undef,Dancer::Plugin::I18N::localize('file_size_limit_exceeded',human_readable_byte_count($file_size_limit)));
                     } elsif (not _is_upload_path($upload->{path})) {
                         &$error_code(undef,"file upload $upload->{fileName} not available");
                     }
