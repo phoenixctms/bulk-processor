@@ -89,6 +89,8 @@ function initPrimeUI(context) {
                 if (signedUp) {
                     button.puibutton('disable'); //already signed up
                     $('#done_btn').puibutton('enable');
+                } else if (!trial.signupProbandList) {
+                    button.puibutton('disable'); //nothing to sign up for, e.g. an inquiry active for signup but not active
                 }
             }
 
