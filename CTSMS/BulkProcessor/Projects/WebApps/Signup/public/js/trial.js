@@ -92,6 +92,13 @@ function initPrimeUI(context) {
 
             var panel = $('<div title="' + trial.name + '"/>').puipanel();
             panel.append(grid);
+            if (trial.status != null && trial.status.name) {
+                var status = $('<span class="ui-corner-all ctsms-trial-status"/>').text(trial.status.name);
+                if (trial.status.color) {
+                    status.css('background-color', trial.status.color.toLowerCase());
+                }
+                panel.find('.ui-panel-titlebar .ui-panel-title').after(status);
+            }
 
             return panel;
         },
