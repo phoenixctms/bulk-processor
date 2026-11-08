@@ -58,7 +58,12 @@ function initPrimeUI(context) {
 
             row = $('<div class="ui-grid-row"/>');
             var _trial = (context.inquiryTrial != null && trial._activeInquiryCount == 0 && trial.signupInquiries) ? context.inquiryTrial : trial;
-            if (_trial._activeInquiryCount > 0) {
+            var inquiries = (_trial._activeInquiryCount > 0 && _trial.signupInquiries);
+            var inquiriesNa = (inquiries && _trial._signupInquiriesNa == 1); //not $item->{status}->{inquiryValueInputEnabled}
+            if (inquiriesNa && trial.signupProbandList) {
+                inquiries = false; //plain proband list signup
+            }
+            if (inquiries) {
 
                 var progressBar = $('<div id="trial_' + trial.id + '_pbar"/>').puiprogressbar({
                     labelTemplate: sprintf(context.inquiriesPbarTemplate, +_trial._savedInquiryCount, +_trial._activeInquiryCount),
@@ -70,23 +75,20 @@ function initPrimeUI(context) {
                 row.append($('<div class="ui-grid-col-5 ctsms-pbar-cell"/>'));
             }
 
-            var button = $('<button name="trial" type="submit" value="' + trial.id + '">' + (_trial._activeInquiryCount > 0 ? context.openInquiriesBtnLabel : context.signupBtnLabel) + '</button>').puibutton({
-                icon: (_trial._activeInquiryCount > 0 ? 'fa-caret-right' : 'fa-user-plus'),
-                iconPos: (_trial._activeInquiryCount > 0 ? 'right' : 'left')
+            var button = $('<button name="trial" type="submit" value="' + trial.id + '">' + (inquiries ? context.openInquiriesBtnLabel : context.signupBtnLabel) + '</button>').puibutton({
+                icon: (inquiries ? 'fa-caret-right' : 'fa-user-plus'),
+                iconPos: (inquiries ? 'right' : 'left')
             });
 
-            var disabled = false;
-            if (_trial._activeInquiryCount > 0) {
-                if (_trial._signupInquiriesNa == 1) {
-                    button.puibutton('disable'); //not $item->{status}->{inquiryValueInputEnabled} or not $item->{signupInquiries}
+            if (inquiries) {
+                if (inquiriesNa) {
+                    button.puibutton('disable'); //not $item->{status}->{inquiryValueInputEnabled}
                     $('#done_btn').puibutton('enable');
-                    disabled = true;
                 }
             } else {
                 if (signedUp) {
                     button.puibutton('disable'); //already signed up
                     $('#done_btn').puibutton('enable');
-                    disabled = true;
                 }
             }
 
@@ -94,7 +96,7 @@ function initPrimeUI(context) {
             grid.append(row);
 
             var title = trial.name;
-            if (disabled && trial.status != null && trial.status.name) {
+            if (inquiries && inquiriesNa && trial.status != null && trial.status.name) {
                 title += ' (' + trial.status.name + ')';
             }
             var panel = $('<div/>').attr('title', title).puipanel();
