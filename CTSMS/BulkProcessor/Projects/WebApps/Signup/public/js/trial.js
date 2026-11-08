@@ -75,30 +75,30 @@ function initPrimeUI(context) {
                 iconPos: (_trial._activeInquiryCount > 0 ? 'right' : 'left')
             });
 
+            var disabled = false;
             if (_trial._activeInquiryCount > 0) {
                 if (_trial._signupInquiriesNa == 1) {
                     button.puibutton('disable'); //not $item->{status}->{inquiryValueInputEnabled} or not $item->{signupInquiries}
                     $('#done_btn').puibutton('enable');
+                    disabled = true;
                 }
             } else {
                 if (signedUp) {
                     button.puibutton('disable'); //already signed up
                     $('#done_btn').puibutton('enable');
+                    disabled = true;
                 }
             }
-                      
+
             row.append($('<div class="ui-grid-col-7" style="text-align:right;"/>').append(button));
             grid.append(row);
 
-            var panel = $('<div title="' + trial.name + '"/>').puipanel();
-            panel.append(grid);
-            if (trial.status != null && trial.status.name) {
-                var status = $('<span class="ui-corner-all ctsms-trial-status"/>').text(trial.status.name);
-                if (trial.status.color) {
-                    status.css('background-color', trial.status.color.toLowerCase());
-                }
-                panel.find('.ui-panel-titlebar .ui-panel-title').after(status);
+            var title = trial.name;
+            if (disabled && trial.status != null && trial.status.name) {
+                title += ' (' + trial.status.name + ')';
             }
+            var panel = $('<div/>').attr('title', title).puipanel();
+            panel.append(grid);
 
             return panel;
         },
