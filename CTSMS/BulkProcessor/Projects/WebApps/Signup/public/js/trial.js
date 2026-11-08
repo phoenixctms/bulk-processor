@@ -95,11 +95,7 @@ function initPrimeUI(context) {
             row.append($('<div class="ui-grid-col-7" style="text-align:right;"/>').append(button));
             grid.append(row);
 
-            var title = trial.name;
-            if (inquiries && inquiriesNa && trial.status != null && trial.status.name) {
-                title += ' (' + trial.status.name + ')';
-            }
-            var panel = $('<div/>').attr('title', title).puipanel();
+            var panel = $('<div title="' + trial.name + '"/>').puipanel();
             panel.append(grid);
 
             return panel;
