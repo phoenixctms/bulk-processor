@@ -16,19 +16,13 @@ pre {
     padding-left: 1em;
 }
 
-footer {
+#footer {
     font-size: 10px;
 }
 
 span.key {
     color: #449;
     font-weight: bold;
-    width: 120px;
-    display: inline;
-}
-
-span.value {
-    color: #494;
 }
 
 /* these are for the message boxes */

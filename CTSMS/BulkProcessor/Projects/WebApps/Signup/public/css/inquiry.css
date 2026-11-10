@@ -53,15 +53,24 @@
     display: none;
 }
 
+/* a fieldset is at least as wide as its widest content by default (min-width: min-content), so a wide field
+   (e.g. a sketch) would widen the whole inquiry beyond a narrow screen, where body's overflow-x: hidden cuts it off: */
+.ctsms-inquiries-content fieldset.ui-fieldset {
+    min-width: 0;
+}
+
+/* the sketch toolbar and pad have fixed pixel sizes: scroll them on narrow screens instead */
+.ctsms-sketch-content {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
 /* FILE fields, like the ctsms upload control (default.css ctsms-upload-control*, ctsms-input-file-*, photoCam.css) */
 
 .ctsms-input-file-label {
     padding: 2px 0 4px 0;
     word-break: break-all;
-}
-
-.ctsms-input-file-link.ui-state-disabled {
-    cursor: default;
 }
 
 .ctsms-upload-control .fileupload-buttonbar {
@@ -103,7 +112,8 @@
 .ctsms-input-file-image-preview {
     display: block;
     max-width: 320px;
-    max-width: min(320px, 100%);
+    /* the 1px border on each side comes on top of the (content-box) width: */
+    max-width: min(320px, 100% - 2px);
     max-height: 240px;
     margin: 4px 0;
     border: 1px solid #cccccc;
@@ -120,11 +130,23 @@
 
 .ctsms-upload-control-camera .fileupload-content > * {
     flex: 0 0 100%;
+    order: 4;
+}
+
+/* forces the line break after the current image and the live view, so the camera selector never goes next to them: */
+.ctsms-upload-control-camera .fileupload-content::after {
+    content: "";
+    flex: 0 0 100%;
     order: 3;
 }
 
+/* not wider than the preview: a large image's own width (from max-height) would otherwise widen the item,
+   which then overflows on narrow screens */
 .ctsms-upload-control-camera .fileupload-content > .ctsms-input-file-current {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 322px;
+    max-width: min(322px, 100%);
     order: 1;
 }
 
@@ -149,6 +171,7 @@
 
 .ctsms-upload-control-camera .fileupload-content > .ctsms-photocam-devices {
     flex: 0 0 auto;
+    order: 4;
 }
 
 .ctsms-upload-control:not(.ctsms-upload-control-camera) .fileupload-content > .ctsms-photocam-devices {
@@ -273,20 +296,12 @@
     background-image: url(../images/mimetypes/html.gif);
 }
 
-.ctsms-mimetype-application-xhtml-xml {
-    background-image: url(../images/mimetypes/html.gif);
-}
-
 .ctsms-mimetype-image-jpeg {
     background-image: url(../images/mimetypes/jpg.gif);
 }
 
 .ctsms-mimetype-application-javascript {
     background-image: url(../images/mimetypes/js.gif);
-}
-
-.ctsms-mimetype-audio-midi {
-    background-image: url(../images/mimetypes/midi.png);
 }
 
 .ctsms-mimetype-audio-midi {
@@ -400,44 +415,3 @@
 .ctsms-mimetype-image-tiff {
     background-image: url(../images/mimetypes/tif.gif);
 }
-
-/* binary.png
-bmp.gif
-cab.gif
-css.gif
-csv.gif
-doc.gif
-dvi.png
-dwg.gif
-dxf.gif
-eps.gif
-fdf.gif
-fla.gif
-fon.gif
-gif.gif
-hlp.gif
-html.gif
-ini.gif
-jpg.gif
-js.gif
-midi.png
-pdf.gif
-php.gif
-png.gif
-ppt.gif
-ps.gif
-real.png
-sound.png
-swf.gif
-tar.png
-tcl.gif
-tgz.png
-tsv.gif
-txt.gif
-vectorgfx.png
-video.png
-xls.gif
-xml.gif
-xsl.gif
-zip.gif
-_misc.gif */

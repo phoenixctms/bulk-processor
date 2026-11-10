@@ -1112,7 +1112,7 @@ function _createSketchpad(context,value) {
         (value.inquiry.field.width == null ? '' : value.inquiry.field.width) + 'px;height:' +
         (value.inquiry.field.height == null ? '' : value.inquiry.field.height) + 'px;' + style + '"/>');
 
-    var content = $('<span/>');
+    var content = $('<span class="ctsms-sketch-content"/>');
     if (!value.inquiry.disabled) {
         var buttonRow = $('<tr/>');
         buttonRow.append(_createSketchpadButton(sketchpadDivId + "_regionToggler", "sketch-region-toggler-off", context.sketchToggleRegionTooltip));
