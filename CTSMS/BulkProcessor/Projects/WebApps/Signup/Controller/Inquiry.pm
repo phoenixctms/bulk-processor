@@ -197,7 +197,8 @@ Dancer::get('/inquiry',sub {
             trial => $trial,
             trialBase64 => to_json_base64($trial),
             probandBase64 => to_json_base64(Dancer::session('proband_out')),
-            probandAddressesBase64 => to_json_base64($address ? [ $address ] : Dancer::session('proband_addresses')),
+            # the address is optional on the contact page, so there may be none (to_json takes no undef):
+            probandAddressesBase64 => to_json_base64($address ? [ $address ] : (Dancer::session('proband_addresses') // [])),
 
             ctsmsBaseUri => get_ctsms_baseuri(),
             fieldsPerPage => $fields_per_page, #5,
