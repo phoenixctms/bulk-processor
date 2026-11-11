@@ -15,6 +15,8 @@ use CTSMS::BulkProcessor::Utils qw(
     booltostring
 );
 
+use Encode qw();
+
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SearchService::Criteria qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SearchService::Criterion qw();
 use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::DBModule qw(
@@ -50,6 +52,19 @@ sub _query_option_supplied {
 sub _same_text {
     my ($left, $right) = @_;
     return defined $left && defined $right && lc($left) eq lc($right);
+}
+
+# Job and shell arguments arrive as raw UTF-8 bytes. uri_escape_utf8 encodes a
+# character string, so leaving the bytes unmarked would encode them a second time.
+sub _utf8_characters {
+    my ($value) = @_;
+    return $value unless defined $value;
+    return $value if Encode::is_utf8($value);
+    my $characters = $value;
+    eval {
+        $characters = Encode::decode('UTF-8', $value, Encode::FB_CROAK);
+    };
+    return $characters;
 }
 
 sub _find_proband_queries {
@@ -94,16 +109,21 @@ sub _find_proband_queries {
 
 sub resolve_proband_criteria {
     my $logger = getlogger(__PACKAGE__);
+    $proband_criteria_label = _utf8_characters($proband_criteria_label);
+    $proband_criteria_category = _utf8_characters($proband_criteria_category);
     if (_query_option_supplied() and not proband_criteria_active()) {
         scripterror('--query requires a value', $logger);
     }
-    my $category = (defined $proband_criteria_category && length($proband_criteria_category) > 0) ? $proband_criteria_category : undef;
-    if (defined $category and not proband_criteria_active()) {
+    if (defined $proband_criteria_category and length($proband_criteria_category) == 0) {
+        scripterror('--query-category requires a value', $logger);
+    }
+    if (defined $proband_criteria_category and not proband_criteria_active()) {
         scripterror('--query-category requires --query', $logger);
     }
     return unless proband_criteria_active();
 
     my $label = $proband_criteria_label;
+    my $category = $proband_criteria_category;
     my $module = CTSMS::BulkProcessor::RestRequests::ctsms::shared::SearchService::Criteria::get_module($PROBAND_DB);
     my @matches = _find_proband_queries($module, $category, $label);
     my $named = defined $category ? "'$label' in category '$category'" : "'$label'";
