@@ -29,6 +29,7 @@ our @EXPORT_OK = qw(
     $proband_criteria_category
     $proband_criteria_in
     proband_criteria_active
+    prepare_quoted_argv
     resolve_proband_criteria
     search_proband_page
 );
@@ -43,12 +44,43 @@ sub proband_criteria_active {
     return defined $proband_criteria_label && length($proband_criteria_label) > 0;
 }
 
-# A job command is split on whitespace, so a space in the label or category is passed as %20.
-sub _decode_query_text {
-    my ($value) = @_;
-    return undef unless defined $value && length($value) > 0;
-    $value =~ s/%20/ /gi;
-    return length($value) > 0 ? $value : undef;
+# Job commands are split on whitespace and the quote characters are kept. Join a
+# double-quoted value back into one argument and drop those quotes.
+sub prepare_quoted_argv {
+    my @joined;
+    my $pending;
+    foreach my $token (@ARGV) {
+        if (defined $pending) {
+            $pending .= ' ' . $token;
+            if (not _open_double_quote($pending)) {
+                push(@joined, _unquote_token($pending));
+                $pending = undef;
+            }
+        } elsif (_open_double_quote($token)) {
+            $pending = $token;
+        } else {
+            push(@joined, _unquote_token($token));
+        }
+    }
+    push(@joined, _unquote_token($pending)) if defined $pending;
+    @ARGV = @joined;
+}
+
+sub _open_double_quote {
+    my ($token) = @_;
+    my $count = () = $token =~ /"/g;
+    return $count % 2;
+}
+
+sub _unquote_token {
+    my ($token) = @_;
+    if ($token =~ m/^(--?[^=\s]+)="(.*)"$/s) {
+        return $1 . '=' . $2;
+    }
+    if ($token =~ m/^"(.*)"$/s) {
+        return $1;
+    }
+    return $token;
 }
 
 sub _find_proband_queries {
@@ -92,9 +124,7 @@ sub _find_proband_queries {
 }
 
 sub resolve_proband_criteria {
-    $proband_criteria_label = _decode_query_text($proband_criteria_label);
-    $proband_criteria_category = _decode_query_text($proband_criteria_category);
-    my $category = $proband_criteria_category;
+    my $category = (defined $proband_criteria_category && length($proband_criteria_category) > 0) ? $proband_criteria_category : undef;
     my $logger = getlogger(__PACKAGE__);
     if (defined $category and not proband_criteria_active()) {
         scripterror('--query-category requires --query', $logger);
