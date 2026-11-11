@@ -43,6 +43,11 @@ sub proband_criteria_active {
     return defined $proband_criteria_label && length($proband_criteria_label) > 0;
 }
 
+sub _same_text {
+    my ($left, $right) = @_;
+    return defined $left && defined $right && lc($left) eq lc($right);
+}
+
 sub _find_proband_queries {
     my ($module, $category, $label) = @_;
     my @matches = ();
@@ -71,9 +76,9 @@ sub _find_proband_queries {
         last unless @$items;
         foreach my $item (@$items) {
             next if $item->{deferredDelete};
-            next unless defined $item->{label} and $item->{label} eq $label;
+            next unless _same_text($item->{label}, $label);
             if (defined $category) {
-                next unless defined $item->{category} and $item->{category} eq $category;
+                next unless _same_text($item->{category}, $category);
             }
             next if $seen{$item->{id}}++;
             push(@matches, $item);
