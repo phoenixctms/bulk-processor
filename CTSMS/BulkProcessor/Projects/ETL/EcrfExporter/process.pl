@@ -41,6 +41,7 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfExporter::Settings qw(
 );
 use CTSMS::BulkProcessor::Projects::ETL::ProbandCriteria qw(
     $proband_criteria_label
+    $proband_criteria_category
     proband_criteria_active
     resolve_proband_criteria
 );
@@ -189,6 +190,7 @@ sub init {
         "signed" => \$signed,
         "tz=s" => \$timezone,
         "query=s" => \$proband_criteria_label,
+        "query-category=s" => \$proband_criteria_category,
     );
 
     my $result = load_config($configfile);

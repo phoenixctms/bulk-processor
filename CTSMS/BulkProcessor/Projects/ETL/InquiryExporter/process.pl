@@ -40,6 +40,7 @@ use CTSMS::BulkProcessor::Projects::ETL::InquiryExporter::Settings qw(
 );
 use CTSMS::BulkProcessor::Projects::ETL::ProbandCriteria qw(
     $proband_criteria_label
+    $proband_criteria_category
     resolve_proband_criteria
 );
 use CTSMS::BulkProcessor::Logging qw(
@@ -152,6 +153,7 @@ sub init {
         "upload" => \$upload_files,
         "tz=s" => \$timezone,
         "query=s" => \$proband_criteria_label,
+        "query-category=s" => \$proband_criteria_category,
     );
 
     my $result = load_config($configfile);
