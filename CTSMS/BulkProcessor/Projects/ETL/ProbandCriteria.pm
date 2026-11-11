@@ -41,9 +41,18 @@ sub proband_criteria_active {
     return defined $proband_criteria_label && length($proband_criteria_label) > 0;
 }
 
+sub _split_query_name {
+    my ($name) = @_;
+    if (defined $name and $name =~ m{^([^/]+)/(.+)$}) {
+        return ($1, $2);
+    }
+    return (undef, $name);
+}
+
 sub resolve_proband_criteria {
     return unless proband_criteria_active();
 
+    my ($category, $label) = _split_query_name($proband_criteria_label);
     my $module = CTSMS::BulkProcessor::RestRequests::ctsms::shared::SearchService::Criteria::get_module($PROBAND_DB);
     my @matches = ();
     my %seen = ();
@@ -61,16 +70,20 @@ sub resolve_proband_criteria {
         my $sf = {
             sort_by => 'id',
             sort_dir => 'asc',
-            label => $proband_criteria_label,
+            label => $label,
             deferredDelete => booltostring(0),
         };
+        $sf->{category} = $category if defined $category;
         my $items = CTSMS::BulkProcessor::RestRequests::ctsms::shared::SearchService::Criteria::get_list($module, $p, $sf) // [];
         $total_count = $p->{total_count} if defined $p->{total_count};
         $page_num += 1;
         last unless @$items;
         foreach my $item (@$items) {
             next if $item->{deferredDelete};
-            next unless defined $item->{label} and $item->{label} eq $proband_criteria_label;
+            next unless defined $item->{label} and $item->{label} eq $label;
+            if (defined $category) {
+                next unless defined $item->{category} and $item->{category} eq $category;
+            }
             next if $seen{$item->{id}}++;
             push(@matches, $item);
         }
@@ -78,15 +91,16 @@ sub resolve_proband_criteria {
     }
 
     my $logger = getlogger(__PACKAGE__);
+    my $query_name = defined $category ? "$category/$label" : $label;
     if ((scalar @matches) == 0) {
-        scripterror("no proband query named '$proband_criteria_label'", $logger);
+        scripterror("no proband query named '$query_name'", $logger);
     } elsif ((scalar @matches) > 1) {
         my $ids = join(', ', map { $_->{id}; } @matches);
-        scripterror("proband query '$proband_criteria_label' is not unique (ids: $ids)", $logger);
+        scripterror("proband query '$query_name' is not unique (ids: $ids)", $logger);
     }
 
     my $criteria = CTSMS::BulkProcessor::RestRequests::ctsms::shared::SearchService::Criteria::get_item($matches[0]->{id});
-    scripterror("error loading proband query '$proband_criteria_label'", $logger) unless $criteria;
+    scripterror("error loading proband query '$query_name'", $logger) unless $criteria;
     my $criterions = $criteria->{criterions};
     if (not defined $criterions or 'ARRAY' ne ref $criterions) {
         $criterions = CTSMS::BulkProcessor::RestRequests::ctsms::shared::SearchService::Criterion::get_items($criteria->{id}) // [];
