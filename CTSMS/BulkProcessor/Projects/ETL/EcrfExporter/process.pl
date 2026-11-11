@@ -237,7 +237,15 @@ sub main {
         update_job($FAILED_JOB_STATUS);
         return 0;
     },getlogger(getscriptpath()));
-    resolve_proband_criteria();
+    eval {
+        resolve_proband_criteria();
+    };
+    if (my $err = $@) {
+        eval {
+            update_job($FAILED_JOB_STATUS);
+        };
+        die $err;
+    }
     if (defined $tasks and 'ARRAY' eq ref $tasks and (scalar @$tasks) > 0) {
 
         foreach my $task (@$tasks) {
