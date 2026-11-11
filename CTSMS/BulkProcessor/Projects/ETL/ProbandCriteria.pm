@@ -43,6 +43,10 @@ sub proband_criteria_active {
     return defined $proband_criteria_label && length($proband_criteria_label) > 0;
 }
 
+sub _query_option_supplied {
+    return defined $proband_criteria_label;
+}
+
 sub _same_text {
     my ($left, $right) = @_;
     return defined $left && defined $right && lc($left) eq lc($right);
@@ -89,8 +93,11 @@ sub _find_proband_queries {
 }
 
 sub resolve_proband_criteria {
-    my $category = (defined $proband_criteria_category && length($proband_criteria_category) > 0) ? $proband_criteria_category : undef;
     my $logger = getlogger(__PACKAGE__);
+    if (_query_option_supplied() and not proband_criteria_active()) {
+        scripterror('--query requires a value', $logger);
+    }
+    my $category = (defined $proband_criteria_category && length($proband_criteria_category) > 0) ? $proband_criteria_category : undef;
     if (defined $category and not proband_criteria_active()) {
         scripterror('--query-category requires --query', $logger);
     }
