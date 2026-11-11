@@ -43,10 +43,12 @@ sub proband_criteria_active {
     return defined $proband_criteria_label && length($proband_criteria_label) > 0;
 }
 
-sub _defined_text {
+# A job command is split on whitespace, so a space in the label or category is passed as %20.
+sub _decode_query_text {
     my ($value) = @_;
     return undef unless defined $value && length($value) > 0;
-    return $value;
+    $value =~ s/%20/ /gi;
+    return length($value) > 0 ? $value : undef;
 }
 
 sub _find_proband_queries {
@@ -90,7 +92,9 @@ sub _find_proband_queries {
 }
 
 sub resolve_proband_criteria {
-    my $category = _defined_text($proband_criteria_category);
+    $proband_criteria_label = _decode_query_text($proband_criteria_label);
+    $proband_criteria_category = _decode_query_text($proband_criteria_category);
+    my $category = $proband_criteria_category;
     my $logger = getlogger(__PACKAGE__);
     if (defined $category and not proband_criteria_active()) {
         scripterror('--query-category requires --query', $logger);
