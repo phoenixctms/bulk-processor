@@ -162,8 +162,12 @@ sub _criterion_in {
         propertyId => _ref_id($criterion->{property}, $criterion->{propertyId}),
         restrictionId => _ref_id($criterion->{restriction}, $criterion->{restrictionId}),
     );
-    foreach my $field (qw(booleanValue dateValue floatValue longValue stringValue timeValue timestampValue)) {
+    foreach my $field (qw(dateValue floatValue longValue stringValue timeValue timestampValue)) {
         $in{$field} = $criterion->{$field} if defined $criterion->{$field};
+    }
+    # Responses turn JSON true/false into 0/1. A bare number is rejected for booleanValue.
+    if (defined $criterion->{booleanValue}) {
+        $in{booleanValue} = $criterion->{booleanValue} ? \1 : \0;
     }
     return \%in;
 }
