@@ -434,8 +434,8 @@ sub export_ecrf_data_vertical_task {
         ($result, $warning_count) = export_ecrf_data_vertical($signed);
     };
     my $err = $@;
-    if ($err) {
-        push(@$messages,'export_ecrf_data_vertical error: ' . $err);
+    if ($err or not $result) {
+        push(@$messages,'export_ecrf_data_vertical error' . ($err ? ': ' . $err : ''));
         return 0;
     } else {
         push(@$messages,'- vertical eCRF data prepared');
@@ -450,8 +450,8 @@ sub export_ecrf_data_horizontal_task {
         ($result, $warning_count) = export_ecrf_data_horizontal($signed);
     };
     my $err = $@;
-    if ($err) {
-        push(@$messages,'export_ecrf_data_horizontal error: ' . $err);
+    if ($err or not $result) {
+        push(@$messages,'export_ecrf_data_horizontal error' . ($err ? ': ' . $err : ''));
         return 0;
     } else {
         push(@$messages,'- horizontal eCRF data prepared');

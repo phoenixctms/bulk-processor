@@ -704,7 +704,7 @@ sub export_ecrf_data_horizontal {
     my $result = _init_ecrf_data_horizontal_context($context);
 
     # create tables:
-    $result = CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataHorizontal::create_table($ecrf_data_truncate_table,
+    $result = CTSMS::BulkProcessor::Projects::ETL::Dao::EcrfDataHorizontal::create_table(proband_criteria_active() ? 1 : $ecrf_data_truncate_table,
         [ map { $_->{colname}; } @{$context->{columns}} ],$context->{listentrytag_map}) if $result;
 
     $result = _export_items($context) if $result;
