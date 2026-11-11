@@ -38,6 +38,10 @@ use CTSMS::BulkProcessor::Projects::ETL::InquiryExporter::Settings qw(
     $defaultconfig
     $force
 );
+use CTSMS::BulkProcessor::Projects::ETL::ProbandCriteria qw(
+    $proband_criteria_label
+    resolve_proband_criteria
+);
 use CTSMS::BulkProcessor::Logging qw(
     init_log
     getlogger
@@ -147,6 +151,7 @@ sub init {
         "auth=s" => \$auth,
         "upload" => \$upload_files,
         "tz=s" => \$timezone,
+        "query=s" => \$proband_criteria_label,
     );
 
     my $result = load_config($configfile);
@@ -193,6 +198,7 @@ sub main {
         update_job($FAILED_JOB_STATUS);
         return 0;
     },getlogger(getscriptpath()));
+    resolve_proband_criteria();
     if (defined $tasks and 'ARRAY' eq ref $tasks and (scalar @$tasks) > 0) {
 
         foreach my $task (@$tasks) {

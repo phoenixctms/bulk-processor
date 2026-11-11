@@ -74,6 +74,11 @@ use CTSMS::BulkProcessor::Projects::ETL::Inquiry qw(
     get_category_map
 );
 
+use CTSMS::BulkProcessor::Projects::ETL::ProbandCriteria qw(
+    proband_criteria_active
+    search_proband_page
+);
+
 use CTSMS::BulkProcessor::Logging qw (
     getlogger
     processing_info
@@ -293,15 +298,7 @@ sub _init_inquiry_data_vertical_context {
 
 NEXT_PROBAND:
         if (not defined $context->{api_probands_page_total_count} or ($context->{api_probands_page_num} * $inquiry_data_api_probands_page_size < $context->{api_probands_page_total_count} and (scalar @{$context->{api_probands_page}}) == 0)) {
-            my $p = { page_size => $inquiry_data_api_probands_page_size, page_num => $context->{api_probands_page_num} + 1, total_count => undef, total_count_expected => not defined $context->{api_probands_page_total_count} };
-            my $sf = { sort_by => 'id', sort_dir => 'asc',
-                       'deferredDelete' => booltostring(0), };
-
-            my $first = $context->{api_probands_page_num} * $inquiry_data_api_probands_page_size;
-            _info($context,"fetch probands page: " . $first . '-' . ($first + $inquiry_data_api_probands_page_size) . ' of ' . (defined $context->{api_probands_page_total_count} ? $context->{api_probands_page_total_count} : '?'),not $show_page_progress);
-            $context->{api_probands_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::get_inquiry_proband_list($context->{inquiry_trial}->{id}, $active, $active_signup, $p, $sf);
-            $context->{api_probands_page_total_count} = $p->{total_count} if defined $p->{total_count};
-            $context->{api_probands_page_num} += 1;
+            _fetch_probands_page($context);
         }
         if (not defined $context->{proband}) {
             $context->{proband} = shift @{$context->{api_probands_page}};
@@ -482,15 +479,7 @@ sub _init_inquiry_data_pdfs_context {
         my ($context) = @_;
 
         if ((scalar @{$context->{api_probands_page}}) == 0) {
-            my $p = { page_size => $inquiry_data_api_probands_page_size , page_num => $context->{api_probands_page_num} + 1, total_count => undef, total_count_expected => not defined $context->{api_probands_page_total_count} };
-            my $sf = { sort_by => 'id', sort_dir => 'asc',
-                       'deferredDelete' => booltostring(0), };
-            #$sf->{fileName} = $dialysis_substitution_volume_file_pattern if defined $dialysis_substitution_volume_file_pattern;
-            my $first = $context->{api_probands_page_num} * $inquiry_data_api_probands_page_size;
-            _info($context,"fetch probands page: " . $first . '-' . ($first + $inquiry_data_api_probands_page_size) . ' of ' . (defined $context->{api_probands_page_total_count} ? $context->{api_probands_page_total_count} : '?'),not $show_page_progress);
-            $context->{api_probands_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::get_inquiry_proband_list($context->{inquiry_trial}->{id}, $active, $active_signup, $p, $sf);
-            $context->{api_probands_page_total_count} = $p->{total_count} if defined $p->{total_count};
-            $context->{api_probands_page_num} += 1;
+            _fetch_probands_page($context);
         }
         $context->{proband} = shift @{$context->{api_probands_page}};
         if (defined $context->{proband}) {
@@ -533,15 +522,7 @@ sub _init_inquiry_data_horizontal_context {
         my ($context) = @_;
 
         if ((scalar @{$context->{api_probands_page}}) == 0) {
-            my $p = { page_size => $inquiry_data_api_probands_page_size , page_num => $context->{api_probands_page_num} + 1, total_count => undef, total_count_expected => not defined $context->{api_probands_page_total_count} };
-            my $sf = { sort_by => 'id', sort_dir => 'asc',
-                       'deferredDelete' => booltostring(0), };
-
-            my $first = $context->{api_probands_page_num} * $inquiry_data_api_probands_page_size;
-            _info($context,"fetch probands page: " . $first . '-' . ($first + $inquiry_data_api_probands_page_size) . ' of ' . (defined $context->{api_probands_page_total_count} ? $context->{api_probands_page_total_count} : '?'),not $show_page_progress);
-            $context->{api_probands_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::get_inquiry_proband_list($context->{inquiry_trial}->{id}, $active, $active_signup, $p, $sf);
-            $context->{api_probands_page_total_count} = $p->{total_count} if defined $p->{total_count};
-            $context->{api_probands_page_num} += 1;
+            _fetch_probands_page($context);
         }
         $context->{proband} = shift @{$context->{api_probands_page}};
         if (defined $context->{proband}) {
@@ -660,6 +641,24 @@ sub _get_inquiryvalue_file_value {
         inquiry => $item->{inquiry}, %colname_abbreviation,) unless defined $colname;
     return get_export_file_value($item,'inquiryvalue',$proband_id,$colname,
         \&CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::InquiryValue::download_file);
+}
+
+sub _fetch_probands_page {
+    my ($context) = @_;
+    my $p = { page_size => $inquiry_data_api_probands_page_size, page_num => $context->{api_probands_page_num} + 1, total_count => undef, total_count_expected => not defined $context->{api_probands_page_total_count} };
+    my $first = $context->{api_probands_page_num} * $inquiry_data_api_probands_page_size;
+        _info($context,"fetch probands page: " . $first . '-' . ($first + $inquiry_data_api_probands_page_size) . ' of ' . (defined $context->{api_probands_page_total_count} ? $context->{api_probands_page_total_count} : '?'),not $show_page_progress);
+    if (proband_criteria_active()) {
+        my $sf = { sort_by => 'id', sort_dir => 'asc', };
+        my $page = search_proband_page($p, $sf);
+        $context->{api_probands_page} = ('ARRAY' eq ref $page) ? $page : [];
+    } else {
+        my $sf = { sort_by => 'id', sort_dir => 'asc',
+                   'deferredDelete' => booltostring(0), };
+        $context->{api_probands_page} = CTSMS::BulkProcessor::RestRequests::ctsms::proband::ProbandService::Proband::get_inquiry_proband_list($context->{inquiry_trial}->{id}, $active, $active_signup, $p, $sf);
+    }
+    $context->{api_probands_page_total_count} = $p->{total_count} if defined $p->{total_count};
+    $context->{api_probands_page_num} += 1;
 }
 
 sub _warn_or_error {

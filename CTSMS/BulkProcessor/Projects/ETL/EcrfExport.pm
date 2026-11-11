@@ -128,6 +128,11 @@ use CTSMS::BulkProcessor::Projects::ETL::Ecrf qw(
     get_probandlistentrytag_colname
 );
 
+use CTSMS::BulkProcessor::Projects::ETL::ProbandCriteria qw(
+    proband_criteria_active
+    search_proband_page
+);
+
 use CTSMS::BulkProcessor::Projects::ETL::EcrfConnectorPool qw(
     get_sqlite_db
     get_csv_db
@@ -493,19 +498,8 @@ sub _init_ecrf_data_vertical_context {
         my ($context) = @_;
 
 NEXT_LISTENTRY:
-        if (not defined $context->{api_listentries_page_total_count} or ($context->{api_listentries_page_num} * $ecrf_data_api_listentries_page_size < $context->{api_listentries_page_total_count} and (scalar @{$context->{api_listentries_page}}) == 0)) {
-            my $p = { page_size => $ecrf_data_api_listentries_page_size , page_num => $context->{api_listentries_page_num} + 1, total_count => undef, total_count_expected => not defined $context->{api_listentries_page_total_count} };
-            my $sf = { sort_by => 'position', sort_dir => 'asc',
-                       'proband.deferredDelete' => booltostring(0), };
-
-            my $first = $context->{api_listentries_page_num} * $ecrf_data_api_listentries_page_size;
-            _info($context,"fetch proband list entries page: " . $first . '-' . ($first + $ecrf_data_api_listentries_page_size) . ' of ' . (defined $context->{api_listentries_page_total_count} ? $context->{api_listentries_page_total_count} : '?'),not $show_page_progress);
-            $context->{api_listentries_page} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::get_trial_list($context->{ecrf_data_trial}->{id}, undef, undef, 1, $p, $sf);
-            $context->{api_listentries_page_total_count} = $p->{total_count} if defined $p->{total_count};
-            $context->{api_listentries_page_num} += 1;
-        }
         if (not defined $context->{listentry}) {
-            $context->{listentry} = shift @{$context->{api_listentries_page}};
+            $context->{listentry} = _next_listentry($context);
             if (defined $context->{listentry}) {
                 $context->{api_ecrfs_page_total_count} = undef;
                 $context->{api_ecrfs_page_num} = 0; #roll over
@@ -771,18 +765,7 @@ sub _init_ecrf_data_pdfs_context {
     $context->{api_get_items_code} = sub {
         my ($context) = @_;
 
-        if ((scalar @{$context->{api_listentries_page}}) == 0) {
-            my $p = { page_size => $ecrf_data_api_listentries_page_size , page_num => $context->{api_listentries_page_num} + 1, total_count => undef, total_count_expected => not defined $context->{api_listentries_page_total_count} };
-            my $sf = { sort_by => 'position', sort_dir => 'asc',
-                       'proband.deferredDelete' => booltostring(0), };
-
-            my $first = $context->{api_listentries_page_num} * $ecrf_data_api_listentries_page_size;
-            _info($context,"fetch proband list entries page: " . $first . '-' . ($first + $ecrf_data_api_listentries_page_size) . ' of ' . (defined $context->{api_listentries_page_total_count} ? $context->{api_listentries_page_total_count} : '?'),not $show_page_progress);
-            $context->{api_listentries_page} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::get_trial_list($context->{ecrf_data_trial}->{id}, undef, undef, 1, $p, $sf);
-            $context->{api_listentries_page_total_count} = $p->{total_count} if defined $p->{total_count};
-            $context->{api_listentries_page_num} += 1;
-        }
-        $context->{listentry} = shift @{$context->{api_listentries_page}};
+        $context->{listentry} = _next_listentry($context);
         if (defined $context->{listentry}) {
             #tag values
             ($context->{tagvalues}, my $tag_cols, my $tag_vals) = array_to_map(_get_probandlistentrytagvalues($context),sub { my $item = shift; return get_probandlistentrytag_colname($item->{tag}); },undef,$listentrytag_map_mode);
@@ -819,18 +802,7 @@ sub _init_ecrf_data_horizontal_context {
     $context->{api_get_items_code} = sub {
         my ($context) = @_;
 
-        if ((scalar @{$context->{api_listentries_page}}) == 0) {
-            my $p = { page_size => $ecrf_data_api_listentries_page_size , page_num => $context->{api_listentries_page_num} + 1, total_count => undef, total_count_expected => not defined $context->{api_listentries_page_total_count} };
-            my $sf = { sort_by => 'position', sort_dir => 'asc',
-                       'proband.deferredDelete' => booltostring(0), };
-
-            my $first = $context->{api_listentries_page_num} * $ecrf_data_api_listentries_page_size;
-            _info($context,"fetch proband list entries page: " . $first . '-' . ($first + $ecrf_data_api_listentries_page_size) . ' of ' . (defined $context->{api_listentries_page_total_count} ? $context->{api_listentries_page_total_count} : '?'),not $show_page_progress);
-            $context->{api_listentries_page} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::get_trial_list($context->{ecrf_data_trial}->{id}, undef, undef, 1, $p, $sf);
-            $context->{api_listentries_page_total_count} = $p->{total_count} if defined $p->{total_count};
-            $context->{api_listentries_page_num} += 1;
-        }
-        $context->{listentry} = shift @{$context->{api_listentries_page}};
+        $context->{listentry} = _next_listentry($context);
         if (defined $context->{listentry}) {
             #return [] unless $context->{listentry}->{proband}->{id} == 688315; #7849798
             #tag values
@@ -1124,6 +1096,51 @@ sub _fetch_ecrf_visit_fieldvalues {
         push(@logs,{ text => ($signed ? 'skipping unsigned' : 'skipping <new>') . " - proband $alias: eCRF '$ecrf_name$visit_label': $status_name", debug => 1, tid => $tid });
     }
     return { values => \@values, included => $included, logs => \@logs };
+}
+
+sub _fetch_subject_page {
+    my ($context) = @_;
+    my $p = { page_size => $ecrf_data_api_listentries_page_size , page_num => $context->{api_listentries_page_num} + 1, total_count => undef, total_count_expected => not defined $context->{api_listentries_page_total_count} };
+    my $first = $context->{api_listentries_page_num} * $ecrf_data_api_listentries_page_size;
+    my $last = $first + $ecrf_data_api_listentries_page_size;
+    my $of = defined $context->{api_listentries_page_total_count} ? $context->{api_listentries_page_total_count} : '?';
+    if (proband_criteria_active()) {
+        my $sf = { sort_by => 'id', sort_dir => 'asc', };
+        _info($context,"fetch probands page: $first-$last of $of",not $show_page_progress);
+        my $page = search_proband_page($p, $sf);
+        $context->{api_listentries_page} = ('ARRAY' eq ref $page) ? $page : [];
+    } else {
+        my $sf = { sort_by => 'position', sort_dir => 'asc',
+                   'proband.deferredDelete' => booltostring(0), };
+        _info($context,"fetch proband list entries page: $first-$last of $of",not $show_page_progress);
+        $context->{api_listentries_page} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::get_trial_list($context->{ecrf_data_trial}->{id}, undef, undef, 1, $p, $sf);
+    }
+    $context->{api_listentries_page_total_count} = $p->{total_count} if defined $p->{total_count};
+    $context->{api_listentries_page_num} += 1;
+}
+
+sub _next_listentry {
+    my ($context) = @_;
+    while (1) {
+        if ((scalar @{$context->{api_listentries_page}}) == 0) {
+            if (defined $context->{api_listentries_page_total_count}
+                    and $context->{api_listentries_page_num} * $ecrf_data_api_listentries_page_size >= $context->{api_listentries_page_total_count}) {
+                return undef;
+            }
+            _fetch_subject_page($context);
+            return undef unless @{$context->{api_listentries_page}};
+        }
+        my $item = shift @{$context->{api_listentries_page}};
+        return undef unless defined $item;
+        if (proband_criteria_active()) {
+            my $p = { page_size => 1, page_num => 1, total_count => undef, total_count_expected => 0 };
+            my $entries = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::ProbandListEntry::get_trial_list($context->{ecrf_data_trial}->{id}, undef, $item->{id}, 1, $p, {});
+            return $entries->[0] if $entries and @$entries;
+            _info($context,'proband ' . $item->alias() . " has no list entry in trial $context->{ecrf_data_trial}->{id}, skipped");
+            next;
+        }
+        return $item;
+    }
 }
 
 sub _run_dbtool {
