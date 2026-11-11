@@ -350,8 +350,8 @@ sub export_inquiry_data_vertical_task {
         ($result, $warning_count) = export_inquiry_data_vertical();
     };
     my $err = $@;
-    if ($err) {
-        push(@$messages,'export_inquiry_data_vertical error: ' . $err);
+    if ($err or not $result) {
+        push(@$messages,'export_inquiry_data_vertical error' . ($err ? ': ' . $err : ''));
         return 0;
     } else {
         push(@$messages,'- vertical inquiry data prepared');
@@ -366,8 +366,8 @@ sub export_inquiry_data_horizontal_task {
         ($result, $warning_count) = export_inquiry_data_horizontal();
     };
     my $err = $@;
-    if ($err) {
-        push(@$messages,'export_inquiry_data_horizontal error: ' . $err);
+    if ($err or not $result) {
+        push(@$messages,'export_inquiry_data_horizontal error' . ($err ? ': ' . $err : ''));
         return 0;
     } else {
         push(@$messages,'- horizontal inquiry data prepared');
