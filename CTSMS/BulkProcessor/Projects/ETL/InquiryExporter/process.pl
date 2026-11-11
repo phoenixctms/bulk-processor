@@ -41,6 +41,7 @@ use CTSMS::BulkProcessor::Projects::ETL::InquiryExporter::Settings qw(
 use CTSMS::BulkProcessor::Projects::ETL::ProbandCriteria qw(
     $proband_criteria_label
     $proband_criteria_category
+    proband_criteria_active
     resolve_proband_criteria
 );
 use CTSMS::BulkProcessor::Logging qw(
@@ -127,9 +128,14 @@ my $publish_inquiry_data_files_task_opt = 'publish_inquiry_data_files';
 push(@TASK_OPTS,$publish_inquiry_data_files_task_opt);
 
 my $upload_files = 0;
+my $exported_vertical = 0;
+my $exported_horizontal = 0;
 
 if (init()) {
-    main();
+    my $result = main();
+    # A run without --query keeps the historical exit 0. With --query, a failed
+    # or refused task has to be visible to the job runner.
+    exit(1) if proband_criteria_active() and not $result;
     exit(0);
 } else {
     exit(1);
@@ -220,9 +226,15 @@ sub main {
                 $result &= cleanup_task(\@messages,1) if taskinfo($cleanup_all_task_opt,\$result);
 
             } elsif (lc($export_inquiry_data_vertical_task_opt) eq lc($task)) {
-                $result &= export_inquiry_data_vertical_task(\@messages) if taskinfo($export_inquiry_data_vertical_task_opt,\$result,1);
+                if (taskinfo($export_inquiry_data_vertical_task_opt,\$result,1)) {
+                    $result &= export_inquiry_data_vertical_task(\@messages);
+                    $exported_vertical = 1 if $result;
+                }
             } elsif (lc($export_inquiry_data_horizontal_task_opt) eq lc($task)) {
-                $result &= export_inquiry_data_horizontal_task(\@messages) if taskinfo($export_inquiry_data_horizontal_task_opt,\$result,1);
+                if (taskinfo($export_inquiry_data_horizontal_task_opt,\$result,1)) {
+                    $result &= export_inquiry_data_horizontal_task(\@messages);
+                    $exported_horizontal = 1 if $result;
+                }
 
             } elsif (lc($publish_inquiry_data_sqlite_task_opt) eq lc($task)) {
                 $result &= publish_inquiry_data_sqlite_task(\@messages,\@attachmentfiles) if taskinfo($publish_inquiry_data_sqlite_task_opt,\$result,1);
@@ -311,9 +323,24 @@ sub cleanup_task {
         push(@$messages,'working directory cleanup error');
         return 0;
     } else {
+        if ($clean_generated) {
+            $exported_vertical = 0;
+            $exported_horizontal = 0;
+        }
         push(@$messages,'- working directory folders cleaned up');
         return 1;
     }
+}
+
+sub _query_requires_same_run_export {
+    my ($task,$messages,$needs_vertical,$needs_horizontal) = @_;
+    return 0 unless proband_criteria_active();
+    my @missing = ();
+    push(@missing,$export_inquiry_data_vertical_task_opt) if $needs_vertical and not $exported_vertical;
+    push(@missing,$export_inquiry_data_horizontal_task_opt) if $needs_horizontal and not $exported_horizontal;
+    return 0 unless @missing;
+    push(@$messages,"$task with --query requires " . join(' and ',@missing) . ' in the same run');
+    return 1;
 }
 
 sub export_inquiry_data_vertical_task {
@@ -350,6 +377,7 @@ sub export_inquiry_data_horizontal_task {
 
 sub publish_inquiry_data_sqlite_task {
     my ($messages,$attachmentfiles) = @_;
+    return 0 if _query_requires_same_run_export('publish_inquiry_data_sqlite',$messages,1,0);
     my $out = undef;
     eval {
         ($out,@job_file) = publish_inquiry_data_sqlite($upload_files);
@@ -366,6 +394,7 @@ sub publish_inquiry_data_sqlite_task {
 
 sub publish_inquiry_data_horizontal_csv_task {
     my ($messages,$attachmentfiles) = @_;
+    return 0 if _query_requires_same_run_export('publish_inquiry_data_horizontal_csv',$messages,0,1);
     my $out = undef;
     eval {
         ($out,@job_file) = publish_inquiry_data_horizontal_csv($upload_files);
@@ -383,6 +412,7 @@ sub publish_inquiry_data_horizontal_csv_task {
 
 sub publish_inquiry_data_xls_task {
     my ($messages,$attachmentfiles) = @_;
+    return 0 if _query_requires_same_run_export('publish_inquiry_data_xls',$messages,1,1);
     my $out = undef;
     eval {
         ($out,@job_file) = publish_inquiry_data_xls($upload_files);
