@@ -39,6 +39,11 @@ use CTSMS::BulkProcessor::Projects::ETL::EcrfExporter::Settings qw(
     $defaultconfig
     $force
 );
+use CTSMS::BulkProcessor::Projects::ETL::ProbandCriteria qw(
+    $proband_criteria_label
+    proband_criteria_active
+    resolve_proband_criteria
+);
 use CTSMS::BulkProcessor::Logging qw(
     init_log
     getlogger
@@ -183,6 +188,7 @@ sub init {
         "upload" => \$upload_files,
         "signed" => \$signed,
         "tz=s" => \$timezone,
+        "query=s" => \$proband_criteria_label,
     );
 
     my $result = load_config($configfile);
@@ -229,6 +235,7 @@ sub main {
         update_job($FAILED_JOB_STATUS);
         return 0;
     },getlogger(getscriptpath()));
+    resolve_proband_criteria();
     if (defined $tasks and 'ARRAY' eq ref $tasks and (scalar @$tasks) > 0) {
 
         foreach my $task (@$tasks) {
@@ -343,6 +350,13 @@ sub main {
     releaselock();
 
     return $result;
+}
+
+sub _query_blocks_task {
+    my ($task,$messages) = @_;
+    return 0 unless proband_criteria_active();
+    push(@$messages,"$task does not support --query; it exports every trial subject");
+    return 1;
 }
 
 sub taskinfo {
@@ -461,6 +475,7 @@ sub publish_ecrf_data_xls_task {
 
 sub publish_ecrf_data_pdf_task {
     my ($messages,$attachmentfiles) = @_;
+    return 0 if _query_blocks_task('publish_ecrf_data_pdf',$messages);
     my $out = undef;
     eval {
         ($out,@job_file) = publish_ecrf_data_pdf($upload_files);
@@ -524,6 +539,7 @@ sub publish_ecrf_data_files_task {
 
 sub publish_audit_trail_xls_task {
     my ($messages,$attachmentfiles) = @_;
+    return 0 if _query_blocks_task('publish_audit_trail_xls',$messages);
     my $out = undef;
     eval {
         ($out,@job_file) = publish_audit_trail_xls($upload_files);
@@ -541,6 +557,7 @@ sub publish_audit_trail_xls_task {
 
 sub publish_ecrf_journal_xls_task {
     my ($messages,$attachmentfiles) = @_;
+    return 0 if _query_blocks_task('publish_ecrf_journal_xls',$messages);
     my $out = undef;
     eval {
         ($out,@job_file) = publish_ecrf_journal_xls($upload_files);
@@ -558,6 +575,7 @@ sub publish_ecrf_journal_xls_task {
 
 sub publish_ecrfs_xls_task {
     my ($messages,$attachmentfiles) = @_;
+    return 0 if _query_blocks_task('publish_ecrfs_xls',$messages);
     my $out = undef;
     eval {
         ($out,@job_file) = publish_ecrfs_xls($upload_files);
@@ -575,6 +593,7 @@ sub publish_ecrfs_xls_task {
 
 sub publish_proband_list_task {
     my ($log_level,$messages,$attachmentfiles) = @_;
+    return 0 if _query_blocks_task('publish_proband_list',$messages);
     my $out = undef;
     eval {
         ($out,@job_file) = publish_proband_list($log_level,$upload_files);
