@@ -43,7 +43,6 @@ use CTSMS::BulkProcessor::Projects::ETL::ProbandCriteria qw(
     $proband_criteria_label
     $proband_criteria_category
     proband_criteria_active
-    prepare_quoted_argv
     resolve_proband_criteria
 );
 use CTSMS::BulkProcessor::Logging qw(
@@ -178,7 +177,6 @@ sub init {
     my $settingsfile = $defaultsettings;
 
     my $auth;
-    prepare_quoted_argv();
     return 0 unless GetOptions(
         "config=s" => \$configfile,
         "settings=s" => \$settingsfile,
