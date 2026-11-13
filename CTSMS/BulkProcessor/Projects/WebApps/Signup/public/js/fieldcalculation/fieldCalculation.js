@@ -1655,6 +1655,8 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			case "SELECT_ONE_RADIO_V":
 			case "SELECT_MANY_H":
 			case "SELECT_MANY_V":
+			case "SELECT_MATRIX_ONE":
+			case "SELECT_MATRIX_MANY":
 				if (!(newValue instanceof Array)) {
 					newValue = (typeof newValue === 'string') ? parseInt(newValue) : newValue;
 					if (isNaN(newValue)) {
@@ -1774,6 +1776,8 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			case "SELECT_ONE_RADIO_V":
 			case "SELECT_MANY_H":
 			case "SELECT_MANY_V":
+			case "SELECT_MATRIX_ONE":
+			case "SELECT_MATRIX_MANY":
 			    if (inputFieldSelectionSetVals && inputFieldVariableValue.selectionValueIds != null) {
 					var res = [];
     		        for (var j = 0; j < inputFieldVariableValue.selectionValueIds.length; j++) {
@@ -1834,6 +1838,8 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			case "SELECT_ONE_RADIO_V":
 			case "SELECT_MANY_H":
 			case "SELECT_MANY_V":
+			case "SELECT_MATRIX_ONE":
+			case "SELECT_MATRIX_MANY":
 				return _selectionSetValueIdsEqual(value.selectionValueIds, enteredValue.selectionValueIds);
 			case "CHECKBOX":
 				return value.booleanValue == enteredValue.booleanValue;
@@ -2357,6 +2363,12 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 
 	}
 
+	function selectMatrixOnChange(value) {
+
+		if (!silent) _inputFieldOnChange(value.inquiry.jsVariableName, value.index, getSelectMatrixVal(value.inquiry.id));
+
+	}
+
 	function autoCompleteOnChange(value) {
 
 		if (!silent) _inputFieldOnChange(value.inquiry.jsVariableName, value.index, getAutocompleteVal(value.inquiry.id));
@@ -2524,6 +2536,12 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		silent = false;
 	}
 
+	function selectMatrixApplyCalculatedValue(value) {
+		silent = true;
+		setSelectMatrixVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		silent = false;
+	}
+
 	function autoCompleteApplyCalculatedValue(value) {
 		silent = true;
 		setAutocompleteVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
@@ -2614,6 +2632,10 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 				case "SELECT_MANY_V":
 					selectManyApplyCalculatedValue(value);
 					break;
+				case "SELECT_MATRIX_ONE":
+				case "SELECT_MATRIX_MANY":
+					selectMatrixApplyCalculatedValue(value);
+					break;
 				case "CHECKBOX":
 					checkBoxApplyCalculatedValue(value);
 					break;
@@ -2703,6 +2725,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	FieldCalculation.selectOneDropdownOnChange = selectOneDropdownOnChange;
 	FieldCalculation.selectOneRadioOnChange = selectOneRadioOnChange;
 	FieldCalculation.selectManyOnChange = selectManyOnChange;
+	FieldCalculation.selectMatrixOnChange = selectMatrixOnChange;
 	FieldCalculation.autoCompleteOnChange = autoCompleteOnChange;
 	FieldCalculation.checkBoxOnChange = checkBoxOnChange;
 	FieldCalculation.integerOnChange = integerOnChange;
@@ -2718,6 +2741,7 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	FieldCalculation.selectOneDropdownApplyCalculatedValue = selectOneDropdownApplyCalculatedValue;
 	FieldCalculation.selectOneRadioApplyCalculatedValue = selectOneRadioApplyCalculatedValue;
 	FieldCalculation.selectManyApplyCalculatedValue = selectManyApplyCalculatedValue;
+	FieldCalculation.selectMatrixApplyCalculatedValue = selectMatrixApplyCalculatedValue;
 	FieldCalculation.autoCompleteApplyCalculatedValue = autoCompleteApplyCalculatedValue;
 	FieldCalculation.checkBoxApplyCalculatedValue = checkBoxApplyCalculatedValue;
 	FieldCalculation.integerApplyCalculatedValue = integerApplyCalculatedValue;
