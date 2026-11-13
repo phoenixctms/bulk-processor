@@ -83,6 +83,8 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Inpu
     $SELECT_ONE_RADIO_V
     $SELECT_MANY_H
     $SELECT_MANY_V
+    $SELECT_MATRIX_ONE
+    $SELECT_MATRIX_MANY
     $INTEGER
     $SKETCH
     $FLOAT
@@ -95,6 +97,8 @@ use CTSMS::BulkProcessor::Array qw(removeduplicates array_to_map);
 my $listentry_load_all_existing_inquiryvalues = 1;
 my $fields_per_page = 5;
 my $save_all_pages = 0;
+# like the ctsms input_model_select_matrix_vertical_head_count setting: more head labels are rendered vertically
+my $select_matrix_vertical_head_count = 6;
 
 my %field_to_param_type_map = (
     $SINGLE_LINE_TEXT => [ 'text' ],
@@ -109,6 +113,8 @@ my %field_to_param_type_map = (
     $SELECT_ONE_RADIO_V => [ 'selection' ],
     $SELECT_MANY_H => [ 'selection' ],
     $SELECT_MANY_V => [ 'selection' ],
+    $SELECT_MATRIX_ONE => [ 'selection' ],
+    $SELECT_MATRIX_MANY => [ 'selection' ],
     $INTEGER => [ 'long' ],
     $SKETCH => [ 'ink' ],
     $FLOAT => [ 'float' ],
@@ -121,7 +127,8 @@ my $file_thumbnail_width = 320;
 my $file_thumbnail_height = 240;
 my %mime_types_cache = ();
 my $param_value_types = removeduplicates([ map { @{$_}; } values %field_to_param_type_map ]);
-my $param_value_types_re = '^(' . join('|',@$param_value_types) . ')_(\\d+)$';
+# a select matrix posts the radio group of each row as selection_<inquiry id>_<row index>
+my $param_value_types_re = '^(' . join('|',@$param_value_types) . ')_(\\d+)(?:_\\d+)?$';
 $param_value_types_re = qr/$param_value_types_re/;
 
 our $navigation_options = sub {
@@ -203,6 +210,7 @@ Dancer::get('/inquiry',sub {
             ctsmsBaseUri => get_ctsms_baseuri(),
             fieldsPerPage => $fields_per_page, #5,
             inquiryPage => $inquiry_page,
+            selectMatrixVerticalHeadCount => $select_matrix_vertical_head_count,
             noSelectionLabel => Dancer::Plugin::I18N::localize('no_selection_label'),
             requiredLabel => Dancer::Plugin::I18N::localize('required_label'),
             optionalLabel => Dancer::Plugin::I18N::localize('optional_label'),
