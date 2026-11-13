@@ -31,6 +31,8 @@ use CTSMS::BulkProcessor::RestRequests::ctsms::shared::SelectionSetService::Inpu
     $SELECT_ONE_RADIO_V
     $SELECT_MANY_H
     $SELECT_MANY_V
+    $SELECT_MATRIX_ONE
+    $SELECT_MATRIX_MANY
 
     $SKETCH
 
@@ -83,6 +85,7 @@ my $fieldnames = [
     "longLowerLimit",
     "longPreset",
     "longUpperLimit",
+    "matrixTransposed",
     "maxDate",
     "maxSelections",
     "maxTime",
@@ -177,7 +180,8 @@ sub is_select {
     my $fieldtype = $self->{fieldType}->{nameL10nKey};
     if ($SELECT_ONE_RADIO_V eq $fieldtype or $SELECT_ONE_RADIO_H eq $fieldtype
              or $SELECT_ONE_DROPDOWN eq $fieldtype or $SKETCH eq $fieldtype
-             or $SELECT_MANY_V eq $fieldtype or $SELECT_MANY_H eq $fieldtype) {
+             or $SELECT_MANY_V eq $fieldtype or $SELECT_MANY_H eq $fieldtype
+             or $SELECT_MATRIX_ONE eq $fieldtype or $SELECT_MATRIX_MANY eq $fieldtype) {
         return 1;
     }
     return 0;

@@ -170,11 +170,15 @@ function _createInquiryField(context,value) {
     }
     
     var tied = isTiedFieldRow(value.inquiry.field.fieldType.type) ? '-tied' : '';
+    // like ctsms, a select matrix spans the full width below its label
+    var selectMatrix = _isSelectMatrix(value.inquiry.field.fieldType.type);
     var row = $('<div class="ui-grid-row ctsms-field-row' + tied + '"/>').appendTo(grid);
-    row.append($('<div class="ui-grid-col-4 ctsms-field-label' + tied + '"/>').append($('<label class="ctsms-align-top' + (value.inquiry.optional ? '' : ' ctsms-required') + '"/>').append(
+    row.append($('<div class="' + (selectMatrix ? 'ui-grid-col-12 ctsms-field-label-full' : 'ui-grid-col-4 ctsms-field-label' + tied) + '"/>').append($('<label class="ctsms-align-top' + (value.inquiry.optional ? '' : ' ctsms-required') + '"/>').append(
         document.createTextNode((value.inquiry.title != null && value.inquiry.title.length > 0) ? value.inquiry.title : value.inquiry.field.title))));
     var inputContent = $('<div class="ui-grid-col-8 ctsms-field-input' + tied + '"/>');
-    row.append(inputContent);
+    if (!selectMatrix) {
+        row.append(inputContent);
+    }
 
     switch (value.inquiry.field.fieldType.type) {
         case 'SINGLE_LINE_TEXT':
@@ -220,6 +224,10 @@ function _createInquiryField(context,value) {
             break;
         case 'SELECT_MANY_V':
             inputContent.append(_createSelectMany(context,value,true));
+            break;
+        case 'SELECT_MATRIX_ONE':
+        case 'SELECT_MATRIX_MANY':
+            $('<div class="ui-grid-row"/>').append($('<div class="ui-grid-col-12"/>').append(_createSelectMatrix(context,value))).appendTo(grid);
             break;
         case 'SKETCH':
             inputContent.append(_createSketchpad(context,value));
@@ -297,6 +305,10 @@ function isTiedFieldRow(fieldType) {
         case 'SELECT_MANY_H':
             return false;
         case 'SELECT_MANY_V':
+            return false;
+        case 'SELECT_MATRIX_ONE':
+            return false;
+        case 'SELECT_MATRIX_MANY':
             return false;
         case 'SKETCH':
             return false;
@@ -379,6 +391,13 @@ function _initInquiryField(context,value,content) {
             _initSelectMany(context,value,content);
             $('#' + applyBtnId).on('click', function(event) {
                 FieldCalculation.selectManyApplyCalculatedValue(value);
+            });
+            break;
+        case 'SELECT_MATRIX_ONE':
+        case 'SELECT_MATRIX_MANY':
+            _initSelectMatrix(context,value,content);
+            $('#' + applyBtnId).on('click', function(event) {
+                FieldCalculation.selectMatrixApplyCalculatedValue(value);
             });
             break;
         case 'SKETCH':
@@ -1016,6 +1035,207 @@ function getSelectManyVal(inquiryId) {
     var result = [];
     elems.each(function(index, elem) {
         if ($(this).puicheckbox('isChecked')) {
+            result.push($(this).val());
+        }
+    });
+    return result;
+}
+
+function _isSelectMatrix(fieldType) {
+    return fieldType == 'SELECT_MATRIX_ONE' || fieldType == 'SELECT_MATRIX_MANY';
+}
+
+function _getSelectionMatrix(selectionSetValues) {
+    // like ctsms SelectionMatrix: the selection set values with the same row form one option group.
+    // Rows and columns appear in the order their labels first occur in the (sorted) selection set values,
+    // and a row/column pair without a selection set value is an empty (null) cell.
+    var rowKey = function(selectionSetValue) {
+        return '_' + (selectionSetValue.rowL10nKey != null ? selectionSetValue.rowL10nKey : selectionSetValue.row);
+    };
+    var columnKey = function(selectionSetValue) {
+        return '_' + (selectionSetValue.columnL10nKey != null ? selectionSetValue.columnL10nKey : selectionSetValue.column);
+    };
+    var rowIndexes = {};
+    var columnIndexes = {};
+    var matrix = { rowLabels: [], columnLabels: [], cells: [] };
+    var i, selectionSetValue;
+    if (selectionSetValues != null) {
+        for (i = 0; i < selectionSetValues.length; i++) {
+            selectionSetValue = selectionSetValues[i];
+            if (!rowIndexes.hasOwnProperty(rowKey(selectionSetValue))) {
+                rowIndexes[rowKey(selectionSetValue)] = matrix.rowLabels.length;
+                matrix.rowLabels.push(selectionSetValue.row);
+            }
+            if (!columnIndexes.hasOwnProperty(columnKey(selectionSetValue))) {
+                columnIndexes[columnKey(selectionSetValue)] = matrix.columnLabels.length;
+                matrix.columnLabels.push(selectionSetValue.column);
+            }
+        }
+        for (i = 0; i < matrix.rowLabels.length; i++) {
+            var cells = [];
+            for (var j = 0; j < matrix.columnLabels.length; j++) {
+                cells.push(null);
+            }
+            matrix.cells.push(cells);
+        }
+        for (i = 0; i < selectionSetValues.length; i++) {
+            selectionSetValue = selectionSetValues[i];
+            var row = matrix.cells[rowIndexes[rowKey(selectionSetValue)]];
+            var columnIndex = columnIndexes[columnKey(selectionSetValue)];
+            if (row[columnIndex] == null) {
+                row[columnIndex] = selectionSetValue;
+            }
+        }
+    }
+    return matrix;
+}
+
+function _createSelectMatrix(context,value) {
+    var one = (value.inquiry.field.fieldType.type == 'SELECT_MATRIX_ONE');
+    var transposed = !!value.inquiry.field.matrixTransposed;
+    var selectMatrixName = 'selection_' + value.inquiry.id;
+    var selectionSetValuesIdMap = _getSelectionSetValuesIdMap(value.selectionValues);
+    var matrix = _getSelectionMatrix(value.inquiry.field.selectionSetValues);
+    // posts the field also if nothing is selected:
+    var selectMatrixHidden = $('<input type="hidden" name="' + selectMatrixName + '" id="' + value.inquiry.id + '_select_matrix_hidden" value=""/>');
+    var result = [ selectMatrixHidden ];
+
+    var createCell = function(rowIndex,selectionSetValue) {
+        var cell = $('<td class="ctsms-select-matrix-cell"/>');
+        if (selectionSetValue != null) {
+            var inputId = value.inquiry.id + '_' + selectionSetValue.id + '_select_matrix';
+            var checked = (selectionSetValue.id in selectionSetValuesIdMap);
+            if (checked) {
+                var inputHiddenId = value.inquiry.id + '_' + selectionSetValue.id + '_select_matrix_hidden';
+                result.push($('<input type="hidden" name="' + selectMatrixName + '" id="' + inputHiddenId + '" value="' + selectionSetValue.id + '"' + (!value.inquiry.disabled ? ' disabled' : '') + '/>'));
+            }
+            // a radio group per row (option group): selection_<inquiry id>_<row index>
+            var input = $('<input type="' + (one ? 'radio' : 'checkbox') + '" name="' + selectMatrixName + (one ? '_' + rowIndex : '') + '" id="' + inputId + '" value="' + selectionSetValue.id + '"' + (checked ? ' checked="checked"' : '') + '/>');
+            // like ctsms, the value's name labels its radio/checkbox for screen readers (visually hidden) and is its tooltip
+            var label = $('<label for="' + inputId + '" class="ctsms-select-matrix-item-label"/>').append(document.createTextNode(selectionSetValue.name != null ? selectionSetValue.name : ''));
+            cell.attr('title',selectionSetValue.name).append(input).append(label);
+        }
+        return cell;
+    };
+    var createLabelCell = function(tag,text) {
+        return $('<' + tag + ' class="ctsms-select-matrix-label"/>').append(document.createTextNode(text != null ? text : ''));
+    };
+
+    var headLabels = (transposed ? matrix.rowLabels : matrix.columnLabels);
+    var verticalHead = (headLabels.length > context.selectMatrixVerticalHeadCount);
+    var table = $('<table class="ctsms-select-matrix-table' + (transposed ? ' ctsms-select-matrix-transposed' : '') + (verticalHead ? ' ctsms-select-matrix-vertical-head' : '') + '"/>');
+    var headRow = $('<tr/>').append(createLabelCell('th',null));
+    for (var h = 0; h < headLabels.length; h++) {
+        headRow.append($('<th class="ctsms-select-matrix-cell"/>').append($('<span class="ctsms-select-matrix-head-label"/>').append(document.createTextNode(headLabels[h] != null ? headLabels[h] : ''))));
+    }
+    table.append($('<thead/>').append(headRow));
+    var body = $('<tbody/>').appendTo(table);
+    var r, c, line;
+    if (transposed) {
+        // each option group is a column, the column labels are the lines
+        for (c = 0; c < matrix.columnLabels.length; c++) {
+            line = $('<tr class="ctsms-select-matrix-row"/>').append(createLabelCell('td',matrix.columnLabels[c])).appendTo(body);
+            for (r = 0; r < matrix.rowLabels.length; r++) {
+                line.append(createCell(r,matrix.cells[r][c]));
+            }
+        }
+    } else {
+        for (r = 0; r < matrix.rowLabels.length; r++) {
+            line = $('<tr class="ctsms-select-matrix-row"/>').append(createLabelCell('td',matrix.rowLabels[r])).appendTo(body);
+            for (c = 0; c < matrix.columnLabels.length; c++) {
+                line.append(createCell(r,matrix.cells[r][c]));
+            }
+        }
+    }
+    // narrow screens scroll the matrix inside the field instead of squeezing its columns (and breaking the head labels' words):
+    table.css('min-width',(8 + headLabels.length * (verticalHead ? 2.5 : 6)) + 'em');
+
+    result.push($('<div id="' + value.inquiry.id + '_select_matrix" class="ctsms-select-matrix"/>').append(table));
+    return result;
+}
+
+function _initSelectMatrix(context,value,content) {
+    var one = (value.inquiry.field.fieldType.type == 'SELECT_MATRIX_ONE');
+    var selectMatrixId = value.inquiry.id + '_select_matrix';
+    _getSelectMatrixInputs(value.inquiry.id).each(function() {
+        var input = $(this);
+        if (one) {
+            input.puiradiobutton();
+        } else {
+            input.puicheckbox();
+        }
+        if (value.inquiry.disabled) {
+            if (one) {
+                input.puiradiobutton('disable');
+            } else {
+                input.puicheckbox('disable');
+            }
+        } else if (value.hasJsVar) {
+            input.on('change', function(event) {
+                FieldCalculation.selectMatrixOnChange(value);
+            });
+        }
+    });
+    $('#' + selectMatrixId).puitooltip({
+        my: 'left bottom',
+        at: 'left top',
+        content: _getTooltipText(context,value)
+    });
+    $('#' + selectMatrixId).off().on('mouseenter', function(event) {
+        $('#' + selectMatrixId).puitooltip('show');
+    }).on('mouseleave', function(event) {
+        $('#' + selectMatrixId).puitooltip('hide');
+    });
+}
+
+function _getSelectMatrixInputs(inquiryId) {
+    return $('#' + inquiryId + '_select_matrix').find('input[type="radio"], input[type="checkbox"]');
+}
+
+function setSelectMatrixVal(inquiryId,selectionValueIds) {
+    // like ctsms FieldCalculation.registerSelectMatrix: distribute the ids to the rows;
+    // apply calculated value may pass null; treat as clear
+    if (selectionValueIds == null) {
+        selectionValueIds = [];
+    } else if (!(selectionValueIds instanceof Array)) {
+        selectionValueIds = [ selectionValueIds ];
+    }
+    var ids = {};
+    for (var i = 0; i < selectionValueIds.length; i++) {
+        if (selectionValueIds[i] instanceof Array) {
+            throw new Error('value element is an array');
+        }
+        // option values are strings; calculated selection ids may be numbers
+        ids['' + selectionValueIds[i]] = 1;
+    }
+    var checkedRows = {};
+    _getSelectMatrixInputs(inquiryId).each(function() {
+        var input = $(this);
+        var match = (input.val() in ids);
+        if (input.is(':radio')) {
+            // one selection per row: the first id of a row wins
+            var row = input.attr('name');
+            if (match && !(row in checkedRows)) {
+                checkedRows[row] = true;
+                input.puiradiobutton('check');
+            } else if (input.puiradiobutton('isChecked')) {
+                // puiradiobutton has no uncheck API (see setSelectOneRadioVal)
+                input.prop('checked', false);
+                input.closest('.ui-radiobutton').children('.ui-radiobutton-box')
+                    .removeClass('ui-state-active ui-state-focus ui-state-hover')
+                    .children('.ui-radiobutton-icon').removeClass('fa fa-fw fa-circle');
+            }
+        } else {
+            input.puicheckbox(match ? 'check' : 'uncheck');
+        }
+    });
+}
+
+function getSelectMatrixVal(inquiryId) {
+    // the selection ids of all rows
+    var result = [];
+    _getSelectMatrixInputs(inquiryId).each(function() {
+        if ($(this).prop('checked')) {
             result.push($(this).val());
         }
     });

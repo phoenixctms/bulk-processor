@@ -66,6 +66,110 @@
     overflow-x: auto;
 }
 
+/* select matrix fields, like the ctsms web form (default.css ctsms-select-matrix*): the label spans the full width,
+   with the matrix below. The table has a min-width per column, so a wide matrix scrolls on narrow screens. */
+
+.ctsms-field-label-full {
+    margin-top: 4px;
+    width: 100%;
+}
+
+.ctsms-select-matrix {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    margin-top: 4px;
+}
+
+/* equal fixed-width columns */
+.ctsms-select-matrix-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+.ctsms-select-matrix-table th,
+.ctsms-select-matrix-table td {
+    padding: 2px;
+    font-weight: normal;
+    vertical-align: middle;
+}
+
+.ctsms-select-matrix-table > thead > tr > th {
+    padding-bottom: 4px;
+    vertical-align: bottom;
+}
+
+.ctsms-select-matrix-table .ctsms-select-matrix-label {
+    width: 35%;
+    padding: 4px 8px 4px 4px;
+    text-align: left;
+    overflow-wrap: break-word;
+}
+
+/* narrow screens: the label column keeps the 8em the table's min-width reserves, so more option columns are in view */
+@media (max-width: 767px) {
+    .ctsms-select-matrix-table .ctsms-select-matrix-label {
+        width: 8em;
+    }
+}
+
+/* radios/checkboxes and head labels centered in their columns */
+.ctsms-select-matrix-table .ctsms-select-matrix-cell {
+    text-align: center;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+.ctsms-select-matrix-cell .ui-radiobutton,
+.ctsms-select-matrix-cell .ui-chkbox {
+    display: inline-block;
+    position: relative;
+    top: auto;
+    left: auto;
+    margin: 0;
+    vertical-align: middle;
+}
+
+.ctsms-select-matrix-cell .ui-chkbox .ui-chkbox-box {
+    margin-right: 0;
+}
+
+/* the value's name labels its radio/checkbox for screen readers only (not display: none, so it stays accessible) */
+.ctsms-select-matrix-cell {
+    position: relative;
+}
+
+.ctsms-select-matrix-item-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* many columns: vertical head labels, reading bottom-up and wrapping */
+.ctsms-select-matrix-vertical-head .ctsms-select-matrix-head-label {
+    display: inline-block;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    max-height: 12em;
+    text-align: left;
+}
+
+/* alternating line shading, across the checkbox cells in the transposed layout too */
+.ctsms-select-matrix-table > tbody > tr.ctsms-select-matrix-row:nth-child(odd) {
+    background-color: rgba(128, 128, 128, 0.1);
+}
+
+.ctsms-select-matrix-transposed > tbody > tr.ctsms-select-matrix-row {
+    height: 2.2em;
+}
+
 /* FILE fields, like the ctsms upload control (default.css ctsms-upload-control*, ctsms-input-file-*, photoCam.css) */
 
 .ctsms-input-file-label {
