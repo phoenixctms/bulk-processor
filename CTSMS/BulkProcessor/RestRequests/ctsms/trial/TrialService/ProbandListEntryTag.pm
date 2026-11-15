@@ -66,6 +66,7 @@ my $fieldnames = [
     "randomize",
     "title",
     "titleL10nKey",
+    "ref",
 ];
 
 sub new {

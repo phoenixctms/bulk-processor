@@ -70,6 +70,7 @@ my $fieldnames = [
     "externalId",
     "title",
     "titleL10nKey",
+    "ref",
 ];
 
 sub new {

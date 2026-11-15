@@ -51,6 +51,7 @@ sub _set_expected_fieldnames {
         'inquiry_category',
         'inquiry_id',
         'inquiry_position',
+        'inquiry_ref',
         'inquiry_title',
         'inquiry_external_id',
         'input_field_name',
