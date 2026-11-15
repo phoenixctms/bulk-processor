@@ -875,6 +875,10 @@ sub get_filter {
     my %filter = %$params;
     delete $filter{first};
     delete $filter{rows};
+    # an empty filter (e.g. no search text) would match only rows having that property set:
+    foreach my $key (keys %filter) {
+        delete $filter{$key} unless (defined $filter{$key} and $filter{$key} =~ /\S/);
+    }
     return \%filter;
 }
 
