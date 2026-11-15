@@ -1651,7 +1651,8 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 			for (var j = 0; j < selectionSetVals.length; j++) {
 				// calculated selection ids may be numbers or strings
 				if (selectionSetVals[j].id == selectionValueIds[i]) {
-					var row = '_' + selectionSetVals[j].row;
+					// like the matrix rendering: rows are told apart by their l10n key (labels may be equal)
+					var row = '_' + (selectionSetVals[j].rowL10nKey != null ? selectionSetVals[j].rowL10nKey : selectionSetVals[j].row);
 					if (!rowIds.hasOwnProperty(row)) {
 						rowIds[row] = {};
 					}
