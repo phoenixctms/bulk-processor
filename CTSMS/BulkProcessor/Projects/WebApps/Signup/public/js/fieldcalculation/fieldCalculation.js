@@ -200,6 +200,8 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	    'mustBeUnselected'       : " darf nicht gesetzt sein",
 	    'mustBeUnmarked'         : " darf nicht markiert sein",
 	    'selectOneMultipleSelectionIds' : "darf höchstens eine Auswahl-ID liefern (erhalten: %d)",
+	    'nestedSelectionIds' : "darf keine verschachtelten Auswahl-ID-Listen liefern",
+	    'selectMatrixOneMultipleSelectionIds' : "darf höchstens eine Auswahl-ID je Zeile liefern (Zeile \"%s\": %d erhalten)",
 	    'fileValueNotSettable'   : "Dateiwerte können nicht durch Ausdrücke gesetzt werden",
 
 	    'true'                   : "angekreuzt",
@@ -260,6 +262,8 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	    'mustBeUnselected'       : " must not be selected",
 	    'mustBeUnmarked'         : " must not be marked",
 	    'selectOneMultipleSelectionIds' : "must return at most one selection id (got %d)",
+	    'nestedSelectionIds' : "must not return nested selection id arrays",
+	    'selectMatrixOneMultipleSelectionIds' : "must return at most one selection id per row (row \"%s\": got %d)",
 	    'fileValueNotSettable'   : "file values cannot be set by expressions",
 
 	    'true'                   : "checked",
@@ -1636,6 +1640,35 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 		}
 	}
 
+	function _checkSelectMatrixOneValue(inputFieldVariableValue, selectionValueIds) {
+		// the selection set values with the same row form one option group (radio group)
+		var selectionSetVals = inputFieldVariableValue.inputFieldSelectionSetValues;
+		if (selectionSetVals == null) {
+			return;
+		}
+		var rowIds = {};
+		for (var i = 0; i < selectionValueIds.length; i++) {
+			for (var j = 0; j < selectionSetVals.length; j++) {
+				// calculated selection ids may be numbers or strings
+				if (selectionSetVals[j].id == selectionValueIds[i]) {
+					var row = '_' + selectionSetVals[j].row;
+					if (!rowIds.hasOwnProperty(row)) {
+						rowIds[row] = {};
+					}
+					rowIds[row]['_' + selectionSetVals[j].id] = true;
+					var count = Object.keys(rowIds[row]).length;
+					if (count > 1) {
+						var locale = (inputFieldVars.locale != null && (inputFieldVars.locale in localizedMessages)) ? inputFieldVars.locale : defaultLocale;
+						var detail = sprintf(localizedMessages[locale]['selectMatrixOneMultipleSelectionIds'], selectionSetVals[j].row, count);
+						var variableName = inputFieldVariableValue.jsVariableName;
+						throw { msg: (variableName != null && variableName.length > 0) ? ("value expression " + variableName + ": " + detail) : detail };
+					}
+					break;
+				}
+			}
+		}
+	}
+
 	function _setInputFieldVariableValue(inputFieldVariableValue, newValue) {
 		if (inputFieldVariableValue != null) {
 			switch (inputFieldVariableValue.inputFieldType) {
@@ -1672,6 +1705,15 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 						}
 					}
 				}
+				for ( var k = 0; k < newValue.length; k++) {
+					// reject e.g. [[11]] before the value is committed, like the widgets do
+					if (newValue[k] instanceof Array) {
+						var nestedLocale = (inputFieldVars.locale != null && (inputFieldVars.locale in localizedMessages)) ? inputFieldVars.locale : defaultLocale;
+						var nestedDetail = localizedMessages[nestedLocale]['nestedSelectionIds'];
+						var nestedVariableName = inputFieldVariableValue.jsVariableName;
+						throw { msg: (nestedVariableName != null && nestedVariableName.length > 0) ? ("value expression " + nestedVariableName + ": " + nestedDetail) : nestedDetail };
+					}
+				}
 				if ((inputFieldVariableValue.inputFieldType == "SELECT_ONE_DROPDOWN"
 						|| inputFieldVariableValue.inputFieldType == "SELECT_ONE_RADIO_H"
 						|| inputFieldVariableValue.inputFieldType == "SELECT_ONE_RADIO_V")
@@ -1680,6 +1722,10 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 					var detail = sprintf(localizedMessages[locale]['selectOneMultipleSelectionIds'], newValue.length);
 					var variableName = inputFieldVariableValue.jsVariableName;
 					throw { msg: (variableName != null && variableName.length > 0) ? ("value expression " + variableName + ": " + detail) : detail };
+				}
+				if (inputFieldVariableValue.inputFieldType == "SELECT_MATRIX_ONE") {
+					// a select matrix one has one option group per row: at most one selection id of each row
+					_checkSelectMatrixOneValue(inputFieldVariableValue, newValue);
 				}
 				inputFieldVariableValue.selectionValueIds = newValue;
 				break;
@@ -2507,101 +2553,157 @@ var FIELD_CALCULATION_OVERRIDE_CALCULATED_VALUES = true;
 	}
 
 	function singleLineTextApplyCalculatedValue(value) {
+		var previousSilent = silent;
 		silent = true;
-		setSingleLineTextVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
-		silent = false;
+		try {
+			setSingleLineTextVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		} finally {
+			silent = previousSilent;
+		}
 	}
 
 	function multiLineTextApplyCalculatedValue(value) {
+		var previousSilent = silent;
 		silent = true;
-		setMultiLineTextVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
-		silent = false;
+		try {
+			setMultiLineTextVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		} finally {
+			silent = previousSilent;
+		}
 	}
 
 	function selectOneDropdownApplyCalculatedValue(value) {
+		var previousSilent = silent;
 		silent = true;
-		setSelectOneDropdownVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
-		silent = false;
+		try {
+			setSelectOneDropdownVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		} finally {
+			silent = previousSilent;
+		}
 	}
 
 	function selectOneRadioApplyCalculatedValue(value) {
+		var previousSilent = silent;
 		silent = true;
-		setSelectOneRadioVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
-		silent = false;
+		try {
+			setSelectOneRadioVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		} finally {
+			silent = previousSilent;
+		}
 	}
 
 	function selectManyApplyCalculatedValue(value) {
+		var previousSilent = silent;
 		silent = true;
-		setSelectManyVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
-		silent = false;
+		try {
+			setSelectManyVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		} finally {
+			silent = previousSilent;
+		}
 	}
 
 	function selectMatrixApplyCalculatedValue(value) {
+		var previousSilent = silent;
 		silent = true;
-		setSelectMatrixVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
-		silent = false;
+		try {
+			setSelectMatrixVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		} finally {
+			silent = previousSilent;
+		}
 	}
 
 	function autoCompleteApplyCalculatedValue(value) {
+		var previousSilent = silent;
 		silent = true;
-		setAutocompleteVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
-		silent = false;
+		try {
+			setAutocompleteVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		} finally {
+			silent = previousSilent;
+		}
 	}
 
 	function checkBoxApplyCalculatedValue(value) {
+		var previousSilent = silent;
 		silent = true;
-		setCheckboxVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
-		silent = false;
+		try {
+			setCheckboxVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		} finally {
+			silent = previousSilent;
+		}
 	}
 
 	function integerApplyCalculatedValue(value) {
+		var previousSilent = silent;
 		silent = true;
-		setSpinnerVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
-		silent = false;
+		try {
+			setSpinnerVal(value.inquiry.id, _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index));
+		} finally {
+			silent = previousSilent;
+		}
 	}
 
 	function floatApplyCalculatedValue(value) {
+		var previousSilent = silent;
 		silent = true;
-		setDecimalVal(value.inquiry.id, _formatDecimal(_inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index)));
-		silent = false;
+		try {
+			setDecimalVal(value.inquiry.id, _formatDecimal(_inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index)));
+		} finally {
+			silent = previousSilent;
+		}
 	}
 
 	function dateApplyCalculatedValue(value) {
+		var previousSilent = silent;
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index);
-		setDatePickerVal(value.inquiry.id, newValue != null ? JSJoda.convert(newValue).toDate() : null);
-		silent = false;
+		try {
+			var newValue = _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index);
+			setDatePickerVal(value.inquiry.id, newValue != null ? JSJoda.convert(newValue).toDate() : null);
+		} finally {
+			silent = previousSilent;
+		}
 	}
 
 	function timeApplyCalculatedValue(value) {
+		var previousSilent = silent;
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index);
-		setTimePickerVal(value.inquiry.id, newValue != null ? JSJoda.convert(JSJoda.LocalDateTime.of(1970,1,1,newValue.hour(),newValue.minute())).toDate() : null);
-		silent = false;
+		try {
+			var newValue = _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index);
+			setTimePickerVal(value.inquiry.id, newValue != null ? JSJoda.convert(JSJoda.LocalDateTime.of(1970,1,1,newValue.hour(),newValue.minute())).toDate() : null);
+		} finally {
+			silent = previousSilent;
+		}
 	}
 
 	function timestampApplyCalculatedValue(value) {
+		var previousSilent = silent;
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index);
-		var timestamp = null;
-		if (newValue != null) {
-			var inputFieldVariable = _getSeriesInputFieldVariable(value.inquiry.jsVariableName, value.index, false);
-			if (inputFieldVariable != null && inputFieldVariable.value.userTimeZone) {
-				timestamp = newValue.withZoneSameInstant(JSJoda.ZoneId.of(INPUT_TIMEZONE_ID));
-			} else {
-				timestamp = newValue;
+		try {
+			var newValue = _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index);
+			var timestamp = null;
+			if (newValue != null) {
+				var inputFieldVariable = _getSeriesInputFieldVariable(value.inquiry.jsVariableName, value.index, false);
+				if (inputFieldVariable != null && inputFieldVariable.value.userTimeZone) {
+					timestamp = newValue.withZoneSameInstant(JSJoda.ZoneId.of(INPUT_TIMEZONE_ID));
+				} else {
+					timestamp = newValue;
+				}
+				timestamp = JSJoda.convert(timestamp.toLocalDateTime()).toDate();
 			}
-			timestamp = JSJoda.convert(timestamp.toLocalDateTime()).toDate();
+			setDateTimePickerVal(value.inquiry.id, timestamp);
+		} finally {
+			silent = previousSilent;
 		}
-		setDateTimePickerVal(value.inquiry.id, timestamp);
-		silent = false;
 	}
 
 	function sketchApplyCalculatedValue(value, widget) {
+		var previousSilent = silent;
 		silent = true;
-		var newValue = _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index);
-		Sketch.setSketchValue(widget,newValue.ink);
-		silent = false;
+		try {
+			var newValue = _inputFieldApplyCalculatedValue(value.inquiry.jsVariableName, value.index);
+			Sketch.setSketchValue(widget,newValue.ink);
+		} finally {
+			silent = previousSilent;
+		}
 	}
 
 	function _applyCalculatedValue(inputFieldVar) {
