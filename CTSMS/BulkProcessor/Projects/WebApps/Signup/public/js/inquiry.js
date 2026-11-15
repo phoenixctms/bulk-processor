@@ -1126,7 +1126,9 @@ function _createSelectMatrix(context,value) {
     var table = $('<table class="ctsms-select-matrix-table' + (transposed ? ' ctsms-select-matrix-transposed' : '') + (verticalHead ? ' ctsms-select-matrix-vertical-head' : '') + '"/>');
     var headRow = $('<tr/>').append(createLabelCell('th',null));
     for (var h = 0; h < headLabels.length; h++) {
-        headRow.append($('<th class="ctsms-select-matrix-cell"/>').append($('<span class="ctsms-select-matrix-head-label"/>').append(document.createTextNode(headLabels[h] != null ? headLabels[h] : ''))));
+        var headLabel = (headLabels[h] != null ? headLabels[h] : '');
+        // a long (vertical) head label is clipped to its column: the full text is its tooltip
+        headRow.append($('<th class="ctsms-select-matrix-cell"/>').append($('<span class="ctsms-select-matrix-head-label"/>').attr('title',headLabel).append(document.createTextNode(headLabel))));
     }
     table.append($('<thead/>').append(headRow));
     var body = $('<tbody/>').appendTo(table);
