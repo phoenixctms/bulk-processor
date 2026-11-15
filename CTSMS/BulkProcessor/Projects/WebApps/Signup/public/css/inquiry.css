@@ -158,6 +158,8 @@
     writing-mode: vertical-rl;
     transform: rotate(180deg);
     max-height: 12em;
+    max-width: 100%;
+    overflow: hidden;
     text-align: left;
 }
 
