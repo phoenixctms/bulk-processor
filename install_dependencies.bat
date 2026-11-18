@@ -6,6 +6,7 @@ call ppm install MIME-Lite
 call ppm install YAML-Tiny
 call ppm install Config-Any
 call ppm install Spreadsheet-ParseExcel
+call cpan -T Spreadsheet::ParseXLSX
 call ppm install XML-LibXML
 
 call cpan -T Log::Log4perl
