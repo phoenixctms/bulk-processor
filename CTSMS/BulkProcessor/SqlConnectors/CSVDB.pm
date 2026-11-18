@@ -1,4 +1,4 @@
-package CTSMS::BulkProcessor::SqlConnectors::CSVDB;
+﻿package CTSMS::BulkProcessor::SqlConnectors::CSVDB;
 use strict;
 
 ## no critic
@@ -38,7 +38,6 @@ use File::Path qw(remove_tree);
 use Locale::Recode;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseExcel::FmtUnicode;
-use Excel::Reader::XLSX;
 use Text::CSV_XS;
 use File::Basename;
 use MIME::Parser;
@@ -56,7 +55,6 @@ our @ISA = qw(Exporter CTSMS::BulkProcessor::SqlConnector);
 our @EXPORT_OK = qw(
     cleanupcsvdirs
     xlsbin2csv
-    xlsxbin2csv
     sanitize_column_name
     sanitize_spreadsheet_name
     get_tableidentifier
@@ -700,114 +698,6 @@ sub _convert_xlsbin2csv {
 
     close CSV;
     $XLS->close;
-
-    xls2csvinfo($csvlinecount . ' line(s) converted',getlogger(__PACKAGE__));
-
-    return $csvlinecount;
-
-}
-
-sub xlsxbin2csv {
-
-    my ($inputfile,$outputfile,$worksheetname) = @_;
-
-    return _convert_xlsxbin2csv($inputfile,
-                            $worksheetname,
-                            $outputfile,
-                            'UTF-8',
-                            $default_csv_config->{quote_char},
-                            $default_csv_config->{escape_char},
-                            $default_csv_config->{sep_char},
-                            $default_csv_config->{eol});
-
-}
-
-sub _convert_xlsxbin2csv {
-    my ($SourceFilename,$worksheet,$DestFilename,$DestCharset,$quote_char,$escape_char,$sep_char,$eol) = @_;
-
-    my $csvlinecount = 0;
-
-    xls2csvinfo('start converting ' . $SourceFilename . ' (worksheet ' . $worksheet . ') to ' . $DestFilename . ' ...',getlogger(__PACKAGE__));
-
-    my $XLS = new IO::File;
-    if (not $XLS->open('<' . $SourceFilename)) {
-        fileerror('cannot open file ' . $SourceFilename . ': ' . $!,getlogger(__PACKAGE__));
-        return 0;
-    } else {
-        $XLS->close();
-    }
-
-    my $reader   = Excel::Reader::XLSX->new();
-    my $workbook = $reader->read_file($SourceFilename);
-
-    my $SourceCharset = $workbook->{_reader}->encoding();
-    $DestCharset = $SourceCharset unless $DestCharset;
-
-    xls2csvinfo('reading ' . $SourceFilename . ' as ' . $SourceCharset,getlogger(__PACKAGE__));
-
-    if ( !defined $workbook ) {
-        xls2csverror($reader->error(),getlogger(__PACKAGE__));
-
-
-        return 0;
-    }
-
-    my $sheet;
-    if ($worksheet) {
-        $sheet = $workbook->worksheet($worksheet);
-        if (!defined $sheet) {
-            xls2csverror('invalid spreadsheet',getlogger(__PACKAGE__));
-            return 0;
-        }
-        xls2csvinfo('converting the ' . $sheet->name() . ' worksheet',getlogger(__PACKAGE__));
-    } else {
-        $sheet = $workbook->worksheet(0);
-        if (@{$workbook->worksheets()} > 1) {
-            xls2csvinfo('multiple worksheets found, converting ' . $sheet->name(),getlogger(__PACKAGE__));
-        }
-    }
-
-    unlink $DestFilename;
-    local *CSV;
-    if (not open(CSV,'>' . $DestFilename)) {
-        fileerror('cannot open file ' . $DestFilename . ': ' . $!,getlogger(__PACKAGE__));
-
-        return 0;
-    }
-    binmode CSV;
-
-    my $csv = Text::CSV_XS->new({
-            'quote_char'  => $quote_char,
-            'escape_char' => $escape_char,
-            'sep_char'    => $sep_char,
-            'binary'      => 1,
-    });
-
-    my $Recoder;
-    if ($DestCharset) {
-    $Recoder = Locale::Recode->new(from => $SourceCharset, to => $DestCharset);
-    }
-
-    while ( my $row = $sheet->next_row() ) {
-        foreach my $value ($row->values()) {
-            $Recoder->recode($value);
-        }
-
-        my $status = $csv->combine($row->values());
-        if (!defined $status) {
-            xls2csvwarn('csv error: ' . $csv->error_input(),getlogger(__PACKAGE__));
-        }
-
-        if (defined $status) {
-            if ($row->row_number() > 0) {
-                print CSV $eol;
-            }
-            print CSV $csv->string();
-            $csvlinecount++;
-        }
-    }
-
-    close CSV;
 
     xls2csvinfo($csvlinecount . ' line(s) converted',getlogger(__PACKAGE__));
 
