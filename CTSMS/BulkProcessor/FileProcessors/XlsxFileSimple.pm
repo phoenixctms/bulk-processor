@@ -119,9 +119,16 @@ sub _read_package {
         return (undef,'cannot read workbook zip');
     }
 
-    my $strings = _shared_strings($zip);
-    my $rels = _workbook_rels($zip);
-    my $workbook = _xml($zip,'xl/workbook.xml');
+    my $parts = _content_types($zip);
+    my $workbook_path = $parts->{workbook} // 'xl/workbook.xml';
+    my $workbook_root = $workbook_path;
+    $workbook_root =~ s{[^/]*$}{};
+    my $shared_path = $parts->{shared_strings} // 'xl/sharedStrings.xml';
+    my $strings = _shared_strings($zip,$shared_path);
+    my $rels_path = $workbook_path;
+    $rels_path =~ s{workbook\.xml$}{_rels/workbook.xml.rels};
+    my $rels = _workbook_rels($zip,$rels_path);
+    my $workbook = _xml($zip,$workbook_path);
     return (undef,'workbook.xml missing') unless defined $workbook;
 
     my @sheets = ();
@@ -130,7 +137,7 @@ sub _read_package {
         my $rid = $node->getAttributeNS($REL_NS,'id');
         $rid = $node->getAttribute('r:id') unless defined $rid;
         my $target = defined $rid ? $rels->{$rid} : undef;
-        my $path = _package_path($target);
+        my $path = _part_path($workbook_root,$target);
         my $rows = defined $path ? _sheet_rows($zip,$path,$strings) : [];
         push(@sheets,{ name => $name, rows => $rows });
     }
@@ -139,12 +146,32 @@ sub _read_package {
 
 }
 
-sub _shared_strings {
+sub _content_types {
 
     my ($zip) = @_;
 
+    my %parts = ();
+    my $doc = _xml($zip,'[Content_Types].xml');
+    return \%parts unless defined $doc;
+    foreach my $node ($doc->findnodes('//*[local-name()="Override"]')) {
+        my $part = $node->getAttribute('PartName') // '';
+        $part =~ s{^/}{};
+        if ($part =~ /sharedStrings\.xml$/) {
+            $parts{shared_strings} = $part;
+        } elsif ($part =~ /workbook\.xml$/) {
+            $parts{workbook} = $part;
+        }
+    }
+    return \%parts;
+
+}
+
+sub _shared_strings {
+
+    my ($zip,$path) = @_;
+
     my @strings = ();
-    my $doc = _xml($zip,'xl/sharedStrings.xml');
+    my $doc = _xml($zip,$path);
     return \@strings unless defined $doc;
     foreach my $si ($doc->findnodes('//*[local-name()="si"]')) {
         push(@strings,$si->textContent());
@@ -155,10 +182,10 @@ sub _shared_strings {
 
 sub _workbook_rels {
 
-    my ($zip) = @_;
+    my ($zip,$path) = @_;
 
     my %rels = ();
-    my $doc = _xml($zip,'xl/_rels/workbook.xml.rels');
+    my $doc = _xml($zip,$path);
     return \%rels unless defined $doc;
     foreach my $rel ($doc->findnodes('//*[local-name()="Relationship"]')) {
         my $id = $rel->getAttribute('Id');
@@ -207,19 +234,23 @@ sub _sheet_rows {
 
 }
 
-sub _package_path {
+sub _part_path {
 
-    my ($target) = @_;
+    my ($root,$target) = @_;
 
     return undef unless defined $target and $target ne '';
     $target =~ s{\\}{/}g;
-    $target =~ s{^\./}{};
-    if ($target =~ m{^/}) {
-        $target =~ s{^/}{};
-        return $target;
+    my $path = ($target =~ s{^/}{} ? $target : $root . $target);
+    my @segments = ();
+    foreach my $segment (split(m{/},$path)) {
+        next if $segment eq '' or $segment eq '.';
+        if ($segment eq '..') {
+            pop(@segments);
+        } else {
+            push(@segments,$segment);
+        }
     }
-    return $target if $target =~ m{^xl/};
-    return 'xl/' . $target;
+    return join('/',@segments);
 
 }
 
