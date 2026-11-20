@@ -49,6 +49,7 @@ my $get_trial_path_query = sub {
 my $fieldnames = [
     "auditTrail",
     "comment",
+    "commentL10nKey",
     "disabled",
     "ecrf",
     "ref",
@@ -64,6 +65,7 @@ my $fieldnames = [
     "position",
     "reasonForChangeRequired",
     "section",
+    "sectionLocalized",
     "series",
     "trial",
     "uniqueName",

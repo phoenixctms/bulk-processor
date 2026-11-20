@@ -41,6 +41,7 @@ function initPrimeUI(context) {
 
             if (context.inquiryStatusVar.first) {
                 context.inquiryStatusVar.category = value.inquiry.category;
+                context.inquiryStatusVar.categoryLocalized = value.inquiry.categoryLocalized || value.inquiry.category;
             }
             var content = [];
             var categoryPanel = _addInquiryField(context,value);
@@ -132,6 +133,7 @@ function _addInquiryField(context,value) {
     if (context.inquiryStatusVar.category != value.inquiry.category) {
         content = _createInquiryCategory(context);
         context.inquiryStatusVar.category = value.inquiry.category;
+        context.inquiryStatusVar.categoryLocalized = value.inquiry.categoryLocalized || value.inquiry.category;
         context.inquiryStatusVar.categoryFields = [];
     }
     var field = { content: _createInquiryField(context,value), value: value };
@@ -142,7 +144,7 @@ function _addInquiryField(context,value) {
 
 function _createInquiryCategory(context) {
     var content = $('<div></div>').puipanel({
-        title: context.inquiryStatusVar.category
+        title: context.inquiryStatusVar.categoryLocalized || context.inquiryStatusVar.category
     });
     var grid = $('<div class="ui-datagrid-content ui-datagrid-col-' + context.fieldsPerRow + '"></div>');
     content.append(grid);

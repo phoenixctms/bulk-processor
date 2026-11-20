@@ -31,6 +31,7 @@ my $fieldnames = [
     "inputFieldId",
     "inputFieldName",
     "section",
+    "sectionLocalized",
     "index",
     "series",
     "inputFieldSelectionSetValues",

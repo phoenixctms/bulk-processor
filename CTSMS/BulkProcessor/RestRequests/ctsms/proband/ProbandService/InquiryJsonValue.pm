@@ -31,6 +31,7 @@ my $fieldnames = [
     "inputFieldId",
     "inputFieldName",
     "category",
+    "categoryLocalized",
     "inputFieldSelectionSetValues",
     "inputFieldType",
     "inquiryId",
