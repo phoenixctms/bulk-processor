@@ -45,6 +45,7 @@ my $get_trial_path_query = sub {
 
 my $fieldnames = [
     "comment",
+    "commentL10nKey",
     "disabled",
     "excelDate",
     "excelValue",
