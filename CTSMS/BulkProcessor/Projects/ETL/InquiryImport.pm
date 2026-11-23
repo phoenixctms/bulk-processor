@@ -219,8 +219,8 @@ sub _init_context {
     my $result = init_context($context);
 
     $context->{inquiry_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($inquiry_trial_id);
-    if (not $context->{inquiry_trial}->{status}->{inquiryValueInputEnabled}) {
-        rowprocessingerror($context->{tid},"inquiry input is disabled for this trial (trial status: $context->{inquiry_trial}->{status}->{name})",getlogger(__PACKAGE__));
+    if (not $context->{inquiry_trial}->{inquiryValueInputEnabled}) {
+        rowprocessingerror($context->{tid},"inquiry value inputs are not enabled for this trial",getlogger(__PACKAGE__));
         $result = 0; #even in skip-error mode..
     } elsif ($context->{inquiry_trial}->locked) {
         rowprocessingerror($context->{tid},"trial is locked",getlogger(__PACKAGE__));

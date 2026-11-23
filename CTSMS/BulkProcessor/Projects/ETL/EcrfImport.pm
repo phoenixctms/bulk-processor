@@ -345,8 +345,8 @@ sub _init_context {
     my $result = init_context($context);
 
     $context->{ecrf_data_trial} = CTSMS::BulkProcessor::RestRequests::ctsms::trial::TrialService::Trial::get_item($ecrf_data_trial_id);
-    if (not $context->{ecrf_data_trial}->{status}->{ecrfValueInputEnabled}) {
-        rowprocessingerror($context->{tid},"eCRFs are locked for this trial (trial status: $context->{ecrf_data_trial}->{status}->{name})",getlogger(__PACKAGE__));
+    if (not $context->{ecrf_data_trial}->{ecrfValueInputEnabled}) {
+        rowprocessingerror($context->{tid},"eCRF value inputs are not enabled for this trial",getlogger(__PACKAGE__));
         $result = 0; #even in skip-error mode..
     } elsif ($context->{ecrf_data_trial}->locked) {
         rowprocessingerror($context->{tid},"trial is locked",getlogger(__PACKAGE__));

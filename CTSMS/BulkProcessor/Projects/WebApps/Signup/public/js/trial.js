@@ -59,7 +59,7 @@ function initPrimeUI(context) {
             row = $('<div class="ui-grid-row"/>');
             var _trial = (context.inquiryTrial != null && trial._activeInquiryCount == 0 && trial.signupInquiries) ? context.inquiryTrial : trial;
             var inquiries = (_trial._activeInquiryCount > 0 && _trial.signupInquiries);
-            var inquiriesNa = (inquiries && _trial._signupInquiriesNa == 1); //not $item->{status}->{inquiryValueInputEnabled}
+            var inquiriesNa = (inquiries && _trial._signupInquiriesNa == 1); //not ($item->{inquiryValueInputEnabled} and not $item->{status}->{lockdown})
             if (inquiriesNa && trial.signupProbandList) {
                 inquiries = false; //plain proband list signup
             }
@@ -82,7 +82,7 @@ function initPrimeUI(context) {
 
             if (inquiries) {
                 if (inquiriesNa) {
-                    button.puibutton('disable'); //not $item->{status}->{inquiryValueInputEnabled}
+                    button.puibutton('disable'); //not ($item->{inquiryValueInputEnabled} and not $item->{status}->{lockdown})
                     $('#done_btn').puibutton('enable');
                 }
             } else {
