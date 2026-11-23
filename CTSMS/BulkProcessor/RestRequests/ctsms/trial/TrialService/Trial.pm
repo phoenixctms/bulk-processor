@@ -74,6 +74,8 @@ my $fieldnames = [
     "dutySelfAllocationLockedFrom",
     "dutySelfAllocationLockedUntil",
     "exclusiveProbands",
+    "ecrfValueInputEnabled",
+    "inquiryValueInputEnabled",
     "id",
     "modifiedTimestamp",
     "modifiedUser",
@@ -88,6 +90,7 @@ my $fieldnames = [
     "title",
     "type",
     "randomization",
+    "randomizationLocked",
     "version",
     "deferredDelete",
     "deferredDeleteReason",
@@ -207,8 +210,8 @@ sub transformitem {
                 undef,
                 $load_recursive,$restapi);
             $item->{$field} = $p->{total_count};
-            $item->{_listentryInquiriesNa} = (($item->{status}->{inquiryValueInputEnabled} and $item->{_activeInquiryCount} > 0) ? 0 : 1);
-            $item->{_signupInquiriesNa} = (($item->{status}->{inquiryValueInputEnabled} and $item->{signupInquiries} and $item->{_activeInquiryCount} > 0) ? 0 : 1);
+            $item->{_listentryInquiriesNa} = ((($item->{inquiryValueInputEnabled} and not $item->{status}->{lockdown}) and $item->{_activeInquiryCount} > 0) ? 0 : 1);
+            $item->{_signupInquiriesNa} = ((($item->{inquiryValueInputEnabled} and not $item->{status}->{lockdown}) and $item->{signupInquiries} and $item->{_activeInquiryCount} > 0) ? 0 : 1);
         }
     }
 }

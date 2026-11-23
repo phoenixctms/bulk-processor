@@ -46,8 +46,6 @@ my $fieldnames = [
     "id",
     "ignoreTimelineEvents",
     "initial",
-    "inquiryValueInputEnabled",
-    "ecrfValueInputEnabled",
     "lockdown",
     "name",
     "nameL10nKey",

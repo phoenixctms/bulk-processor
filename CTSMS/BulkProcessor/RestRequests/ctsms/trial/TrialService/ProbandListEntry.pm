@@ -81,6 +81,7 @@ my $fieldnames = [
     "inquirySignupUrl",
     "rating",
     "ratingMax",
+    "randomized",
 ];
 
 sub new {
